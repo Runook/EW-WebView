@@ -1,0 +1,223 @@
+.services {
+  padding: var(--space-8) 0;
+}
+
+/* Header */
+.services-header {
+  text-align: center;
+  margin-bottom: var(--space-16);
+}
+
+.services-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.services-description {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  max-width: 700px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Services Grid */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: var(--space-8);
+  margin-bottom: var(--space-20);
+}
+
+.service-card {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  height: fit-content;
+}
+
+.service-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-green-alpha);
+}
+
+.service-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, var(--primary-green), var(--primary-green-light));
+  border-radius: var(--radius-xl);
+  color: white;
+  margin-bottom: var(--space-6);
+}
+
+.service-content {
+  flex: 1;
+}
+
+.service-title {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.service-subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--primary-green);
+  font-weight: 600;
+  margin-bottom: var(--space-4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.service-description {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-6);
+}
+
+.service-features {
+  list-style: none;
+  margin-bottom: var(--space-6);
+}
+
+.service-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.service-feature svg {
+  color: var(--primary-green);
+  flex-shrink: 0;
+}
+
+.service-pricing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  padding: var(--space-3);
+  background-color: var(--primary-green-alpha);
+  border-radius: var(--radius-lg);
+}
+
+.pricing-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.pricing-value {
+  font-size: var(--font-size-base);
+  color: var(--primary-green);
+  font-weight: 600;
+}
+
+.service-btn {
+  width: 100%;
+  padding: var(--space-3) var(--space-6);
+  font-size: var(--font-size-base);
+  justify-content: center;
+}
+
+/* CTA Section */
+.services-cta {
+  text-align: center;
+  padding: var(--space-16);
+  background: linear-gradient(135deg, var(--primary-green), var(--primary-green-light));
+  border-radius: var(--radius-2xl);
+  color: white;
+}
+
+.cta-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  margin-bottom: var(--space-4);
+}
+
+.cta-description {
+  font-size: var(--font-size-lg);
+  opacity: 0.9;
+  margin-bottom: var(--space-8);
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cta-actions {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+}
+
+.cta-actions .btn {
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--font-size-base);
+}
+
+.cta-actions .btn-primary {
+  background-color: white;
+  color: var(--primary-green);
+}
+
+.cta-actions .btn-primary:hover {
+  background-color: var(--background-secondary);
+}
+
+.cta-actions .btn-secondary {
+  background-color: transparent;
+  color: white;
+  border-color: white;
+}
+
+.cta-actions .btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .services {
+    padding: var(--space-6) 0;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+
+  .service-card {
+    padding: var(--space-6);
+  }
+
+  .service-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .services-cta {
+    padding: var(--space-12);
+  }
+
+  .cta-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .cta-actions .btn {
+    width: 100%;
+    max-width: 300px;
+  }
+} 

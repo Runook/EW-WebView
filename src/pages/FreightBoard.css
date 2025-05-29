@@ -1,0 +1,415 @@
+.freight-board {
+  padding: var(--space-8) 0;
+  min-height: 80vh;
+}
+
+/* Header */
+.board-header {
+  text-align: center;
+  margin-bottom: var(--space-12);
+}
+
+.board-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.board-description {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Tabs */
+.board-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-8);
+  background-color: var(--background-secondary);
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.tab.active {
+  background-color: var(--primary-green);
+  color: white;
+}
+
+.tab:hover:not(.active) {
+  background-color: var(--primary-green-alpha);
+  color: var(--primary-green);
+}
+
+/* Post Buttons */
+.post-buttons {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.post-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.post-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Search and Filters */
+.search-filters {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-8);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  padding: var(--space-3);
+  background-color: var(--background-secondary);
+  border-radius: var(--radius-lg);
+}
+
+.search-bar svg {
+  color: var(--text-secondary);
+}
+
+.search-bar input {
+  flex: 1;
+  background: none;
+  border: none;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+}
+
+.search-bar input::placeholder {
+  color: var(--text-secondary);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  align-items: end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.filter-group label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.filter-group input,
+.filter-group select {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background-color: white;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  outline: none;
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 3px var(--primary-green-alpha);
+}
+
+/* Results */
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+}
+
+.results-header h3 {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sort-options select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background-color: white;
+  color: var(--text-primary);
+}
+
+/* Load Cards */
+.load-card,
+.truck-card {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  margin-bottom: var(--space-4);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.load-card:hover,
+.truck-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-green-alpha);
+}
+
+.load-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.route {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.location svg {
+  color: var(--primary-green);
+}
+
+.route-arrow {
+  color: var(--text-secondary);
+}
+
+.rate {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--primary-green);
+  font-weight: 600;
+}
+
+.rate-amount {
+  font-size: var(--font-size-xl);
+}
+
+.rate-per-mile {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.load-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.detail-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.detail-group svg {
+  color: var(--primary-green);
+}
+
+.load-footer,
+.truck-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.company-info {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.company-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--primary-green);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.rating svg {
+  fill: currentColor;
+}
+
+.load-actions,
+.truck-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.load-actions .btn,
+.truck-actions .btn {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  gap: var(--space-1);
+}
+
+/* Truck Cards */
+.truck-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.availability {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.availability svg {
+  color: var(--primary-green);
+}
+
+.truck-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .freight-board {
+    padding: var(--space-6) 0;
+  }
+
+  .board-tabs {
+    flex-direction: column;
+  }
+
+  .tab {
+    justify-content: flex-start;
+  }
+
+  .post-buttons {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .post-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .search-filters {
+    padding: var(--space-4);
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .results-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .load-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .route {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+
+  .load-details {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+
+  .load-footer,
+  .truck-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .load-actions,
+  .truck-actions {
+    width: 100%;
+  }
+
+  .load-actions .btn,
+  .truck-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .truck-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+} 

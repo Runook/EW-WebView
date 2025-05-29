@@ -1,0 +1,265 @@
+.contact {
+  padding: var(--space-8) 0;
+}
+
+/* Header */
+.contact-header {
+  text-align: center;
+  margin-bottom: var(--space-12);
+}
+
+.contact-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.contact-description {
+  font-size: var(--font-size-lg);
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+/* Contact Content */
+.contact-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+  align-items: start;
+}
+
+/* Contact Info */
+.contact-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.info-description {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-8);
+}
+
+.contact-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.contact-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+
+.contact-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-green-alpha);
+}
+
+.contact-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: var(--primary-green-alpha);
+  border-radius: var(--radius-lg);
+  color: var(--primary-green);
+  flex-shrink: 0;
+}
+
+.contact-details {
+  flex: 1;
+}
+
+.contact-card-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.contact-card-details {
+  font-size: var(--font-size-base);
+  color: var(--primary-green);
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.contact-card-description {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.quick-actions .btn {
+  padding: var(--space-3) var(--space-6);
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+/* Contact Form */
+.contact-form {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.form-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.form-description {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: var(--space-8);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-group label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background-color: white;
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 3px var(--primary-green-alpha);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+.form-submit {
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--font-size-base);
+  gap: var(--space-2);
+  align-self: flex-start;
+  min-width: 200px;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+  .contact-content {
+    grid-template-columns: 1fr;
+    gap: var(--space-12);
+  }
+
+  .contact-form {
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact {
+    padding: var(--space-6) 0;
+  }
+
+  .contact-content {
+    gap: var(--space-8);
+  }
+
+  .contact-form {
+    padding: var(--space-6);
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+
+  .contact-card {
+    padding: var(--space-4);
+  }
+
+  .contact-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .quick-actions {
+    flex-direction: row;
+  }
+
+  .quick-actions .btn {
+    flex: 1;
+  }
+
+  .form-submit {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-actions {
+    flex-direction: column;
+  }
+} 
