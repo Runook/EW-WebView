@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Truck, Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
+import { Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import './Footer.css';
 
@@ -39,7 +39,7 @@ const Footer = () => {
           <div className="footer-section">
             <Link to="/" className="footer-logo">
               <div className="footer-logo-icon">
-                <Truck size={28} />
+                <img src="/logo.png" alt="EWLogistics Logo" className="footer-logo-image" />
               </div>
               <div className="footer-logo-text">
                 <span className="footer-logo-main">{t('logo.main')}</span>

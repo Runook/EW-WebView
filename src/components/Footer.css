@@ -37,6 +37,12 @@
   color: white;
 }
 
+.footer-logo-image {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
 .footer-logo-text {
   display: flex;
   flex-direction: column;

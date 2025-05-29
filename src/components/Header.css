@@ -39,6 +39,9 @@
   width: 40px;
   height: 40px;
   object-fit: contain;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, var(--primary-green), var(--primary-green-light));
+  padding: 4px;
 }
 
 .logo-text {

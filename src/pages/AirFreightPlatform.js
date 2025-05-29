@@ -23,7 +23,7 @@ import './FreightBoard.css'; // 复用样式
 import './AirFreightPlatform.css'; // 空运专用样式
 
 const AirFreightPlatform = () => {
-  const [activeTab, setActiveTab] = useState('cargo');
+  const [activeTab, setActiveTab] = useState('demands');
   const [searchQuery, setSearchQuery] = useState('');
   const [isPostCargoModalOpen, setIsPostCargoModalOpen] = useState(false);
   const [isPostDemandModalOpen, setIsPostDemandModalOpen] = useState(false);
@@ -170,18 +170,18 @@ const AirFreightPlatform = () => {
         {/* Tabs */}
         <div className="board-tabs">
           <button 
-            className={`tab ${activeTab === 'cargo' ? 'active' : ''}`}
-            onClick={() => setActiveTab('cargo')}
-          >
-            <Plane size={20} />
-            可用舱位
-          </button>
-          <button 
             className={`tab ${activeTab === 'demands' ? 'active' : ''}`}
             onClick={() => setActiveTab('demands')}
           >
             <Package size={20} />
             货运需求
+          </button>
+          <button 
+            className={`tab ${activeTab === 'cargo' ? 'active' : ''}`}
+            onClick={() => setActiveTab('cargo')}
+          >
+            <Plane size={20} />
+            可用舱位
           </button>
         </div>
 
@@ -271,92 +271,7 @@ const AirFreightPlatform = () => {
 
         {/* Results */}
         <div className="results">
-          {activeTab === 'cargo' ? (
-            <div className="loads-list">
-              <div className="results-header">
-                <h3>{allCargo.length} 条舱位信息</h3>
-                <div className="sort-options">
-                  <select>
-                    <option>按运费排序 (低到高)</option>
-                    <option>按运费排序 (高到低)</option>
-                    <option>按起飞时间排序</option>
-                    <option>按可用重量排序</option>
-                  </select>
-                </div>
-              </div>
-
-              {allCargo.map(cargo => (
-                <div key={cargo.id} className="load-card">
-                  <div className="load-header">
-                    <div className="route">
-                      <div className="location origin">
-                        <MapPin size={16} />
-                        <span>{cargo.origin}</span>
-                      </div>
-                      <ArrowRight size={16} className="route-arrow" />
-                      <div className="location destination">
-                        <MapPin size={16} />
-                        <span>{cargo.destination}</span>
-                      </div>
-                    </div>
-                    <div className="rate">
-                      <DollarSign size={16} />
-                      <span className="rate-amount">{cargo.rate}</span>
-                    </div>
-                  </div>
-
-                  <div className="load-details">
-                    <div className="detail-group">
-                      <Calendar size={16} />
-                      <span>起飞时间: {cargo.flightDate}</span>
-                    </div>
-                    <div className="detail-group">
-                      <Plane size={16} />
-                      <span>{cargo.flightNumber} - {cargo.airline}</span>
-                    </div>
-                    <div className="detail-group">
-                      <Scale size={16} />
-                      <span>可载重: {cargo.availableWeight}</span>
-                    </div>
-                    <div className="detail-group">
-                      <Package size={16} />
-                      <span>{cargo.cargoType}</span>
-                    </div>
-                    <div className="detail-group">
-                      <Clock size={16} />
-                      <span>航程: {cargo.transitTime}</span>
-                    </div>
-                    {cargo.specialService && (
-                      <div className="detail-group">
-                        <Star size={16} />
-                        <span>特殊服务: {cargo.specialService}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="load-footer">
-                    <div className="company-info">
-                      <span className="company-name">{cargo.company}</span>
-                      <div className="rating">
-                        <Star size={14} />
-                        <span>{cargo.rating}</span>
-                      </div>
-                    </div>
-                    <div className="load-actions">
-                      <button className="btn btn-ghost">
-                        <MessageCircle size={16} />
-                        询价
-                      </button>
-                      <button className="btn btn-primary">
-                        <Phone size={16} />
-                        {cargo.phone}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
+          {activeTab === 'demands' ? (
             <div className="trucks-list">
               <div className="results-header">
                 <h3>{allDemands.length} 条货运需求</h3>
@@ -436,6 +351,91 @@ const AirFreightPlatform = () => {
                       <button className="btn btn-primary">
                         <Phone size={16} />
                         {demand.phone}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="loads-list">
+              <div className="results-header">
+                <h3>{allCargo.length} 条舱位信息</h3>
+                <div className="sort-options">
+                  <select>
+                    <option>按运费排序 (低到高)</option>
+                    <option>按运费排序 (高到低)</option>
+                    <option>按起飞时间排序</option>
+                    <option>按可用重量排序</option>
+                  </select>
+                </div>
+              </div>
+
+              {allCargo.map(cargo => (
+                <div key={cargo.id} className="load-card">
+                  <div className="load-header">
+                    <div className="route">
+                      <div className="location origin">
+                        <MapPin size={16} />
+                        <span>{cargo.origin}</span>
+                      </div>
+                      <ArrowRight size={16} className="route-arrow" />
+                      <div className="location destination">
+                        <MapPin size={16} />
+                        <span>{cargo.destination}</span>
+                      </div>
+                    </div>
+                    <div className="rate">
+                      <DollarSign size={16} />
+                      <span className="rate-amount">{cargo.rate}</span>
+                    </div>
+                  </div>
+
+                  <div className="load-details">
+                    <div className="detail-group">
+                      <Calendar size={16} />
+                      <span>起飞时间: {cargo.flightDate}</span>
+                    </div>
+                    <div className="detail-group">
+                      <Plane size={16} />
+                      <span>{cargo.flightNumber} - {cargo.airline}</span>
+                    </div>
+                    <div className="detail-group">
+                      <Scale size={16} />
+                      <span>可载重: {cargo.availableWeight}</span>
+                    </div>
+                    <div className="detail-group">
+                      <Package size={16} />
+                      <span>{cargo.cargoType}</span>
+                    </div>
+                    <div className="detail-group">
+                      <Clock size={16} />
+                      <span>航程: {cargo.transitTime}</span>
+                    </div>
+                    {cargo.specialService && (
+                      <div className="detail-group">
+                        <Star size={16} />
+                        <span>特殊服务: {cargo.specialService}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="load-footer">
+                    <div className="company-info">
+                      <span className="company-name">{cargo.company}</span>
+                      <div className="rating">
+                        <Star size={14} />
+                        <span>{cargo.rating}</span>
+                      </div>
+                    </div>
+                    <div className="load-actions">
+                      <button className="btn btn-ghost">
+                        <MessageCircle size={16} />
+                        询价
+                      </button>
+                      <button className="btn btn-primary">
+                        <Phone size={16} />
+                        {cargo.phone}
                       </button>
                     </div>
                   </div>
