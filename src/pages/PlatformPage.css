@@ -1,0 +1,140 @@
+.platform-page {
+  min-height: 80vh;
+  padding: 2rem 0;
+}
+
+.platform-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.platform-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #34C759, #30D158);
+  border-radius: 20px;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+.platform-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 1rem;
+}
+
+.platform-description {
+  font-size: 1.1rem;
+  color: #6e6e73;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.platform-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.platform-search {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 3rem;
+  flex-wrap: wrap;
+}
+
+.search-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f5f5f7;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  min-width: 400px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.search-bar:focus-within {
+  border-color: #34C759;
+  background: white;
+  box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.1);
+}
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  background: none;
+  outline: none;
+  margin-left: 0.5rem;
+  font-size: 1rem;
+  color: #1d1d1f;
+}
+
+.search-bar input::placeholder {
+  color: #8e8e93;
+}
+
+.coming-soon {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #f5f5f7;
+  border-radius: 20px;
+  margin-top: 2rem;
+}
+
+.coming-soon h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 1rem;
+}
+
+.coming-soon p {
+  font-size: 1rem;
+  color: #6e6e73;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .platform-title {
+    font-size: 2rem;
+  }
+  
+  .platform-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .action-btn {
+    width: 100%;
+    max-width: 300px;
+    justify-content: center;
+  }
+  
+  .search-bar {
+    min-width: 100%;
+  }
+  
+  .platform-search {
+    flex-direction: column;
+  }
+} 

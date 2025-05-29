@@ -113,15 +113,6 @@ const FreightBoard = () => {
     }
   ];
 
-  const equipmentTypes = [
-    t('common.dryVan'),
-    t('common.reefer'),
-    t('common.flatbed'),
-    t('common.stepDeck'),
-    t('common.lowboy'),
-    t('common.tanker')
-  ];
-
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
@@ -139,9 +130,10 @@ const FreightBoard = () => {
       <div className="container">
         {/* Header */}
         <div className="board-header">
-          <h1 className="board-title">{t('freight.title')}</h1>
+          <h1 className="board-title">陆运信息平台</h1>
           <p className="board-description">
-            {t('freight.description')}
+            货主发布货源信息，承运商发布车源信息，通过智能匹配系统实现高效对接。
+            免费发布，实时更新，让陆运生意更简单。
           </p>
         </div>
 
@@ -152,14 +144,14 @@ const FreightBoard = () => {
             onClick={() => setActiveTab('loads')}
           >
             <Package size={20} />
-            {t('freight.availableLoads')}
+            可用货源
           </button>
           <button 
             className={`tab ${activeTab === 'trucks' ? 'active' : ''}`}
             onClick={() => setActiveTab('trucks')}
           >
             <Truck size={20} />
-            {t('freight.availableTrucks')}
+            可用车源
           </button>
         </div>
 
@@ -170,14 +162,14 @@ const FreightBoard = () => {
             onClick={() => setIsPostLoadModalOpen(true)}
           >
             <Plus size={20} />
-            {t('freight.postLoad')}
+            发布货源
           </button>
           <button 
             className="btn btn-ghost post-btn"
             onClick={() => setIsPostTruckModalOpen(true)}
           >
             <Plus size={20} />
-            {t('freight.postTruck')}
+            发布车源
           </button>
         </div>
 
@@ -187,7 +179,7 @@ const FreightBoard = () => {
             <Search size={20} />
             <input
               type="text"
-              placeholder={t('freight.search')}
+              placeholder="搜索起点、终点或货物类型"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -195,41 +187,44 @@ const FreightBoard = () => {
           
           <div className="filters">
             <div className="filter-group">
-              <label>{t('freight.origin')}</label>
+              <label>起点</label>
               <input
                 type="text"
-                placeholder="City, State"
+                placeholder="城市, 省份"
                 value={filters.origin}
                 onChange={(e) => handleFilterChange('origin', e.target.value)}
               />
             </div>
             
             <div className="filter-group">
-              <label>{t('freight.destination')}</label>
+              <label>终点</label>
               <input
                 type="text"
-                placeholder="City, State"
+                placeholder="城市, 省份"
                 value={filters.destination}
                 onChange={(e) => handleFilterChange('destination', e.target.value)}
               />
             </div>
             
             <div className="filter-group">
-              <label>{t('freight.equipment')}</label>
+              <label>车型</label>
               <select
                 value={filters.equipment}
                 onChange={(e) => handleFilterChange('equipment', e.target.value)}
               >
-                <option value="">{t('freight.allTypes')}</option>
-                {equipmentTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
+                <option value="">所有车型</option>
+                <option value="厢式货车">厢式货车</option>
+                <option value="冷藏车">冷藏车</option>
+                <option value="平板车">平板车</option>
+                <option value="高栏车">高栏车</option>
+                <option value="低板车">低板车</option>
+                <option value="油罐车">油罐车</option>
               </select>
             </div>
 
             <button className="btn btn-primary">
               <Filter size={16} />
-              {t('freight.applyFilters')}
+              应用筛选
             </button>
           </div>
         </div>
@@ -239,13 +234,13 @@ const FreightBoard = () => {
           {activeTab === 'loads' ? (
             <div className="loads-list">
               <div className="results-header">
-                <h3>{allLoads.length} {t('freight.loadsAvailable')}</h3>
+                <h3>{allLoads.length} 条货源信息</h3>
                 <div className="sort-options">
                   <select>
-                    <option>{t('freight.sortRate')} (High to Low)</option>
-                    <option>{t('freight.sortRate')} (Low to High)</option>
-                    <option>{t('freight.sortDate')}</option>
-                    <option>{t('freight.sortMiles')}</option>
+                    <option>按运费排序 (高到低)</option>
+                    <option>按运费排序 (低到高)</option>
+                    <option>按发货日期排序</option>
+                    <option>按里程排序</option>
                   </select>
                 </div>
               </div>

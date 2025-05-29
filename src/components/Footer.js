@@ -99,9 +99,9 @@ const Footer = () => {
             <ul className="footer-links">
               {legalLinks.map((link) => (
                 <li key={link}>
-                  <a href="#" className="footer-link">
+                  <button className="footer-link footer-link-button" type="button">
                     {link}
-                  </a>
+                  </button>
                 </li>
               ))}
             </ul>
@@ -123,18 +123,18 @@ const Footer = () => {
               © {currentYear} {t('footer.copyright')}
             </p>
             <div className="social-links">
-              <a href="#" className="social-link" aria-label="Facebook">
+              <button className="social-link" aria-label="Facebook" type="button">
                 <Facebook size={20} />
-              </a>
-              <a href="#" className="social-link" aria-label="Twitter">
+              </button>
+              <button className="social-link" aria-label="Twitter" type="button">
                 <Twitter size={20} />
-              </a>
-              <a href="#" className="social-link" aria-label="LinkedIn">
+              </button>
+              <button className="social-link" aria-label="LinkedIn" type="button">
                 <Linkedin size={20} />
-              </a>
-              <a href="#" className="social-link" aria-label="Instagram">
+              </button>
+              <button className="social-link" aria-label="Instagram" type="button">
                 <Instagram size={20} />
-              </a>
+              </button>
             </div>
           </div>
         </div>

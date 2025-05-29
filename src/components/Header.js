@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Truck, MessageCircle, Phone } from 'lucide-react';
+import { Menu, X, MessageCircle, Phone } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import './Header.css';
 
@@ -25,7 +25,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="logo">
             <div className="logo-icon">
-              <Truck size={32} />
+              <img src="/logo.png" alt="EWLogistics Logo" className="logo-image" />
             </div>
             <div className="logo-text">
               <span className="logo-main">{t('logo.main')}</span>

@@ -3,63 +3,20 @@ import { Link } from 'react-router-dom';
 import { 
   Truck, 
   Ship, 
-  Package, 
-  Warehouse, 
   ArrowRight, 
   CheckCircle,
   Users,
   Globe,
   Clock,
-  Shield
+  Shield,
+  Plane,
+  Navigation
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import './Home.css';
 
 const Home = () => {
   const { t } = useLanguage();
-
-  const services = [
-    {
-      icon: <Ship size={32} />,
-      title: t('home.services.oceanFreight'),
-      description: t('home.services.oceanFreightDesc'),
-      features: [
-        t('services.oceanFreight.features.fcl'),
-        t('services.oceanFreight.features.lcl'),
-        t('services.oceanFreight.features.portTrucking')
-      ]
-    },
-    {
-      icon: <Truck size={32} />,
-      title: t('home.services.truckLoads'),
-      description: t('home.services.truckLoadsDesc'),
-      features: [
-        t('services.truckLoads.features.ftl'),
-        t('services.truckLoads.features.ltl'),
-        t('services.truckLoads.features.expedited')
-      ]
-    },
-    {
-      icon: <Package size={32} />,
-      title: t('home.services.fbaShipping'),
-      description: t('home.services.fbaShippingDesc'),
-      features: [
-        t('services.fbaShipping.features.prep'),
-        t('services.fbaShipping.features.compliance'),
-        t('services.lastMile.features.sameDay')
-      ]
-    },
-    {
-      icon: <Warehouse size={32} />,
-      title: t('home.services.warehousing'),
-      description: t('home.services.warehousingDesc'),
-      features: [
-        t('services.warehousing.features.climateControlled'),
-        t('services.warehousing.features.transloading'),
-        t('services.warehousing.features.crossDocking')
-      ]
-    }
-  ];
 
   const stats = [
     { icon: <Users size={24} />, number: '10,000+', label: t('home.stats.customers') },
@@ -76,33 +33,34 @@ const Home = () => {
           <div className="hero-content">
             <div className="hero-text">
               <h1 className="hero-title">
-                {t('home.title')}
-                <span className="text-green">{t('home.titleHighlight')}</span>
+                物流行业
+                <span className="text-green">B2B服务平台</span>
               </h1>
               <p className="hero-description">
-                {t('home.description')}
+                连接货主、承运商、物流服务商，打造高效透明的物流信息交易平台。
+                发布需求、寻找服务、在线交易，让物流更简单。
               </p>
               <div className="hero-actions">
                 <Link to="/freight-board" className="btn btn-primary">
-                  {t('home.findFreight')}
+                  陆运平台
                   <ArrowRight size={20} />
                 </Link>
                 <Link to="/services" className="btn btn-secondary">
-                  {t('home.ourServices')}
+                  所有平台
                 </Link>
               </div>
               <div className="hero-features">
                 <div className="feature-item">
                   <CheckCircle size={16} />
-                  <span>{t('home.realTimeTracking')}</span>
+                  <span>信息发布免费</span>
                 </div>
                 <div className="feature-item">
                   <CheckCircle size={16} />
-                  <span>{t('home.competitiveRates')}</span>
+                  <span>实时匹配推荐</span>
                 </div>
                 <div className="feature-item">
                   <CheckCircle size={16} />
-                  <span>{t('home.support247')}</span>
+                  <span>交易安全保障</span>
                 </div>
               </div>
             </div>
@@ -110,19 +68,19 @@ const Home = () => {
               <div className="hero-graphic">
                 <div className="floating-card card-1">
                   <Truck size={24} />
-                  <span>整车/零担</span>
+                  <span>陆运</span>
                 </div>
                 <div className="floating-card card-2">
                   <Ship size={24} />
                   <span>海运</span>
                 </div>
                 <div className="floating-card card-3">
-                  <Package size={24} />
-                  <span>FBA配送</span>
+                  <Plane size={24} />
+                  <span>空运</span>
                 </div>
                 <div className="floating-card card-4">
-                  <Warehouse size={24} />
-                  <span>仓储</span>
+                  <Navigation size={24} />
+                  <span>联运</span>
                 </div>
               </div>
             </div>
@@ -149,56 +107,21 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Services Section */}
-      <section className="services">
-        <div className="container">
-          <div className="section-header">
-            <h2 className="section-title">{t('home.services.title')}</h2>
-            <p className="section-description">
-              {t('home.services.description')}
-            </p>
-          </div>
-          <div className="services-grid">
-            {services.map((service, index) => (
-              <div key={index} className="service-card">
-                <div className="service-icon">
-                  {service.icon}
-                </div>
-                <h3 className="service-title">{service.title}</h3>
-                <p className="service-description">{service.description}</p>
-                <ul className="service-features">
-                  {service.features.map((feature, idx) => (
-                    <li key={idx} className="service-feature">
-                      <CheckCircle size={16} />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/services" className="service-link">
-                  {t('home.services.learnMore')}
-                  <ArrowRight size={16} />
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
       <section className="cta">
         <div className="container">
           <div className="cta-content">
-            <h2 className="cta-title">{t('home.cta.title')}</h2>
+            <h2 className="cta-title">立即加入东西方物流平台</h2>
             <p className="cta-description">
-              {t('home.cta.description')}
+              无论您是货主、承运商还是物流服务商，我们都为您提供最合适的平台服务
             </p>
             <div className="cta-actions">
               <Link to="/freight-board" className="btn btn-primary">
-                {t('home.cta.getStarted')}
+                开始使用平台
                 <ArrowRight size={20} />
               </Link>
               <button className="btn btn-ghost">
-                {t('home.cta.contactSales')}
+                联系客服
               </button>
             </div>
           </div>
