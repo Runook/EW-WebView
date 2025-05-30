@@ -11,14 +11,15 @@ const Footer = () => {
   const quickLinks = [
     { label: t('nav.home'), path: '/' },
     { label: t('nav.services'), path: '/services' },
-    { label: t('nav.freightBoard'), path: '/freight-board' },
+    { label: t('nav.landWarehouse'), path: '/land-warehouse' },
+    { label: t('nav.seaportQuery'), path: '/seaport-query' },
+    { label: t('nav.airportQuery'), path: '/airport-query' },
     { label: t('nav.contact'), path: '/contact' }
   ];
 
   const services = [
     t('home.services.oceanFreight'),
     t('home.services.truckLoads'),
-    t('home.services.fbaShipping'),
     t('home.services.warehousing'),
     t('services.airFreight.title'),
     t('services.lastMile.title')

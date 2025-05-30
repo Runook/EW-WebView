@@ -14,7 +14,9 @@ const translations = {
   // Header
   'nav.home': '首页',
   'nav.services': '服务',
-  'nav.freightBoard': '货运板',
+  'nav.landWarehouse': '陆仓查询',
+  'nav.seaportQuery': '海港查询',
+  'nav.airportQuery': '机场查询',
   'nav.contact': '联系我们',
   'header.liveChat': '在线客服',
   'header.callNow': '立即拨打',

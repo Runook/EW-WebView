@@ -8,6 +8,9 @@ import Home from './pages/Home';
 import Services from './pages/Services';
 import FreightBoard from './pages/FreightBoard';
 import Contact from './pages/Contact';
+import LandWarehouseQuery from './pages/LandWarehouseQuery';
+import SeaportQuery from './pages/SeaportQuery';
+import AirportQuery from './pages/AirportQuery';
 import SeaFreightPlatform from './pages/SeaFreightPlatform';
 import AirFreightPlatform from './pages/AirFreightPlatform';
 import MultimodalPlatform from './pages/MultimodalPlatform';
@@ -24,6 +27,9 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/services" element={<Services />} />
             <Route path="/freight-board" element={<FreightBoard />} />
+            <Route path="/land-warehouse" element={<LandWarehouseQuery />} />
+            <Route path="/seaport-query" element={<SeaportQuery />} />
+            <Route path="/airport-query" element={<AirportQuery />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/sea-freight" element={<SeaFreightPlatform />} />
             <Route path="/air-freight" element={<AirFreightPlatform />} />

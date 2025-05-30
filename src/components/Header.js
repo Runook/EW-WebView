@@ -12,7 +12,9 @@ const Header = () => {
   const navigationItems = [
     { path: '/', label: t('nav.home') },
     { path: '/services', label: t('nav.services') },
-    { path: '/freight-board', label: t('nav.freightBoard') },
+    { path: '/land-warehouse', label: t('nav.landWarehouse') },
+    { path: '/seaport-query', label: t('nav.seaportQuery') },
+    { path: '/airport-query', label: t('nav.airportQuery') },
     { path: '/contact', label: t('nav.contact') }
   ];
 

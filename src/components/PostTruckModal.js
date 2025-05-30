@@ -1,36 +1,47 @@
 import React, { useState } from 'react';
-import { X, MapPin, Truck, Calendar, DollarSign, Navigation } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+import { X, MapPin, Calendar, DollarSign, Truck, Star, Scale, Box } from 'lucide-react';
 import './Modal.css';
 
 const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
-  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     currentLocation: '',
+    availableDate: '',
+    serviceType: '', // FTL, LTL 或 FTL/LTL
+    equipment: '',
+    length: '',
+    capacity: '',
+    volume: '',
     preferredOrigin: '',
     preferredDestination: '',
-    availableDate: '',
-    equipment: '',
-    capacity: '',
-    length: '',
-    preferredRate: '',
-    radius: '',
-    specialRequirements: '',
+    rateRange: '',
+    specialServices: '',
     contactName: '',
     contactPhone: '',
     contactEmail: '',
-    companyName: '',
-    truckNumber: '',
-    driverName: ''
+    companyName: ''
   });
 
+  const serviceTypes = [
+    { value: 'FTL', label: 'FTL (整车运输)' },
+    { value: 'LTL', label: 'LTL (零担运输)' },
+    { value: 'FTL/LTL', label: 'FTL/LTL (都可以)' }
+  ];
+
   const equipmentTypes = [
-    { value: 'dry-van', label: t('common.dryVan') },
-    { value: 'reefer', label: t('common.reefer') },
-    { value: 'flatbed', label: t('common.flatbed') },
-    { value: 'step-deck', label: t('common.stepDeck') },
-    { value: 'lowboy', label: t('common.lowboy') },
-    { value: 'tanker', label: t('common.tanker') }
+    { value: '厢式货车', label: '厢式货车' },
+    { value: '冷藏车', label: '冷藏车' },
+    { value: '平板车', label: '平板车' },
+    { value: '高栏车', label: '高栏车' },
+    { value: '低板车', label: '低板车' },
+    { value: '油罐车', label: '油罐车' }
+  ];
+
+  const truckLengths = [
+    '4.2米', '6.8米', '9.6米', '13米', '17.5米'
+  ];
+
+  const capacityRanges = [
+    '5吨以下', '5-10吨', '10-20吨', '20-30吨', '30吨以上'
   ];
 
   const handleChange = (e) => {
@@ -46,25 +57,27 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
       ...formData,
       id: Date.now(),
       type: 'truck',
-      postedDate: new Date().toISOString()
+      postedDate: new Date().toISOString(),
+      location: formData.currentLocation,
+      destination: '开放',
+      preferredLanes: `${formData.preferredOrigin} 至 ${formData.preferredDestination}`
     });
     setFormData({
       currentLocation: '',
+      availableDate: '',
+      serviceType: '',
+      equipment: '',
+      length: '',
+      capacity: '',
+      volume: '',
       preferredOrigin: '',
       preferredDestination: '',
-      availableDate: '',
-      equipment: '',
-      capacity: '',
-      length: '',
-      preferredRate: '',
-      radius: '',
-      specialRequirements: '',
+      rateRange: '',
+      specialServices: '',
       contactName: '',
       contactPhone: '',
       contactEmail: '',
-      companyName: '',
-      truckNumber: '',
-      driverName: ''
+      companyName: ''
     });
     onClose();
   };
@@ -75,7 +88,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{t('freight.postTruck')}</h2>
+          <h2>发布车源信息</h2>
           <button className="modal-close" onClick={onClose}>
             <X size={24} />
           </button>
@@ -83,19 +96,39 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-section">
-            <h3>{t('freight.truckInfo')}</h3>
+            <h3>车辆信息</h3>
             <div className="form-grid">
               <div className="form-group">
                 <label>
+                  <Truck size={16} />
+                  服务类型
+                </label>
+                <select
+                  name="serviceType"
+                  value={formData.serviceType}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">选择服务类型</option>
+                  {serviceTypes.map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>
                   <MapPin size={16} />
-                  {t('freight.currentLocation')}
+                  当前位置
                 </label>
                 <input
                   type="text"
                   name="currentLocation"
                   value={formData.currentLocation}
                   onChange={handleChange}
-                  placeholder={t('freight.currentLocation')}
+                  placeholder="当前城市或地区"
                   required
                 />
               </div>
@@ -103,7 +136,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Calendar size={16} />
-                  {t('freight.availableDate')}
+                  可用日期
                 </label>
                 <input
                   type="date"
@@ -117,7 +150,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Truck size={16} />
-                  {t('freight.equipment')}
+                  车型
                 </label>
                 <select
                   name="equipment"
@@ -125,7 +158,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">{t('freight.selectEquipment')}</option>
+                  <option value="">选择车型</option>
                   {equipmentTypes.map(type => (
                     <option key={type.value} value={type.value}>
                       {type.label}
@@ -135,135 +168,126 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
 
               <div className="form-group">
-                <label>
-                  <Truck size={16} />
-                  {t('freight.capacity')}
-                </label>
-                <input
-                  type="number"
-                  name="capacity"
-                  value={formData.capacity}
-                  onChange={handleChange}
-                  placeholder="80000"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <Truck size={16} />
-                  {t('freight.length')}
-                </label>
-                <input
-                  type="number"
+                <label>车长</label>
+                <select
                   name="length"
                   value={formData.length}
                   onChange={handleChange}
-                  placeholder="53"
-                />
+                  required
+                >
+                  <option value="">选择车长</option>
+                  {truckLengths.map(length => (
+                    <option key={length} value={length}>
+                      {length}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">
                 <label>
-                  <Navigation size={16} />
-                  {t('freight.searchRadius')}
+                  <Scale size={16} />
+                  载重能力
+                </label>
+                <select
+                  name="capacity"
+                  value={formData.capacity}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">选择载重</option>
+                  {capacityRanges.map(range => (
+                    <option key={range} value={range}>
+                      {range}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <Box size={16} />
+                  货舱体积 (立方米)
                 </label>
                 <input
                   type="number"
-                  name="radius"
-                  value={formData.radius}
+                  name="volume"
+                  value={formData.volume}
                   onChange={handleChange}
-                  placeholder="500"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>{t('freight.truckNumber')}</label>
-                <input
-                  type="text"
-                  name="truckNumber"
-                  value={formData.truckNumber}
-                  onChange={handleChange}
-                  placeholder="T-1001"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>{t('freight.driverName')}</label>
-                <input
-                  type="text"
-                  name="driverName"
-                  value={formData.driverName}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h3>{t('freight.preferredRoutes')}</h3>
-            <div className="form-grid">
-              <div className="form-group">
-                <label>
-                  <MapPin size={16} />
-                  {t('freight.preferredOrigin')}
-                </label>
-                <input
-                  type="text"
-                  name="preferredOrigin"
-                  value={formData.preferredOrigin}
-                  onChange={handleChange}
-                  placeholder={t('freight.optional')}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <MapPin size={16} />
-                  {t('freight.preferredDestination')}
-                </label>
-                <input
-                  type="text"
-                  name="preferredDestination"
-                  value={formData.preferredDestination}
-                  onChange={handleChange}
-                  placeholder={t('freight.optional')}
+                  placeholder="例如: 45"
+                  step="0.1"
                 />
               </div>
 
               <div className="form-group">
                 <label>
                   <DollarSign size={16} />
-                  {t('freight.preferredRate')}
+                  运费区间 (¥/公里)
                 </label>
                 <input
-                  type="number"
-                  step="0.01"
-                  name="preferredRate"
-                  value={formData.preferredRate}
+                  type="text"
+                  name="rateRange"
+                  value={formData.rateRange}
                   onChange={handleChange}
-                  placeholder="2.50"
+                  placeholder="例如: ¥6-12/公里"
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h3>运营范围</h3>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>
+                  <MapPin size={16} />
+                  常跑起点
+                </label>
+                <input
+                  type="text"
+                  name="preferredOrigin"
+                  value={formData.preferredOrigin}
+                  onChange={handleChange}
+                  placeholder="经常发货的地区"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <MapPin size={16} />
+                  常跑终点
+                </label>
+                <input
+                  type="text"
+                  name="preferredDestination"
+                  value={formData.preferredDestination}
+                  onChange={handleChange}
+                  placeholder="经常送货的地区"
                 />
               </div>
             </div>
 
             <div className="form-group full-width">
-              <label>{t('freight.specialRequirements')}</label>
+              <label>
+                <Star size={16} />
+                特殊服务
+              </label>
               <textarea
-                name="specialRequirements"
-                value={formData.specialRequirements}
+                name="specialServices"
+                value={formData.specialServices}
                 onChange={handleChange}
-                placeholder={t('freight.specialReqPlaceholder')}
+                placeholder="如: 恒温运输、GPS跟踪、危险品运输资质、保险服务等"
                 rows="3"
               />
             </div>
           </div>
 
           <div className="form-section">
-            <h3>{t('freight.contactInfo')}</h3>
+            <h3>联系信息</h3>
             <div className="form-grid">
               <div className="form-group">
-                <label>{t('freight.companyName')}</label>
+                <label>公司名称</label>
                 <input
                   type="text"
                   name="companyName"
@@ -274,7 +298,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
 
               <div className="form-group">
-                <label>{t('freight.contactName')}</label>
+                <label>联系人</label>
                 <input
                   type="text"
                   name="contactName"
@@ -285,7 +309,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
 
               <div className="form-group">
-                <label>{t('freight.phoneNumber')}</label>
+                <label>手机号码</label>
                 <input
                   type="tel"
                   name="contactPhone"
@@ -296,13 +320,12 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
 
               <div className="form-group">
-                <label>{t('freight.emailAddress')}</label>
+                <label>邮箱</label>
                 <input
                   type="email"
                   name="contactEmail"
                   value={formData.contactEmail}
                   onChange={handleChange}
-                  required
                 />
               </div>
             </div>
@@ -310,10 +333,10 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
 
           <div className="modal-actions">
             <button type="button" className="btn btn-ghost" onClick={onClose}>
-              {t('freight.cancel')}
+              取消
             </button>
             <button type="submit" className="btn btn-primary">
-              {t('freight.postTruckBtn')}
+              发布车源
             </button>
           </div>
         </form>

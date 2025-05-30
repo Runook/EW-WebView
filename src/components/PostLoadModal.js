@@ -1,34 +1,45 @@
 import React, { useState } from 'react';
-import { X, MapPin, Package, Calendar, DollarSign, Truck } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+import { X, MapPin, Package, Calendar, DollarSign, Truck, Scale, Box } from 'lucide-react';
 import './Modal.css';
 
 const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
-  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     origin: '',
     destination: '',
     pickupDate: '',
     deliveryDate: '',
+    loadType: '', // FTL或LTL
     equipment: '',
     weight: '',
-    length: '',
+    volume: '',
+    pallets: '',
     rate: '',
     distance: '',
-    description: '',
+    commodity: '',
+    requirements: '',
     contactName: '',
     contactPhone: '',
     contactEmail: '',
     companyName: ''
   });
 
+  const loadTypes = [
+    { value: 'FTL', label: 'FTL (整车运输)' },
+    { value: 'LTL', label: 'LTL (零担运输)' }
+  ];
+
   const equipmentTypes = [
-    { value: 'dry-van', label: t('common.dryVan') },
-    { value: 'reefer', label: t('common.reefer') },
-    { value: 'flatbed', label: t('common.flatbed') },
-    { value: 'step-deck', label: t('common.stepDeck') },
-    { value: 'lowboy', label: t('common.lowboy') },
-    { value: 'tanker', label: t('common.tanker') }
+    { value: '厢式货车', label: '厢式货车' },
+    { value: '冷藏车', label: '冷藏车' },
+    { value: '平板车', label: '平板车' },
+    { value: '高栏车', label: '高栏车' },
+    { value: '低板车', label: '低板车' },
+    { value: '油罐车', label: '油罐车' }
+  ];
+
+  const commodityTypes = [
+    '电子设备', '机械设备', '生鲜食品', '日用百货', 
+    '化工产品', '建材', '汽车配件', '纺织品', '医疗器械', '其他'
   ];
 
   const handleChange = (e) => {
@@ -51,12 +62,15 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       destination: '',
       pickupDate: '',
       deliveryDate: '',
+      loadType: '',
       equipment: '',
       weight: '',
-      length: '',
+      volume: '',
+      pallets: '',
       rate: '',
       distance: '',
-      description: '',
+      commodity: '',
+      requirements: '',
       contactName: '',
       contactPhone: '',
       contactEmail: '',
@@ -71,7 +85,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{t('freight.postLoad')}</h2>
+          <h2>发布货源信息</h2>
           <button className="modal-close" onClick={onClose}>
             <X size={24} />
           </button>
@@ -79,19 +93,39 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-section">
-            <h3>{t('freight.loadInfo')}</h3>
+            <h3>货源详情</h3>
             <div className="form-grid">
               <div className="form-group">
                 <label>
+                  <Package size={16} />
+                  运输类型
+                </label>
+                <select
+                  name="loadType"
+                  value={formData.loadType}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">选择运输类型</option>
+                  {loadTypes.map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>
                   <MapPin size={16} />
-                  {t('freight.origin')}
+                  起点
                 </label>
                 <input
                   type="text"
                   name="origin"
                   value={formData.origin}
                   onChange={handleChange}
-                  placeholder={t('freight.origin')}
+                  placeholder="起始城市或地区"
                   required
                 />
               </div>
@@ -99,14 +133,14 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <MapPin size={16} />
-                  {t('freight.destination')}
+                  终点
                 </label>
                 <input
                   type="text"
                   name="destination"
                   value={formData.destination}
                   onChange={handleChange}
-                  placeholder={t('freight.destination')}
+                  placeholder="目的城市或地区"
                   required
                 />
               </div>
@@ -114,7 +148,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Calendar size={16} />
-                  {t('freight.pickupDate')}
+                  提货日期
                 </label>
                 <input
                   type="date"
@@ -128,7 +162,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Calendar size={16} />
-                  {t('freight.deliveryDate')}
+                  送达日期
                 </label>
                 <input
                   type="date"
@@ -142,7 +176,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Truck size={16} />
-                  {t('freight.equipment')}
+                  车型要求
                 </label>
                 <select
                   name="equipment"
@@ -150,7 +184,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">{t('freight.selectEquipment')}</option>
+                  <option value="">选择车型</option>
                   {equipmentTypes.map(type => (
                     <option key={type.value} value={type.value}>
                       {type.label}
@@ -161,66 +195,110 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
               <div className="form-group">
                 <label>
-                  <Package size={16} />
-                  {t('freight.weight')}
+                  <Scale size={16} />
+                  货物重量 (吨)
                 </label>
                 <input
                   type="number"
                   name="weight"
                   value={formData.weight}
                   onChange={handleChange}
-                  placeholder="45000"
+                  placeholder="例如: 22"
+                  step="0.1"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <Box size={16} />
+                  货物体积 (立方米)
+                </label>
+                <input
+                  type="number"
+                  name="volume"
+                  value={formData.volume}
+                  onChange={handleChange}
+                  placeholder="例如: 35"
+                  step="0.1"
                 />
               </div>
 
               <div className="form-group">
                 <label>
                   <Package size={16} />
-                  {t('freight.length')}
+                  托盘数量
                 </label>
                 <input
                   type="number"
-                  name="length"
-                  value={formData.length}
+                  name="pallets"
+                  value={formData.pallets}
                   onChange={handleChange}
-                  placeholder="48"
+                  placeholder="例如: 20"
                 />
+              </div>
+
+              <div className="form-group">
+                <label>货物类型</label>
+                <select
+                  name="commodity"
+                  value={formData.commodity}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">选择货物类型</option>
+                  {commodityTypes.map(type => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">
                 <label>
                   <DollarSign size={16} />
-                  {t('freight.rate')}
+                  预算价格 ($)
                 </label>
                 <input
                   type="number"
                   name="rate"
                   value={formData.rate}
                   onChange={handleChange}
-                  placeholder="2500"
+                  placeholder="例如: 8500"
                   required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>距离 (公里)</label>
+                <input
+                  type="number"
+                  name="distance"
+                  value={formData.distance}
+                  onChange={handleChange}
+                  placeholder="例如: 1463"
                 />
               </div>
             </div>
 
             <div className="form-group full-width">
-              <label>{t('freight.loadDescription')}</label>
+              <label>特殊要求</label>
               <textarea
-                name="description"
-                value={formData.description}
+                name="requirements"
+                value={formData.requirements}
                 onChange={handleChange}
-                placeholder={t('freight.descriptionPlaceholder')}
+                placeholder="如: 恒温运输、GPS跟踪、保险要求等"
                 rows="3"
-                required
               />
             </div>
           </div>
 
           <div className="form-section">
-            <h3>{t('freight.contactInfo')}</h3>
+            <h3>联系信息</h3>
             <div className="form-grid">
               <div className="form-group">
-                <label>{t('freight.companyName')}</label>
+                <label>公司名称</label>
                 <input
                   type="text"
                   name="companyName"
@@ -231,7 +309,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
 
               <div className="form-group">
-                <label>{t('freight.contactName')}</label>
+                <label>联系人</label>
                 <input
                   type="text"
                   name="contactName"
@@ -242,7 +320,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
 
               <div className="form-group">
-                <label>{t('freight.phoneNumber')}</label>
+                <label>手机号码</label>
                 <input
                   type="tel"
                   name="contactPhone"
@@ -253,13 +331,12 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
 
               <div className="form-group">
-                <label>{t('freight.emailAddress')}</label>
+                <label>邮箱</label>
                 <input
                   type="email"
                   name="contactEmail"
                   value={formData.contactEmail}
                   onChange={handleChange}
-                  required
                 />
               </div>
             </div>
@@ -267,10 +344,10 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
           <div className="modal-actions">
             <button type="button" className="btn btn-ghost" onClick={onClose}>
-              {t('freight.cancel')}
+              取消
             </button>
             <button type="submit" className="btn btn-primary">
-              {t('freight.postLoadBtn')}
+              发布货源
             </button>
           </div>
         </form>
