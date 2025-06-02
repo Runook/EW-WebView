@@ -28,18 +28,194 @@ function App() {
           <Header />
           <main>
             <Routes>
+              {/* 首页 */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/services" element={<Services />} />
+              
+              {/* 陆运服务 */}
               <Route path="/freight-board" element={<FreightBoard />} />
               <Route path="/land-warehouse" element={<LandWarehouseQuery />} />
+              
+              {/* 海运服务 */}
+              <Route path="/services" element={<Services />} />
               <Route path="/seaport-query" element={<SeaportQuery />} />
-              <Route path="/airport-query" element={<AirportQuery />} />
-              <Route path="/contact" element={<Contact />} />
               <Route path="/sea-freight" element={<SeaFreightPlatform />} />
+              
+              {/* 空运服务 */}
+              <Route path="/air-platform" element={<AirFreightPlatform />} />
+              <Route path="/airport-query" element={<AirportQuery />} />
               <Route path="/air-freight" element={<AirFreightPlatform />} />
+              
+              {/* 多式联运 */}
+              <Route path="/ddp-service" element={
+                <ComingSoonPlatform 
+                  icon={<Package size={48} />}
+                  title="双清包（DDP）服务"
+                  description="提供门到门的双清包服务，包含出口清关、运输、进口清关及税费"
+                  actionText1="发布DDP需求"
+                  actionText2="提供DDP服务"
+                  searchPlaceholder="搜索目的国或货物类型"
+                />
+              } />
+              <Route path="/ddu-service" element={
+                <ComingSoonPlatform 
+                  icon={<Package size={48} />}
+                  title="单清包（DDU）服务"
+                  description="提供到港的单清包服务，包含出口清关和运输，进口清关由收货人负责"
+                  actionText1="发布DDU需求"
+                  actionText2="提供DDU服务"
+                  searchPlaceholder="搜索目的港或货物类型"
+                />
+              } />
+              <Route path="/ldp-service" element={
+                <ComingSoonPlatform 
+                  icon={<Package size={48} />}
+                  title="港口货（LDP）服务"
+                  description="港口到港口的货运服务，提供最基础的运输服务，清关由客户自行处理"
+                  actionText1="发布LDP需求"
+                  actionText2="提供LDP服务"
+                  searchPlaceholder="搜索起运港或目的港"
+                />
+              } />
               <Route path="/multimodal" element={<MultimodalPlatform />} />
+              
+              {/* 信息服务 */}
+              <Route path="/yellow-pages" element={
+                <ComingSoonPlatform 
+                  icon={<BookOpen size={48} />}
+                  title="商家黄页"
+                  description="物流行业企业信息发布平台，提供全面的物流服务商查询和企业展示服务"
+                  actionText1="发布企业信息"
+                  actionText2="企业认证"
+                  searchPlaceholder="搜索企业名称或服务类型"
+                />
+              } />
+              <Route path="/jobs" element={
+                <ComingSoonPlatform 
+                  icon={<Briefcase size={48} />}
+                  title="招聘求职"
+                  description="物流企业发布招聘信息，求职者发布简历信息，提供精准的人才匹配服务"
+                  actionText1="发布职位"
+                  actionText2="投递简历"
+                  searchPlaceholder="搜索职位名称或公司"
+                />
+              } />
+              <Route path="/logistics-rental" element={
+                <ComingSoonPlatform 
+                  icon={<ShoppingBag size={48} />}
+                  title="物流租售"
+                  description="物流设备拥有者发布租赁信息，需求方发布租赁需求，提供设备租售撮合服务"
+                  actionText1="发布设备信息"
+                  actionText2="发布租赁需求"
+                  searchPlaceholder="搜索设备类型或品牌"
+                />
+              } />
+              <Route path="/forum" element={
+                <ComingSoonPlatform 
+                  icon={<BookOpen size={48} />}
+                  title="事件论坛"
+                  description="物流行业交流论坛，分享行业资讯、经验交流、问题解答"
+                  actionText1="发布话题"
+                  actionText2="参与讨论"
+                  searchPlaceholder="搜索话题或关键词"
+                />
+              } />
+              
+              {/* 我们 */}
+              <Route path="/my-points" element={
+                <ComingSoonPlatform 
+                  icon={<Package size={48} />}
+                  title="我的积分"
+                  description="查看积分余额、积分明细、积分商城兑换"
+                  actionText1="查看积分"
+                  actionText2="积分兑换"
+                  searchPlaceholder="搜索积分商品"
+                />
+              } />
+              <Route path="/recharge" element={
+                <ComingSoonPlatform 
+                  icon={<Package size={48} />}
+                  title="我要充值"
+                  description="账户余额充值，支持多种支付方式"
+                  actionText1="立即充值"
+                  actionText2="充值记录"
+                  searchPlaceholder="输入充值金额"
+                />
+              } />
+              <Route path="/my-posts" element={
+                <ComingSoonPlatform 
+                  icon={<Package size={48} />}
+                  title="我的发布"
+                  description="管理我发布的货源、车源、招聘等信息"
+                  actionText1="发布信息"
+                  actionText2="管理发布"
+                  searchPlaceholder="搜索我的发布"
+                />
+              } />
+              <Route path="/favorites" element={
+                <ComingSoonPlatform 
+                  icon={<Package size={48} />}
+                  title="我的收藏"
+                  description="查看收藏的货源、车源、企业等信息"
+                  actionText1="查看收藏"
+                  actionText2="管理收藏"
+                  searchPlaceholder="搜索收藏内容"
+                />
+              } />
+              <Route path="/my-recruitment" element={
+                <ComingSoonPlatform 
+                  icon={<Briefcase size={48} />}
+                  title="我的招聘"
+                  description="管理我发布的招聘职位和收到的简历"
+                  actionText1="发布职位"
+                  actionText2="管理招聘"
+                  searchPlaceholder="搜索候选人"
+                />
+              } />
+              <Route path="/my-job-search" element={
+                <ComingSoonPlatform 
+                  icon={<Briefcase size={48} />}
+                  title="我的求职"
+                  description="管理我的简历和求职申请"
+                  actionText1="更新简历"
+                  actionText2="查看申请"
+                  searchPlaceholder="搜索职位"
+                />
+              } />
+              <Route path="/certification" element={
+                <ComingSoonPlatform 
+                  icon={<Package size={48} />}
+                  title="我的认证"
+                  description="企业认证、个人认证状态查看和管理"
+                  actionText1="企业认证"
+                  actionText2="个人认证"
+                  searchPlaceholder="查看认证状态"
+                />
+              } />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/business" element={
+                <ComingSoonPlatform 
+                  icon={<Briefcase size={48} />}
+                  title="商务合作"
+                  description="商务合作洽谈、代理加盟、战略合作"
+                  actionText1="合作申请"
+                  actionText2="联系商务"
+                  searchPlaceholder="搜索合作项目"
+                />
+              } />
+              <Route path="/invite-rewards" element={
+                <ComingSoonPlatform 
+                  icon={<Package size={48} />}
+                  title="邀请有奖"
+                  description="邀请好友注册享受奖励，推广返佣计划"
+                  actionText1="邀请好友"
+                  actionText2="查看奖励"
+                  searchPlaceholder="生成邀请链接"
+                />
+              } />
+              
+              {/* 保留原有路由以兼容性 */}
               <Route path="/dropshipping" element={
                 <ComingSoonPlatform 
                   icon={<Package size={48} />}
@@ -58,16 +234,6 @@ function App() {
                   actionText1="发布企业信息"
                   actionText2="企业认证"
                   searchPlaceholder="搜索企业名称或服务类型"
-                />
-              } />
-              <Route path="/jobs" element={
-                <ComingSoonPlatform 
-                  icon={<Briefcase size={48} />}
-                  title="招聘求职平台"
-                  description="物流企业发布招聘信息，求职者发布简历信息，提供精准的人才匹配服务"
-                  actionText1="发布职位"
-                  actionText2="投递简历"
-                  searchPlaceholder="搜索职位名称或公司"
                 />
               } />
               <Route path="/equipment-rental" element={

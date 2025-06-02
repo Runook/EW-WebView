@@ -16,6 +16,25 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
+# 检查并清理端口占用
+echo "🔍 检查端口占用情况..."
+
+# 检查端口5001（后端）
+if lsof -i :5001 &> /dev/null; then
+    echo "⚠️  端口5001被占用，正在清理..."
+    lsof -ti :5001 | xargs kill -9 2>/dev/null || true
+    sleep 1
+fi
+
+# 检查端口3000（前端）
+if lsof -i :3000 &> /dev/null; then
+    echo "⚠️  端口3000被占用，正在清理..."
+    lsof -ti :3000 | xargs kill -9 2>/dev/null || true
+    sleep 1
+fi
+
+echo "✅ 端口检查完成"
+
 # 安装依赖
 echo "📦 检查并安装依赖..."
 
@@ -56,17 +75,9 @@ fi
 echo "🎨 启动前端服务..."
 cd ../frontend
 
-# 检查端口3000是否被占用
-if lsof -i :3000 &> /dev/null; then
-    echo "⚠️  端口3000被占用，将使用其他端口"
-    PORT=3001 npm start &
-    FRONTEND_PID=$!
-    echo "✅ 前端服务启动成功 (http://localhost:3001)"
-else
-    npm start &
-    FRONTEND_PID=$!
-    echo "✅ 前端服务启动成功 (http://localhost:3000)"
-fi
+npm start &
+FRONTEND_PID=$!
+echo "✅ 前端服务启动成功 (http://localhost:3000)"
 
 # 保存进程ID
 echo $BACKEND_PID > ../backend.pid
@@ -76,7 +87,7 @@ echo ""
 echo "🎉 EW物流平台已启动！"
 echo ""
 echo "服务地址："
-echo "  前端: http://localhost:3000 (或 3001)"
+echo "  前端: http://localhost:3000"
 echo "  后端: http://localhost:5001"
 echo "  API: http://localhost:5001/api"
 echo "  健康检查: http://localhost:5001/health"

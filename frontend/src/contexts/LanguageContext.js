@@ -13,6 +13,49 @@ export const useLanguage = () => {
 const translations = {
   // Header
   'nav.home': '首页',
+  
+  // 陆运服务
+  'nav.landServices': '陆运服务',
+  'nav.landServices.platform': '陆运平台',
+  'nav.landServices.warehouse': '陆仓查询',
+  
+  // 海运服务
+  'nav.oceanServices': '海运服务',
+  'nav.oceanServices.platform': '海运平台',
+  'nav.oceanServices.seaport': '码头查询',
+  
+  // 空运服务
+  'nav.airServices': '空运服务',
+  'nav.airServices.platform': '空运平台',
+  'nav.airServices.airport': '机场查询',
+  
+  // 多式联运
+  'nav.multimodal': '多式联运',
+  'nav.multimodal.ddp': '双清包（DDP）',
+  'nav.multimodal.ddu': '单清包（DDU）',
+  'nav.multimodal.ldp': '港口货（LDP）',
+  
+  // 信息服务
+  'nav.infoServices': '信息服务',
+  'nav.infoServices.yellowPages': '商家黄页',
+  'nav.infoServices.jobs': '招聘求职',
+  'nav.infoServices.logistics': '物流租售',
+  'nav.infoServices.forum': '事件论坛',
+  
+  // 我们
+  'nav.account': '我们',
+  'nav.account.points': '我的积分',
+  'nav.account.recharge': '我要充值',
+  'nav.account.myPosts': '我的发布',
+  'nav.account.favorites': '我的收藏',
+  'nav.account.myRecruitment': '我的招聘',
+  'nav.account.myJobSearch': '我的求职',
+  'nav.account.certification': '我的认证',
+  'nav.account.contact': '联系我们',
+  'nav.account.business': '商务合作',
+  'nav.account.invite': '邀请有奖',
+
+  // Legacy navigation items (保持兼容性)
   'nav.services': '服务',
   'nav.landWarehouse': '陆仓查询',
   'nav.seaportQuery': '海港查询',
