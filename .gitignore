@@ -53,8 +53,7 @@ temp/
 .dockerignore
 docker-compose.override.yml
 
-# Package lock files (if using yarn)
-package-lock.json
+# Package lock files (only for yarn projects)
 yarn.lock
 
 # 系统文件

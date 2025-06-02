@@ -23,8 +23,16 @@ const Contact = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
+    // 这里可以添加表单提交逻辑
+    // console.log('Form submitted:', formData);
+    alert('感谢您的留言！我们会尽快回复您。');
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      company: '',
+      message: ''
+    });
   };
 
   const contactInfo = [

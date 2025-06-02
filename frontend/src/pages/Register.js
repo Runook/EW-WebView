@@ -267,6 +267,7 @@ const Register = () => {
             value={formData.email}
             onChange={handleInputChange}
             className="form-input"
+            style={{ paddingLeft: '80px' }}
             placeholder="输入您的邮箱地址"
             autoComplete="email"
           />
@@ -284,6 +285,7 @@ const Register = () => {
             value={formData.password}
             onChange={handleInputChange}
             className="form-input"
+            style={{ paddingLeft: '80px' }}
             placeholder="设置登录密码"
             autoComplete="new-password"
           />
@@ -309,6 +311,7 @@ const Register = () => {
             value={formData.confirmPassword}
             onChange={handleInputChange}
             className="form-input"
+            style={{ paddingLeft: '80px' }}
             placeholder="再次输入密码"
             autoComplete="new-password"
           />
@@ -341,6 +344,7 @@ const Register = () => {
               value={formData.firstName}
               onChange={handleInputChange}
               className="form-input"
+              style={{ paddingLeft: '80px' }}
               placeholder="您的名字"
               autoComplete="given-name"
             />
@@ -358,6 +362,7 @@ const Register = () => {
               value={formData.lastName}
               onChange={handleInputChange}
               className="form-input"
+              style={{ paddingLeft: '80px' }}
               placeholder="您的姓氏"
               autoComplete="family-name"
             />
@@ -376,6 +381,7 @@ const Register = () => {
             value={formData.phone}
             onChange={handleInputChange}
             className="form-input"
+            style={{ paddingLeft: '80px' }}
             placeholder="输入手机号码"
             autoComplete="tel"
           />
@@ -393,6 +399,7 @@ const Register = () => {
             value={formData.companyName}
             onChange={handleInputChange}
             className="form-input"
+            style={{ paddingLeft: '80px' }}
             placeholder="输入公司名称"
             autoComplete="organization"
           />
@@ -428,6 +435,7 @@ const Register = () => {
               value={formData.mcNumber}
               onChange={handleInputChange}
               className="form-input"
+              style={{ paddingLeft: '16px' }}
               placeholder="输入MC号码"
             />
           </div>
@@ -441,6 +449,7 @@ const Register = () => {
               value={formData.dotNumber}
               onChange={handleInputChange}
               className="form-input"
+              style={{ paddingLeft: '16px' }}
               placeholder="输入DOT号码（可选）"
             />
           </div>
@@ -456,6 +465,7 @@ const Register = () => {
           value={formData.businessLicense}
           onChange={handleInputChange}
           className="form-input"
+          style={{ paddingLeft: '16px' }}
           placeholder="输入营业执照号码"
         />
       </div>

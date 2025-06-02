@@ -130,6 +130,7 @@ const Login = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   className="form-input"
+                  style={{ paddingLeft: '80px' }}
                   placeholder="输入您的邮箱地址"
                   disabled={isLoading}
                   autoComplete="email"
@@ -150,6 +151,7 @@ const Login = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   className="form-input"
+                  style={{ paddingLeft: '80px' }}
                   placeholder="输入您的密码"
                   disabled={isLoading}
                   autoComplete="current-password"

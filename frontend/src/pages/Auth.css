@@ -144,11 +144,14 @@
   left: var(--space-4);
   color: var(--text-secondary);
   z-index: 1;
+  pointer-events: none;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .form-input {
   width: 100%;
-  padding: var(--space-4) var(--space-4) var(--space-4) calc(var(--space-4) + 20px + var(--space-3));
+  padding: var(--space-4) var(--space-4) var(--space-4) 5rem;
   border: 2px solid var(--border);
   border-radius: var(--radius-lg);
   font-size: var(--font-size-base);
@@ -192,6 +195,7 @@
   padding: var(--space-1);
   border-radius: var(--radius-sm);
   transition: color 0.2s ease;
+  z-index: 2;
 }
 
 .password-toggle:hover {
