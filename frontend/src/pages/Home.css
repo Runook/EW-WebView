@@ -67,7 +67,7 @@
 /* Hero Image */
 .hero-image {
   position: relative;
-  height: 400px;
+  height: 500px;
   animation: fadeIn 1s ease-out 0.3s both;
 }
 
@@ -75,54 +75,413 @@
   position: relative;
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
+/* 基础浮块样式 */
 .floating-card {
   position: absolute;
   background: white;
-  border-radius: var(--radius-xl);
-  padding: var(--space-4);
-  box-shadow: var(--shadow);
+  border-radius: 16px;
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.1),
+    0 4px 10px rgba(0, 0, 0, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.floating-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.floating-card:hover::before {
+  left: 100%;
+}
+
+.floating-card:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.15),
+    0 8px 16px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(52, 199, 89, 0.1);
+}
+
+/* 运输方式卡片 */
+.transport-card {
+  width: 120px;
+  height: 140px;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+.card-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  border-radius: 16px 16px 0 0;
+  opacity: 0.9;
+}
+
+.truck-gradient {
+  background: linear-gradient(135deg, #34C759 0%, #30D158 50%, #32D74B 100%);
+}
+
+.ocean-gradient {
+  background: linear-gradient(135deg, #007AFF 0%, #5856D6 50%, #AF52DE 100%);
+}
+
+.air-gradient {
+  background: linear-gradient(135deg, #FF9500 0%, #FF6B6B 50%, #FF3B30 100%);
+}
+
+.multimodal-gradient {
+  background: linear-gradient(135deg, #5856D6 0%, #AF52DE 50%, #FF2D92 100%);
+}
+
+.card-content {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-2);
-  color: var(--primary-green);
-  font-weight: 600;
-  font-size: var(--font-size-sm);
-  animation: float 3s ease-in-out infinite;
+  padding: 16px 12px 8px;
+  flex: 1;
 }
 
+.card-content svg {
+  color: white;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 2px;
+  text-align: center;
+}
+
+.card-subtitle {
+  font-size: 11px;
+  color: #86868b;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.card-stats {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(248, 249, 250, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 0 0 16px 16px;
+}
+
+.stat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34C759;
+  animation: pulse 2s infinite;
+}
+
+.stat-text {
+  font-size: 12px;
+  font-weight: 600;
+  color: #34C759;
+}
+
+/* 数据卡片 */
+.data-card {
+  width: 100px;
+  height: 70px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+}
+
+.data-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+}
+
+.data-content svg {
+  color: #34C759;
+  flex-shrink: 0;
+}
+
+.data-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.data-number {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1d1d1f;
+  line-height: 1;
+}
+
+.data-label {
+  font-size: 10px;
+  color: #86868b;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+/* 卡片定位 - 重新设计布局 */
 .card-1 {
-  top: 20%;
-  left: 10%;
+  top: 15%;
+  left: 8%;
+  animation: float 4s ease-in-out infinite;
   animation-delay: 0s;
 }
 
 .card-2 {
-  top: 10%;
-  right: 20%;
-  animation-delay: 0.5s;
+  top: 8%;
+  right: 15%;
+  animation: float 4s ease-in-out infinite;
+  animation-delay: 0.8s;
 }
 
 .card-3 {
-  bottom: 30%;
-  left: 20%;
-  animation-delay: 1s;
+  bottom: 25%;
+  left: 15%;
+  animation: float 4s ease-in-out infinite;
+  animation-delay: 1.6s;
 }
 
 .card-4 {
-  bottom: 20%;
-  right: 10%;
+  bottom: 15%;
+  right: 8%;
+  animation: float 4s ease-in-out infinite;
+  animation-delay: 2.4s;
+}
+
+.card-5 {
+  top: 45%;
+  left: 35%;
+  animation: float 3s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+.card-6 {
+  top: 25%;
+  right: 45%;
+  animation: float 3s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+.card-7 {
+  bottom: 45%;
+  right: 35%;
+  animation: float 3s ease-in-out infinite;
   animation-delay: 1.5s;
 }
 
+/* 背景装饰元素 */
+.bg-element {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(45deg, rgba(52, 199, 89, 0.1), rgba(52, 199, 89, 0.05));
+  animation: rotate 20s linear infinite;
+}
+
+.element-1 {
+  width: 200px;
+  height: 200px;
+  top: 10%;
+  left: 40%;
+  animation-delay: 0s;
+}
+
+.element-2 {
+  width: 150px;
+  height: 150px;
+  bottom: 20%;
+  left: 20%;
+  animation-delay: 5s;
+}
+
+.element-3 {
+  width: 100px;
+  height: 100px;
+  top: 60%;
+  right: 20%;
+  animation-delay: 10s;
+}
+
+/* 连接线动画 */
+.connection-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.connection-line {
+  stroke-dasharray: 5, 5;
+  animation: dash 3s linear infinite;
+}
+
+/* 动画定义 */
 @keyframes float {
   0%, 100% {
-    transform: translateY(0px);
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) rotate(1deg);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-4px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-12px) rotate(-1deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .hero {
+    padding: var(--space-16) 0;
+    min-height: auto;
+  }
+
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+    text-align: center;
+  }
+
+  .hero-title {
+    font-size: var(--font-size-3xl);
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .hero-features {
+    justify-content: center;
+  }
+
+  .hero-image {
+    height: 350px;
+  }
+
+  .transport-card {
+    width: 90px;
+    height: 110px;
+  }
+
+  .card-content {
+    padding: 12px 8px 6px;
+  }
+
+  .card-content svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .card-title {
+    font-size: 12px;
+  }
+
+  .card-subtitle {
+    font-size: 10px;
+  }
+
+  .data-card {
+    width: 80px;
+    height: 60px;
+    padding: 8px;
+  }
+
+  .data-content svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .data-number {
+    font-size: 12px;
+  }
+
+  .data-label {
+    font-size: 9px;
+  }
+
+  .bg-element {
+    opacity: 0.5;
+  }
+
+  .element-1 {
+    width: 120px;
+    height: 120px;
+  }
+
+  .element-2 {
+    width: 100px;
+    height: 100px;
+  }
+
+  .element-3 {
+    width: 80px;
+    height: 80px;
   }
 }
 
@@ -336,59 +695,6 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .hero {
-    padding: var(--space-16) 0;
-    min-height: auto;
-  }
-
-  .hero-content {
-    grid-template-columns: 1fr;
-    gap: var(--space-8);
-    text-align: center;
-  }
-
-  .hero-title {
-    font-size: var(--font-size-3xl);
-  }
-
-  .hero-actions {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .hero-actions .btn {
-    width: 100%;
-    max-width: 300px;
-  }
-
-  .hero-features {
-    justify-content: center;
-  }
-
-  .hero-image {
-    height: 300px;
-  }
-
-  .floating-card {
-    padding: var(--space-3);
-    font-size: var(--font-size-xs);
-  }
-
-  .stats {
-    padding: var(--space-12) 0;
-  }
-
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: var(--space-4);
-  }
-
-  .stat-item {
-    flex-direction: column;
-    text-align: center;
-    padding: var(--space-4);
-  }
-
   .services {
     padding: var(--space-16) 0;
   }

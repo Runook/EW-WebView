@@ -10,7 +10,10 @@ import {
   Clock,
   Shield,
   Plane,
-  Navigation
+  Navigation,
+  Package,
+  BarChart3,
+  Award
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import './Home.css';
@@ -66,22 +69,118 @@ const Home = () => {
             </div>
             <div className="hero-image">
               <div className="hero-graphic">
-                <div className="floating-card card-1">
-                  <Truck size={24} />
-                  <span>陆运</span>
+                {/* 主要运输方式卡片 */}
+                <div className="floating-card card-1 transport-card">
+                  <div className="card-gradient truck-gradient"></div>
+                  <div className="card-content">
+                    <Truck size={28} />
+                    <span className="card-title">陆运</span>
+                    <span className="card-subtitle">公路运输</span>
+                  </div>
+                  <div className="card-stats">
+                    <span className="stat-dot"></span>
+                    <span className="stat-text">1.2万+</span>
+                  </div>
                 </div>
-                <div className="floating-card card-2">
-                  <Ship size={24} />
-                  <span>海运</span>
+
+                <div className="floating-card card-2 transport-card">
+                  <div className="card-gradient ocean-gradient"></div>
+                  <div className="card-content">
+                    <Ship size={28} />
+                    <span className="card-title">海运</span>
+                    <span className="card-subtitle">国际货运</span>
+                  </div>
+                  <div className="card-stats">
+                    <span className="stat-dot"></span>
+                    <span className="stat-text">850+</span>
+                  </div>
                 </div>
-                <div className="floating-card card-3">
-                  <Plane size={24} />
-                  <span>空运</span>
+
+                <div className="floating-card card-3 transport-card">
+                  <div className="card-gradient air-gradient"></div>
+                  <div className="card-content">
+                    <Plane size={28} />
+                    <span className="card-title">空运</span>
+                    <span className="card-subtitle">快速配送</span>
+                  </div>
+                  <div className="card-stats">
+                    <span className="stat-dot"></span>
+                    <span className="stat-text">620+</span>
+                  </div>
                 </div>
-                <div className="floating-card card-4">
-                  <Navigation size={24} />
-                  <span>联运</span>
+
+                <div className="floating-card card-4 transport-card">
+                  <div className="card-gradient multimodal-gradient"></div>
+                  <div className="card-content">
+                    <Navigation size={28} />
+                    <span className="card-title">联运</span>
+                    <span className="card-subtitle">多式运输</span>
+                  </div>
+                  <div className="card-stats">
+                    <span className="stat-dot"></span>
+                    <span className="stat-text">480+</span>
+                  </div>
                 </div>
+
+                {/* 数据指标卡片 */}
+                <div className="floating-card card-5 data-card">
+                  <div className="data-content">
+                    <BarChart3 size={20} />
+                    <div className="data-text">
+                      <span className="data-number">99.8%</span>
+                      <span className="data-label">准时率</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="floating-card card-6 data-card">
+                  <div className="data-content">
+                    <Package size={20} />
+                    <div className="data-text">
+                      <span className="data-number">2.5万</span>
+                      <span className="data-label">日订单</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="floating-card card-7 data-card">
+                  <div className="data-content">
+                    <Award size={20} />
+                    <div className="data-text">
+                      <span className="data-number">4.9</span>
+                      <span className="data-label">服务评分</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 背景装饰元素 */}
+                <div className="bg-element element-1"></div>
+                <div className="bg-element element-2"></div>
+                <div className="bg-element element-3"></div>
+                
+                {/* 连接线动画 */}
+                <svg className="connection-lines" width="100%" height="100%">
+                  <defs>
+                    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#34C759" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#34C759" stopOpacity="0.1" />
+                    </linearGradient>
+                  </defs>
+                  <path 
+                    className="connection-line line-1" 
+                    d="M 80 120 Q 200 80 320 160" 
+                    stroke="url(#lineGradient)" 
+                    strokeWidth="2" 
+                    fill="none" 
+                  />
+                  <path 
+                    className="connection-line line-2" 
+                    d="M 120 300 Q 250 250 380 320" 
+                    stroke="url(#lineGradient)" 
+                    strokeWidth="2" 
+                    fill="none" 
+                  />
+                </svg>
               </div>
             </div>
           </div>
