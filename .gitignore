@@ -1,1 +1,80 @@
-node_modules
+# 依赖
+node_modules/
+*/node_modules/
+
+# 构建产物
+build/
+dist/
+*/build/
+*/dist/
+
+# 环境变量
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+*.log
+
+# 系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE 文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Docker
+.dockerignore
+
+# 测试覆盖率
+coverage/
+*.lcov
+
+# 缓存
+.cache/
+.parcel-cache/
+
+# 备份文件
+*.bak
+*.backup
+*.orig
+
+# 上传文件
+uploads/
+temp/
+
+# SSL 证书
+*.pem
+*.key
+*.crt
+
+# 数据库文件
+*.sqlite
+*.db
+
+# AWS
+.aws/
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# 监控和日志
+monitoring/logs/
+*.pid
