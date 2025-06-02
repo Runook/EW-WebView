@@ -1,0 +1,51 @@
+{
+  "name": "ew-logistics-platform",
+  "version": "1.0.0",
+  "description": "EW Logistics - Modern freight and logistics platform",
+  "author": "EW Logistics Team",
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "install:all": "npm install && npm install --prefix frontend && npm install --prefix backend",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm start",
+    "dev:backend": "cd backend && npm run dev",
+    "start": "./start-local.sh",
+    "stop": "./stop-local.sh",
+    "build": "cd frontend && npm run build",
+    "test": "concurrently \"npm run test:frontend\" \"npm run test:backend\"",
+    "test:frontend": "cd frontend && npm test -- --watchAll=false",
+    "test:backend": "cd backend && npm test",
+    "lint": "concurrently \"npm run lint:frontend\" \"npm run lint:backend\"",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "prettier": "^2.8.7"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ew-logistics/platform.git"
+  },
+  "keywords": [
+    "logistics",
+    "freight",
+    "transportation",
+    "shipping",
+    "platform"
+  ]
+} 

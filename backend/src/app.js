@@ -7,7 +7,7 @@ const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // 安全中间件
 app.use(helmet());
@@ -49,6 +49,7 @@ app.get('/api', (req, res) => {
     endpoints: {
       health: '/health',
       api: '/api',
+      auth: '/api/auth',
       freight: '/api/freight',
       users: '/api/users',
       companies: '/api/companies'
@@ -57,6 +58,7 @@ app.get('/api', (req, res) => {
 });
 
 // 路由文件
+app.use('/api/auth', require('./routes/auth'));
 // app.use('/api/freight', require('./routes/freight'));
 // app.use('/api/users', require('./routes/users'));
 // app.use('/api/companies', require('./routes/companies'));
@@ -91,6 +93,7 @@ app.listen(PORT, () => {
   console.log(`🚀 EW Logistics Backend API running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
 });
 
 module.exports = app; 

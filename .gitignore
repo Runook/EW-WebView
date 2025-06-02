@@ -1,62 +1,67 @@
-# 依赖
+# Dependencies
 node_modules/
-*/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# 构建产物
+# Production builds
 build/
 dist/
-*/build/
-*/dist/
 
-# 环境变量
+# Environment variables
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# 日志
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
-*.log
-
-# 系统文件
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# IDE 文件
+# IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Logs
+logs/
+*.log
+
+# Runtime files
+*.pid
+backend.pid
+frontend.pid
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# nyc test coverage
+.nyc_output
+
+# Temporary folders
+tmp/
+temp/
 
 # Docker
 .dockerignore
+docker-compose.override.yml
 
-# 测试覆盖率
-coverage/
-*.lcov
+# Package lock files (if using yarn)
+package-lock.json
+yarn.lock
 
-# 缓存
-.cache/
-.parcel-cache/
-
-# 备份文件
-*.bak
-*.backup
-*.orig
-
-# 上传文件
-uploads/
-temp/
+# 系统文件
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 
 # SSL 证书
 *.pem
@@ -77,4 +82,3 @@ temp/
 
 # 监控和日志
 monitoring/logs/
-*.pid
