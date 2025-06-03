@@ -154,12 +154,7 @@ const Home = () => {
                   </div>
                 </div>
               </div>
-              <div className="hero-image">
-                {/* 简化的hero图片区域，移除所有浮块 */}
-                <div className="hero-simple-graphic">
-                  <div className="simple-bg-element"></div>
-                </div>
-              </div>
+  
             </div>
           </div>
         </section>
