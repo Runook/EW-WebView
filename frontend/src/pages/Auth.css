@@ -253,7 +253,7 @@
 
 .user-type-card p {
   font-size: var(--font-size-sm);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin-bottom: var(--space-4);
 }
 
@@ -525,12 +525,14 @@
   font-size: var(--font-size-lg);
   font-weight: 600;
   margin-bottom: var(--space-1);
+  color: white;
 }
 
 .feature-item p {
   font-size: var(--font-size-sm);
   opacity: 0.8;
   margin: 0;
+  color: white;
 }
 
 /* Responsive Design */
