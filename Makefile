@@ -1,18 +1,14 @@
 # EW Logistics Platform - Makefile
 
-.PHONY: help build up down logs clean install dev dev-local local-up local-down prod test
+.PHONY: help build up down logs clean install dev prod test
 
 # 默认目标
 help:
 	@echo "EW Logistics Platform - 可用命令:"
 	@echo ""
-	@echo "本地开发 (推荐):"
-	@echo "  make local-up   - 启动本地开发环境 (Node.js)"
-	@echo "  make local-down - 停止本地开发环境"
+	@echo "开发环境:"
 	@echo "  make install    - 安装所有依赖"
-	@echo ""
-	@echo "Docker开发环境:"
-	@echo "  make dev        - 启动Docker开发环境"
+	@echo "  make dev        - 启动开发环境"
 	@echo "  make build      - 构建所有服务"
 	@echo "  make up         - 启动所有服务"
 	@echo "  make down       - 停止所有服务"
@@ -23,7 +19,7 @@ help:
 	@echo "  make prod-build - 构建生产镜像"
 	@echo ""
 	@echo "测试和维护:"
-	@echo "  make test       - 运行测试"
+	@echo "  make test       - 运行测试"vv
 	@echo "  make clean      - 清理容器和卷"
 	@echo "  make reset      - 完全重置环境"
 
@@ -35,18 +31,9 @@ install:
 	cd backend && npm install
 	@echo "✅ 依赖安装完成"
 
-# 本地开发环境 (推荐)
-local-up:
-	@echo "🚀 启动本地开发环境..."
-	./start-local.sh
-
-local-down:
-	@echo "🛑 停止本地开发环境..."
-	./stop-local.sh
-
-# Docker开发环境
+# 开发环境
 dev:
-	@echo "🚀 启动Docker开发环境..."
+	@echo "🚀 启动开发环境..."
 	docker-compose up --build
 
 # 构建服务
