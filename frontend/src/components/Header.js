@@ -85,7 +85,7 @@ const Header = () => {
       label: t('nav.oceanServices'),
       type: 'dropdown',
       items: [
-        { path: '/services', label: t('nav.oceanServices.platform') },
+        { path: '/sea-freight', label: t('nav.oceanServices.platform') },
         { path: '/seaport-query', label: t('nav.oceanServices.seaport') }
       ]
     },
