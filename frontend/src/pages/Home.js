@@ -100,14 +100,7 @@ const Home = () => {
                   立即开始
                   <ArrowRight size={20} />
                 </Link>
-                <button 
-                  onClick={toggleVideo}
-                  className="btn btn-ghost btn-large video-control"
-                >
-                  <Play size={20} />
-                  <Pause size={20} className="pause-icon" />
-                  <span>播放/暂停</span>
-                </button>
+
               </div>
             </div>
           </div>
