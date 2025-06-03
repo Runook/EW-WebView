@@ -221,7 +221,7 @@ const Login = () => {
             <div className="auth-features">
               <div className="feature-item">
                 <div className="feature-icon">
-                  <Truck size={32} />
+                  <Truck size={32} color="white" />
                 </div>
                 <div>
                   <h3>货运匹配</h3>
@@ -230,7 +230,7 @@ const Login = () => {
               </div>
               <div className="feature-item">
                 <div className="feature-icon">
-                  <BarChart3 size={32} />
+                  <BarChart3 size={32} color="white" />
                 </div>
                 <div>
                   <h3>实时追踪</h3>
@@ -239,7 +239,7 @@ const Login = () => {
               </div>
               <div className="feature-item">
                 <div className="feature-icon">
-                  <Shield size={32} />
+                  <Shield color="white" size={32} />
                 </div>
                 <div>
                   <h3>安全保障</h3>
