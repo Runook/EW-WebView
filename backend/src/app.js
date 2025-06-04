@@ -50,6 +50,9 @@ app.get('/api', (req, res) => {
       health: '/health',
       api: '/api',
       auth: '/api/auth',
+      seafreight: '/api/seafreight',
+      landfreight: '/api/landfreight',
+      airfreight: '/api/airfreight',
       freight: '/api/freight',
       users: '/api/users',
       companies: '/api/companies'
@@ -59,6 +62,9 @@ app.get('/api', (req, res) => {
 
 // 路由文件
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/seafreight', require('./routes/seafreight'));
+app.use('/api/landfreight', require('./routes/landfreight'));
+app.use('/api/airfreight', require('./routes/airfreight'));
 // app.use('/api/freight', require('./routes/freight'));
 // app.use('/api/users', require('./routes/users'));
 // app.use('/api/companies', require('./routes/companies'));
