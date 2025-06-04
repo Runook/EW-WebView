@@ -445,9 +445,11 @@ const LogisticsRental = () => {
             租赁需求
           </button>
         </div>
+      </div>
 
-        {/* 搜索区域 */}
-        <div className="search-section">
+      {/* 搜索区域 */}
+      <div className="search-section">
+        <div className="container">
           <div className="search-bar">
             <div className="search-input-group">
               <Search size={20} />
@@ -535,7 +537,9 @@ const LogisticsRental = () => {
             </button>
           </div>
         </div>
+      </div>
 
+      <div className="container">
         {/* 内容区域 */}
         {activeTab === 'equipment' ? (
           // 设备列表

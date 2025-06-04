@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, 
-  Filter, 
   MapPin, 
   Phone, 
   Mail, 
@@ -9,18 +8,15 @@ import {
   Star,
   Building,
   Users,
-  Package,
   Plus,
   Eye,
   Heart,
   Share2,
   Verified
 } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
 import './YellowPages.css';
 
 const YellowPages = () => {
-  const { t } = useLanguage();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -121,13 +117,8 @@ const YellowPages = () => {
     }
   ];
 
-  // 页面加载时获取企业数据
-  useEffect(() => {
-    fetchCompanies();
-  }, []);
-
   // 获取企业列表 - API接口
-  const fetchCompanies = async () => {
+  const fetchCompanies = useCallback(async () => {
     setLoading(true);
     try {
       // TODO: 替换为真实API调用
@@ -148,7 +139,12 @@ const YellowPages = () => {
       console.error('获取企业列表失败:', error);
       setLoading(false);
     }
-  };
+  }, []);
+
+  // 页面加载时获取企业数据
+  useEffect(() => {
+    fetchCompanies();
+  }, [fetchCompanies]);
 
   // 搜索企业 - API接口
   const searchCompanies = async () => {
@@ -283,9 +279,9 @@ const YellowPages = () => {
         </div>
       </div>
 
-      <div className="container">
-        {/* 搜索区域 */}
-        <div className="search-section">
+      {/* 搜索区域 */}
+      <div className="search-section">
+        <div className="container">
           <div className="search-bar">
             <div className="search-input-group">
               <Search size={20} />
@@ -350,7 +346,9 @@ const YellowPages = () => {
             </button>
           </div>
         </div>
+      </div>
 
+      <div className="container">
         {/* 企业列表 */}
         <div className="companies-grid">
           {loading ? (

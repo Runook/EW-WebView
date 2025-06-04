@@ -417,9 +417,11 @@ const Jobs = () => {
             人才简历
           </button>
         </div>
+      </div>
 
-        {/* 搜索区域 */}
-        <div className="search-section">
+      {/* 搜索区域 */}
+      <div className="search-section">
+        <div className="container">
           <div className="search-bar">
             <div className="search-input-group">
               <Search size={20} />
@@ -494,7 +496,9 @@ const Jobs = () => {
             </button>
           </div>
         </div>
+      </div>
 
+      <div className="container">
         {/* 内容区域 */}
         {activeTab === 'jobs' ? (
           // 职位列表
