@@ -18,6 +18,10 @@ import SeaFreightPlatform from './pages/SeaFreightPlatform';
 import AirFreightPlatform from './pages/AirFreightPlatform';
 import MultimodalPlatform from './pages/MultimodalPlatform';
 import ComingSoonPlatform from './pages/ComingSoonPlatform';
+import YellowPages from './pages/YellowPages';
+import Jobs from './pages/Jobs';
+import LogisticsRental from './pages/LogisticsRental';
+import Forum from './pages/Forum';
 import './App.css';
 
 function App() {
@@ -80,47 +84,11 @@ function App() {
               } />
               <Route path="/multimodal" element={<MultimodalPlatform />} />
               
-              {/* 信息服务 */}
-              <Route path="/yellow-pages" element={
-                <ComingSoonPlatform 
-                  icon={<BookOpen size={48} />}
-                  title="商家黄页"
-                  description="物流行业企业信息发布平台，提供全面的物流服务商查询和企业展示服务"
-                  actionText1="发布企业信息"
-                  actionText2="企业认证"
-                  searchPlaceholder="搜索企业名称或服务类型"
-                />
-              } />
-              <Route path="/jobs" element={
-                <ComingSoonPlatform 
-                  icon={<Briefcase size={48} />}
-                  title="招聘求职"
-                  description="物流企业发布招聘信息，求职者发布简历信息，提供精准的人才匹配服务"
-                  actionText1="发布职位"
-                  actionText2="投递简历"
-                  searchPlaceholder="搜索职位名称或公司"
-                />
-              } />
-              <Route path="/logistics-rental" element={
-                <ComingSoonPlatform 
-                  icon={<ShoppingBag size={48} />}
-                  title="物流租售"
-                  description="物流设备拥有者发布租赁信息，需求方发布租赁需求，提供设备租售撮合服务"
-                  actionText1="发布设备信息"
-                  actionText2="发布租赁需求"
-                  searchPlaceholder="搜索设备类型或品牌"
-                />
-              } />
-              <Route path="/forum" element={
-                <ComingSoonPlatform 
-                  icon={<BookOpen size={48} />}
-                  title="事件论坛"
-                  description="物流行业交流论坛，分享行业资讯、经验交流、问题解答"
-                  actionText1="发布话题"
-                  actionText2="参与讨论"
-                  searchPlaceholder="搜索话题或关键词"
-                />
-              } />
+              {/* 信息服务 - 使用新的完整功能页面 */}
+              <Route path="/yellow-pages" element={<YellowPages />} />
+              <Route path="/jobs" element={<Jobs />} />
+              <Route path="/logistics-rental" element={<LogisticsRental />} />
+              <Route path="/forum" element={<Forum />} />
               
               {/* 我们 */}
               <Route path="/my-points" element={
@@ -198,20 +166,20 @@ function App() {
                 <ComingSoonPlatform 
                   icon={<Briefcase size={48} />}
                   title="商务合作"
-                  description="商务合作洽谈、代理加盟、战略合作"
-                  actionText1="合作申请"
-                  actionText2="联系商务"
-                  searchPlaceholder="搜索合作项目"
+                  description="寻求商业合作机会，建立合作伙伴关系"
+                  actionText1="合作咨询"
+                  actionText2="提交方案"
+                  searchPlaceholder="搜索合作机会"
                 />
               } />
               <Route path="/invite-rewards" element={
                 <ComingSoonPlatform 
                   icon={<Package size={48} />}
-                  title="邀请有奖"
-                  description="邀请好友注册享受奖励，推广返佣计划"
-                  actionText1="邀请好友"
+                  title="邀请奖励"
+                  description="邀请好友注册，获得丰厚奖励"
+                  actionText1="立即邀请"
                   actionText2="查看奖励"
-                  searchPlaceholder="生成邀请链接"
+                  searchPlaceholder="输入邀请码"
                 />
               } />
               
