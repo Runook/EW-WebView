@@ -15,14 +15,14 @@ import {
   Loader2,
   AlertCircle
 } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+// import { useLanguage } from '../contexts/LanguageContext';
 import PostLoadModal from '../components/PostLoadModal';
 import PostTruckModal from '../components/PostTruckModal';
 import './PlatformPage.css';
 import './FreightBoard.css';
 
 const FreightBoard = () => {
-  const { t } = useLanguage();
+  // const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('loads');
   const [searchQuery, setSearchQuery] = useState('');
   const [isPostLoadModalOpen, setIsPostLoadModalOpen] = useState(false);

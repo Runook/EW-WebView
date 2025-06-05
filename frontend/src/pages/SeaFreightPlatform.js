@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Search, 
   Filter, 
@@ -13,7 +13,6 @@ import {
   ArrowRight,
   Plus,
   Clock,
-  Scale,
   Shield,
   Anchor,
   Container,
@@ -40,9 +39,8 @@ const SeaFreightPlatform = () => {
     origin: '',
     destination: '',
     cargoType: '',
-    weight: '',
-    urgency: '',
-    vesselType: ''
+    vesselType: '',
+    urgency: ''
   });
 
   // Generate future dates for mock data
@@ -84,163 +82,56 @@ const SeaFreightPlatform = () => {
     '超大型集装箱船'
   ];
 
-  // API调用函数
-  const fetchSeaCargo = async () => {
+  // API调用函数 - 使用useCallback包装
+  const fetchSeaCargo = useCallback(async () => {
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
       const response = await fetch(`${API_URL}/seafreight/cargo`);
       if (!response.ok) {
-        throw new Error('获取舱位信息失败');
+        throw new Error('获取海运舱位信息失败');
       }
       const data = await response.json();
       return data.data || [];
     } catch (error) {
-      console.error('获取舱位信息失败:', error);
-      // 返回带有更新日期的mock数据作为fallback
-      return [
-        {
-          id: 1,
-          origin: '上海港 (CNSHA)',
-          destination: '洛杉矶港 (USLAX)',
-          sailingDate: getRandomFutureDate(5),
-          vesselName: '中远海运宇宙',
-          shippingLine: '中远海运集装箱运输',
-          availableSpace: '200 TEU',
-          rate: '¥2,800/TEU',
-          transitTime: '15天',
-          cargoType: '普货/危险品',
-          company: '中远海运代理',
-          rating: 4.8,
-          phone: '(021) 1234-5678',
-          vesselType: '集装箱船',
-          cutOffDate: getRandomFutureDate(3),
-          specialService: 'Door to Door'
-        },
-        {
-          id: 2,
-          origin: '深圳盐田港 (CNYKA)',
-          destination: '汉堡港 (DEHAM)',
-          sailingDate: getRandomFutureDate(7),
-          vesselName: 'OOCL Hong Kong',
-          shippingLine: '东方海外货柜航运',
-          availableSpace: '150 TEU',
-          rate: '¥3,200/TEU',
-          transitTime: '28天',
-          cargoType: '普货/冷冻',
-          company: '东方海外代理',
-          rating: 4.9,
-          phone: '(0755) 9876-5432',
-          vesselType: '集装箱船',
-          cutOffDate: getRandomFutureDate(5),
-          specialService: '冷链服务'
-        },
-        {
-          id: 3,
-          origin: '宁波舟山港 (CNNGB)',
-          destination: '鹿特丹港 (NLRTM)',
-          sailingDate: getRandomFutureDate(10),
-          vesselName: 'MSC Oscar',
-          shippingLine: '地中海航运',
-          availableSpace: '300 TEU',
-          rate: '¥2,600/TEU',
-          transitTime: '30天',
-          cargoType: '普货/散货',
-          company: '地中海航运中国',
-          rating: 4.7,
-          phone: '(0574) 5555-8888',
-          vesselType: '超大型集装箱船',
-          cutOffDate: getRandomFutureDate(8),
-          specialService: 'LCL拼箱'
-        },
-        {
-          id: 4,
-          origin: '青岛港 (CNTAO)',
-          destination: '纽约港 (USNYC)',
-          sailingDate: getRandomFutureDate(12),
-          vesselName: 'COSCO SHIPPING Universe',
-          shippingLine: '中远海运集装箱运输',
-          availableSpace: '180 TEU',
-          rate: '¥3,000/TEU',
-          transitTime: '18天',
-          cargoType: '普货/项目货',
-          company: '中远海运青岛',
-          rating: 4.6,
-          phone: '(0532) 7777-9999',
-          vesselType: '集装箱船',
-          cutOffDate: getRandomFutureDate(10),
-          specialService: '项目物流'
-        }
-      ];
+      console.error('获取海运舱位信息失败:', error);
+      return [];
     }
-  };
+  }, []);
 
-  const fetchSeaDemands = async () => {
+  const fetchSeaDemands = useCallback(async () => {
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
       const response = await fetch(`${API_URL}/seafreight/demands`);
       if (!response.ok) {
-        throw new Error('获取货运需求失败');
+        throw new Error('获取海运需求信息失败');
       }
       const data = await response.json();
       return data.data || [];
     } catch (error) {
-      console.error('获取货运需求失败:', error);
-      // 返回带有更新日期的mock数据作为fallback
+      console.error('获取海运需求信息失败:', error);
       return [
         {
           id: 1,
-          origin: '广州南沙港 (CNCAN)',
-          destination: '新加坡港 (SGSIN)',
-          requiredDate: getRandomFutureDate(8),
-          weight: '20 TEU',
-          cargoType: '电子产品',
-          urgency: '紧急',
-          maxRate: '¥1,800/TEU',
-          company: '广州科技出口',
-          rating: 4.6,
-          phone: '(020) 1111-2222',
-          specialRequirements: '恒温干燥',
-          insurance: '高价值货物保险',
-          containerType: '20GP 干箱',
-          incoterms: 'FOB'
-        },
-        {
-          id: 2,
-          origin: '天津港 (CNTSN)',
-          destination: '安特卫普港 (BEANR)',
-          requiredDate: getRandomFutureDate(10),
-          weight: '35 TEU',
-          cargoType: '机械设备',
-          urgency: '加急',
-          maxRate: '¥2,500/TEU',
-          company: '京津冀重工',
-          rating: 4.8,
-          phone: '(022) 3333-4444',
-          specialRequirements: '超重货物处理',
-          insurance: '基础货物保险',
-          containerType: '40HC 超高箱',
-          incoterms: 'CIF'
-        },
-        {
-          id: 3,
-          origin: '厦门港 (CNXMN)',
-          destination: '釜山港 (KRPUS)',
-          requiredDate: getRandomFutureDate(15),
-          weight: '10 TEU',
-          cargoType: '食品原料',
+          origin: '上海',
+          destination: '洛杉矶',
+          requiredDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
+          cargoType: '集装箱货物',
+          containerType: '20GP',
+          quantity: '50',
+          maxRate: '2,800',
           urgency: '普通',
-          maxRate: '¥1,200/TEU',
-          company: '闽南食品贸易',
-          rating: 4.5,
-          phone: '(0592) 6666-7777',
-          specialRequirements: '冷藏运输',
-          insurance: '食品安全保险',
-          containerType: '20RF 冷冻箱',
-          incoterms: 'EXW'
+          vesselType: '集装箱船',
+          company: '环球贸易',
+          rating: 4.7,
+          phone: '(021) 1234-5678',
+          routeType: 'FCL',
+          commodity: '电子产品',
+          weight: '480吨',
+          incoterms: 'FOB'
         }
       ];
     }
-  };
+  }, []);
 
   // 初始化数据
   useEffect(() => {
@@ -248,12 +139,12 @@ const SeaFreightPlatform = () => {
       try {
         setLoading(true);
         setError(null);
-        const [cargoData, demandData] = await Promise.all([
+        const [cargoData, demandsData] = await Promise.all([
           fetchSeaCargo(),
           fetchSeaDemands()
         ]);
         setSeaCargo(cargoData);
-        setSeaDemands(demandData);
+        setSeaDemands(demandsData);
       } catch (err) {
         setError('加载数据失败，请稍后重试');
         console.error('数据加载失败:', err);
@@ -263,7 +154,7 @@ const SeaFreightPlatform = () => {
     };
 
     loadData();
-  }, []);
+  }, [fetchSeaCargo, fetchSeaDemands]); // 添加依赖
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -293,7 +184,7 @@ const SeaFreightPlatform = () => {
         throw new Error('发布失败');
       }
 
-      const result = await response.json();
+      // const result = await response.json();
       
       // 重新加载数据
       if (postData.type === 'cargo') {
@@ -592,9 +483,8 @@ const SeaFreightPlatform = () => {
                 origin: '',
                 destination: '',
                 cargoType: '',
-                weight: '',
-                urgency: '',
-                vesselType: ''
+                vesselType: '',
+                urgency: ''
               })}
             >
               <Filter size={16} />
@@ -841,9 +731,8 @@ const SeaFreightPlatform = () => {
                     origin: '',
                     destination: '',
                     cargoType: '',
-                    weight: '',
-                    urgency: '',
-                    vesselType: ''
+                    vesselType: '',
+                    urgency: ''
                   });
                 }}
                 style={{
