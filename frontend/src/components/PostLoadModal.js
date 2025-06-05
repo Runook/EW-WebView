@@ -13,7 +13,10 @@ import {
   Shield,
   Calculator,
   AlertCircle,
-  Info
+  Info,
+  Phone,
+  DollarSign,
+  Clock
 } from 'lucide-react';
 import './Modal.css';
 
@@ -48,7 +51,10 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     // 联系信息
     contactPhone: '',
     contactEmail: '',
-    notes: ''
+    notes: '',
+    companyName: '',
+    maxRate: '',
+    urgency: '普通'
   });
 
   const [densityInfo, setDensityInfo] = useState({
@@ -199,8 +205,12 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // 基础验证
-    const requiredFields = ['origin', 'destination', 'pickupDate', 'deliveryDate', 'cargoType', 'truckType', 'weight'];
+    // 基础验证 - 包含所有必填字段
+    const requiredFields = [
+      'origin', 'destination', 'pickupDate', 'deliveryDate', 
+      'cargoType', 'truckType', 'weight', 'companyName', 
+      'contactPhone', 'maxRate', 'urgency'
+    ];
     
     // LTL额外必填字段
     if (formData.serviceType === 'LTL') {
@@ -219,13 +229,30 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       return;
     }
 
-    // 添加计算出的信息到提交数据中
+    // 转换为后端API期望的格式
     const submitData = {
-      ...formData,
-      // 确保包含计算出的密度和分类信息
-      calculatedDensity: densityInfo.density,
-      calculatedClass: densityInfo.suggestedClass,
-      classDescription: densityInfo.classDescription
+      type: 'load',
+      // 后端必填字段
+      origin: formData.origin,
+      destination: formData.destination,
+      requiredDate: formData.pickupDate, // 使用取货日期作为要求日期
+      weight: formData.weight,
+      cargoType: formData.cargoType,
+      urgency: formData.urgency,
+      maxRate: formData.maxRate,
+      companyName: formData.companyName,
+      contactPhone: formData.contactPhone,
+      // 可选字段
+      contactEmail: formData.contactEmail || '',
+      specialRequirements: formData.notes || '',
+      serviceType: formData.serviceType,
+      // 保留原始表单数据用于显示
+      originalData: {
+        ...formData,
+        calculatedDensity: densityInfo.density,
+        calculatedClass: densityInfo.suggestedClass,
+        classDescription: densityInfo.classDescription
+      }
     };
 
     onSubmit(submitData);
@@ -257,6 +284,9 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       fragile: false,
       contactPhone: '',
       contactEmail: '',
+      companyName: '',
+      maxRate: '',
+      urgency: '普通',
       notes: ''
     });
     
@@ -635,13 +665,32 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
             <h3>联系信息 (Contact Information)</h3>
             <div className="form-grid">
               <div className="form-group">
-                <label>联系电话 (Phone)</label>
+                <label>
+                  <Building size={16} />
+                  公司名称 (Company Name) *
+                </label>
+                <input
+                  type="text"
+                  name="companyName"
+                  value={formData.companyName}
+                  onChange={handleInputChange}
+                  placeholder="您的公司名称"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <Phone size={16} />
+                  联系电话 (Phone) *
+                </label>
                 <input
                   type="tel"
                   name="contactPhone"
                   value={formData.contactPhone}
                   onChange={handleInputChange}
                   placeholder="(555) 123-4567"
+                  required
                 />
               </div>
 
@@ -654,6 +703,39 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                   onChange={handleInputChange}
                   placeholder="your@email.com"
                 />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <DollarSign size={16} />
+                  最高运费 (Max Rate) *
+                </label>
+                <input
+                  type="text"
+                  name="maxRate"
+                  value={formData.maxRate}
+                  onChange={handleInputChange}
+                  placeholder="如：$2,500 或 面议"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <Clock size={16} />
+                  紧急程度 (Urgency) *
+                </label>
+                <select
+                  name="urgency"
+                  value={formData.urgency}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="普通">普通 (Normal)</option>
+                  <option value="加急">加急 (Urgent)</option>
+                  <option value="紧急">紧急 (Critical)</option>
+                  <option value="特急">特急 (Emergency)</option>
+                </select>
               </div>
             </div>
             

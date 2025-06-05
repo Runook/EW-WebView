@@ -18,7 +18,8 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
     contactName: '',
     contactPhone: '',
     contactEmail: '',
-    companyName: ''
+    companyName: '',
+    notes: ''
   });
 
   const serviceTypes = [
@@ -53,15 +54,51 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit({
-      ...formData,
-      id: Date.now(),
+    
+    // 验证必填字段
+    const requiredFields = [
+      'currentLocation', 'availableDate', 'equipment', 'capacity', 
+      'rateRange', 'serviceType', 'companyName', 'contactPhone'
+    ];
+    
+    const missingFields = requiredFields.filter(field => !formData[field]);
+    
+    if (missingFields.length > 0) {
+      alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    // 转换为后端API期望的格式
+    const submitData = {
       type: 'truck',
-      postedDate: new Date().toISOString(),
-      location: formData.currentLocation,
-      destination: '开放',
-      preferredLanes: `${formData.preferredOrigin} 至 ${formData.preferredDestination}`
-    });
+      // 后端必填字段
+      origin: formData.currentLocation,
+      destination: formData.preferredDestination || '全国各地',
+      availableDate: formData.availableDate,
+      truckType: formData.equipment,
+      capacity: formData.capacity,
+      rate: formData.rateRange,
+      serviceType: formData.serviceType,
+      companyName: formData.companyName,
+      contactPhone: formData.contactPhone,
+      // 可选字段
+      contactEmail: formData.contactEmail || '',
+      driverLicense: '',
+      truckFeatures: formData.specialServices || '',
+      notes: formData.notes || '',
+      // 保留原始数据用于显示
+      originalData: {
+        ...formData,
+        id: Date.now(),
+        postedDate: new Date().toISOString(),
+        location: formData.currentLocation,
+        preferredLanes: `${formData.preferredOrigin || '任意地点'} 至 ${formData.preferredDestination || '全国各地'}`
+      }
+    };
+
+    onSubmit(submitData);
+    
+    // 重置表单
     setFormData({
       currentLocation: '',
       availableDate: '',
@@ -77,7 +114,8 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
       contactName: '',
       contactPhone: '',
       contactEmail: '',
-      companyName: ''
+      companyName: '',
+      notes: ''
     });
     onClose();
   };
