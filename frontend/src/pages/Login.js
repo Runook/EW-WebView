@@ -80,26 +80,38 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    console.log('Login: 表单提交开始');
+    console.log('Login: 表单数据:', formData);
+    
     if (!validateForm()) {
+      console.log('Login: 表单验证失败');
       return;
     }
     
+    console.log('Login: 表单验证通过，开始登录');
     setIsLoading(true);
     setFormError('');
     
     try {
+      console.log('Login: 调用login函数...');
       const result = await login(formData.email, formData.password);
+      console.log('Login: 登录结果:', result);
       
       if (result.success) {
+        console.log('Login: 登录成功，准备重定向');
         const from = location.state?.from?.pathname || '/';
+        console.log('Login: 重定向到:', from);
         navigate(from, { replace: true });
       } else {
+        console.log('Login: 登录失败，设置错误信息:', result.error);
         setFormError(result.error);
       }
     } catch (error) {
+      console.error('Login: 捕获异常:', error);
       setFormError('登录失败，请稍后重试');
     } finally {
       setIsLoading(false);
+      console.log('Login: 登录流程结束');
     }
   };
 

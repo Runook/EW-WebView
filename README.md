@@ -40,7 +40,7 @@
 - **CSS Modules** - 样式管理
 - **Responsive Design** - 响应式布局
 
-### 后端
+### 后端  
 - **Node.js** - 运行时环境
 - **Express.js** - Web框架
 - **JWT** - 身份验证

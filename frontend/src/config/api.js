@@ -56,7 +56,7 @@ export const getAuthHeaders = (token = null) => {
     'Content-Type': 'application/json'
   };
   
-  const authToken = token || localStorage.getItem('token');
+  const authToken = token || localStorage.getItem('authToken');
   if (authToken) {
     headers['Authorization'] = `Bearer ${authToken}`;
   }

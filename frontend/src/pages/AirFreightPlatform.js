@@ -64,55 +64,55 @@ const AirFreightPlatform = () => {
       console.error('获取舱位信息失败:', error);
       // 返回带有更新日期的mock数据作为fallback
       return [
-        {
-          id: 1,
-          origin: '上海浦东机场 (PVG)',
-          destination: '洛杉矶国际机场 (LAX)',
+    {
+      id: 1,
+      origin: '上海浦东机场 (PVG)',
+      destination: '洛杉矶国际机场 (LAX)',
           flightDate: getRandomFutureDate(1),
-          flightNumber: 'CA987',
-          airline: '中国国际航空',
-          availableWeight: '5,000 kg',
-          rate: '¥45/kg',
-          cargoType: '普货',
-          company: '国际航空货运',
-          rating: 4.8,
-          phone: '(021) 1234-5678',
-          transitTime: '12小时',
-          specialService: '温控货舱'
-        },
-        {
-          id: 2,
-          origin: '北京首都机场 (PEK)',
-          destination: '法兰克福机场 (FRA)',
+      flightNumber: 'CA987',
+      airline: '中国国际航空',
+      availableWeight: '5,000 kg',
+      rate: '¥45/kg',
+      cargoType: '普货',
+      company: '国际航空货运',
+      rating: 4.8,
+      phone: '(021) 1234-5678',
+      transitTime: '12小时',
+      specialService: '温控货舱'
+    },
+    {
+      id: 2,
+      origin: '北京首都机场 (PEK)',
+      destination: '法兰克福机场 (FRA)',
           flightDate: getRandomFutureDate(2),
-          flightNumber: 'LH720',
-          airline: '汉莎航空',
-          availableWeight: '3,200 kg',
-          rate: '¥52/kg',
-          cargoType: '普货/危险品',
-          company: '欧洲航空物流',
-          rating: 4.9,
-          phone: '(010) 9876-5432',
-          transitTime: '10小时',
-          specialService: '危险品认证'
-        },
-        {
-          id: 3,
-          origin: '深圳宝安机场 (SZX)',
-          destination: '迪拜国际机场 (DXB)',
+      flightNumber: 'LH720',
+      airline: '汉莎航空',
+      availableWeight: '3,200 kg',
+      rate: '¥52/kg',
+      cargoType: '普货/危险品',
+      company: '欧洲航空物流',
+      rating: 4.9,
+      phone: '(010) 9876-5432',
+      transitTime: '10小时',
+      specialService: '危险品认证'
+    },
+    {
+      id: 3,
+      origin: '深圳宝安机场 (SZX)',
+      destination: '迪拜国际机场 (DXB)',
           flightDate: getRandomFutureDate(3),
-          flightNumber: 'EK362',
-          airline: '阿联酋航空',
-          availableWeight: '8,500 kg',
-          rate: '¥38/kg',
-          cargoType: '普货/生鲜',
-          company: '中东快运',
-          rating: 4.7,
-          phone: '(0755) 5555-8888',
-          transitTime: '8小时',
-          specialService: '冷链运输'
-        }
-      ];
+      flightNumber: 'EK362',
+      airline: '阿联酋航空',
+      availableWeight: '8,500 kg',
+      rate: '¥38/kg',
+      cargoType: '普货/生鲜',
+      company: '中东快运',
+      rating: 4.7,
+      phone: '(0755) 5555-8888',
+      transitTime: '8小时',
+      specialService: '冷链运输'
+    }
+  ];
     }
   };
 
@@ -129,37 +129,37 @@ const AirFreightPlatform = () => {
       console.error('获取货运需求失败:', error);
       // 返回带有更新日期的mock数据作为fallback
       return [
-        {
-          id: 1,
-          origin: '广州白云机场 (CAN)',
-          destination: '纽约肯尼迪机场 (JFK)',
+    {
+      id: 1,
+      origin: '广州白云机场 (CAN)',
+      destination: '纽约肯尼迪机场 (JFK)',
           requiredDate: getRandomFutureDate(4),
-          weight: '2,500 kg',
-          cargoType: '电子产品',
-          urgency: '紧急',
-          maxRate: '¥50/kg',
-          company: '科技出口公司',
-          rating: 4.6,
-          phone: '(020) 1111-2222',
-          specialRequirements: '防静电包装',
-          insurance: '需要货物保险'
-        },
-        {
-          id: 2,
-          origin: '成都双流机场 (CTU)',
-          destination: '东京羽田机场 (HND)',
+      weight: '2,500 kg',
+      cargoType: '电子产品',
+      urgency: '紧急',
+      maxRate: '¥50/kg',
+      company: '科技出口公司',
+      rating: 4.6,
+      phone: '(020) 1111-2222',
+      specialRequirements: '防静电包装',
+      insurance: '需要货物保险'
+    },
+    {
+      id: 2,
+      origin: '成都双流机场 (CTU)',
+      destination: '东京羽田机场 (HND)',
           requiredDate: getRandomFutureDate(5),
-          weight: '1,800 kg',
-          cargoType: '医疗器械',
-          urgency: '特急',
-          maxRate: '¥65/kg',
-          company: '医疗设备有限公司',
-          rating: 4.8,
-          phone: '(028) 3333-4444',
-          specialRequirements: '温控运输',
-          insurance: '高价值货物保险'
-        }
-      ];
+      weight: '1,800 kg',
+      cargoType: '医疗器械',
+      urgency: '特急',
+      maxRate: '¥65/kg',
+      company: '医疗设备有限公司',
+      rating: 4.8,
+      phone: '(028) 3333-4444',
+      specialRequirements: '温控运输',
+      insurance: '高价值货物保险'
+    }
+  ];
     }
   };
 
@@ -457,8 +457,8 @@ const AirFreightPlatform = () => {
           
           <div className="filters">
             <select 
-              value={filters.origin} 
-              onChange={(e) => handleFilterChange('origin', e.target.value)}
+                value={filters.origin}
+                onChange={(e) => handleFilterChange('origin', e.target.value)}
             >
               <option value="">起始机场</option>
               <option value="上海浦东机场">上海浦东机场 (PVG)</option>
@@ -469,8 +469,8 @@ const AirFreightPlatform = () => {
             </select>
 
             <select 
-              value={filters.destination} 
-              onChange={(e) => handleFilterChange('destination', e.target.value)}
+                value={filters.destination}
+                onChange={(e) => handleFilterChange('destination', e.target.value)}
             >
               <option value="">目的机场</option>
               <option value="洛杉矶国际机场">洛杉矶国际机场 (LAX)</option>
@@ -480,19 +480,19 @@ const AirFreightPlatform = () => {
               <option value="东京羽田机场">东京羽田机场 (HND)</option>
             </select>
 
-            <select 
-              value={filters.cargoType} 
-              onChange={(e) => handleFilterChange('cargoType', e.target.value)}
-            >
+              <select
+                value={filters.cargoType}
+                onChange={(e) => handleFilterChange('cargoType', e.target.value)}
+              >
               <option value="">货物类型</option>
-              {cargoTypes.map(type => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
+                {cargoTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
 
             {activeTab === 'demands' && (
-              <select 
-                value={filters.urgency} 
+              <select
+                value={filters.urgency}
                 onChange={(e) => handleFilterChange('urgency', e.target.value)}
               >
                 <option value="">紧急程度</option>
@@ -552,73 +552,73 @@ const AirFreightPlatform = () => {
                 filteredDemands.map(demand => (
                   <div key={demand.id} className="load-card">
                     <div className="load-header">
-                      <div className="route">
+                    <div className="route">
                         <div className="route-point">
-                          <MapPin size={16} />
-                          <span>{demand.origin}</span>
-                        </div>
-                        <ArrowRight size={16} className="route-arrow" />
-                        <div className="route-point">
-                          <MapPin size={16} />
-                          <span>{demand.destination}</span>
-                        </div>
+                        <MapPin size={16} />
+                        <span>{demand.origin}</span>
                       </div>
-                      <div className="urgency-badge">
-                        <span className={`urgency ${demand.urgency}`}>{demand.urgency}</span>
+                      <ArrowRight size={16} className="route-arrow" />
+                        <div className="route-point">
+                        <MapPin size={16} />
+                        <span>{demand.destination}</span>
                       </div>
                     </div>
+                    <div className="urgency-badge">
+                      <span className={`urgency ${demand.urgency}`}>{demand.urgency}</span>
+                    </div>
+                  </div>
 
                     <div className="load-details">
                       <div className="detail-row">
-                        <Calendar size={16} />
-                        <span>要求日期: {demand.requiredDate}</span>
-                      </div>
+                      <Calendar size={16} />
+                      <span>要求日期: {demand.requiredDate}</span>
+                    </div>
                       <div className="detail-row weight-display">
-                        <Scale size={16} />
+                      <Scale size={16} />
                         <span>{demand.weight}</span>
-                      </div>
+                    </div>
                       <div className="detail-row">
-                        <Package size={16} />
+                      <Package size={16} />
                         <span>货物: {demand.cargoType}</span>
-                      </div>
+                    </div>
                       <div className="detail-row">
-                        <DollarSign size={16} />
+                      <DollarSign size={16} />
                         <span className="rate">预算: {demand.maxRate}</span>
-                      </div>
-                      {demand.specialRequirements && (
+                    </div>
+                    {demand.specialRequirements && (
                         <div className="detail-row special">
                           <Shield size={16} />
                           <span>{demand.specialRequirements}</span>
-                        </div>
-                      )}
-                      {demand.insurance && (
+                      </div>
+                    )}
+                    {demand.insurance && (
                         <div className="special-service">
                           <Shield size={12} />
                           {demand.insurance}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                  </div>
 
                     <div className="load-footer">
-                      <div className="company-info">
-                        <span className="company-name">{demand.company}</span>
-                        <div className="rating">
-                          <Star size={14} />
-                          <span>{demand.rating}</span>
-                        </div>
-                      </div>
-                      <div className="load-actions">
-                        <button className="btn btn-ghost">
-                          <MessageCircle size={16} />
-                          询价
-                        </button>
-                        <button className="btn btn-primary">
-                          <Phone size={16} />
-                          {demand.phone}
-                        </button>
+                    <div className="company-info">
+                      <span className="company-name">{demand.company}</span>
+                      <div className="rating">
+                        <Star size={14} />
+                        <span>{demand.rating}</span>
                       </div>
                     </div>
+                      <div className="load-actions">
+                      <button className="btn btn-ghost">
+                        <MessageCircle size={16} />
+                          询价
+                      </button>
+                      <button className="btn btn-primary">
+                        <Phone size={16} />
+                        {demand.phone}
+                      </button>
+                    </div>
                   </div>
+                </div>
                 ))
               )}
             </div>
@@ -654,42 +654,42 @@ const AirFreightPlatform = () => {
                 </div>
               ) : (
                 filteredCargo.map(cargo => (
-                  <div key={cargo.id} className="load-card">
-                    <div className="load-header">
-                      <div className="route">
+                <div key={cargo.id} className="load-card">
+                  <div className="load-header">
+                    <div className="route">
                         <div className="route-point">
-                          <MapPin size={16} />
-                          <span>{cargo.origin}</span>
-                        </div>
-                        <ArrowRight size={16} className="route-arrow" />
-                        <div className="route-point">
-                          <MapPin size={16} />
-                          <span>{cargo.destination}</span>
-                        </div>
+                        <MapPin size={16} />
+                        <span>{cargo.origin}</span>
                       </div>
+                      <ArrowRight size={16} className="route-arrow" />
+                        <div className="route-point">
+                        <MapPin size={16} />
+                        <span>{cargo.destination}</span>
+                      </div>
+                    </div>
                       <div className="flight-info">
                         <Plane size={16} />
                         <span>{cargo.flightNumber}</span>
-                      </div>
                     </div>
+                  </div>
 
-                    <div className="load-details">
+                  <div className="load-details">
                       <div className="detail-row">
-                        <Calendar size={16} />
+                      <Calendar size={16} />
                         <span>航班: {cargo.flightDate}</span>
-                      </div>
+                    </div>
                       <div className="detail-row">
-                        <Plane size={16} />
+                      <Plane size={16} />
                         <span>航司: {cargo.airline}</span>
-                      </div>
+                    </div>
                       <div className="detail-row weight-display">
-                        <Scale size={16} />
+                      <Scale size={16} />
                         <span>可载: {cargo.availableWeight}</span>
-                      </div>
+                    </div>
                       <div className="detail-row">
-                        <Clock size={16} />
-                        <span>航程: {cargo.transitTime}</span>
-                      </div>
+                      <Clock size={16} />
+                      <span>航程: {cargo.transitTime}</span>
+                    </div>
                       <div className="detail-row">
                         <DollarSign size={16} />
                         <span className="rate">运费: {cargo.rate}</span>
@@ -698,34 +698,34 @@ const AirFreightPlatform = () => {
                         <Package size={16} />
                         <span>货类: {cargo.cargoType}</span>
                       </div>
-                      {cargo.specialService && (
+                    {cargo.specialService && (
                         <div className="special-service">
                           <Shield size={12} />
                           {cargo.specialService}
-                        </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                  </div>
 
-                    <div className="load-footer">
-                      <div className="company-info">
-                        <span className="company-name">{cargo.company}</span>
-                        <div className="rating">
-                          <Star size={14} />
-                          <span>{cargo.rating}</span>
-                        </div>
+                  <div className="load-footer">
+                    <div className="company-info">
+                      <span className="company-name">{cargo.company}</span>
+                      <div className="rating">
+                        <Star size={14} />
+                        <span>{cargo.rating}</span>
                       </div>
-                      <div className="load-actions">
-                        <button className="btn btn-ghost">
-                          <MessageCircle size={16} />
-                          询价
-                        </button>
-                        <button className="btn btn-primary">
-                          <Phone size={16} />
-                          {cargo.phone}
-                        </button>
-                      </div>
+                    </div>
+                    <div className="load-actions">
+                      <button className="btn btn-ghost">
+                        <MessageCircle size={16} />
+                        询价
+                      </button>
+                      <button className="btn btn-primary">
+                        <Phone size={16} />
+                        {cargo.phone}
+                      </button>
                     </div>
                   </div>
+                </div>
                 ))
               )}
             </div>
