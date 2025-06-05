@@ -23,11 +23,14 @@ import {
   Layers,
   Shield,
   Home,
-  Building
+  Building,
+  Trash2,
+  RotateCcw
 } from 'lucide-react';
 // import { useLanguage } from '../contexts/LanguageContext';
 import PostLoadModal from '../components/PostLoadModal';
 import PostTruckModal from '../components/PostTruckModal';
+import { useAuth } from '../contexts/AuthContext';
 import './PlatformPage.css';
 import './FreightBoard.css';
 
@@ -66,6 +69,8 @@ const FreightBoard = () => {
   });
   const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('date'); // date, rate-low, rate-high, weight
+
+  const { isAuthenticated } = useAuth();
 
   // API调用函数
   const fetchLoads = async () => {
@@ -426,12 +431,12 @@ const FreightBoard = () => {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
       const endpoint = postData.type === 'load' ? '/landfreight/loads' : '/landfreight/trucks';
       
-      const token = localStorage.getItem('token');
-      if (!token) {
+      if (!isAuthenticated) {
         alert('请先登录再发布信息');
         return;
       }
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: {
@@ -566,6 +571,23 @@ const FreightBoard = () => {
     }
   };
 
+  // 处理发布按钮点击
+  const handlePostLoadClick = () => {
+    if (!isAuthenticated) {
+      alert('请先登录再发布货源信息');
+      return;
+    }
+    setIsPostLoadModalOpen(true);
+  };
+
+  const handlePostTruckClick = () => {
+    if (!isAuthenticated) {
+      alert('请先登录再发布车源信息');
+      return;
+    }
+    setIsPostTruckModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="freight-board">
@@ -636,14 +658,14 @@ const FreightBoard = () => {
         <div className="post-actions">
           <button 
             className="btn btn-primary post-btn"
-            onClick={() => setIsPostLoadModalOpen(true)}
+            onClick={handlePostLoadClick}
           >
             <Plus size={18} />
             发布货源信息
           </button>
           <button 
             className="btn btn-secondary post-btn"
-            onClick={() => setIsPostTruckModalOpen(true)}
+            onClick={handlePostTruckClick}
           >
             <Plus size={18} />
             发布车源信息

@@ -23,6 +23,7 @@ import PostAirDemandModal from '../components/PostAirDemandModal';
 import './PlatformPage.css';
 import './FreightBoard.css'; // 复用样式
 import './AirFreightPlatform.css'; // 空运专用样式
+import { useAuth } from '../contexts/AuthContext';
 
 const AirFreightPlatform = () => {
   const [activeTab, setActiveTab] = useState('demands');
@@ -41,6 +42,8 @@ const AirFreightPlatform = () => {
     weight: '',
     urgency: ''
   });
+
+  const { isAuthenticated } = useAuth();
 
   // Generate future dates for mock data
   const getRandomFutureDate = (daysFromNow = 1, maxDays = 7) => {
@@ -213,12 +216,12 @@ const AirFreightPlatform = () => {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
       const endpoint = postData.type === 'cargo' ? '/airfreight/cargo' : '/airfreight/demands';
       
-      const token = localStorage.getItem('token');
-      if (!token) {
+      if (!isAuthenticated) {
         alert('请先登录再发布信息');
         return;
       }
 
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: {
@@ -307,6 +310,23 @@ const AirFreightPlatform = () => {
   // 应用筛选
   const filteredCargo = filterData(allCargo);
   const filteredDemands = filterData(allDemands);
+
+  // 处理发布按钮点击
+  const handlePostCargoClick = () => {
+    if (!isAuthenticated) {
+      alert('请先登录再发布舱位信息');
+      return;
+    }
+    setIsPostCargoModalOpen(true);
+  };
+
+  const handlePostDemandClick = () => {
+    if (!isAuthenticated) {
+      alert('请先登录再发布货运需求');
+      return;
+    }
+    setIsPostDemandModalOpen(true);
+  };
 
   if (loading) {
     return (
@@ -413,14 +433,14 @@ const AirFreightPlatform = () => {
         <div className="post-buttons">
           <button 
             className="btn btn-primary post-btn"
-            onClick={() => setIsPostCargoModalOpen(true)}
+            onClick={handlePostCargoClick}
           >
             <Plus size={20} />
             发布舱位信息
           </button>
           <button 
             className="btn btn-secondary post-btn"
-            onClick={() => setIsPostDemandModalOpen(true)}
+            onClick={handlePostDemandClick}
           >
             <Plus size={20} />
             发布货运需求
@@ -542,7 +562,7 @@ const AirFreightPlatform = () => {
                   </p>
                   <button 
                     className="btn btn-primary"
-                    onClick={() => setIsPostDemandModalOpen(true)}
+                    onClick={handlePostDemandClick}
                   >
                     <Plus size={16} style={{ marginRight: '8px' }} />
                     发布货运需求
@@ -646,7 +666,7 @@ const AirFreightPlatform = () => {
                   </p>
                   <button 
                     className="btn btn-primary"
-                    onClick={() => setIsPostCargoModalOpen(true)}
+                    onClick={handlePostCargoClick}
                   >
                     <Plus size={16} style={{ marginRight: '8px' }} />
                     发布舱位信息

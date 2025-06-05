@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ApiService } from '../config/api';
 import { filterData, sortData, handleApiError } from '../utils/dataUtils';
+import { useAuth } from '../contexts/AuthContext';
 
 // 通用平台数据管理Hook
 export const usePlatformData = (platform, initialFilters = {}) => {
@@ -15,6 +16,8 @@ export const usePlatformData = (platform, initialFilters = {}) => {
   const [filters, setFilters] = useState(initialFilters);
   const [sortType, setSortType] = useState('date');
   const [userPosts, setUserPosts] = useState([]);
+
+  const { isAuthenticated } = useAuth();
 
   // 获取API服务
   const getApiService = useCallback(() => {
@@ -135,9 +138,8 @@ export const usePlatformData = (platform, initialFilters = {}) => {
   const handlePostSubmit = useCallback(async (postData) => {
     try {
       const methods = getApiMethods();
-      const token = localStorage.getItem('token');
       
-      if (!token) {
+      if (!isAuthenticated) {
         throw new Error('请先登录再发布信息');
       }
 
@@ -160,7 +162,7 @@ export const usePlatformData = (platform, initialFilters = {}) => {
       
       return { success: false, message: errorMessage };
     }
-  }, [getApiMethods, loadData]);
+  }, [getApiMethods, loadData, isAuthenticated]);
 
   // 获取统计信息
   const getStats = useCallback(() => {
