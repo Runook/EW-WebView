@@ -491,59 +491,65 @@
     align-items: center;
   }
 
-  /* 第一行：服务类型 + 路线（跨两列） */
-  .card-main .service-type {
-    grid-column: 1 / -1;
-    justify-self: center;
+  /* 第一行：起点终点（左） + 服务类型（右） */
+  .card-main .route {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: start;
+    margin-bottom: 0;
   }
 
-  .card-main .route {
-    grid-column: 1 / -1;
-    justify-self: center;
-    margin-bottom: 0.25rem;
+  .card-main .service-type {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
   }
 
   /* 第二行：货物类型 + 重量 */
   .card-main .cargo-type,
   .card-main .equipment {
     grid-column: 1;
+    grid-row: 2;
     justify-self: start;
   }
 
   .card-main .weight,
   .card-main .capacity {
     grid-column: 2;
+    grid-row: 2;
     justify-self: end;
   }
 
   /* 第三行：日期 + 价格 */
   .card-main .date {
     grid-column: 1;
+    grid-row: 3;
     justify-self: start;
   }
 
   .card-main .price,
   .card-main .rate {
     grid-column: 2;
+    grid-row: 3;
     justify-self: end;
   }
 
   /* 紧急程度（如果有）跨两列 */
   .card-main .urgency {
     grid-column: 1 / -1;
+    grid-row: 4;
     justify-self: center;
     margin-top: 0.25rem;
   }
 
   .service-type span {
-    justify-content: center;
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
   }
 
   .route {
     min-width: auto;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   .card-main .cargo-type,
@@ -552,12 +558,12 @@
   .card-main .capacity,
   .card-main .date {
     min-width: auto;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
   }
 
   .card-main .price,
   .card-main .rate {
-    font-size: 1rem;
+    font-size: 0.9rem;
     font-weight: 700;
     min-width: auto;
   }
