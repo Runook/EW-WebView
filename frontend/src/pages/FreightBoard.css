@@ -1,5 +1,6 @@
+/* 陆运信息平台样式 - 重新设计 */
 .freight-board {
-  padding: var(--space-8) 0;
+  padding: 2rem 0;
   min-height: 80vh;
 }
 
@@ -8,12 +9,13 @@
   padding: 2rem 0;
 }
 
-/* Header */
-.board-header {
-  text-align: center;
-  margin-bottom: var(--space-12);
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1rem;
 }
 
+/* Header */
 .platform-header {
   text-align: center;
   margin-bottom: 3rem;
@@ -31,39 +33,28 @@
   color: white;
 }
 
-.board-title,
 .platform-title {
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  font-size: 2.5rem;
   font-weight: 700;
-  color: var(--text-primary, #1d1d1f);
-  margin-bottom: var(--space-4, 1rem);
-  line-height: 1.2;
-  word-break: keep-all;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: #1d1d1f;
+  margin-bottom: 1rem;
 }
 
-.board-description,
 .platform-description {
-  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
-  color: var(--text-secondary, #6e6e73);
+  font-size: 1.1rem;
+  color: #6e6e73;
   max-width: 600px;
   margin: 0 auto;
-  line-height: 1.6;
-  word-break: keep-all;
-  padding: 0 1rem;
 }
 
 /* Tabs */
 .board-tabs {
   display: flex;
-  gap: var(--space-2, 0.5rem);
-  margin-bottom: var(--space-8, 2rem);
-  background-color: var(--background-secondary, #f5f5f7);
-  padding: var(--space-1, 0.25rem);
-  border-radius: var(--radius-lg, 12px);
-  overflow: hidden;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  background: #f5f5f7;
+  padding: 0.25rem;
+  border-radius: 12px;
 }
 
 .tab {
@@ -71,942 +62,150 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2, 0.5rem);
-  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  border-radius: var(--radius-md, 8px);
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
   background: none;
   border: none;
-  color: var(--text-secondary, #6e6e73);
+  color: #6e6e73;
   font-weight: 500;
-  font-size: clamp(0.85rem, 2vw, 1rem);
-  transition: all 0.2s ease;
   cursor: pointer;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  overflow: hidden;
-  min-height: 48px;
+  transition: all 0.2s ease;
 }
 
 .tab.active {
-  background-color: var(--primary-green, #34C759);
+  background: #34C759;
   color: white;
-}
-
-.tab:hover:not(.active) {
-  background-color: var(--primary-green-alpha, rgba(52, 199, 89, 0.1));
-  color: var(--primary-green, #34C759);
 }
 
 .tab-count {
-  margin-left: 8px;
-  background-color: rgba(255, 255, 255, 0.2);
-  color: inherit;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.3);
   padding: 2px 8px;
-  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
-  font-weight: bold;
-  min-width: 20px;
-  text-align: center;
+  border-radius: 12px;
+  font-size: 0.8rem;
 }
 
-.tab.active .tab-count {
-  background-color: rgba(255, 255, 255, 0.3);
-  color: white;
-}
-
-/* Post Buttons */
-.post-buttons {
+/* Post Actions */
+.post-actions {
   display: flex;
   justify-content: center;
-  gap: var(--space-4, 1rem);
-  margin-bottom: var(--space-8, 2rem);
-  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2rem;
 }
 
 .post-btn {
   display: flex;
   align-items: center;
-  gap: var(--space-2, 0.5rem);
-  padding: var(--space-3, 0.75rem) var(--space-6, 1.5rem);
-  font-weight: 600;
-  font-size: clamp(0.9rem, 2vw, 1rem);
-  transition: all 0.3s ease;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
   border-radius: 8px;
-  white-space: nowrap;
-  min-height: 44px;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
 .post-btn:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.15));
 }
 
-/* Search and Filters */
-.platform-search,
-.board-search {
-  margin-bottom: var(--space-8, 2rem);
+/* 搜索筛选区域 - 简洁版 */
+.search-filter-section {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .search-bar {
-  position: relative;
   display: flex;
   align-items: center;
-  background: #f5f5f7;
-  border-radius: 12px;
+  background: white;
+  border-radius: 8px;
   padding: 0.75rem 1rem;
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto 1.5rem;
+  margin-bottom: 1rem;
   border: 2px solid transparent;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease;
 }
 
 .search-bar:focus-within {
   border-color: #34C759;
-  background: white;
-  box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.1);
+}
+
+.search-bar svg {
+  color: #34C759;
+  margin-right: 0.5rem;
 }
 
 .search-bar input {
   flex: 1;
   border: none;
-  background: none;
   outline: none;
-  margin-left: 0.5rem;
-  font-size: clamp(0.9rem, 2vw, 1rem);
-  color: #1d1d1f;
+  font-size: 1rem;
 }
 
-.search-bar input::placeholder {
-  color: #8e8e93;
-}
-
-.search-bar svg {
-  color: var(--text-secondary, #666);
-  flex-shrink: 0;
-}
-
-.filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: var(--space-4, 1rem);
-  align-items: end;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-.filters select {
-  padding: var(--space-3, 0.75rem);
-  border: 1px solid var(--border, #ddd);
-  border-radius: var(--radius-md, 8px);
-  font-size: clamp(0.85rem, 2vw, 1rem);
-  color: var(--text-primary, #333);
-  background-color: white;
-  min-height: 44px;
-  transition: all 0.2s ease;
-}
-
-.filters select:focus {
-  outline: none;
-  border-color: var(--primary-green, #34C759);
-  box-shadow: 0 0 0 3px var(--primary-green-alpha, rgba(52, 199, 89, 0.1));
-}
-
-.filter-btn {
+.filters-row {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: var(--space-3, 0.75rem) var(--space-4, 1rem);
-  font-size: clamp(0.85rem, 2vw, 1rem);
-  white-space: nowrap;
-  min-height: 44px;
-}
-
-/* Content Grid */
-.board-content {
-  margin-bottom: 2rem;
-}
-
-.loads-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-  padding: 0 1rem;
-  max-width: 1400px;
-  margin: 0 auto;
-}
-
-/* Cards */
-.load-card,
-.truck-card {
-  background: white;
-  border-radius: var(--radius-xl, 16px);
-  padding: var(--space-6, 1.5rem);
-  box-shadow: var(--shadow, 0 4px 15px rgba(0, 0, 0, 0.08));
-  border: 1px solid var(--border, #e5e5e7);
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
   gap: 1rem;
-}
-
-.load-card:hover,
-.truck-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.15));
-  border-color: var(--primary-green-alpha, rgba(52, 199, 89, 0.3));
-}
-
-.load-header,
-.truck-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.route {
-  display: flex;
   align-items: center;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 0;
+  flex-wrap: wrap;
 }
 
-.route-point {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: var(--text-primary, #333);
-  font-weight: 500;
-  font-size: clamp(0.85rem, 2vw, 0.95rem);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-}
-
-.route-point svg {
-  color: var(--primary-green, #34C759);
-  flex-shrink: 0;
-}
-
-.route-arrow {
-  color: var(--text-secondary, #666);
-  flex-shrink: 0;
-}
-
-.location {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--text-primary, #333);
-  font-weight: 500;
-  font-size: clamp(0.85rem, 2vw, 0.95rem);
-}
-
-.location svg {
-  color: var(--primary-green, #34C759);
-  flex-shrink: 0;
-}
-
-/* Badges */
-.load-type-badge,
-.service-type-badge,
-.urgency-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: clamp(0.75rem, 1.5vw, 0.85rem);
-  font-weight: 500;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.load-type-badge {
-  background: #e3f2fd;
-  color: #1976d2;
-}
-
-.service-type-badge {
-  background: #f3e5f5;
-  color: #7b1fa2;
-}
-
-.urgency-badge .urgency {
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: clamp(0.75rem, 1.5vw, 0.85rem);
-  font-weight: 500;
-  text-align: center;
-}
-
-.urgency.普通 {
-  background: #e5f3ff;
-  color: #0066cc;
-}
-
-.urgency.加急 {
-  background: #fff3e0;
-  color: #e65100;
-}
-
-.urgency.紧急 {
-  background: #ffebee;
-  color: #c62828;
-  animation: pulse 2s infinite;
-}
-
-.urgency.特急 {
-  background: #f3e5f5;
-  color: #7b1fa2;
-  animation: pulse 1.5s infinite;
-  font-weight: 600;
-}
-
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
-}
-
-.flight-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #4a90e2;
-  font-weight: 500;
-  font-size: clamp(0.8rem, 2vw, 0.9rem);
-  white-space: nowrap;
-}
-
-/* Details */
-.load-details,
-.truck-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.detail-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: clamp(0.8rem, 2vw, 0.9rem);
-  color: var(--text-primary, #333);
-}
-
-.detail-row svg {
-  color: var(--text-secondary, #666);
-  flex-shrink: 0;
-}
-
-.detail-row.special {
-  color: #e65100;
-  font-weight: 500;
-}
-
-.detail-row .rate {
-  font-weight: 600;
-  color: var(--primary-green, #34C759);
-}
-
-.weight-display {
-  font-weight: 600;
-  color: #1976d2;
-}
-
-.special-service {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.125rem 0.5rem;
-  background: #e8f5e8;
-  color: #2e7d32;
-  border-radius: 8px;
-  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
-  font-weight: 500;
-  margin-top: 0.5rem;
-  align-self: flex-start;
-}
-
-/* Footer */
-.load-footer,
-.truck-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border, #e5e5e7);
-  margin-top: auto;
-}
-
-.company-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
-  min-width: 0;
-}
-
-.company-name {
-  font-weight: 600;
-  color: var(--text-primary, #333);
-  font-size: clamp(0.85rem, 2vw, 0.95rem);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.rating {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: #ff9500;
-  font-size: clamp(0.8rem, 1.5vw, 0.85rem);
-}
-
-.rating svg {
-  color: #ff9500;
-}
-
-.load-actions,
-.truck-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.load-actions .btn,
-.truck-actions .btn {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+.filters-row select {
   padding: 0.5rem 0.75rem;
-  font-size: clamp(0.8rem, 1.5vw, 0.85rem);
+  border: 1px solid #ddd;
   border-radius: 6px;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-/* Empty State */
-.empty-state {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 3rem 1.5rem;
-  color: #666;
-  background-color: #f9f9f9;
-  border-radius: 12px;
-  border: 2px dashed #ddd;
-  margin: 0 1rem;
-}
-
-.empty-state h3 {
-  margin-bottom: 0.5rem;
-  color: #333;
-  font-size: clamp(1.1rem, 3vw, 1.3rem);
-}
-
-.empty-state p {
-  margin-bottom: 1.5rem;
-  font-size: clamp(0.85rem, 2vw, 1rem);
-  max-width: 400px;
-  line-height: 1.5;
-}
-
-/* 响应式布局 */
-@media (max-width: 768px) {
-  .platform-page,
-  .freight-board {
-    padding: 1rem 0;
-  }
-
-  .platform-icon {
-    width: 60px;
-    height: 60px;
-    margin-bottom: 1rem;
-  }
-
-  .board-title,
-  .platform-title {
-    font-size: 1.8rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .board-description,
-  .platform-description {
-    font-size: 0.95rem;
-    padding: 0 1.5rem;
-  }
-
-  .board-tabs {
-    margin: 0 1rem 1.5rem;
-    gap: 0.25rem;
-  }
-
-  .tab {
-    padding: 0.75rem 0.5rem;
-    font-size: 0.85rem;
-    min-height: 44px;
-  }
-
-  .tab-count {
-    font-size: 0.7rem;
-    padding: 1px 6px;
-  }
-
-  .post-buttons {
-    flex-direction: column;
-    align-items: center;
-    margin: 0 1rem 1.5rem;
-    gap: 0.75rem;
-  }
-
-  .post-btn {
-    width: 100%;
-    max-width: 280px;
-    justify-content: center;
-    padding: 0.875rem 1.5rem;
-  }
-
-  .search-bar {
-    margin: 0 1rem 1rem;
-    padding: 0.75rem;
-    max-width: none;
-  }
-
-  .filters {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-    padding: 0 1rem;
-  }
-
-  .filters select,
-  .filter-btn {
-    font-size: 0.9rem;
-    padding: 0.75rem;
-  }
-
-  .loads-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 0 1rem;
-  }
-
-  .load-card,
-  .truck-card {
-    padding: 1.25rem;
-  }
-
-  .load-header,
-  .truck-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .route {
-    width: 100%;
-  }
-
-  .route-point {
-    max-width: 150px;
-    font-size: 0.85rem;
-  }
-
-  .load-footer,
-  .truck-footer {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.75rem;
-  }
-
-  .load-actions,
-  .truck-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .load-actions .btn,
-  .truck-actions .btn {
-    flex: 1;
-    justify-content: center;
-    padding: 0.75rem;
-    font-size: 0.85rem;
-  }
-
-  .empty-state {
-    padding: 2rem 1rem;
-    margin: 0;
-  }
-}
-
-@media (max-width: 480px) {
-  .board-title,
-  .platform-title {
-    font-size: 1.5rem;
-  }
-
-  .tab {
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0.75rem 0.25rem;
-    font-size: 0.8rem;
-  }
-
-  .tab svg {
-    width: 16px;
-    height: 16px;
-  }
-
-  .route {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .route-arrow {
-    transform: rotate(90deg);
-    align-self: center;
-  }
-
-  .route-point {
-    max-width: none;
-    width: 100%;
-  }
-
-  .load-actions,
-  .truck-actions {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .load-actions .btn,
-  .truck-actions .btn {
-    width: 100%;
-  }
-}
-
-/* 辅助样式 */
-.container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0;
-}
-
-/* Loading 和 Error 状态 */
-.loading-container,
-.error-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 400px;
-  flex-direction: column;
-  padding: 2rem;
-}
-
-.loading-container p,
-.error-container p {
-  margin-top: 1rem;
-  color: #666;
-  font-size: 1rem;
-  text-align: center;
-}
-
-.error-container button {
-  margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: #34C759;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.error-container button:hover {
-  background: #30D158;
-  transform: translateY(-2px);
-}
-
-/* 确保文本不换行的关键样式 */
-.no-wrap {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* 针对特定元素的文本保护 */
-.tab span,
-.route-point span,
-.company-name,
-.detail-row span {
-  word-break: keep-all;
-  overflow-wrap: normal;
-}
-
-/* 统计信息样式 */
-.stats-summary {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  text-align: center;
-  color: #666;
-  font-size: clamp(0.8rem, 2vw, 0.9rem);
-}
-
-.stats-summary button {
-  margin-left: 1rem;
-  background: none;
-  border: none;
-  color: #34C759;
-  cursor: pointer;
-  text-decoration: underline;
-  font-size: inherit;
-}
-
-.stats-summary button:hover {
-  color: #30D158;
-}
-
-/* 搜索筛选区域样式 */
-.search-filter-section {
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-}
-
-.main-search {
-  margin-bottom: 1rem;
-}
-
-.search-input-group {
-  display: flex;
-  align-items: center;
   background: white;
-  border-radius: 8px;
-  padding: 0.75rem;
-  gap: 0.5rem;
-  border: 2px solid transparent;
-  transition: all 0.3s ease;
+  font-size: 0.9rem;
+  min-width: 120px;
 }
 
-.search-input-group:focus-within {
-  border-color: #34C759;
-  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.1);
-}
-
-.search-input-group svg {
-  color: #34C759;
-  flex-shrink: 0;
-}
-
-.search-input-group input {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: 1rem;
-  color: #333;
-}
-
-.search-input-group input::placeholder {
-  color: #999;
-}
-
-.search-submit-btn {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  background: #34C759;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.search-submit-btn:hover {
-  background: #2ecc71;
-  transform: translateY(-1px);
-}
-
-.quick-filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.filter-group {
+.date-range {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.filter-group label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 0.375rem;
-}
-
-.filter-group select {
+.date-range input {
   padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 6px;
-  background: white;
-  font-size: 0.875rem;
-  color: #333;
-  transition: border-color 0.2s ease;
-}
-
-.filter-group select:focus {
-  outline: none;
-  border-color: #34C759;
-  box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.1);
-}
-
-.filter-actions {
-  display: flex;
-  gap: 0.75rem;
-  align-items: flex-end;
-}
-
-.apply-btn, .reset-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-}
-
-.apply-btn {
-  background: #34C759;
-  color: white;
-}
-
-.apply-btn:hover {
-  background: #2ecc71;
-  transform: translateY(-1px);
+  font-size: 0.9rem;
 }
 
 .reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
   background: #f5f5f5;
-  color: #666;
   border: 1px solid #ddd;
+  border-radius: 6px;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .reset-btn:hover {
   background: #e0e0e0;
-  color: #333;
 }
 
-.advanced-controls {
-  display: flex;
-  gap: 1rem;
-  align-items: flex-end;
-  margin-bottom: 1rem;
-}
-
-.range-filters {
-  display: flex;
-  gap: 1rem;
-  flex: 1;
-}
-
-.range-group {
-  flex: 1;
-}
-
-.range-group label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 0.375rem;
-}
-
-.range-inputs {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.range-inputs input {
-  flex: 1;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  font-size: 0.875rem;
-  text-align: center;
-}
-
-.range-inputs span {
-  color: #666;
-  font-weight: 500;
-}
-
-.sort-control {
-  min-width: 160px;
-}
-
-.sort-control label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 0.375rem;
-}
-
-.sort-control select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  font-size: 0.875rem;
-}
-
+/* 活跃筛选标签 */
 .active-filters {
-  background: rgba(52, 199, 89, 0.1);
-  border: 1px solid rgba(52, 199, 89, 0.3);
-  border-radius: 8px;
-  padding: 0.75rem;
+  margin-top: 1rem;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.filter-label {
+.results-text {
   font-weight: 600;
   color: #2e7d32;
 }
 
 .filter-tags {
   display: flex;
-  flex-wrap: wrap;
   gap: 0.5rem;
-  flex: 1;
+  flex-wrap: wrap;
 }
 
 .filter-tag {
@@ -1026,286 +225,162 @@
   border: none;
   color: #999;
   cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
-  padding: 0;
-  margin-left: 0.25rem;
-}
-
-.filter-tag button:hover {
-  color: #666;
-}
-
-.results-count {
-  font-weight: 600;
-  color: #2e7d32;
-  white-space: nowrap;
-}
-
-/* 紧凑货源卡片样式 */
-.freight-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1rem;
-  padding: 0;
-}
-
-.freight-card {
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #e5e5e7;
-  overflow: hidden;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.freight-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
-  border-color: #34C759;
-}
-
-.freight-card.ftl {
-  border-left: 4px solid #007AFF;
-}
-
-.freight-card.ltl {
-  border-left: 4px solid #34C759;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background: #f8f9fa;
-  border-bottom: 1px solid #e5e5e7;
-}
-
-.service-type-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.375rem;
-  font-weight: 700;
-  font-size: 0.875rem;
-}
-
-.service-type-badge.ftl {
-  color: #007AFF;
-}
-
-.service-type-badge.ltl {
-  color: #34C759;
-}
-
-.urgency-tag {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.urgency-tag.加急 {
-  background: #fff3e0;
-  color: #e65100;
-}
-
-.urgency-tag.紧急 {
-  background: #ffebee;
-  color: #c62828;
-  animation: pulse 2s infinite;
-}
-
-.available-tag {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: #e8f5e8;
-  color: #2e7d32;
-}
-
-.card-content {
-  padding: 1rem;
-}
-
-.route-section {
-  margin-bottom: 0.75rem;
-}
-
-.route-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-}
-
-.origin, .destination {
-  font-weight: 600;
-  color: #333;
-  font-size: 0.95rem;
-}
-
-.arrow {
-  color: #999;
-}
-
-.distance {
-  color: #666;
-  font-size: 0.8rem;
-}
-
-.date-info {
-  font-size: 0.8rem;
-  color: #666;
-}
-
-.cargo-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
-  gap: 1rem;
-}
-
-.cargo-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  flex: 1;
-}
-
-.commodity {
-  font-weight: 600;
-  color: #333;
   font-size: 0.9rem;
 }
 
-.weight-equipment {
-  color: #666;
-  font-size: 0.8rem;
+/* 内容区域 */
+.freight-content {
+  margin-bottom: 2rem;
 }
 
-.price-info {
+.freight-list {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
+  gap: 0.75rem;
 }
 
-.price {
-  font-weight: 700;
-  color: #e65100;
-  font-size: 1.1rem;
-}
-
-.freight-class {
-  background: #34C759;
-  color: white;
-  padding: 0.125rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 600;
-}
-
-.requirements-section {
-  margin-bottom: 0.75rem;
-}
-
-.requirements {
-  background: #fff8e1;
-  color: #f57c00;
-  padding: 0.5rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  border-left: 3px solid #ff9800;
-}
-
-.ltl-details, .ftl-details {
+/* 超简洁卡片样式 */
+.simple-card {
+  background: white;
+  border: 1px solid #e5e5e7;
+  border-radius: 8px;
+  padding: 1rem;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.simple-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #34C759;
+}
+
+.simple-card.ftl {
+  border-left: 4px solid #1976d2;
+}
+
+.simple-card.ltl {
+  border-left: 4px solid #34C759;
+}
+
+.card-main {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex: 1;
+}
+
+/* 服务类型标识 */
+.service-type span {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
-.ltl-details span, .ftl-details span {
-  background: #f5f5f5;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  color: #666;
-}
-
-.ltl-details .positive {
-  background: #e8f5e8;
-  color: #2e7d32;
-}
-
-.ltl-details .negative {
-  background: #ffebee;
-  color: #c62828;
-}
-
-.insurance {
+.ftl-badge {
   background: #e3f2fd;
   color: #1976d2;
 }
 
-.card-footer {
+.ltl-badge {
+  background: #e8f5e8;
+  color: #34C759;
+}
+
+.truck-badge {
+  background: #f3e5f5;
+  color: #7b1fa2;
+}
+
+/* 路线信息 */
+.route {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: #f8f9fa;
-  border-top: 1px solid #e5e5e7;
-}
-
-.company-section {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.company-name {
+  gap: 0.5rem;
   font-weight: 600;
   color: #333;
-  font-size: 0.875rem;
+  min-width: 160px;
 }
 
-.company-rating {
+.route svg {
+  color: #999;
+}
+
+/* 货物/设备类型 */
+.cargo-type, .equipment {
+  color: #666;
+  font-size: 0.9rem;
+  min-width: 100px;
+}
+
+/* 重量/载重 */
+.weight, .capacity {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  font-size: 0.75rem;
   color: #666;
+  font-size: 0.9rem;
+  min-width: 80px;
 }
 
-.company-rating svg {
-  color: #FFD700;
+/* 日期 */
+.date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #666;
+  font-size: 0.9rem;
+  min-width: 80px;
 }
 
-.action-buttons {
+/* 价格 */
+.price, .rate {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 700;
+  color: #e65100;
+  font-size: 1rem;
+  min-width: 100px;
+}
+
+/* 紧急程度 */
+.urgency {
+  background: #ffeb3b;
+  color: #f57c00;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* 操作按钮 */
+.card-actions {
   display: flex;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .contact-btn, .quote-btn {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.375rem 0.75rem;
+  padding: 0.5rem 1rem;
   border-radius: 6px;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .contact-btn {
@@ -1315,7 +390,6 @@
 
 .contact-btn:hover {
   background: #2ecc71;
-  transform: translateY(-1px);
 }
 
 .quote-btn {
@@ -1326,111 +400,319 @@
 
 .quote-btn:hover {
   background: #f5f5f5;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.empty-state svg {
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  margin-bottom: 0.5rem;
   color: #333;
 }
 
-/* 移动端响应式 */
+/* Loading 和 Error 状态 */
+.loading-container, .error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  flex-direction: column;
+  padding: 2rem;
+}
+
+.error-container button {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: #34C759;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* 响应式设计 */
 @media (max-width: 768px) {
+  .platform-page {
+    padding: 1rem 0;
+  }
+
+  .container {
+    padding: 0 0.75rem;
+  }
+
+  .platform-title {
+    font-size: 1.8rem;
+  }
+
+  .platform-description {
+    font-size: 1rem;
+  }
+
   .search-filter-section {
     padding: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
   }
 
-  .quick-filters {
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-  }
-
-  .filter-actions {
-    grid-column: 1 / -1;
-    justify-content: center;
-    margin-top: 0.5rem;
-  }
-
-  .advanced-controls {
+  .filters-row {
     flex-direction: column;
     gap: 0.75rem;
   }
 
-  .range-filters {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .sort-control {
-    min-width: auto;
+  .filters-row select, .date-range input, .reset-btn {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
   }
 
   .freight-list {
-    grid-template-columns: 1fr;
     gap: 0.75rem;
   }
 
-  .cargo-section {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .price-info {
-    align-items: flex-start;
-  }
-
-  .card-footer {
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: stretch;
-  }
-
-  .action-buttons {
-    justify-content: center;
-  }
-
-  .active-filters {
+  .simple-card {
     flex-direction: column;
     align-items: stretch;
-    gap: 0.5rem;
+    padding: 0.75rem;
   }
 
-  .filter-tags {
+  .card-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    align-items: center;
+  }
+
+  /* 第一行：服务类型 + 路线（跨两列） */
+  .card-main .service-type {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+
+  .card-main .route {
+    grid-column: 1 / -1;
+    justify-self: center;
+    margin-bottom: 0.25rem;
+  }
+
+  /* 第二行：货物类型 + 重量 */
+  .card-main .cargo-type,
+  .card-main .equipment {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .card-main .weight,
+  .card-main .capacity {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  /* 第三行：日期 + 价格 */
+  .card-main .date {
+    grid-column: 1;
+    justify-self: start;
+  }
+
+  .card-main .price,
+  .card-main .rate {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  /* 紧急程度（如果有）跨两列 */
+  .card-main .urgency {
+    grid-column: 1 / -1;
+    justify-self: center;
+    margin-top: 0.25rem;
+  }
+
+  .service-type span {
     justify-content: center;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .route {
+    min-width: auto;
+    font-size: 0.9rem;
+  }
+
+  .card-main .cargo-type,
+  .card-main .equipment,
+  .card-main .weight,
+  .card-main .capacity,
+  .card-main .date {
+    min-width: auto;
+    font-size: 0.8rem;
+  }
+
+  .card-main .price,
+  .card-main .rate {
+    font-size: 1rem;
+    font-weight: 700;
+    min-width: auto;
+  }
+
+  .card-actions {
+    justify-content: space-between;
+  }
+
+  .contact-btn, .quote-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.8rem;
+    padding: 0.6rem;
   }
 }
 
+/* 小屏手机优化 */
 @media (max-width: 480px) {
+  .container {
+    padding: 0 0.5rem;
+  }
+
+  .platform-title {
+    font-size: 1.5rem;
+  }
+
   .search-filter-section {
     padding: 0.75rem;
   }
 
-  .quick-filters {
-    grid-template-columns: 1fr;
+  .filters-row select, .date-range input, .reset-btn {
+    padding: 0.6rem;
+    font-size: 0.9rem;
   }
 
-  .search-input-group {
-    flex-direction: column;
+  .freight-list {
     gap: 0.75rem;
   }
 
-  .search-submit-btn {
-    width: 100%;
+  .simple-card {
+    padding: 0.6rem;
   }
 
-  .filter-actions {
-    flex-direction: column;
-    gap: 0.5rem;
+  .card-main {
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
   }
 
-  .apply-btn, .reset-btn {
-    width: 100%;
-    justify-content: center;
+  .service-type span {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
   }
 
-  .route-info {
-    flex-wrap: wrap;
+  .route {
+    font-size: 0.85rem;
   }
 
-  .distance {
-    width: 100%;
-    text-align: center;
-    margin-top: 0.25rem;
+  .card-main .cargo-type,
+  .card-main .equipment,
+  .card-main .weight,
+  .card-main .capacity,
+  .card-main .date {
+    font-size: 0.75rem;
+  }
+
+  .card-main .price,
+  .card-main .rate {
+    font-size: 0.9rem;
+  }
+
+  .contact-btn, .quote-btn {
+    font-size: 0.75rem;
+    padding: 0.5rem;
+  }
+}
+
+/* 确保价格和日期元素始终可见 */
+.simple-card .price,
+.simple-card .rate,
+.simple-card .date {
+  display: flex !important;
+  align-items: center;
+  gap: 0.25rem;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.simple-card .price,
+.simple-card .rate {
+  font-weight: 700;
+  color: #e65100;
+  font-size: 1rem;
+}
+
+.simple-card .date {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* 确保文本内容显示 */
+.price-text,
+.rate-text,
+.date-text {
+  display: inline !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.price-text,
+.rate-text {
+  color: #e65100;
+  font-weight: 700;
+}
+
+.date-text {
+  color: #666;
+}
+
+/* 桌面版布局优化 */
+@media (min-width: 769px) {
+  .card-main {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1;
+  }
+
+  .card-main > * {
+    flex-shrink: 0;
+  }
+
+  .service-type {
+    min-width: 120px;
+  }
+
+  .route {
+    min-width: 160px;
+  }
+
+  .cargo-type, .equipment {
+    min-width: 100px;
+  }
+
+  .weight, .capacity {
+    min-width: 80px;
+  }
+
+  .date {
+    min-width: 80px;
+  }
+
+  .price, .rate {
+    min-width: 100px;
   }
 } 

@@ -25,7 +25,8 @@ import {
   Home,
   Building,
   Trash2,
-  RotateCcw
+  RotateCcw,
+  Box
 } from 'lucide-react';
 // import { useLanguage } from '../contexts/LanguageContext';
 import PostLoadModal from '../components/PostLoadModal';
@@ -46,29 +47,16 @@ const FreightBoard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // 分离筛选条件和应用的筛选条件
+  // 简化的筛选条件
   const [filters, setFilters] = useState({
+    search: '',
     origin: '',
     destination: '',
-    equipment: '',
-    serviceType: '',
-    minRate: '',
-    maxRate: '',
-    minWeight: '',
-    maxWeight: ''
+    serviceType: '', // FTL, LTL
+    dateFrom: '',
+    dateTo: ''
   });
-  const [appliedFilters, setAppliedFilters] = useState({
-    origin: '',
-    destination: '',
-    equipment: '',
-    serviceType: '',
-    minRate: '',
-    maxRate: '',
-    minWeight: '',
-    maxWeight: ''
-  });
-  const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('date'); // date, rate-low, rate-high, weight
+  const [sortBy, setSortBy] = useState('date'); // date, rate, weight
 
   const { isAuthenticated } = useAuth();
 
@@ -405,58 +393,77 @@ const FreightBoard = () => {
   };
 
   const applyFilters = () => {
-    setAppliedFilters({ ...filters });
-    setAppliedSearchQuery(searchQuery);
+    // Implementation of applyFilters function
   };
 
   const resetFilters = () => {
     const resetState = {
+      search: '',
       origin: '',
       destination: '',
-      equipment: '',
       serviceType: '',
-      minRate: '',
-      maxRate: '',
-      minWeight: '',
-      maxWeight: ''
+      dateFrom: '',
+      dateTo: ''
     };
     setFilters(resetState);
-    setAppliedFilters(resetState);
     setSearchQuery('');
-    setAppliedSearchQuery('');
   };
 
   const handlePostSubmit = async (postData) => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const endpoint = postData.type === 'load' ? '/landfreight/loads' : '/landfreight/trucks';
-      
+      // 临时简化：直接添加到本地数据，不调用API
       if (!isAuthenticated) {
         alert('请先登录再发布信息');
         return;
       }
 
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${API_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(postData)
-      });
-
-      if (!response.ok) {
-        throw new Error('发布失败');
-      }
-
-      // 重新加载数据
+      console.log('收到的发布数据:', postData); // 调试日志
+      
       if (postData.type === 'load') {
-        const loadData = await fetchLoads();
-        setLoads(loadData);
+        const newLoad = {
+          id: Date.now(),
+          origin: postData.origin,
+          destination: postData.destination,
+          pickupDate: postData.pickupDate || postData.requiredDate,
+          deliveryDate: postData.deliveryDate || postData.pickupDate,
+          rate: postData.maxRate,
+          rateValue: parseFloat(postData.maxRate?.replace(/[^\d.]/g, '')) || 0,
+          weight: postData.weight,
+          weightValue: parseFloat(postData.weight?.replace(/[^\d.]/g, '')) || 0,
+          serviceType: postData.serviceType,
+          equipment: postData.truckType || '标准货车',
+          company: postData.companyName,
+          rating: 4.5,
+          phone: postData.contactPhone,
+          commodity: postData.cargoType,
+          urgency: postData.urgency,
+          pallets: postData.originalData?.pallets || '',
+          requirements: postData.specialRequirements || postData.notes || '',
+          freightClass: postData.originalData?.freightClass || '',
+          density: postData.originalData?.calculatedDensity || '',
+          stackable: postData.originalData?.stackable || true
+        };
+        console.log('创建的新货源:', newLoad); // 调试日志
+        setLoads(prev => [newLoad, ...prev]);
       } else {
-        const truckData = await fetchTrucks();
-        setTrucks(truckData);
+        const newTruck = {
+          id: Date.now(),
+          location: postData.currentLocation || postData.origin,
+          destination: postData.destination || postData.preferredDestination || '全国各地',
+          availableDate: postData.availableDate,
+          equipment: postData.equipment || postData.truckType,
+          capacity: postData.capacity,
+          volume: postData.volume || '',
+          serviceType: postData.serviceType,
+          rateRange: postData.rateRange || postData.rate,
+          company: postData.companyName,
+          rating: 4.5,
+          phone: postData.contactPhone,
+          preferredLanes: postData.originalData?.preferredLanes || `${postData.preferredOrigin || '任意地点'} 至 ${postData.preferredDestination || '全国各地'}`,
+          specialServices: postData.truckFeatures || postData.specialServices || ''
+        };
+        console.log('创建的新车源:', newTruck); // 调试日志
+        setTrucks(prev => [newTruck, ...prev]);
       }
 
       alert('发布成功！');
@@ -468,67 +475,55 @@ const FreightBoard = () => {
 
   const filterData = (data) => {
     let filteredData = data.filter(item => {
-      // 搜索过滤
-      if (appliedSearchQuery) {
-        const searchLower = appliedSearchQuery.toLowerCase();
+      // 搜索过滤 - 扩展搜索字段
+      if (searchQuery) {
+        const searchLower = searchQuery.toLowerCase();
         const matchesSearch = 
           item.origin?.toLowerCase().includes(searchLower) ||
           item.destination?.toLowerCase().includes(searchLower) ||
           item.location?.toLowerCase().includes(searchLower) ||
+          item.currentLocation?.toLowerCase().includes(searchLower) ||
           item.equipment?.toLowerCase().includes(searchLower) ||
+          item.truckType?.toLowerCase().includes(searchLower) ||
+          item.cargoType?.toLowerCase().includes(searchLower) ||
           item.commodity?.toLowerCase().includes(searchLower) ||
-          item.company?.toLowerCase().includes(searchLower);
+          item.company?.toLowerCase().includes(searchLower) ||
+          item.companyName?.toLowerCase().includes(searchLower) ||
+          item.specialServices?.toLowerCase().includes(searchLower) ||
+          item.preferredLanes?.toLowerCase().includes(searchLower);
         
         if (!matchesSearch) return false;
       }
 
       // 基础筛选条件
-      if (appliedFilters.origin && !item.origin?.toLowerCase().includes(appliedFilters.origin.toLowerCase()) && 
-          !item.location?.toLowerCase().includes(appliedFilters.origin.toLowerCase())) return false;
+      if (filters.origin && 
+          !item.origin?.toLowerCase().includes(filters.origin.toLowerCase()) && 
+          !item.location?.toLowerCase().includes(filters.origin.toLowerCase())) return false;
       
-      if (appliedFilters.destination && !item.destination?.toLowerCase().includes(appliedFilters.destination.toLowerCase())) return false;
+      if (filters.destination && 
+          !item.destination?.toLowerCase().includes(filters.destination.toLowerCase())) return false;
       
-      if (appliedFilters.equipment && !item.equipment?.toLowerCase().includes(appliedFilters.equipment.toLowerCase())) return false;
-      
-      if (appliedFilters.serviceType && item.serviceType !== appliedFilters.serviceType) return false;
+      // 服务类型筛选
+      if (filters.serviceType && item.serviceType !== filters.serviceType) return false;
 
-      // 价格范围筛选
-      if (appliedFilters.minRate) {
-        const minRate = parseInt(appliedFilters.minRate);
-        if (item.rateValue && item.rateValue < minRate) return false;
-      }
-      
-      if (appliedFilters.maxRate) {
-        const maxRate = parseInt(appliedFilters.maxRate);
-        if (item.rateValue && item.rateValue > maxRate) return false;
-      }
-
-      // 重量范围筛选
-      if (appliedFilters.minWeight) {
-        const minWeight = parseInt(appliedFilters.minWeight);
-        if (item.weightValue && item.weightValue < minWeight) return false;
-      }
-      
-      if (appliedFilters.maxWeight) {
-        const maxWeight = parseInt(appliedFilters.maxWeight);
-        if (item.weightValue && item.weightValue > maxWeight) return false;
-      }
+      // 取货日期范围筛选
+      if (filters.dateFrom && new Date(item.pickupDate) < new Date(filters.dateFrom)) return false;
+      if (filters.dateTo && new Date(item.pickupDate) > new Date(filters.dateTo)) return false;
 
       return true;
     });
 
-    // 排序功能
+    // 排序功能 - 扩展排序选项
     if (sortBy) {
       filteredData.sort((a, b) => {
         switch (sortBy) {
           case 'date':
-            return new Date(b.pickupDate || b.availableDate) - new Date(a.pickupDate || a.availableDate);
-          case 'rate-low':
-            return (a.rateValue || 0) - (b.rateValue || 0);
-          case 'rate-high':
-            return (b.rateValue || 0) - (a.rateValue || 0);
+            return new Date(b.pickupDate || b.availableDate || b.postedDate) - 
+                   new Date(a.pickupDate || a.availableDate || a.postedDate);
+          case 'rate':
+            return (a.rateValue || a.maxRate || 0) - (b.rateValue || b.maxRate || 0);
           case 'weight':
-            return (b.weightValue || 0) - (a.weightValue || 0);
+            return (b.weightValue || b.weight || 0) - (a.weightValue || a.weight || 0);
           default:
             return 0;
         }
@@ -541,19 +536,16 @@ const FreightBoard = () => {
   const filteredLoads = filterData(loads);
   const filteredTrucks = filterData(trucks);
 
-  const hasAppliedFilters = Object.values(appliedFilters).some(value => value !== '') || appliedSearchQuery !== '';
+  const hasAppliedFilters = Object.values(filters).some(value => value !== '');
 
   const getFilterDescription = () => {
     const descriptions = [];
-    if (appliedFilters.origin) descriptions.push(`起始: ${appliedFilters.origin}`);
-    if (appliedFilters.destination) descriptions.push(`目的: ${appliedFilters.destination}`);
-    if (appliedFilters.equipment) descriptions.push(`车型: ${appliedFilters.equipment}`);
-    if (appliedFilters.serviceType) descriptions.push(`服务: ${appliedFilters.serviceType === 'FTL' ? '整车' : '零担'}`);
-    if (appliedFilters.minRate) descriptions.push(`最低价: ${appliedFilters.minRate}元`);
-    if (appliedFilters.maxRate) descriptions.push(`最高价: ${appliedFilters.maxRate}元`);
-    if (appliedFilters.minWeight) descriptions.push(`最低重量: ${appliedFilters.minWeight}kg`);
-    if (appliedFilters.maxWeight) descriptions.push(`最高重量: ${appliedFilters.maxWeight}kg`);
-    if (appliedSearchQuery) descriptions.push(`搜索: ${appliedSearchQuery}`);
+    if (filters.origin) descriptions.push(`起始: ${filters.origin}`);
+    if (filters.destination) descriptions.push(`目的: ${filters.destination}`);
+    if (filters.serviceType) descriptions.push(`服务: ${filters.serviceType === 'FTL' ? '整车' : '零担'}`);
+    if (filters.dateFrom) descriptions.push(`取货从: ${filters.dateFrom}`);
+    if (filters.dateTo) descriptions.push(`取货到: ${filters.dateTo}`);
+    if (searchQuery) descriptions.push(`搜索: ${searchQuery}`);
     
     return descriptions.length > 0 
       ? `应用的筛选条件: ${descriptions.join(', ')}`
@@ -672,331 +664,199 @@ const FreightBoard = () => {
           </button>
         </div>
 
-        {/* 搜索筛选区域 */}
+        {/* 搜索筛选区域 - 重新设计 */}
         <div className="search-filter-section">
-          {/* 主搜索栏 */}
-          <div className="main-search">
-            <div className="search-input-group">
-              <Search size={20} />
-              <input
-                type="text"
-                placeholder="搜索起始地、目的地、公司名称..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
-              />
-              <button className="search-submit-btn" onClick={applyFilters}>
-                搜索
-              </button>
-            </div>
+          <div className="search-bar">
+            <Search size={20} />
+            <input
+              type="text"
+              placeholder="搜索起始地、目的地、公司名称..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
+            />
           </div>
 
-          {/* 快速筛选 */}
-          <div className="quick-filters">
-            <div className="filter-group">
-              <label>起始地</label>
-              <select 
-                value={filters.origin} 
-                onChange={(e) => handleFilterChange('origin', e.target.value)}
-              >
-                <option value="">选择起始地</option>
-                <option value="北京">北京</option>
-                <option value="上海">上海</option>
-                <option value="广州">广州</option>
-                <option value="深圳">深圳</option>
-                <option value="杭州">杭州</option>
-                <option value="南京">南京</option>
-                <option value="成都">成都</option>
-                <option value="重庆">重庆</option>
-                <option value="西安">西安</option>
-                <option value="郑州">郑州</option>
-                <option value="天津">天津</option>
-                <option value="济南">济南</option>
-                <option value="青岛">青岛</option>
-                <option value="福州">福州</option>
-                <option value="厦门">厦门</option>
-                <option value="昆明">昆明</option>
-                <option value="贵阳">贵阳</option>
-              </select>
-            </div>
+          <div className="filters-row">
+            <select 
+              value={filters.origin} 
+              onChange={(e) => handleFilterChange('origin', e.target.value)}
+            >
+              <option value="">选择起始地</option>
+              <option value="北京">北京</option>
+              <option value="上海">上海</option>
+              <option value="广州">广州</option>
+              <option value="深圳">深圳</option>
+              <option value="杭州">杭州</option>
+              <option value="南京">南京</option>
+              <option value="成都">成都</option>
+              <option value="重庆">重庆</option>
+            </select>
 
-            <div className="filter-group">
-              <label>目的地</label>
-              <select 
-                value={filters.destination} 
-                onChange={(e) => handleFilterChange('destination', e.target.value)}
-              >
-                <option value="">选择目的地</option>
-                <option value="北京">北京</option>
-                <option value="上海">上海</option>
-                <option value="广州">广州</option>
-                <option value="深圳">深圳</option>
-                <option value="杭州">杭州</option>
-                <option value="南京">南京</option>
-                <option value="成都">成都</option>
-                <option value="重庆">重庆</option>
-                <option value="西安">西安</option>
-                <option value="郑州">郑州</option>
-                <option value="天津">天津</option>
-                <option value="济南">济南</option>
-                <option value="青岛">青岛</option>
-                <option value="福州">福州</option>
-                <option value="厦门">厦门</option>
-                <option value="昆明">昆明</option>
-                <option value="贵阳">贵阳</option>
-                <option value="全国">全国各地</option>
-              </select>
-            </div>
+            <select 
+              value={filters.destination} 
+              onChange={(e) => handleFilterChange('destination', e.target.value)}
+            >
+              <option value="">选择目的地</option>
+              <option value="北京">北京</option>
+              <option value="上海">上海</option>
+              <option value="广州">广州</option>
+              <option value="深圳">深圳</option>
+              <option value="杭州">杭州</option>
+              <option value="南京">南京</option>
+              <option value="成都">成都</option>
+              <option value="重庆">重庆</option>
+              <option value="全国">全国各地</option>
+            </select>
 
-            <div className="filter-group">
-              <label>车型</label>
-              <select 
-                value={filters.equipment} 
-                onChange={(e) => handleFilterChange('equipment', e.target.value)}
-              >
-                <option value="">选择车型</option>
-                <option value="厢式货车">厢式货车</option>
-                <option value="平板车">平板车</option>
-                <option value="高栏车">高栏车</option>
-                <option value="冷藏车">冷藏车</option>
-                <option value="特种车">特种车</option>
-              </select>
-            </div>
+            <select 
+              value={filters.serviceType} 
+              onChange={(e) => handleFilterChange('serviceType', e.target.value)}
+            >
+              <option value="">全部类型</option>
+              <option value="FTL">整车运输</option>
+              <option value="LTL">零担运输</option>
+            </select>
 
-            <div className="filter-group">
-              <label>服务类型</label>
-              <select 
-                value={filters.serviceType} 
-                onChange={(e) => handleFilterChange('serviceType', e.target.value)}
-              >
-                <option value="">全部类型</option>
-                <option value="FTL">整车运输</option>
-                <option value="LTL">零担运输</option>
-              </select>
-            </div>
-
-            <div className="filter-actions">
-              <button className="apply-btn" onClick={applyFilters}>
-                <Filter size={16} />
-                筛选
-              </button>
-              <button className="reset-btn" onClick={resetFilters}>
-                <X size={16} />
-                重置
-              </button>
-            </div>
-          </div>
-
-          {/* 高级筛选和排序 */}
-          <div className="advanced-controls">
-            <div className="range-filters">
-              <div className="range-group">
-                <label>价格范围(元)</label>
-                <div className="range-inputs">
-                  <input
-                    type="number"
-                    placeholder="最低价"
-                    value={filters.minRate}
-                    onChange={(e) => handleFilterChange('minRate', e.target.value)}
-                  />
-                  <span>-</span>
-                  <input
-                    type="number"
-                    placeholder="最高价"
-                    value={filters.maxRate}
-                    onChange={(e) => handleFilterChange('maxRate', e.target.value)}
-                  />
-                </div>
+            {activeTab === 'loads' && (
+              <div className="date-range">
+                <input
+                  type="date"
+                  value={filters.dateFrom}
+                  onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+                  placeholder="取货开始日期"
+                />
+                <span>-</span>
+                <input
+                  type="date"
+                  value={filters.dateTo}
+                  onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+                  placeholder="取货结束日期"
+                />
               </div>
+            )}
 
-              <div className="range-group">
-                <label>重量范围(kg)</label>
-                <div className="range-inputs">
-                  <input
-                    type="number"
-                    placeholder="最低重量"
-                    value={filters.minWeight}
-                    onChange={(e) => handleFilterChange('minWeight', e.target.value)}
-                  />
-                  <span>-</span>
-                  <input
-                    type="number"
-                    placeholder="最高重量"
-                    value={filters.maxWeight}
-                    onChange={(e) => handleFilterChange('maxWeight', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="date">按日期排序</option>
+              <option value="rate">按价格排序</option>
+              <option value="weight">按重量排序</option>
+            </select>
 
-            <div className="sort-control">
-              <label>排序方式</label>
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                <option value="date">发布时间</option>
-                <option value="rate-low">价格由低到高</option>
-                <option value="rate-high">价格由高到低</option>
-                <option value="weight">重量由大到小</option>
-              </select>
-            </div>
+            <button className="reset-btn" onClick={resetFilters}>
+              <RotateCcw size={16} />
+              重置
+            </button>
           </div>
 
-          {/* 当前筛选状态 */}
+          {/* 活跃筛选标签 */}
           {hasAppliedFilters && (
             <div className="active-filters">
-              <span className="filter-label">当前筛选：</span>
+              <span className="results-text">
+                找到 {activeTab === 'loads' ? filteredLoads.length : filteredTrucks.length} 条结果
+              </span>
               <div className="filter-tags">
-                {appliedSearchQuery && (
+                {searchQuery && (
                   <span className="filter-tag">
-                    搜索: {appliedSearchQuery}
-                    <button onClick={() => { setSearchQuery(''); setAppliedSearchQuery(''); }}>×</button>
+                    搜索: {searchQuery}
+                    <button onClick={() => setSearchQuery('')}>×</button>
                   </span>
                 )}
-                {appliedFilters.origin && (
+                {filters.origin && (
                   <span className="filter-tag">
-                    起始: {appliedFilters.origin}
+                    起始: {filters.origin}
                     <button onClick={() => handleFilterChange('origin', '')}>×</button>
                   </span>
                 )}
-                {appliedFilters.destination && (
+                {filters.destination && (
                   <span className="filter-tag">
-                    目的: {appliedFilters.destination}
+                    目的: {filters.destination}
                     <button onClick={() => handleFilterChange('destination', '')}>×</button>
                   </span>
                 )}
-                {appliedFilters.serviceType && (
+                {filters.serviceType && (
                   <span className="filter-tag">
-                    类型: {appliedFilters.serviceType === 'FTL' ? '整车' : '零担'}
+                    类型: {filters.serviceType === 'FTL' ? '整车' : '零担'}
                     <button onClick={() => handleFilterChange('serviceType', '')}>×</button>
                   </span>
                 )}
+                {(filters.dateFrom || filters.dateTo) && (
+                  <span className="filter-tag">
+                    日期: {filters.dateFrom || '不限'} - {filters.dateTo || '不限'}
+                    <button onClick={() => { handleFilterChange('dateFrom', ''); handleFilterChange('dateTo', ''); }}>×</button>
+                  </span>
+                )}
               </div>
-              <span className="results-count">
-                共找到 {activeTab === 'loads' ? filteredLoads.length : filteredTrucks.length} 条结果
-              </span>
             </div>
           )}
         </div>
 
         {/* Content */}
-        <div className="freight-list-container">
+        <div className="freight-content">
           {activeTab === 'loads' && (
             <div className="freight-list">
               {filteredLoads.length === 0 ? (
                 <div className="empty-state">
                   <Package size={48} />
-                  <h3>
-                    {hasAppliedFilters ? '没有符合条件的货源信息' : '暂无货源信息'}
-                  </h3>
-                  <p>
-                    {hasAppliedFilters 
-                      ? '请尝试修改筛选条件' 
-                      : '还没有货源信息发布，快来发布第一个吧！'
-                    }
-                  </p>
+                  <h3>暂无货源信息</h3>
+                  <p>还没有符合条件的货源信息</p>
                 </div>
               ) : (
                 filteredLoads.map(load => (
-                  <div key={load.id} className={`freight-card ${load.serviceType?.toLowerCase()}`}>
-                    {/* 紧凑货源卡片 */}
-                    <div className="card-header">
-                      <div className={`service-type-badge ${load.serviceType?.toLowerCase()}`}>
+                  <div key={load.id} className={`simple-card load-card ${load.serviceType?.toLowerCase()}`}>
+                    <div className="card-main">
+                      <div className="service-type">
                         {load.serviceType === 'FTL' ? (
-                          <>
-                            <Truck size={14} />
-                            <span>整车</span>
-                          </>
+                          <span className="ftl-badge">
+                            <Truck size={16} />
+                            整车 FTL
+                          </span>
                         ) : (
-                          <>
-                            <Package size={14} />
-                            <span>零担</span>
-                          </>
+                          <span className="ltl-badge">
+                            <Package size={16} />
+                            零担 LTL
+                          </span>
                         )}
                       </div>
                       
+                      <div className="route">
+                        <span className="origin">{load.origin}</span>
+                        <ArrowRight size={16} />
+                        <span className="destination">{load.destination}</span>
+                      </div>
+                      
+                      <div className="cargo-type">
+                        {load.commodity}
+                      </div>
+                      
+                      <div className="weight">
+                        <Scale size={14} />
+                        {load.weight}
+                      </div>
+                      
+                      <div className="date">
+                        <Calendar size={14} />
+                        <span className="date-text">{load.pickupDate?.split('-').slice(1).join('/') || '未知日期'}</span>
+                      </div>
+                      
+                      <div className="price">
+                        <DollarSign size={16} />
+                        <span className="price-text">{load.rate || '价格面议'}</span>
+                      </div>
+                      
                       {load.urgency && load.urgency !== '普通' && (
-                        <div className={`urgency-tag ${load.urgency}`}>
-                          {load.urgency === '紧急' && <AlertCircle size={12} />}
-                          {load.urgency === '加急' && <Clock size={12} />}
-                          <span>{load.urgency}</span>
-                        </div>
+                        <div className="urgency">{load.urgency}</div>
                       )}
                     </div>
-
-                    <div className="card-content">
-                      {/* 路线信息 - 更紧凑 */}
-                      <div className="route-section">
-                        <div className="route-info">
-                          <span className="origin">{load.origin}</span>
-                          <ArrowRight size={14} className="arrow" />
-                          <span className="destination">{load.destination}</span>
-                          <span className="distance">({load.distance})</span>
-                        </div>
-                        <div className="date-info">
-                          {load.pickupDate?.split('-').slice(1).join('/')} 取货
-                        </div>
-                      </div>
-
-                      {/* 货物和价格信息 */}
-                      <div className="cargo-section">
-                        <div className="cargo-info">
-                          <span className="commodity">{load.commodity}</span>
-                          <span className="weight-equipment">{load.weight} | {load.equipment}</span>
-                        </div>
-                        <div className="price-info">
-                          <span className="price">{load.rate}</span>
-                          {load.serviceType === 'LTL' && load.freightClass && (
-                            <span className="freight-class">{load.freightClass}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* 特殊要求 */}
-                      {load.requirements && (
-                        <div className="requirements-section">
-                          <span className="requirements">{load.requirements}</span>
-                        </div>
-                      )}
-
-                      {/* LTL特有信息 */}
-                      {load.serviceType === 'LTL' && (
-                        <div className="ltl-details">
-                          {load.dimensions && <span>尺寸: {load.dimensions}</span>}
-                          {load.density && <span>密度: {load.density}</span>}
-                          {load.stackable !== undefined && (
-                            <span className={load.stackable ? 'positive' : 'negative'}>
-                              {load.stackable ? '可堆叠' : '不可堆叠'}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* FTL特有信息 */}
-                      {load.serviceType === 'FTL' && load.insurance && (
-                        <div className="ftl-details">
-                          <span className="insurance">{load.insurance}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 公司信息和操作 */}
-                    <div className="card-footer">
-                      <div className="company-section">
-                        <div className="company-name">{load.company}</div>
-                        <div className="company-rating">
-                          <Star size={12} />
-                          <span>{load.rating}</span>
-                        </div>
-                      </div>
-                      <div className="action-buttons">
-                        <button className="contact-btn" onClick={() => window.open(`tel:${load.phone}`)}>
-                          <Phone size={12} />
-                          联系
-                        </button>
-                        <button className="quote-btn">
-                          <MessageCircle size={12} />
-                          询价
-                        </button>
-                      </div>
+                    
+                    <div className="card-actions">
+                      <button className="contact-btn" onClick={() => window.open(`tel:${load.phone}`)}>
+                        <Phone size={14} />
+                        联系
+                      </button>
+                      <button className="quote-btn">
+                        <MessageCircle size={14} />
+                        询价
+                      </button>
                     </div>
                   </div>
                 ))
@@ -1009,99 +869,55 @@ const FreightBoard = () => {
               {filteredTrucks.length === 0 ? (
                 <div className="empty-state">
                   <Truck size={48} />
-                  <h3>
-                    {hasAppliedFilters ? '没有符合条件的车源信息' : '暂无车源信息'}
-                  </h3>
-                  <p>
-                    {hasAppliedFilters 
-                      ? '请尝试修改筛选条件' 
-                      : '还没有车源信息发布，快来发布第一个吧！'
-                    }
-                  </p>
+                  <h3>暂无车源信息</h3>
+                  <p>还没有符合条件的车源信息</p>
                 </div>
               ) : (
                 filteredTrucks.map(truck => (
-                  <div key={truck.id} className={`freight-card ${truck.serviceType?.toLowerCase()}`}>
-                    {/* 紧凑车源卡片 */}
-                    <div className="card-header">
-                      <div className={`service-type-badge ${truck.serviceType?.toLowerCase()}`}>
-                        {truck.serviceType === 'FTL' ? (
-                          <>
-                            <Truck size={14} />
-                            <span>整车</span>
-                          </>
-                        ) : (
-                          <>
-                            <Package size={14} />
-                            <span>零担</span>
-                          </>
-                        )}
+                  <div key={truck.id} className={`simple-card truck-card ${truck.serviceType?.toLowerCase()}`}>
+                    <div className="card-main">
+                      <div className="service-type">
+                        <span className="truck-badge">
+                          <Truck size={16} />
+                          车源 {truck.serviceType}
+                        </span>
                       </div>
                       
-                      <div className="available-tag">
-                        <Clock size={12} />
-                        <span>可用车辆</span>
+                      <div className="route">
+                        <span className="origin">{truck.location}</span>
+                        <ArrowRight size={16} />
+                        <span className="destination">{truck.destination}</span>
+                      </div>
+                      
+                      <div className="equipment">
+                        {truck.equipment}
+                      </div>
+                      
+                      <div className="capacity">
+                        <Scale size={14} />
+                        {truck.capacity}
+                      </div>
+                      
+                      <div className="date">
+                        <Calendar size={14} />
+                        <span className="date-text">{truck.availableDate?.split('-').slice(1).join('/') || '未知日期'}</span>
+                      </div>
+                      
+                      <div className="rate">
+                        <DollarSign size={16} />
+                        <span className="rate-text">{truck.rateRange || '价格面议'}</span>
                       </div>
                     </div>
-
-                    <div className="card-content">
-                      {/* 路线信息 */}
-                      <div className="route-section">
-                        <div className="route-info">
-                          <span className="origin">{truck.location}</span>
-                          <ArrowRight size={14} className="arrow" />
-                          <span className="destination">{truck.destination}</span>
-                        </div>
-                        <div className="date-info">
-                          {truck.availableDate?.split('-').slice(1).join('/')} 可用
-                        </div>
-                      </div>
-
-                      {/* 车辆和价格信息 */}
-                      <div className="cargo-section">
-                        <div className="cargo-info">
-                          <span className="commodity">{truck.equipment}</span>
-                          <span className="weight-equipment">{truck.capacity} | {truck.volume}</span>
-                        </div>
-                        <div className="price-info">
-                          <span className="price">{truck.rateRange}</span>
-                        </div>
-                      </div>
-
-                      {/* 优势路线 */}
-                      {truck.preferredLanes && (
-                        <div className="requirements-section">
-                          <span className="requirements">优势路线: {truck.preferredLanes}</span>
-                        </div>
-                      )}
-
-                      {/* 特殊服务 */}
-                      {truck.specialServices && (
-                        <div className="ltl-details">
-                          <span className="positive">{truck.specialServices}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 公司信息和操作 */}
-                    <div className="card-footer">
-                      <div className="company-section">
-                        <div className="company-name">{truck.company}</div>
-                        <div className="company-rating">
-                          <Star size={12} />
-                          <span>{truck.rating}</span>
-                        </div>
-                      </div>
-                      <div className="action-buttons">
-                        <button className="contact-btn" onClick={() => window.open(`tel:${truck.phone}`)}>
-                          <Phone size={12} />
-                          联系
-                        </button>
-                        <button className="quote-btn">
-                          <MessageCircle size={12} />
-                          询价
-                        </button>
-                      </div>
+                    
+                    <div className="card-actions">
+                      <button className="contact-btn" onClick={() => window.open(`tel:${truck.phone}`)}>
+                        <Phone size={14} />
+                        联系
+                      </button>
+                      <button className="quote-btn">
+                        <MessageCircle size={14} />
+                        询价
+                      </button>
                     </div>
                   </div>
                 ))
