@@ -306,5 +306,5 @@ curl -X POST http://localhost:5001/api/auth/login \
 
 **状态更新时间**: 2025-01-02  
 **版本**: 1.1.0  
-**维护者**: EW Logistics Team  
+**维护者**: EW Logistics Team 
 **最新完成**: 海运信息平台 ⭐

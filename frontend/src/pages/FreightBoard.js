@@ -18,7 +18,12 @@ import {
   Users,
   Scale,
   CheckCircle,
-  X
+  X,
+  Hash,
+  Layers,
+  Shield,
+  Home,
+  Building
 } from 'lucide-react';
 // import { useLanguage } from '../contexts/LanguageContext';
 import PostLoadModal from '../components/PostLoadModal';
@@ -74,123 +79,171 @@ const FreightBoard = () => {
       return [
         {
           id: 1,
-          origin: '上海',
-          destination: '北京',
+          origin: '洛杉矶, CA',
+          destination: '芝加哥, IL',
           pickupDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-          deliveryDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-          rate: '8,500',
-          weight: '22吨',
-          volume: '35立方米',
+          deliveryDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+          rate: '$2,800',
+          weight: '22,000 lbs',
+          volume: '35 cu ft',
           loadType: 'FTL',
-          equipment: '厢式货车',
-          length: '17.5米',
-          company: '上海运输集团',
+          serviceType: 'FTL',
+          equipment: 'Dry Van',
+          length: '48 ft',
+          company: 'Pacific Freight Co.',
           rating: 4.8,
-          phone: '(021) 1234-5678',
-          distance: '1463公里',
-          commodity: '电子设备',
-          pallets: '20托盘',
-          requirements: '恒温运输'
+          phone: '(213) 555-0123',
+          distance: '2,015 miles',
+          commodity: '电子设备 (Electronics)',
+          pallets: '20 pallets',
+          requirements: '恒温运输',
+          // FTL专用信息
+          trailerLength: '53 ft',
+          maxWeight: '80,000 lbs',
+          specialServices: 'Team Driver Available'
         },
         {
           id: 2,
-          origin: '广州',
-          destination: '深圳',
+          origin: '达拉斯, TX',
+          destination: '迈阿密, FL',
           pickupDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-          deliveryDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-          rate: '1,200',
-          weight: '3.5吨',
-          volume: '8立方米',
+          deliveryDate: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0],
+          rate: '$850',
+          weight: '3,500 lbs',
+          volume: '185 cu ft',
           loadType: 'LTL',
-          equipment: '冷藏车',
-          length: '9.6米',
-          company: '粤港运输',
+          serviceType: 'LTL',
+          equipment: 'Refrigerated',
+          length: '8 ft',
+          width: '4 ft',
+          height: '6 ft',
+          company: 'Southern Express',
           rating: 4.9,
-          phone: '(020) 987-6543',
-          distance: '140公里',
-          commodity: '生鲜食品',
-          pallets: '4托盘',
-          requirements: '冷链运输 2-8°C'
+          phone: '(214) 555-0456',
+          distance: '1,290 miles',
+          commodity: '生鲜食品 (Perishables)',
+          pallets: '4 pallets',
+          requirements: '冷链运输 35-40°F',
+          // LTL专用信息
+          freightClass: '125',
+          density: '18.9 lbs/cu ft',
+          stackable: true,
+          hazmat: false,
+          originType: 'Commercial',
+          destinationType: 'Residential',
+          liftgateRequired: true
         },
         {
           id: 3,
-          origin: '成都',
-          destination: '重庆',
+          origin: '西雅图, WA',
+          destination: '丹佛, CO',
           pickupDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-          deliveryDate: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0],
-          rate: '3,800',
-          weight: '15吨',
-          volume: '25立方米',
+          deliveryDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
+          rate: '$3,200',
+          weight: '45,000 lbs',
+          volume: '52 cu ft',
           loadType: 'FTL',
-          equipment: '平板车',
-          length: '13米',
-          company: '川渝物流',
+          serviceType: 'FTL',
+          equipment: 'Flatbed',
+          length: '48 ft',
+          company: 'Mountain Logistics',
           rating: 4.7,
-          phone: '(028) 456-7890',
-          distance: '300公里',
-          commodity: '机械设备',
-          pallets: '不适用',
-          requirements: '专业装卸'
+          phone: '(206) 555-0789',
+          distance: '1,320 miles',
+          commodity: '机械设备 (Machinery)',
+          pallets: 'N/A',
+          requirements: '专业装卸, 保险$50万',
+          // FTL专用信息
+          trailerLength: '48 ft',
+          maxWeight: '80,000 lbs',
+          specialServices: 'Tarping Required, Crane Service'
         },
         {
           id: 4,
-          origin: '天津',
-          destination: '青岛',
+          origin: '亚特兰大, GA',
+          destination: '费城, PA',
           pickupDate: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0],
-          deliveryDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
-          rate: '2,600',
-          weight: '8吨',
-          volume: '12立方米',
+          deliveryDate: new Date(Date.now() + 6 * 86400000).toISOString().split('T')[0],
+          rate: '$420',
+          weight: '1,800 lbs',
+          volume: '96 cu ft',
           loadType: 'LTL',
-          equipment: '厢式货车',
-          length: '9.6米',
-          company: '环渤海运输',
+          serviceType: 'LTL',
+          equipment: 'Dry Van',
+          length: '6 ft',
+          width: '4 ft',
+          height: '4 ft',
+          company: 'East Coast Transport',
           rating: 4.6,
-          phone: '(022) 333-4444',
-          distance: '320公里',
-          commodity: '日用百货',
-          pallets: '8托盘',
-          requirements: '干货运输'
+          phone: '(404) 555-0321',
+          distance: '780 miles',
+          commodity: '纺织品 (Textiles)',
+          pallets: '3 pallets',
+          requirements: '防潮包装',
+          // LTL专用信息
+          freightClass: '110',
+          density: '18.75 lbs/cu ft',
+          stackable: true,
+          hazmat: false,
+          originType: 'Commercial',
+          destinationType: 'Commercial',
+          liftgateRequired: false
         },
         {
           id: 5,
-          origin: '西安',
-          destination: '郑州',
+          origin: '凤凰城, AZ',
+          destination: '拉斯维加斯, NV',
           pickupDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
           deliveryDate: new Date(Date.now() + 6 * 86400000).toISOString().split('T')[0],
-          rate: '4,200',
-          weight: '18吨',
-          volume: '28立方米',
+          rate: '$4,500',
+          weight: '38,000 lbs',
+          volume: '48 cu ft',
           loadType: 'FTL',
-          equipment: '高栏车',
-          length: '17.5米',
-          company: '中原快运',
+          serviceType: 'FTL',
+          equipment: 'Step Deck',
+          length: '45 ft',
+          company: 'Desert Haul Inc.',
           rating: 4.5,
-          phone: '(029) 888-9999',
-          distance: '480公里',
-          commodity: '建材',
-          pallets: '不适用',
-          requirements: '吊装设备'
+          phone: '(602) 555-0654',
+          distance: '300 miles',
+          commodity: '建筑材料 (Construction Materials)',
+          pallets: 'N/A',
+          requirements: '专业绑定, 超尺寸许可',
+          // FTL专用信息
+          trailerLength: '53 ft',
+          maxWeight: '80,000 lbs',
+          specialServices: 'Oversized Load, Permits Required'
         },
         {
           id: 6,
-          origin: '杭州',
-          destination: '南京',
+          origin: '波士顿, MA',
+          destination: '纽约, NY',
           pickupDate: new Date(Date.now() + 6 * 86400000).toISOString().split('T')[0],
           deliveryDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-          rate: '1,800',
-          weight: '5吨',
-          volume: '10立方米',
+          rate: '$320',
+          weight: '850 lbs',
+          volume: '48 cu ft',
           loadType: 'LTL',
-          equipment: '厢式货车',
-          length: '9.6米',
-          company: '江浙物流',
+          serviceType: 'LTL',
+          equipment: 'Dry Van',
+          length: '4 ft',
+          width: '4 ft',
+          height: '3 ft',
+          company: 'Northeast Delivery',
           rating: 4.7,
-          phone: '(0571) 777-8888',
-          distance: '280公里',
-          commodity: '纺织品',
-          pallets: '6托盘',
-          requirements: '防潮包装'
+          phone: '(617) 555-0987',
+          distance: '220 miles',
+          commodity: '电子产品 (Electronics)',
+          pallets: '2 pallets',
+          requirements: '易碎品包装',
+          // LTL专用信息
+          freightClass: '175',
+          density: '17.7 lbs/cu ft',
+          stackable: false,
+          hazmat: false,
+          originType: 'Commercial',
+          destinationType: 'Residential',
+          liftgateRequired: true
         }
       ];
     }
@@ -210,88 +263,51 @@ const FreightBoard = () => {
       return [
         {
           id: 1,
-          location: '武汉',
-          destination: '开放',
-          availableDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-          equipment: '厢式货车',
-          length: '17.5米',
-          capacity: '30吨',
-          volume: '45立方米',
+          location: '加州洛杉矶',
+          destination: '任何地点',
+          availableDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+          equipment: 'Dry Van 53ft',
+          capacity: '80,000 lbs',
+          volume: '3,400 cu ft',
           serviceType: 'FTL',
-          company: '中部运输',
-          rating: 4.6,
-          phone: '(027) 111-2222',
-          preferredLanes: '华中至华东、华南',
-          rateRange: '¥6-12/公里',
-          specialServices: '恒温运输、GPS跟踪'
+          rateRange: '$2.20-2.80/mile',
+          company: 'West Coast Trucking',
+          rating: 4.8,
+          phone: '(323) 555-0123',
+          preferredLanes: 'CA to TX, AZ, NV',
+          specialServices: 'Team Driver, Expedited'
         },
         {
           id: 2,
-          location: '西安',
-          destination: '开放',
-          availableDate: new Date(Date.now() + 1 * 86400000).toISOString().split('T')[0],
-          equipment: '冷藏车',
-          length: '13米',
-          capacity: '18吨',
-          volume: '35立方米',
-          serviceType: 'FTL/LTL',
-          company: '西北冷链',
-          rating: 4.8,
-          phone: '(029) 333-4444',
-          preferredLanes: '西北至全国',
-          rateRange: '¥8-15/公里',
-          specialServices: '冷链运输 -18°C至+25°C'
+          location: '德州休斯顿',
+          destination: '东部各州',
+          availableDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
+          equipment: 'Refrigerated 53ft',
+          capacity: '80,000 lbs',
+          volume: '3,200 cu ft',
+          serviceType: 'FTL',
+          rateRange: '$2.50-3.20/mile',
+          company: 'Gulf Coast Carriers',
+          rating: 4.9,
+          phone: '(713) 555-0456',
+          preferredLanes: 'TX to FL, GA, NC',
+          specialServices: 'Temperature Control, Food Grade'
         },
         {
           id: 3,
-          location: '郑州',
-          destination: '开放',
+          location: '伊利诺伊芝加哥',
+          destination: '中西部地区',
           availableDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-          equipment: '高栏车',
-          length: '9.6米',
-          capacity: '12吨',
-          volume: '20立方米',
+          equipment: 'LTL Network',
+          capacity: '28,000 lbs',
+          volume: '1,800 cu ft',
           serviceType: 'LTL',
-          company: '中原快运',
-          rating: 4.5,
-          phone: '(0371) 555-6666',
-          preferredLanes: '河南省内及周边',
-          rateRange: '¥3-8/公里',
-          specialServices: '零担拼车、当日达'
-        },
-        {
-          id: 4,
-          location: '青岛',
-          destination: '开放',
-          availableDate: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0],
-          equipment: '平板车',
-          length: '17.5米',
-          capacity: '35吨',
-          volume: '50立方米',
-          serviceType: 'FTL',
-          company: '山东重载',
+          rateRange: '$0.85-1.45/lb',
+          company: 'Midwest LTL Services',
           rating: 4.7,
-          phone: '(0532) 666-7777',
-          preferredLanes: '华东至全国',
-          rateRange: '¥5-10/公里',
-          specialServices: '超重货物、专业装卸'
-        },
-        {
-          id: 5,
-          location: '深圳',
-          destination: '开放',
-          availableDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
-          equipment: '厢式货车',
-          length: '9.6米',
-          capacity: '8吨',
-          volume: '15立方米',
-          serviceType: 'LTL',
-          company: '深港快运',
-          rating: 4.8,
-          phone: '(0755) 888-9999',
-          preferredLanes: '珠三角至全国',
-          rateRange: '¥4-9/公里',
-          specialServices: '港货运输、当日达'
+          phone: '(312) 555-0789',
+          preferredLanes: 'IL to WI, IN, OH, MI',
+          specialServices: 'Liftgate, Residential Delivery'
         }
       ];
     }
@@ -303,12 +319,12 @@ const FreightBoard = () => {
       try {
         setLoading(true);
         setError(null);
-        const [loadsData, trucksData] = await Promise.all([
+        const [loadData, truckData] = await Promise.all([
           fetchLoads(),
           fetchTrucks()
         ]);
-        setLoads(loadsData);
-        setTrucks(trucksData);
+        setLoads(loadData);
+        setTrucks(truckData);
       } catch (err) {
         setError('加载数据失败，请稍后重试');
         console.error('数据加载失败:', err);
@@ -324,15 +340,13 @@ const FreightBoard = () => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  // 应用筛选条件
   const applyFilters = () => {
-    setAppliedFilters(filters);
+    setAppliedFilters({ ...filters });
     setAppliedSearchQuery(searchQuery);
   };
 
-  // 重置筛选条件
   const resetFilters = () => {
-    setFilters({
+    const resetState = {
       origin: '',
       destination: '',
       equipment: '',
@@ -340,16 +354,9 @@ const FreightBoard = () => {
       serviceType: '',
       capacity: '',
       volume: ''
-    });
-    setAppliedFilters({
-      origin: '',
-      destination: '',
-      equipment: '',
-      loadType: '',
-      serviceType: '',
-      capacity: '',
-      volume: ''
-    });
+    };
+    setFilters(resetState);
+    setAppliedFilters(resetState);
     setSearchQuery('');
     setAppliedSearchQuery('');
   };
@@ -380,104 +387,89 @@ const FreightBoard = () => {
 
       // 重新加载数据
       if (postData.type === 'load') {
-        const loadsData = await fetchLoads();
-        setLoads(loadsData);
+        const loadData = await fetchLoads();
+        setLoads(loadData);
       } else {
-        const trucksData = await fetchTrucks();
-        setTrucks(trucksData);
+        const truckData = await fetchTrucks();
+        setTrucks(truckData);
       }
 
       alert('发布成功！');
     } catch (error) {
       console.error('发布失败:', error);
-      // 如果API调用失败，至少更新本地状态
-      setUserPosts(prev => [...prev, { ...postData, id: Date.now() }]);
-      alert('发布成功！');
+      alert('发布失败，请稍后重试');
     }
   };
 
-  // 筛选和搜索逻辑（基于已应用的筛选条件）
   const filterData = (data) => {
-    let filtered = [...data];
+    return data.filter(item => {
+      // 搜索过滤
+      if (appliedSearchQuery) {
+        const searchLower = appliedSearchQuery.toLowerCase();
+        const matchesSearch = 
+          item.origin?.toLowerCase().includes(searchLower) ||
+          item.destination?.toLowerCase().includes(searchLower) ||
+          item.location?.toLowerCase().includes(searchLower) ||
+          item.equipment?.toLowerCase().includes(searchLower) ||
+          item.commodity?.toLowerCase().includes(searchLower) ||
+          item.company?.toLowerCase().includes(searchLower);
+        
+        if (!matchesSearch) return false;
+      }
 
-    // 搜索筛选
-    if (appliedSearchQuery.trim()) {
-      const query = appliedSearchQuery.toLowerCase();
-      filtered = filtered.filter(item => 
-        (item.origin && item.origin.toLowerCase().includes(query)) ||
-        (item.destination && item.destination.toLowerCase().includes(query)) ||
-        (item.location && item.location.toLowerCase().includes(query)) ||
-        (item.commodity && item.commodity.toLowerCase().includes(query)) ||
-        (item.equipment && item.equipment.toLowerCase().includes(query)) ||
-        (item.company && item.company.toLowerCase().includes(query))
-      );
-    }
+      // 筛选条件过滤
+      if (appliedFilters.origin && !item.origin?.toLowerCase().includes(appliedFilters.origin.toLowerCase()) && 
+          !item.location?.toLowerCase().includes(appliedFilters.origin.toLowerCase())) return false;
+      
+      if (appliedFilters.destination && !item.destination?.toLowerCase().includes(appliedFilters.destination.toLowerCase())) return false;
+      
+      if (appliedFilters.equipment && !item.equipment?.toLowerCase().includes(appliedFilters.equipment.toLowerCase())) return false;
+      
+      if (appliedFilters.loadType && item.loadType !== appliedFilters.loadType) return false;
+      
+      if (appliedFilters.serviceType && item.serviceType !== appliedFilters.serviceType) return false;
 
-    // 应用其他筛选条件
-    if (appliedFilters.origin) {
-      filtered = filtered.filter(item => 
-        (item.origin && item.origin.toLowerCase().includes(appliedFilters.origin.toLowerCase())) ||
-        (item.location && item.location.toLowerCase().includes(appliedFilters.origin.toLowerCase()))
-      );
-    }
-
-    if (appliedFilters.destination) {
-      filtered = filtered.filter(item => 
-        item.destination && item.destination.toLowerCase().includes(appliedFilters.destination.toLowerCase())
-      );
-    }
-
-    if (appliedFilters.equipment) {
-      filtered = filtered.filter(item => 
-        item.equipment && item.equipment.toLowerCase().includes(appliedFilters.equipment.toLowerCase())
-      );
-    }
-
-    if (appliedFilters.loadType) {
-      filtered = filtered.filter(item => 
-        item.loadType === appliedFilters.loadType || 
-        (item.serviceType && item.serviceType.includes(appliedFilters.loadType))
-      );
-    }
-
-    return filtered;
+      return true;
+    });
   };
 
-  // Combine user posts with API data
-  const allLoads = [...loads, ...userPosts.filter(post => post.type === 'load')];
-  const allTrucks = [...trucks, ...userPosts.filter(post => post.type === 'truck')];
+  const filteredLoads = filterData(loads);
+  const filteredTrucks = filterData(trucks);
 
-  // 应用筛选
-  const filteredLoads = filterData(allLoads);
-  const filteredTrucks = filterData(allTrucks);
+  const hasAppliedFilters = Object.values(appliedFilters).some(value => value !== '') || appliedSearchQuery !== '';
 
-  // 检查是否有应用的筛选条件
-  const hasAppliedFilters = appliedSearchQuery || Object.values(appliedFilters).some(f => f);
-
-  // 获取当前筛选条件的描述
   const getFilterDescription = () => {
-    const conditions = [];
-    if (appliedSearchQuery) conditions.push(`关键词: ${appliedSearchQuery}`);
-    if (appliedFilters.origin) conditions.push(`起始地: ${appliedFilters.origin}`);
-    if (appliedFilters.destination) conditions.push(`目的地: ${appliedFilters.destination}`);
-    if (appliedFilters.equipment) conditions.push(`车型: ${appliedFilters.equipment}`);
-    if (appliedFilters.loadType) conditions.push(`方式: ${appliedFilters.loadType}`);
-    return conditions.join(' | ');
+    const descriptions = [];
+    if (appliedFilters.origin) descriptions.push(`起点: ${appliedFilters.origin}`);
+    if (appliedFilters.destination) descriptions.push(`终点: ${appliedFilters.destination}`);
+    if (appliedFilters.equipment) descriptions.push(`车型: ${appliedFilters.equipment}`);
+    if (appliedFilters.loadType) descriptions.push(`类型: ${appliedFilters.loadType}`);
+    if (appliedFilters.serviceType) descriptions.push(`服务: ${appliedFilters.serviceType}`);
+    if (appliedSearchQuery) descriptions.push(`搜索: ${appliedSearchQuery}`);
+    
+    return descriptions.length > 0 
+      ? `应用的筛选条件: ${descriptions.join(', ')}`
+      : '';
+  };
+
+  // 获取地址类型图标
+  const getLocationIcon = (locationType) => {
+    switch (locationType) {
+      case 'Residential': return <Home size={12} />;
+      case 'Commercial': return <Building size={12} />;
+      case 'Elevator Required': return <Layers size={12} />;
+      case 'Gated/Secured': return <Shield size={12} />;
+      default: return <Building size={12} />;
+    }
   };
 
   if (loading) {
     return (
-      <div className="platform-page freight-board">
+      <div className="freight-board">
         <div className="container">
-          <div className="loading-container" style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            minHeight: '400px',
-            flexDirection: 'column'
-          }}>
-            <Loader2 size={48} style={{ color: '#34C759', animation: 'spin 1s linear infinite' }} />
-            <p style={{ marginTop: '16px', color: '#666', fontSize: '16px' }}>正在加载陆运信息...</p>
+          <div className="loading-container">
+            <Loader2 size={48} className="loading-spinner" />
+            <p>正在加载货运信息...</p>
           </div>
         </div>
       </div>
@@ -486,25 +478,13 @@ const FreightBoard = () => {
 
   if (error) {
     return (
-      <div className="platform-page freight-board">
+      <div className="freight-board">
         <div className="container">
-          <div className="error-container" style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            minHeight: '400px',
-            flexDirection: 'column',
-            textAlign: 'center'
-          }}>
-            <AlertCircle size={48} style={{ color: '#ff4444' }} />
-            <p style={{ marginTop: '16px', color: '#666', fontSize: '16px', maxWidth: '400px' }}>{error}</p>
-            <button 
-              className="btn btn-primary" 
-              style={{ marginTop: '16px' }}
-              onClick={() => window.location.reload()}
-            >
-              重新加载
-            </button>
+          <div className="error-container">
+            <AlertCircle size={48} />
+            <h3>加载失败</h3>
+            <p>{error}</p>
+            <button onClick={() => window.location.reload()}>重新加载</button>
           </div>
         </div>
       </div>
@@ -655,7 +635,7 @@ const FreightBoard = () => {
         {/* Content */}
         <div className="freight-list-container">
           {activeTab === 'loads' && (
-            <div className="freight-list">
+            <div className="loads-grid">
               {filteredLoads.length === 0 ? (
                 <div className="empty-state">
                   <Package size={48} />
@@ -671,54 +651,208 @@ const FreightBoard = () => {
                 </div>
               ) : (
                 filteredLoads.map(load => (
-                  <div key={load.id} className="freight-card-compact">
+                  <div key={load.id} className="load-card enhanced">
+                    {/* 运输类型标签 - 突出显示 */}
+                    <div className={`service-type-header ${load.serviceType?.toLowerCase()}`}>
+                      <div className="service-type-badge">
+                        {load.serviceType === 'FTL' ? (
+                          <>
+                            <Truck size={16} />
+                            <span>FTL - 整车运输</span>
+                          </>
+                        ) : (
+                          <>
+                            <Package size={16} />
+                            <span>LTL - 零担运输</span>
+                          </>
+                        )}
+                      </div>
+                      {load.serviceType === 'LTL' && load.freightClass && (
+                        <div className="freight-class-badge">
+                          <Hash size={12} />
+                          <span>Class {load.freightClass}</span>
+                        </div>
+                      )}
+                    </div>
+
                     {/* 路线信息 */}
-                    <div className="route-info">
+                    <div className="load-header">
                       <div className="route">
-                        <span className="origin">{load.origin}</span>
-                        <ArrowRight size={16} />
-                        <span className="destination">{load.destination}</span>
+                        <div className="route-point">
+                          <MapPin size={14} />
+                          <div className="location">
+                            <span className="city">{load.origin}</span>
+                            {load.serviceType === 'LTL' && load.originType && (
+                              <span className="location-type">
+                                {getLocationIcon(load.originType)}
+                                {load.originType}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="route-arrow">
+                          <ArrowRight size={16} />
+                          <span className="distance">{load.distance}</span>
+                        </div>
+                        
+                        <div className="route-point">
+                          <MapPin size={14} />
+                          <div className="location">
+                            <span className="city">{load.destination}</span>
+                            {load.serviceType === 'LTL' && load.destinationType && (
+                              <span className="location-type">
+                                {getLocationIcon(load.destinationType)}
+                                {load.destinationType}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div className="route-meta">
-                        <span className="distance">{load.distance || 'N/A'}</span>
-                        <span className={`load-type ${load.loadType ? load.loadType.toLowerCase() : 'unknown'}`}>{load.loadType || 'N/A'}</span>
+
+                      <div className="date-info">
+                        <span className="pickup-date">
+                          <Calendar size={12} />
+                          取货: {load.pickupDate}
+                        </span>
+                        <span className="delivery-date">
+                          <Clock size={12} />
+                          送达: {load.deliveryDate}
+                        </span>
                       </div>
                     </div>
 
-                    {/* 详细信息 */}
-                    <div className="details-info">
-                      <div className="detail-row">
-                        <span><Calendar size={14} /> {load.pickupDate || 'N/A'}</span>
-                        <span><Package size={14} /> {load.commodity || 'N/A'}</span>
-                        <span><Truck size={14} /> {load.equipment || 'N/A'}</span>
+                    {/* 货物详细信息 */}
+                    <div className="load-details enhanced">
+                      <div className="commodity-info">
+                        <div className="commodity-name">
+                          <Package size={14} />
+                          <span>{load.commodity}</span>
+                        </div>
+                        <div className="equipment-type">
+                          <Truck size={14} />
+                          <span>{load.equipment}</span>
+                        </div>
                       </div>
-                      <div className="detail-row">
-                        <span><Scale size={14} /> {load.weight || 'N/A'}</span>
-                        <span className="volume">{load.volume || 'N/A'}</span>
-                        {load.requirements && <span className="requirements">{load.requirements}</span>}
-                      </div>
+
+                      {/* 根据运输类型显示不同信息 */}
+                      {load.serviceType === 'FTL' ? (
+                        <div className="ftl-details">
+                          <div className="detail-row">
+                            <div className="detail-item">
+                              <Scale size={14} />
+                              <span>重量: {load.weight}</span>
+                            </div>
+                            <div className="detail-item">
+                              <Layers size={14} />
+                              <span>长度: {load.trailerLength || load.length}</span>
+                            </div>
+                            <div className="detail-item">
+                              <DollarSign size={14} />
+                              <span className="rate-highlight">{load.rate}</span>
+                            </div>
+                          </div>
+                          
+                          {load.specialServices && (
+                            <div className="special-services">
+                              <CheckCircle size={12} />
+                              <span>{load.specialServices}</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="ltl-details">
+                          <div className="ltl-metrics">
+                            <div className="metric-item">
+                              <Scale size={14} />
+                              <div>
+                                <span className="metric-value">{load.weight}</span>
+                                <span className="metric-label">重量</span>
+                              </div>
+                            </div>
+                            
+                            <div className="metric-item">
+                              <Package size={14} />
+                              <div>
+                                <span className="metric-value">{load.pallets}</span>
+                                <span className="metric-label">托盘</span>
+                              </div>
+                            </div>
+                            
+                            {load.density && (
+                              <div className="metric-item">
+                                <Layers size={14} />
+                                <div>
+                                  <span className="metric-value">{load.density}</span>
+                                  <span className="metric-label">密度</span>
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div className="metric-item rate">
+                              <DollarSign size={14} />
+                              <div>
+                                <span className="metric-value rate-highlight">{load.rate}</span>
+                                <span className="metric-label">运费</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* LTL尺寸信息 */}
+                          {load.length && load.width && load.height && (
+                            <div className="dimensions-info">
+                              <span className="dimensions-label">尺寸:</span>
+                              <span className="dimensions-value">
+                                {load.length} × {load.width} × {load.height}
+                              </span>
+                              <span className="volume">({load.volume})</span>
+                            </div>
+                          )}
+
+                          {/* LTL特殊属性 */}
+                          <div className="ltl-attributes">
+                            {load.stackable !== undefined && (
+                              <span className={`attribute ${load.stackable ? 'positive' : 'negative'}`}>
+                                {load.stackable ? '可堆叠' : '不可堆叠'}
+                              </span>
+                            )}
+                            {load.hazmat && (
+                              <span className="attribute hazmat">危险品</span>
+                            )}
+                            {load.liftgateRequired && (
+                              <span className="attribute service">需要尾板</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 特殊要求 */}
+                      {load.requirements && (
+                        <div className="requirements">
+                          <AlertCircle size={12} />
+                          <span>{load.requirements}</span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* 公司信息 */}
-                    <div className="company-info">
-                      <div className="company">{load.company || 'N/A'}</div>
-                      <div className="rating">
-                        <Star size={14} />
-                        <span>{load.rating || 'N/A'}</span>
+                    {/* 公司信息和操作 */}
+                    <div className="load-footer enhanced">
+                      <div className="company-info">
+                        <div className="company-name">{load.company}</div>
+                        <div className="company-rating">
+                          <Star size={12} />
+                          <span>{load.rating}</span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* 价格和操作 */}
-                    <div className="action-info">
-                      <div className="price">¥{load.rate || 'N/A'}</div>
-                      <div className="actions">
-                        <button className="btn-action">
-                          <MessageCircle size={14} />
-                          询价
-                        </button>
-                        <button className="btn-action primary">
+                      <div className="load-actions">
+                        <button className="btn-contact" onClick={() => window.open(`tel:${load.phone}`)}>
                           <Phone size={14} />
-                          联系
+                          <span>联系</span>
+                        </button>
+                        <button className="btn-quote">
+                          <MessageCircle size={14} />
+                          <span>询价</span>
                         </button>
                       </div>
                     </div>
@@ -765,6 +899,7 @@ const FreightBoard = () => {
                         <span><Truck size={14} /> {truck.equipment || 'N/A'}</span>
                         <span><Scale size={14} /> {truck.capacity || 'N/A'}</span>
                       </div>
+
                       <div className="detail-row">
                         <span className="volume">{truck.volume || 'N/A'}</span>
                         <span>{truck.preferredLanes || 'N/A'}</span>
@@ -1439,3 +1574,4 @@ const FreightBoard = () => {
 };
 
 export default FreightBoard; 
+
