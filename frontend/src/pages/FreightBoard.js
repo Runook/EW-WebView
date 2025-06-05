@@ -303,7 +303,7 @@ const FreightBoard = () => {
           destination: '华东地区',
           availableDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
           equipment: '冷藏车13米',
-          capacity: '25吨',
+          capacity: '25',
           volume: '85立方米',
           serviceType: 'FTL',
           rateRange: '4.0-5.5元/公里',
