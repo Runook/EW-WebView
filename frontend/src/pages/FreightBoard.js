@@ -869,7 +869,7 @@ const FreightBoard = () => {
                       {load.serviceType === 'FTL' ? (
                         <div className="cargo-value">
                           <DollarSign size={14} />
-                           {load.cargoValue || '未提供'} 货值
+                           {load.cargoValue || '无'} （货值）
                         </div>
                       ) : (
                         <div className="nmfc-class">
@@ -880,14 +880,14 @@ const FreightBoard = () => {
                       
                       <div className="weight">
                         <Scale size={14} />
-                        {load.weight}lb
+                        {load.weight} lb
                       </div>
                       
                       <div className="date">
                         <Calendar size={14} />
                         <span className="date-text">{load.pickupDate?.split('-').slice(1).join('/') || '未知日期'}</span>
                       </div>
-                       <div className="Pallets">      
+                      <div className="Pallets">      
                         <span >板数: {load.pallets || '未知'}</span>
                       </div>
                       
@@ -895,9 +895,9 @@ const FreightBoard = () => {
                         <DollarSign size={16} />
                         {/* LTL显示托盘数量 + 价格，FTL只显示价格 */}
                         {load.serviceType === 'LTL' && load.pallets ? (
-                          <span className="price-text">{load.rate || '预估价格'}</span>
+                          <span className="price-text">{load.rate || '无'}（估价）</span>
                         ) : (
-                          <span className="price-text">{load.rate || '预估价格'}</span>
+                          <span className="price-text">{load.rate || '无'}（估价）</span>
                         )}
                       </div>
                       
