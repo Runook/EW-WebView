@@ -26,11 +26,13 @@ import {
   Building,
   Trash2,
   RotateCcw,
-  Box
+  Box,
+  Info
 } from 'lucide-react';
 // import { useLanguage } from '../contexts/LanguageContext';
 import PostLoadModal from '../components/PostLoadModal';
 import PostTruckModal from '../components/PostTruckModal';
+import DetailsModal from '../components/DetailsModal';
 import { useAuth } from '../contexts/AuthContext';
 import './PlatformPage.css';
 import './FreightBoard.css';
@@ -41,6 +43,8 @@ const FreightBoard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isPostLoadModalOpen, setIsPostLoadModalOpen] = useState(false);
   const [isPostTruckModalOpen, setIsPostTruckModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [userPosts, setUserPosts] = useState([]);
   const [loads, setLoads] = useState([]);
   const [trucks, setTrucks] = useState([]);
@@ -91,6 +95,7 @@ const FreightBoard = () => {
           phone: '021-6666-8888',
           distance: '1,318公里',
           commodity: '电子设备',
+          cargoValue: '150万元',
           pallets: '标准托盘×26',
           requirements: '需要保险、防震包装',
           insurance: '货值保险100万',
@@ -116,7 +121,8 @@ const FreightBoard = () => {
           commodity: '生鲜食品',
           pallets: '保温箱×8',
           requirements: '温控2-8°C，当日配送',
-          freightClass: '150级',
+          freightClass: '150',
+          nmfcClass: '150',
           density: '583公斤/立方米',
           stackable: false,
           urgency: '加急'
@@ -139,6 +145,7 @@ const FreightBoard = () => {
           phone: '023-7777-9999',
           distance: '308公里',
           commodity: '钢材',
+          cargoValue: '280万元',
           pallets: '散装',
           requirements: '需要绑扎固定，超重货物',
           insurance: '货值保险200万',
@@ -164,7 +171,8 @@ const FreightBoard = () => {
           commodity: '纺织品',
           pallets: '纸箱×24',
           requirements: '防潮包装，轻拿轻放',
-          freightClass: '85级',
+          freightClass: '85',
+          nmfcClass: '85',
           density: '400公斤/立方米',
           stackable: true,
           urgency: '普通'
@@ -187,6 +195,7 @@ const FreightBoard = () => {
           phone: '029-8888-7777',
           distance: '480公里',
           commodity: '建材',
+          cargoValue: '320万元',
           pallets: '散装',
           requirements: '需要苫布覆盖，防尘',
           insurance: '货值保险150万',
@@ -212,7 +221,8 @@ const FreightBoard = () => {
           commodity: '机械配件',
           pallets: '木托盘×6',
           requirements: '精密包装，防震',
-          freightClass: '125级',
+          freightClass: '125',
+          nmfcClass: '125',
           density: '244公斤/立方米',
           stackable: false,
           urgency: '加急'
@@ -237,7 +247,8 @@ const FreightBoard = () => {
           commodity: '农产品',
           pallets: '保鲜箱×12',
           requirements: '通风透气，避免挤压',
-          freightClass: '70级',
+          freightClass: '70',
+          nmfcClass: '70',
           density: '467公斤/立方米',
           stackable: true,
           urgency: '紧急'
@@ -260,6 +271,7 @@ const FreightBoard = () => {
           phone: '0591-9999-5555',
           distance: '280公里',
           commodity: '大型设备',
+          cargoValue: '500万元',
           pallets: '专用支架',
           requirements: '超限运输，需要护送',
           insurance: '货值保险500万',
@@ -439,9 +451,11 @@ const FreightBoard = () => {
           urgency: postData.urgency,
           pallets: postData.originalData?.pallets || '',
           requirements: postData.specialRequirements || postData.notes || '',
-          freightClass: postData.originalData?.freightClass || '',
+          freightClass: postData.originalData?.freightClass || postData.originalData?.calculatedClass || '',
+          nmfcClass: postData.originalData?.calculatedClass || '',
           density: postData.originalData?.calculatedDensity || '',
-          stackable: postData.originalData?.stackable || true
+          stackable: postData.originalData?.stackable || true,
+          cargoValue: postData.cargoValue || postData.originalData?.cargoValue || ''
         };
         console.log('创建的新货源:', newLoad); // 调试日志
         setLoads(prev => [newLoad, ...prev]);
@@ -578,6 +592,16 @@ const FreightBoard = () => {
       return;
     }
     setIsPostTruckModalOpen(true);
+  };
+
+  const handleDetailsClick = (item) => {
+    setSelectedItem(item);
+    setDetailsModalOpen(true);
+  };
+
+  const handleDetailsClose = () => {
+    setDetailsModalOpen(false);
+    setSelectedItem(null);
   };
 
   if (loading) {
@@ -824,13 +848,22 @@ const FreightBoard = () => {
                         <span className="destination">{load.destination}</span>
                       </div>
                       
-                      <div className="cargo-type">
-                        {load.commodity}
-                      </div>
+                      {/* 根据服务类型显示不同信息 */}
+                      {load.serviceType === 'FTL' ? (
+                        <div className="cargo-value">
+                          <DollarSign size={14} />
+                           {load.cargoValue || '未提供'} 货值
+                        </div>
+                      ) : (
+                        <div className="nmfc-class">
+                          <Layers size={14} />
+                          Class: {load.freightClass || load.nmfcClass || '未分类'}
+                        </div>
+                      )}
                       
                       <div className="weight">
                         <Scale size={14} />
-                        {load.weight}
+                        {load.weight}lb
                       </div>
                       
                       <div className="date">
@@ -840,7 +873,7 @@ const FreightBoard = () => {
                       
                       <div className="price">
                         <DollarSign size={16} />
-                        <span className="price-text">{load.rate || '价格面议'}</span>
+                        <span className="price-text">{load.rate || '预估价格'}</span>
                       </div>
                       
                       {load.urgency && load.urgency !== '普通' && (
@@ -849,9 +882,9 @@ const FreightBoard = () => {
                     </div>
                     
                     <div className="card-actions">
-                      <button className="contact-btn" onClick={() => window.open(`tel:${load.phone}`)}>
-                        <Phone size={14} />
-                        联系
+                      <button className="contact-btn" onClick={() => handleDetailsClick(load)}>
+                        <Info size={14} />
+                        详情
                       </button>
                       <button className="quote-btn">
                         <MessageCircle size={14} />
@@ -905,14 +938,14 @@ const FreightBoard = () => {
                       
                       <div className="rate">
                         <DollarSign size={16} />
-                        <span className="rate-text">{truck.rateRange || '价格面议'}</span>
+                        <span className="rate-text">{truck.rateRange || '预估价格'}</span>
                       </div>
                     </div>
                     
                     <div className="card-actions">
-                      <button className="contact-btn" onClick={() => window.open(`tel:${truck.phone}`)}>
-                        <Phone size={14} />
-                        联系
+                      <button className="contact-btn" onClick={() => handleDetailsClick(truck)}>
+                        <Info size={14} />
+                        详情
                       </button>
                       <button className="quote-btn">
                         <MessageCircle size={14} />
@@ -938,6 +971,12 @@ const FreightBoard = () => {
         isOpen={isPostTruckModalOpen}
         onClose={() => setIsPostTruckModalOpen(false)}
         onSubmit={handlePostSubmit}
+      />
+
+      <DetailsModal 
+        isOpen={detailsModalOpen}
+        onClose={handleDetailsClose}
+        item={selectedItem}
       />
     </div>
   );

@@ -31,6 +31,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     cargoType: '',
     truckType: '',
     weight: '',
+    cargoValue: '', // FTL 货物估价
     // LTL专用字段 - 按照NMFC标准
     originLocationType: 'commercial',
     destinationLocationType: 'commercial',
@@ -246,12 +247,14 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       contactEmail: formData.contactEmail || '',
       specialRequirements: formData.notes || '',
       serviceType: formData.serviceType,
+      cargoValue: formData.cargoValue, // FTL货物估价
       // 保留原始表单数据用于显示
       originalData: {
         ...formData,
         calculatedDensity: densityInfo.density,
         calculatedClass: densityInfo.suggestedClass,
-        classDescription: densityInfo.classDescription
+        classDescription: densityInfo.classDescription,
+        cargoValue: formData.cargoValue
       }
     };
 
@@ -269,6 +272,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       cargoType: '',
       truckType: '',
       weight: '',
+      cargoValue: '',
       originLocationType: 'commercial',
       destinationLocationType: 'commercial',
       pallets: '',
@@ -475,6 +479,22 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                 </select>
               </div>
 
+              {formData.serviceType === 'FTL' && (
+                <div className="form-group">
+                  <label>
+                    <DollarSign size={16} />
+                    货物估价 (Cargo Value)
+                  </label>
+                  <input
+                    type="text"
+                    name="cargoValue"
+                    value={formData.cargoValue}
+                    onChange={handleInputChange}
+                    placeholder="如：$50,000 或 50万元"
+                  />
+                </div>
+              )}
+
               {formData.serviceType === 'LTL' && (
                 <div className="form-group">
                   <label>
@@ -662,7 +682,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
           {/* 联系信息 */}
           <div className="form-section">
-            <h3>联系信息 (Contact Information)</h3>
+            <h3>发布人信息 (Contact Information)</h3>
             <div className="form-grid">
               <div className="form-group">
                 <label>
@@ -708,7 +728,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <DollarSign size={16} />
-                  最高运费 (Max Rate) *
+                  预估运费 (Estimated Rate) *
                 </label>
                 <input
                   type="text"

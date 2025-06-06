@@ -316,9 +316,36 @@
 
 /* 货物/设备类型 */
 .cargo-type, .equipment {
-  color: #666;
   font-size: 0.9rem;
-  min-width: 100px;
+  color: #666;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cargo-value {
+  font-size: 0.9rem;
+  color: #e65100;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nmfc-class {
+  font-size: 0.9rem;
+  color: #34C759;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 重量/载重 */
@@ -507,10 +534,12 @@
 
   /* 第二行：货物类型 + 重量 */
   .card-main .cargo-type,
-  .card-main .equipment {
-    grid-column: 1;
-    grid-row: 2;
-    justify-self: start;
+  .card-main .equipment,
+  .card-main .cargo-value,
+  .card-main .nmfc-class {
+    font-size: 0.75rem;
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
   }
 
   .card-main .weight,
@@ -623,6 +652,8 @@
 
   .card-main .cargo-type,
   .card-main .equipment,
+  .card-main .cargo-value,
+  .card-main .nmfc-class,
   .card-main .weight,
   .card-main .capacity,
   .card-main .date {
@@ -720,5 +751,9 @@
 
   .price, .rate {
     min-width: 100px;
+  }
+
+  .cargo-value, .nmfc-class {
+    min-width: 120px;
   }
 } 
