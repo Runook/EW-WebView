@@ -64,6 +64,13 @@ const FreightBoard = () => {
 
   const { isAuthenticated } = useAuth();
 
+  // 生成EWID单号
+  const generateEWID = () => {
+    const timestamp = Date.now().toString();
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `EWID${timestamp.slice(-6)}${random}`;
+  };
+
   // API调用函数
   const fetchLoads = async () => {
     try {
@@ -99,7 +106,8 @@ const FreightBoard = () => {
           pallets: '标准托盘×26',
           requirements: '需要保险、防震包装',
           insurance: '货值保险100万',
-          urgency: '普通'
+          urgency: '普通',
+          ewid: 'EWID456001'
         },
         {
           id: 2,
@@ -125,7 +133,8 @@ const FreightBoard = () => {
           nmfcClass: '150',
           density: '583公斤/立方米',
           stackable: false,
-          urgency: '加急'
+          urgency: '加急',
+          ewid: 'EWID456002'
         },
         {
           id: 3,
@@ -149,7 +158,8 @@ const FreightBoard = () => {
           pallets: '散装',
           requirements: '需要绑扎固定，超重货物',
           insurance: '货值保险200万',
-          urgency: '普通'
+          urgency: '普通',
+          ewid: 'EWID456003'
         },
         {
           id: 4,
@@ -175,7 +185,8 @@ const FreightBoard = () => {
           nmfcClass: '85',
           density: '400公斤/立方米',
           stackable: true,
-          urgency: '普通'
+          urgency: '普通',
+          ewid: 'EWID456004'
         },
         {
           id: 5,
@@ -199,7 +210,8 @@ const FreightBoard = () => {
           pallets: '散装',
           requirements: '需要苫布覆盖，防尘',
           insurance: '货值保险150万',
-          urgency: '普通'
+          urgency: '普通',
+          ewid: 'EWID456005'
         },
         {
           id: 6,
@@ -225,7 +237,8 @@ const FreightBoard = () => {
           nmfcClass: '125',
           density: '244公斤/立方米',
           stackable: false,
-          urgency: '加急'
+          urgency: '加急',
+          ewid: 'EWID456006'
         },
         {
           id: 7,
@@ -251,7 +264,8 @@ const FreightBoard = () => {
           nmfcClass: '70',
           density: '467公斤/立方米',
           stackable: true,
-          urgency: '紧急'
+          urgency: '紧急',
+          ewid: 'EWID456007'
         },
         {
           id: 8,
@@ -275,7 +289,8 @@ const FreightBoard = () => {
           pallets: '专用支架',
           requirements: '超限运输，需要护送',
           insurance: '货值保险500万',
-          urgency: '紧急'
+          urgency: '紧急',
+          ewid: 'EWID456008'
         }
       ];
     }
@@ -455,7 +470,8 @@ const FreightBoard = () => {
           nmfcClass: postData.originalData?.calculatedClass || '',
           density: postData.originalData?.calculatedDensity || '',
           stackable: postData.originalData?.stackable || true,
-          cargoValue: postData.cargoValue || postData.originalData?.cargoValue || ''
+          cargoValue: postData.cargoValue || postData.originalData?.cargoValue || '',
+          EWID: generateEWID()
         };
         console.log('创建的新货源:', newLoad); // 调试日志
         setLoads(prev => [newLoad, ...prev]);
@@ -474,7 +490,8 @@ const FreightBoard = () => {
           rating: 4.5,
           phone: postData.contactPhone,
           preferredLanes: postData.originalData?.preferredLanes || `${postData.preferredOrigin || '任意地点'} 至 ${postData.preferredDestination || '全国各地'}`,
-          specialServices: postData.truckFeatures || postData.specialServices || ''
+          specialServices: postData.truckFeatures || postData.specialServices || '',
+          EWID: generateEWID()
         };
         console.log('创建的新车源:', newTruck); // 调试日志
         setTrucks(prev => [newTruck, ...prev]);
@@ -870,11 +887,27 @@ const FreightBoard = () => {
                         <Calendar size={14} />
                         <span className="date-text">{load.pickupDate?.split('-').slice(1).join('/') || '未知日期'}</span>
                       </div>
+                       <div className="Pallets">      
+                        <span >板数: {load.pallets || '未知'}</span>
+                      </div>
                       
                       <div className="price">
                         <DollarSign size={16} />
-                        <span className="price-text">{load.rate || '预估价格'}</span>
+                        {/* LTL显示托盘数量 + 价格，FTL只显示价格 */}
+                        {load.serviceType === 'LTL' && load.pallets ? (
+                          <span className="price-text">{load.rate || '预估价格'}</span>
+                        ) : (
+                          <span className="price-text">{load.rate || '预估价格'}</span>
+                        )}
                       </div>
+                      
+                      {/* EWID单号显示 */}
+                      {(load.ewid || load.EWID) && (
+                        <div className="ewid">
+                          <Hash size={14} />
+                          <span className="ewid-text">{load.ewid || load.EWID}</span>
+                        </div>
+                      )}
                       
                       {load.urgency && load.urgency !== '普通' && (
                         <div className="urgency">{load.urgency}</div>

@@ -16,7 +16,9 @@ import {
   Info,
   Phone,
   DollarSign,
-  Clock
+  Clock,
+  Plus,
+  Minus
 } from 'lucide-react';
 import './Modal.css';
 
@@ -36,7 +38,25 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     originLocationType: 'commercial',
     destinationLocationType: 'commercial',
     pallets: '',
-    // 尺寸字段 - 分别输入长宽高
+    // LTL多货物支持
+    cargoItems: [
+      {
+        id: 1,
+        description: '',
+        weight: '', // 磅
+        length: '', // 英寸
+        width: '',  // 英寸
+        height: '', // 英寸
+        volume: '', // 自动计算的立方英尺
+        density: '', // 自动计算的磅/立方英尺
+        freightClass: '', // 自动计算的NMFC分类
+        pallets: '', // 这个货物的托盘数
+        stackable: true,
+        fragile: false,
+        hazmat: false
+      }
+    ],
+    // FTL单货物字段（保留向后兼容）
     length: '', // 英寸
     width: '',  // 英寸
     height: '', // 英寸
@@ -188,6 +208,121 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     });
   };
 
+  // 计算单个货物项目的密度和分类代码
+  const calculateCargoItemClass = (item) => {
+    const { weight, length, width, height, hazmat, fragile } = item;
+    
+    if (!weight || !length || !width || !height) return item;
+    
+    const weightNum = parseFloat(weight);
+    const lengthNum = parseFloat(length);
+    const widthNum = parseFloat(width);
+    const heightNum = parseFloat(height);
+    
+    if (weightNum <= 0 || lengthNum <= 0 || widthNum <= 0 || heightNum <= 0) return item;
+    
+    // 计算立方英尺 (长x宽x高 英寸 / 1728)
+    const cubicInches = lengthNum * widthNum * heightNum;
+    const cubicFeet = cubicInches / 1728;
+    
+    // 计算密度 (磅/立方英尺)
+    const density = weightNum / cubicFeet;
+    
+    // 根据密度确定分类代码
+    let selectedClass = freightClassMap[freightClassMap.length - 1]; // 默认最低分类
+    for (const classEntry of freightClassMap) {
+      if (density >= classEntry.minDensity) {
+        selectedClass = classEntry;
+        break;
+      }
+    }
+    
+    // 危险品或易碎品需要特殊处理
+    let finalClass = selectedClass.class;
+    
+    if (hazmat) {
+      // 危险品通常分类更高
+      const hazmatClassNum = Math.max(parseFloat(finalClass), 85);
+      finalClass = hazmatClassNum.toString();
+    }
+    
+    if (fragile) {
+      // 易碎品可能需要更高分类
+      const fragileClassNum = Math.max(parseFloat(finalClass), 125);
+      finalClass = fragileClassNum.toString();
+    }
+    
+    return {
+      ...item,
+      volume: cubicFeet.toFixed(2),
+      density: density.toFixed(2),
+      freightClass: finalClass
+    };
+  };
+
+  // 添加新的货物项目
+  const addCargoItem = () => {
+    const newId = Math.max(...formData.cargoItems.map(item => item.id)) + 1;
+    const newItem = {
+      id: newId,
+      description: '',
+      weight: '',
+      length: '',
+      width: '',
+      height: '',
+      volume: '',
+      density: '',
+      freightClass: '',
+      pallets: '',
+      stackable: true,
+      fragile: false,
+      hazmat: false
+    };
+    
+    setFormData(prev => ({
+      ...prev,
+      cargoItems: [...prev.cargoItems, newItem]
+    }));
+  };
+
+  // 删除货物项目
+  const removeCargoItem = (itemId) => {
+    if (formData.cargoItems.length <= 1) {
+      alert('至少需要保留一个货物项目');
+      return;
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      cargoItems: prev.cargoItems.filter(item => item.id !== itemId)
+    }));
+  };
+
+  // 更新货物项目
+  const updateCargoItem = (itemId, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      cargoItems: prev.cargoItems.map(item => {
+        if (item.id === itemId) {
+          const updatedItem = {
+            ...item,
+            [field]: field === 'stackable' || field === 'fragile' || field === 'hazmat' 
+              ? value 
+              : value
+          };
+          
+          // 如果更新的是尺寸或重量相关字段，重新计算分类
+          if (['weight', 'length', 'width', 'height', 'hazmat', 'fragile'].includes(field)) {
+            return calculateCargoItemClass(updatedItem);
+          }
+          
+          return updatedItem;
+        }
+        return item;
+      })
+    }));
+  };
+
   // 监听尺寸和重量变化，自动计算
   useEffect(() => {
     if (formData.serviceType === 'LTL') {
@@ -213,52 +348,115 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       'contactPhone', 'maxRate', 'urgency'
     ];
     
-    // LTL额外必填字段
+    // LTL额外验证
     if (formData.serviceType === 'LTL') {
-      requiredFields.push('pallets', 'length', 'width', 'height');
+      // 移除单个重量字段的验证，改为验证货物项目
+      const requiredFieldsLTL = requiredFields.filter(field => field !== 'weight');
       
-      if (!formData.freightClass) {
-        alert('请确保填写完整的尺寸和重量信息，以便自动计算NMFC分类代码');
+      // 验证每个货物项目
+      const invalidItems = formData.cargoItems.filter(item => 
+        !item.description || !item.weight || !item.length || 
+        !item.width || !item.height || !item.pallets
+      );
+      
+      if (invalidItems.length > 0) {
+        alert('请填写所有货物项目的完整信息：描述、重量、尺寸和托盘数量');
+        return;
+      }
+      
+      // 检查是否都计算出了分类代码
+      const unclassifiedItems = formData.cargoItems.filter(item => !item.freightClass);
+      if (unclassifiedItems.length > 0) {
+        alert('请确保所有货物项目都已计算出NMFC分类代码');
+        return;
+      }
+      
+      const missingFields = requiredFieldsLTL.filter(field => !formData[field]);
+      if (missingFields.length > 0) {
+        alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
+        return;
+      }
+    } else {
+      // FTL验证保持原样
+      const missingFields = requiredFields.filter(field => !formData[field]);
+      if (missingFields.length > 0) {
+        alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
         return;
       }
     }
-    
-    const missingFields = requiredFields.filter(field => !formData[field]);
-    
-    if (missingFields.length > 0) {
-      alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
-      return;
+
+    // 根据服务类型处理提交数据
+    if (formData.serviceType === 'LTL') {
+      // LTL: 为每个货物项目创建单独的提交数据
+      formData.cargoItems.forEach((item, index) => {
+        const submitData = {
+          type: 'load',
+          origin: formData.origin,
+          destination: formData.destination,
+          requiredDate: formData.pickupDate,
+          weight: item.weight,
+          cargoType: `${formData.cargoType} - ${item.description}`,
+          urgency: formData.urgency,
+          maxRate: formData.maxRate,
+          companyName: formData.companyName,
+          contactPhone: formData.contactPhone,
+          contactEmail: formData.contactEmail || '',
+          specialRequirements: formData.notes || '',
+          serviceType: formData.serviceType,
+          // 保留原始表单数据用于显示
+          originalData: {
+            ...formData,
+            // 当前货物项目的特定数据
+            currentItem: item,
+            itemIndex: index + 1,
+            totalItems: formData.cargoItems.length,
+            calculatedDensity: item.density,
+            calculatedClass: item.freightClass,
+            classDescription: `Class ${item.freightClass} - 基于密度 ${item.density} lbs/cu ft`,
+            weight: item.weight,
+            length: item.length,
+            width: item.width,
+            height: item.height,
+            volume: item.volume,
+            freightClass: item.freightClass,
+            pallets: item.pallets,
+            stackable: item.stackable,
+            fragile: item.fragile,
+            hazmat: item.hazmat
+          }
+        };
+        
+        onSubmit(submitData);
+      });
+    } else {
+      // FTL: 单个提交数据（保持原有逻辑）
+      const submitData = {
+        type: 'load',
+        origin: formData.origin,
+        destination: formData.destination,
+        requiredDate: formData.pickupDate,
+        weight: formData.weight,
+        cargoType: formData.cargoType,
+        urgency: formData.urgency,
+        maxRate: formData.maxRate,
+        companyName: formData.companyName,
+        contactPhone: formData.contactPhone,
+        contactEmail: formData.contactEmail || '',
+        specialRequirements: formData.notes || '',
+        serviceType: formData.serviceType,
+        cargoValue: formData.cargoValue,
+        originalData: {
+          ...formData,
+          calculatedDensity: densityInfo.density,
+          calculatedClass: densityInfo.suggestedClass,
+          classDescription: densityInfo.classDescription,
+          cargoValue: formData.cargoValue
+        }
+      };
+      
+      onSubmit(submitData);
     }
-
-    // 转换为后端API期望的格式
-    const submitData = {
-      type: 'load',
-      // 后端必填字段
-      origin: formData.origin,
-      destination: formData.destination,
-      requiredDate: formData.pickupDate, // 使用取货日期作为要求日期
-      weight: formData.weight,
-      cargoType: formData.cargoType,
-      urgency: formData.urgency,
-      maxRate: formData.maxRate,
-      companyName: formData.companyName,
-      contactPhone: formData.contactPhone,
-      // 可选字段
-      contactEmail: formData.contactEmail || '',
-      specialRequirements: formData.notes || '',
-      serviceType: formData.serviceType,
-      cargoValue: formData.cargoValue, // FTL货物估价
-      // 保留原始表单数据用于显示
-      originalData: {
-        ...formData,
-        calculatedDensity: densityInfo.density,
-        calculatedClass: densityInfo.suggestedClass,
-        classDescription: densityInfo.classDescription,
-        cargoValue: formData.cargoValue
-      }
-    };
-
-    onSubmit(submitData);
+    
     onClose();
     
     // 重置表单
@@ -276,6 +474,23 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       originLocationType: 'commercial',
       destinationLocationType: 'commercial',
       pallets: '',
+      cargoItems: [
+        {
+          id: 1,
+          description: '',
+          weight: '',
+          length: '',
+          width: '',
+          height: '',
+          volume: '',
+          density: '',
+          freightClass: '',
+          pallets: '',
+          stackable: true,
+          fragile: false,
+          hazmat: false
+        }
+      ],
       length: '',
       width: '',
       height: '',
@@ -445,39 +660,23 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>
-                  <Scale size={16} />
-                  重量 (Weight) * (磅)
-                </label>
-                <input
-                  type="number"
-                  name="weight"
-                  value={formData.weight}
-                  onChange={handleInputChange}
-                  placeholder="输入重量 (lbs)"
-                  min="1"
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <Truck size={16} />
-                  车型要求 (Equipment Type) *
-                </label>
-                <select
-                  name="truckType"
-                  value={formData.truckType}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">请选择车型要求</option>
-                  {truckTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
+              {formData.serviceType === 'FTL' && (
+                <div className="form-group">
+                  <label>
+                    <Scale size={16} />
+                    重量 (Weight) * (磅)
+                  </label>
+                  <input
+                    type="number"
+                    name="weight"
+                    value={formData.weight}
+                    onChange={handleInputChange}
+                    placeholder="输入重量 (lbs)"
+                    min="1"
+                    required
+                  />
+                </div>
+              )}
 
               {formData.serviceType === 'FTL' && (
                 <div className="form-group">
@@ -496,151 +695,250 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               )}
 
               {formData.serviceType === 'LTL' && (
-                <div className="form-group">
+                <div className="form-group full-width">
                   <label>
-                    <Layers size={16} />
-                    托盘数量 (Pallets) *
+                    <Info size={16} />
+                    LTL模式说明
                   </label>
-                  <input
-                    type="number"
-                    name="pallets"
-                    value={formData.pallets}
-                    onChange={handleInputChange}
-                    placeholder="托盘数量"
-                    min="1"
-                    required={formData.serviceType === 'LTL'}
-                  />
+                  <p style={{ fontSize: '0.9rem', color: '#666', margin: '0.5rem 0' }}>
+                    LTL零担运输支持多个不同规格的货物。请为每个货物单独填写尺寸和重量信息，系统会自动计算NMFC分类等级。
+                  </p>
                 </div>
               )}
+
+              <div className="form-group">
+                <label>
+                  <Truck size={16} />
+                  车型要求 (Equipment Type) *
+                </label>
+                <select
+                  name="truckType"
+                  value={formData.truckType}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">请选择车型要求</option>
+                  {truckTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* LTL专用 - 尺寸和NMFC计算 */}
+          {/* LTL专用 - 多货物管理 */}
           {formData.serviceType === 'LTL' && (
             <div className="form-section ltl-section">
-              <h3>
-                <Calculator size={20} />
-                LTL尺寸计算 & NMFC分类 (LTL Dimensions & NMFC Classification)
-              </h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3>
+                  <Package size={20} />
+                  货物清单管理 (Cargo Items Management)
+                </h3>
+                <button
+                  type="button"
+                  onClick={addCargoItem}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    background: '#34C759',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  <Plus size={16} />
+                  添加货物
+                </button>
+              </div>
               
               <div className="nmfc-info">
                 <Info size={16} />
-                <p>根据美国NMFC标准，系统将自动计算密度和分类代码。请准确输入货物的长、宽、高尺寸。</p>
+                <p>LTL零担运输可以包含多个不同规格的货物。每个货物都会根据NMFC标准自动计算分类等级。</p>
               </div>
 
-              <div className="form-grid dimensions-grid">
-                <div className="form-group">
-                  <label>长度 (Length) * (英寸)</label>
-                  <input
-                    type="number"
-                    name="length"
-                    value={formData.length}
-                    onChange={handleInputChange}
-                    placeholder="长度 (inches)"
-                    min="1"
-                    step="0.1"
-                    required
-                  />
-                </div>
+              {formData.cargoItems.map((item, index) => (
+                <div key={item.id} className="cargo-item-card" style={{
+                  border: '2px solid #e0e0e0',
+                  borderRadius: '8px',
+                  padding: '1rem',
+                  marginBottom: '1rem',
+                  background: '#f9f9f9'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h4 style={{ margin: 0, color: '#34C759' }}>
+                      货物 #{index + 1}
+                    </h4>
+                    {formData.cargoItems.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeCargoItem(item.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          padding: '0.25rem 0.5rem',
+                          background: '#ff4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.8rem'
+                        }}
+                      >
+                        <Minus size={14} />
+                        删除
+                      </button>
+                    )}
+                  </div>
 
-                <div className="form-group">
-                  <label>宽度 (Width) * (英寸)</label>
-                  <input
-                    type="number"
-                    name="width"
-                    value={formData.width}
-                    onChange={handleInputChange}
-                    placeholder="宽度 (inches)"
-                    min="1"
-                    step="0.1"
-                    required
-                  />
-                </div>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>货物描述 (Description) *</label>
+                      <input
+                        type="text"
+                        value={item.description}
+                        onChange={(e) => updateCargoItem(item.id, 'description', e.target.value)}
+                        placeholder="如：电子设备、机械部件等"
+                        required
+                      />
+                    </div>
 
-                <div className="form-group">
-                  <label>高度 (Height) * (英寸)</label>
-                  <input
-                    type="number"
-                    name="height"
-                    value={formData.height}
-                    onChange={handleInputChange}
-                    placeholder="高度 (inches)"
-                    min="1"
-                    step="0.1"
-                    required
-                  />
-                </div>
-              </div>
+                    <div className="form-group">
+                      <label>托盘数量 (Pallets) *</label>
+                      <input
+                        type="number"
+                        value={item.pallets}
+                        onChange={(e) => updateCargoItem(item.id, 'pallets', e.target.value)}
+                        placeholder="托盘数量"
+                        min="1"
+                        required
+                      />
+                    </div>
+                  </div>
 
-              {/* 自动计算结果显示 */}
-              {densityInfo.calculated && (
-                <div className="calculation-results">
-                  <h4>自动计算结果 (Calculated Results)</h4>
-                  <div className="results-grid">
-                    <div className="result-item">
-                      <strong>体积 (Volume):</strong>
-                      <span>{formData.volume} 立方英尺</span>
+                  <div className="form-grid dimensions-grid">
+                    <div className="form-group">
+                      <label>重量 (Weight) * (磅)</label>
+                      <input
+                        type="number"
+                        value={item.weight}
+                        onChange={(e) => updateCargoItem(item.id, 'weight', e.target.value)}
+                        placeholder="重量 (lbs)"
+                        min="1"
+                        step="0.1"
+                        required
+                      />
                     </div>
-                    <div className="result-item">
-                      <strong>密度 (Density):</strong>
-                      <span>{densityInfo.density} lbs/cu ft</span>
+
+                    <div className="form-group">
+                      <label>长度 (Length) * (英寸)</label>
+                      <input
+                        type="number"
+                        value={item.length}
+                        onChange={(e) => updateCargoItem(item.id, 'length', e.target.value)}
+                        placeholder="长度 (inches)"
+                        min="1"
+                        step="0.1"
+                        required
+                      />
                     </div>
-                    <div className="result-item freight-class">
-                      <strong>NMFC分类 (Freight Class):</strong>
-                      <span className="class-badge">Class {densityInfo.suggestedClass}</span>
+
+                    <div className="form-group">
+                      <label>宽度 (Width) * (英寸)</label>
+                      <input
+                        type="number"
+                        value={item.width}
+                        onChange={(e) => updateCargoItem(item.id, 'width', e.target.value)}
+                        placeholder="宽度 (inches)"
+                        min="1"
+                        step="0.1"
+                        required
+                      />
                     </div>
-                    <div className="result-description">
-                      <small>{densityInfo.classDescription}</small>
+
+                    <div className="form-group">
+                      <label>高度 (Height) * (英寸)</label>
+                      <input
+                        type="number"
+                        value={item.height}
+                        onChange={(e) => updateCargoItem(item.id, 'height', e.target.value)}
+                        placeholder="高度 (inches)"
+                        min="1"
+                        step="0.1"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* 计算结果显示 */}
+                  {item.freightClass && (
+                    <div className="calculation-results" style={{
+                      background: 'linear-gradient(135deg, #e8f5e8, #f0faf0)',
+                      border: '1px solid #34C759',
+                      borderRadius: '6px',
+                      padding: '1rem',
+                      marginTop: '1rem'
+                    }}>
+                      <h5 style={{ margin: '0 0 0.5rem 0', color: '#34C759' }}>
+                        <Calculator size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                        计算结果
+                      </h5>
+                      <div className="results-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                        <div style={{ background: 'white', padding: '0.5rem', borderRadius: '4px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '0.8rem', color: '#666' }}>体积</div>
+                          <div style={{ fontWeight: '600' }}>{item.volume} ft³</div>
+                        </div>
+                        <div style={{ background: 'white', padding: '0.5rem', borderRadius: '4px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '0.8rem', color: '#666' }}>密度</div>
+                          <div style={{ fontWeight: '600' }}>{item.density} lbs/ft³</div>
+                        </div>
+                        <div style={{ background: '#34C759', color: 'white', padding: '0.5rem', borderRadius: '4px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '0.8rem' }}>NMFC等级</div>
+                          <div style={{ fontWeight: '700' }}>Class {item.freightClass}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 特殊属性 */}
+                  <div style={{ marginTop: '1rem' }}>
+                    <h5 style={{ margin: '0 0 0.5rem 0', color: '#333' }}>特殊属性 (Special Characteristics)</h5>
+                    <div className="checkbox-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                      <label className="checkbox-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={item.stackable}
+                          onChange={(e) => updateCargoItem(item.id, 'stackable', e.target.checked)}
+                        />
+                        <span>可堆叠</span>
+                      </label>
+                      
+                      <label className="checkbox-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={item.fragile}
+                          onChange={(e) => updateCargoItem(item.id, 'fragile', e.target.checked)}
+                        />
+                        <span>易碎品</span>
+                      </label>
+                      
+                      <label className="checkbox-item hazmat" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={item.hazmat}
+                          onChange={(e) => updateCargoItem(item.id, 'hazmat', e.target.checked)}
+                        />
+                        <span>危险品</span>
+                      </label>
                     </div>
                   </div>
                 </div>
-              )}
-
-              {/* LTL特殊属性 */}
-              <div className="ltl-attributes">
-                <h4>特殊属性 (Special Characteristics)</h4>
-                <div className="checkbox-grid">
-                  <label className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      name="stackable"
-                      checked={formData.stackable}
-                      onChange={handleInputChange}
-                    />
-                    <span>可堆叠 (Stackable)</span>
-                  </label>
-                  
-                  <label className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      name="allowMixedLoad"
-                      checked={formData.allowMixedLoad}
-                      onChange={handleInputChange}
-                    />
-                    <span>允许拼车 (Mixed Load OK)</span>
-                  </label>
-                  
-                  <label className="checkbox-item hazmat">
-                    <input
-                      type="checkbox"
-                      name="hazmat"
-                      checked={formData.hazmat}
-                      onChange={handleInputChange}
-                    />
-                    <span>危险品 (Hazmat)</span>
-                  </label>
-                  
-                  <label className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      name="fragile"
-                      checked={formData.fragile}
-                      onChange={handleInputChange}
-                    />
-                    <span>易碎品 (Fragile)</span>
-                  </label>
-                </div>
-              </div>
+              ))}
 
               {/* 地址类型 */}
               <div className="location-types">
