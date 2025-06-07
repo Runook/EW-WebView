@@ -999,14 +999,14 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Building size={16} />
-                  公司名称 (Company Name) *
+                  发布人名称 (Contact Name) *
                 </label>
                 <input
                   type="text"
                   name="companyName"
                   value={formData.companyName}
                   onChange={handleInputChange}
-                  placeholder="您的公司名称"
+                  placeholder="您的名称"
                   required
                 />
               </div>
@@ -1014,7 +1014,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Phone size={16} />
-                  联系电话 (Phone) *
+                  发布人电话 (Phone) *
                 </label>
                 <input
                   type="tel"
@@ -1027,7 +1027,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
 
               <div className="form-group">
-                <label>联系邮箱 (Email)</label>
+                <label>发布人邮箱 (Email)</label>
                 <input
                   type="email"
                   name="contactEmail"
@@ -1037,20 +1037,23 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                 />
               </div>
 
-              <div className="form-group">
-                <label>
-                  <DollarSign size={16} />
-                  {formData.serviceType === 'LTL' ? '总预估运费 (总参考价格)' : '预估运费 (Estimated Rate) *'}
-                </label>
-                <input
-                  type="text"
-                  name="maxRate"
-                  value={formData.maxRate}
-                  onChange={handleInputChange}
-                  placeholder={formData.serviceType === 'LTL' ? '可选：如总计$2,500' : '如：$2,500 或 面议'}
-                  required={formData.serviceType === 'FTL'}
-                />
-              </div>
+{formData.serviceType !== 'LTL' && (
+  <div className="form-group">
+    <label>
+      <DollarSign size={16} />
+      {'预估运费 (Estimated Rate) *'}
+    </label>
+    <input
+      type="text"
+      name="maxRate"
+      value={formData.maxRate}
+      onChange={handleInputChange}
+      placeholder="如：$2,500 或 面议"
+      required
+    />
+  </div>
+)}
+
 
               <div className="form-group">
                 <label>
