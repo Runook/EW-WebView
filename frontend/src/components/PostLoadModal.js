@@ -75,8 +75,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     contactEmail: '',
     notes: '',
     companyName: '',
-    maxRate: '',
-    urgency: '普通'
+    maxRate: ''
   });
 
   const [densityInfo, setDensityInfo] = useState({
@@ -347,7 +346,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     const requiredFields = [
       'origin', 'destination', 'pickupDate', 'deliveryDate', 
       'cargoType', 'truckType', 'weight', 'companyName', 
-      'contactPhone', 'maxRate', 'urgency'
+      'contactPhone', 'maxRate'
     ];
     
     // LTL额外验证
@@ -398,13 +397,13 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           requiredDate: formData.pickupDate,
           weight: item.weight,
           cargoType: `${formData.cargoType} - ${item.description}`,
-          urgency: formData.urgency,
           maxRate: item.estimatedRate,
           companyName: formData.companyName,
           contactPhone: formData.contactPhone,
           contactEmail: formData.contactEmail || '',
           specialRequirements: formData.notes || '',
           serviceType: formData.serviceType,
+          truckType: formData.truckType,
           // 保留原始表单数据用于显示
           originalData: {
             ...formData,
@@ -439,7 +438,6 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         requiredDate: formData.pickupDate,
         weight: formData.weight,
         cargoType: formData.cargoType,
-        urgency: formData.urgency,
         maxRate: formData.maxRate,
         companyName: formData.companyName,
         contactPhone: formData.contactPhone,
@@ -447,6 +445,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         specialRequirements: formData.notes || '',
         serviceType: formData.serviceType,
         cargoValue: formData.cargoValue,
+        truckType: formData.truckType,
         originalData: {
           ...formData,
           calculatedDensity: densityInfo.density,
@@ -508,7 +507,6 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       contactEmail: '',
       companyName: '',
       maxRate: '',
-      urgency: '普通',
       notes: ''
     });
     
@@ -1037,40 +1035,19 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                 />
               </div>
 
-{formData.serviceType !== 'LTL' && (
-  <div className="form-group">
-    <label>
-      <DollarSign size={16} />
-      {'预估运费 (Estimated Rate) *'}
-    </label>
-    <input
-      type="text"
-      name="maxRate"
-      value={formData.maxRate}
-      onChange={handleInputChange}
-      placeholder="如：$2,500 或 面议"
-      required
-    />
-  </div>
-)}
-
-
               <div className="form-group">
                 <label>
-                  <Clock size={16} />
-                  紧急程度 (Urgency) *
+                  <DollarSign size={16} />
+                  {formData.serviceType === 'LTL' ? '参考价格 (总预估运费，选填)' : '预估运费 (Estimated Rate) *'}
                 </label>
-                <select
-                  name="urgency"
-                  value={formData.urgency}
+                <input
+                  type="text"
+                  name="maxRate"
+                  value={formData.maxRate}
                   onChange={handleInputChange}
-                  required
-                >
-                  <option value="普通">普通 (Normal)</option>
-                  <option value="加急">加急 (Urgent)</option>
-                  <option value="紧急">紧急 (Critical)</option>
-                  <option value="特急">特急 (Emergency)</option>
-                </select>
+                  placeholder="如：$2,500 或 面议"
+                  required={formData.serviceType === 'FTL'}
+                />
               </div>
             </div>
             
