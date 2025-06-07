@@ -885,7 +885,7 @@ const FreightBoard = () => {
                       
                       <div className="date">
                         <Calendar size={14} />
-                        <span className="date-text">{load.pickupDate?.split('-').slice(1).join('/') || '未知日期'}</span>
+                        <span className="date-text">{load.pickupDate?.split('-').slice(1).join('/') || '未知日期'} 取货</span>
                       </div>
                       {load.serviceType === 'LTL' && (
                       <div className="Pallets">
