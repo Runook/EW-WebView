@@ -812,19 +812,19 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                     </div>
 
                     <div className="form-group">
-                      <label>托盘数量 (Pallets) *</label>
+                      <label>托板数量 (Pallets) *</label>
                       <input
                         type="number"
                         value={item.pallets}
                         onChange={(e) => updateCargoItem(item.id, 'pallets', e.target.value)}
-                        placeholder="托盘数量"
+                        placeholder="托板数量"
                         min="1"
                         required
                       />
                     </div>
 
                     <div className="form-group">
-                      <label>预估价格 (Estimated Rate) *</label>
+                      <label>预估运费 (Estimated Rate) *</label>
                       <input
                         type="text"
                         value={item.estimatedRate}

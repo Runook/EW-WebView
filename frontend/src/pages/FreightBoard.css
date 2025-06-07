@@ -328,8 +328,17 @@
 
 .cargo-value {
   font-size: 0.9rem;
-  color: #e65100;
-  font-weight: 600;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pallets {
+  font-size: 0.9rem;
+  color: #666;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -685,6 +694,7 @@
   .card-main .cargo-type,
   .card-main .equipment,
   .card-main .cargo-value,
+  .card-main .pallets,
   .card-main .nmfc-class,
   .card-main .weight,
   .card-main .capacity,

@@ -887,17 +887,19 @@ const FreightBoard = () => {
                         <Calendar size={14} />
                         <span className="date-text">{load.pickupDate?.split('-').slice(1).join('/') || '未知日期'}</span>
                       </div>
-                      <div className="Pallets">      
-                        <span >板数: {load.pallets || '未知'}</span>
+                      {load.serviceType === 'LTL' && (
+                      <div className="Pallets">
+                        <span>板数: {load.pallets || '未知'}</span>
                       </div>
+                      )}
                       
                       <div className="price">
                         <DollarSign size={16} />
                         {/* LTL显示托盘数量 + 价格，FTL只显示价格 */}
                         {load.serviceType === 'LTL' && load.pallets ? (
-                          <span className="price-text">{load.rate || '无'}（估价）</span>
+                          <span className="price-text">{load.rate || '无'}（预估运费）</span>
                         ) : (
-                          <span className="price-text">{load.rate || '无'}（估价）</span>
+                          <span className="price-text">{load.rate || '无'}（预估运费）</span>
                         )}
                       </div>
                       
