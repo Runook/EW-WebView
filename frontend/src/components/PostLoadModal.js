@@ -51,6 +51,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         density: '', // 自动计算的磅/立方英尺
         freightClass: '', // 自动计算的NMFC分类
         pallets: '', // 这个货物的托盘数
+        estimatedRate: '', // 每个货物项目的预估价格
         stackable: true,
         fragile: false,
         hazmat: false
@@ -274,6 +275,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       density: '',
       freightClass: '',
       pallets: '',
+      estimatedRate: '',
       stackable: true,
       fragile: false,
       hazmat: false
@@ -350,17 +352,17 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     
     // LTL额外验证
     if (formData.serviceType === 'LTL') {
-      // 移除单个重量字段的验证，改为验证货物项目
-      const requiredFieldsLTL = requiredFields.filter(field => field !== 'weight');
+      // 移除单个重量字段和全局价格字段的验证，改为验证货物项目
+      const requiredFieldsLTL = requiredFields.filter(field => field !== 'weight' && field !== 'maxRate');
       
       // 验证每个货物项目
       const invalidItems = formData.cargoItems.filter(item => 
         !item.description || !item.weight || !item.length || 
-        !item.width || !item.height || !item.pallets
+        !item.width || !item.height || !item.pallets || !item.estimatedRate
       );
       
       if (invalidItems.length > 0) {
-        alert('请填写所有货物项目的完整信息：描述、重量、尺寸和托盘数量');
+        alert('请填写所有货物项目的完整信息：描述、重量、尺寸、托盘数量和预估价格');
         return;
       }
       
@@ -397,7 +399,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           weight: item.weight,
           cargoType: `${formData.cargoType} - ${item.description}`,
           urgency: formData.urgency,
-          maxRate: formData.maxRate,
+          maxRate: item.estimatedRate,
           companyName: formData.companyName,
           contactPhone: formData.contactPhone,
           contactEmail: formData.contactEmail || '',
@@ -486,6 +488,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           density: '',
           freightClass: '',
           pallets: '',
+          estimatedRate: '',
           stackable: true,
           fragile: false,
           hazmat: false
@@ -796,7 +799,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                     )}
                   </div>
 
-                  <div className="form-grid">
+                  <div className="form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                     <div className="form-group">
                       <label>货物描述 (Description) *</label>
                       <input
@@ -816,6 +819,17 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                         onChange={(e) => updateCargoItem(item.id, 'pallets', e.target.value)}
                         placeholder="托盘数量"
                         min="1"
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>预估价格 (Estimated Rate) *</label>
+                      <input
+                        type="text"
+                        value={item.estimatedRate}
+                        onChange={(e) => updateCargoItem(item.id, 'estimatedRate', e.target.value)}
+                        placeholder="如：$500 或 面议"
                         required
                       />
                     </div>
@@ -1026,15 +1040,15 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <DollarSign size={16} />
-                  预估运费 (Estimated Rate) *
+                  {formData.serviceType === 'LTL' ? '总预估运费 (总参考价格)' : '预估运费 (Estimated Rate) *'}
                 </label>
                 <input
                   type="text"
                   name="maxRate"
                   value={formData.maxRate}
                   onChange={handleInputChange}
-                  placeholder="如：$2,500 或 面议"
-                  required
+                  placeholder={formData.serviceType === 'LTL' ? '可选：如总计$2,500' : '如：$2,500 或 面议'}
+                  required={formData.serviceType === 'FTL'}
                 />
               </div>
 
