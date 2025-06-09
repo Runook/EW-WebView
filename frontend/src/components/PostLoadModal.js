@@ -407,9 +407,9 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     
     // 基础验证 - 包含所有必填字段
     const requiredFields = [
-      'origin', 'destination', 'pickupDate', 'deliveryDate', 
-      'cargoType', 'truckType', 'weight', 'companyName', 
-      'contactPhone', 'maxRate'
+      'origin', 'destination', 'pickupDate', 
+       'weight', 'companyName', 
+      'contactPhone', 
     ];
     
     // LTL额外验证
@@ -419,8 +419,8 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       
       // 验证每个货物项目
       const invalidItems = formData.cargoItems.filter(item => 
-        !item.description || !item.weight || !item.length || 
-        !item.width || !item.height || !item.pallets || !item.estimatedRate
+         !item.weight || !item.length || 
+        !item.width || !item.height || !item.pallets 
       );
       
       if (invalidItems.length > 0) {
@@ -696,7 +696,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Calendar size={16} />
-                  送达日期 (Delivery Date) <span className="required">*</span>
+                  送达日期 (Delivery Date) 
                 </label>
                 <input
                   type="date"
@@ -753,7 +753,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Truck size={16} />
-                  车型要求 (Equipment Type) <span className="required">*</span>
+                  车型要求 (Equipment Type) 
                 </label>
                 <select
                   name="truckType"
@@ -770,7 +770,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Package size={16} />
-                  货物类型 (Commodity Type) <span className="required">*</span>
+                  货物类型 (Commodity Type) 
                 </label>
                 <select
                   name="cargoType"
@@ -900,7 +900,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                     </div>
 
                     <div className="form-group">
-                      <label>货物描述 (Description) <span className="required">*</span></label>
+                      <label>货物描述 (Description) </label>
                       <input
                         type="text"
                         value={item.description}
@@ -1029,16 +1029,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                       </div>
                     </div>
 
-                    <div className="form-group">
-                      <label>预估价格 (Estimated Rate) <span className="required">*</span></label>
-                      <input
-                        type="text"
-                        value={item.estimatedRate}
-                        onChange={(e) => updateCargoItem(item.id, 'estimatedRate', e.target.value)}
-                        placeholder="如：$500"
-                        required
-                      />
-                    </div>
+
                   </div>
 
                   {/* 计算结果显示 */}
@@ -1196,21 +1187,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                 />
               </div>
 
-              <div className="form-group">
-                <label>
-                  <DollarSign size={16} />
-                  {formData.serviceType === 'LTL' ? '参考价格 (总预估运费，选填)' : '预估运费 (Estimated Rate) '}
-                  {formData.serviceType === 'FTL' && <span className="required">*</span>}
-                </label>
-                <input
-                  type="text"
-                  name="maxRate"
-                  value={formData.maxRate}
-                  onChange={handleInputChange}
-                  placeholder="如：$2,500 或 面议"
-                  required={formData.serviceType === 'FTL'}
-                />
-              </div>
+
             </div>
             
             <div className="form-group">

@@ -872,12 +872,17 @@ const FreightBoard = () => {
 
                       
                       {/* 发布时间显示 */}
-                      <div className="publication-date">
-                        <Clock size={14} />
-                        <span className="publication-text">
-                          {load.publicationDate ? formatPublicationDate(load.publicationDate) : (load.postedTime || '未知时间')}
-                        </span>
-                      </div>
+<div
+  className={`publication-date ${load.serviceType === 'FTL' ? 'ml-offset' : ''}`}
+>
+  <Clock size={14} />
+  <span className="publication-text">
+    {load.publicationDate
+      ? formatPublicationDate(load.publicationDate)
+      : (load.postedTime || '未知时间')}
+  </span>
+</div>
+
                     </div>
                     
                     <div className="card-actions">

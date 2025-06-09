@@ -802,6 +802,10 @@
   .cargo-type, .equipment {
     min-width: 100px;
   }
+  .ml-offset {
+  margin-left: 6em; /* 4个汉字宽度，1em ≈ 1个字符宽度 */
+}
+
 
   .weight, .capacity {
     min-width: 80px;
