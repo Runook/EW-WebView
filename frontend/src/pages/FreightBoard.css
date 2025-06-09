@@ -694,7 +694,7 @@
   .card-main .cargo-type,
   .card-main .equipment,
   .card-main .cargo-value,
-  .card-main .pallets,
+  .card-main .pallets
   .card-main .nmfc-class,
   .card-main .weight,
   .card-main .capacity,
@@ -802,4 +802,5 @@
   .ewid {
     min-width: 120px;
   }
+  
 } 

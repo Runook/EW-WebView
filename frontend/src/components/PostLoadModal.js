@@ -113,7 +113,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     '超长车 (Stretch)', 
     '超重车 (Heavy Haul)', 
     '升降尾板 (Liftgate Required)', 
-    '不限 (Any)'
+    '其他 (Other)'
   ];
 
   // 地址类型选项
@@ -606,6 +606,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                   required
                 />
               </div>
+              
 
               <div className="form-group">
                 <label>
@@ -625,7 +626,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Calendar size={16} />
-                  送达日期 (Delivery Date) *
+                  送达日期 (Delivery Date) 
                 </label>
                 <input
                   type="date"
@@ -638,11 +639,64 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
             </div>
           </div>
+                                 {/* 地址类型 */}
+              <div className="location-types">
+                <h4>地址类型 (Location Types)</h4>
+                <div className="form-grid">
+                  <div className="form-group">
+                    <label>起点类型 (Origin Type)</label>
+                    <select
+                      name="originLocationType"
+                      value={formData.originLocationType}
+                      onChange={handleInputChange}
+                    >
+                      {locationTypes.map(type => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>终点类型 (Destination Type)</label>
+                    <select
+                      name="destinationLocationType"
+                      value={formData.destinationLocationType}
+                      onChange={handleInputChange}
+                    >
+                      {locationTypes.map(type => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+ 
 
           {/* 货物信息 */}
           <div className="form-section">
             <h3>货物信息 (Commodity Information)</h3>
             <div className="form-grid">
+              <div className="form-group">
+                <label>
+                  <Truck size={16} />
+                  车型要求 (Equipment Type) 
+                </label>
+                <select
+                  name="truckType"
+                  value={formData.truckType}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="">请选择车型要求</option>
+                  {truckTypes.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>              
               <div className="form-group">
                 <label>
                   <Package size={16} />
@@ -707,23 +761,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                 </div>
               )}
 
-              <div className="form-group">
-                <label>
-                  <Truck size={16} />
-                  车型要求 (Equipment Type) *
-                </label>
-                <select
-                  name="truckType"
-                  value={formData.truckType}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">请选择车型要求</option>
-                  {truckTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
+
             </div>
           </div>
 
@@ -952,41 +990,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                 </div>
               ))}
 
-              {/* 地址类型 */}
-              <div className="location-types">
-                <h4>地址类型 (Location Types)</h4>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>起点类型 (Origin Type)</label>
-                    <select
-                      name="originLocationType"
-                      value={formData.originLocationType}
-                      onChange={handleInputChange}
-                    >
-                      {locationTypes.map(type => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
 
-                  <div className="form-group">
-                    <label>终点类型 (Destination Type)</label>
-                    <select
-                      name="destinationLocationType"
-                      value={formData.destinationLocationType}
-                      onChange={handleInputChange}
-                    >
-                      {locationTypes.map(type => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
