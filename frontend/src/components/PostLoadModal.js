@@ -700,7 +700,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Package size={16} />
-                  货物类型 (Commodity Type) *
+                  货物类型 (Commodity Type) 
                 </label>
                 <select
                   name="cargoType"
@@ -773,26 +773,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                   <Package size={20} />
                   货物清单管理 (Cargo Items Management)
                 </h3>
-                <button
-                  type="button"
-                  onClick={addCargoItem}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    background: '#34C759',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    fontWeight: '600'
-                  }}
-                >
-                  <Plus size={16} />
-                  添加货物
-                </button>
+
               </div>
               
               <div className="nmfc-info">
@@ -837,17 +818,6 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
                   <div className="form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                     <div className="form-group">
-                      <label>货物描述 (Description) *</label>
-                      <input
-                        type="text"
-                        value={item.description}
-                        onChange={(e) => updateCargoItem(item.id, 'description', e.target.value)}
-                        placeholder="如：电子设备、机械部件等"
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group">
                       <label>托板数量 (Pallets) *</label>
                       <input
                         type="number"
@@ -859,13 +829,13 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label>预估运费 (Estimated Rate) *</label>
+                                        <div className="form-group">
+                      <label>货物描述 (Description) </label>
                       <input
                         type="text"
-                        value={item.estimatedRate}
-                        onChange={(e) => updateCargoItem(item.id, 'estimatedRate', e.target.value)}
-                        placeholder="如：$500 或 面议"
+                        value={item.description}
+                        onChange={(e) => updateCargoItem(item.id, 'description', e.target.value)}
+                        placeholder="如：电子设备、机械部件等"
                         required
                       />
                     </div>
@@ -985,6 +955,26 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                         />
                         <span>危险品</span>
                       </label>
+                <button
+                  type="button"
+                  onClick={addCargoItem}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.5rem 1rem',
+                    background: '#34C759',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '600'
+                  }}
+                >  
+                  <Plus size={16} />
+                  添加货物
+                </button>
                     </div>
                   </div>
                 </div>

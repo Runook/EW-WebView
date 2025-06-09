@@ -835,15 +835,7 @@ const FreightBoard = () => {
                       </div>
                       )}
                       
-                      <div className="price">
-                        <DollarSign size={16} />
-                        {/* LTL显示托盘数量 + 价格，FTL只显示价格 */}
-                        {load.serviceType === 'LTL' && load.pallets ? (
-                          <span className="price-text">{load.rate || '无'}（预估运费）</span>
-                        ) : (
-                          <span className="price-text">{load.rate || '无'}（预估运费）</span>
-                        )}
-                      </div>
+
                       
                       {/* EWID单号显示 */}
                       {(load.ewid || load.EWID) && (
