@@ -38,8 +38,8 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     // FTL单位转换辅助字段
     weightKg: '',
     // LTL专用字段 - 按照NMFC标准
-    originLocationType: 'commercial',
-    destinationLocationType: 'commercial',
+    originLocationTypes: [], // 改为数组
+    destinationLocationTypes: [], // 改为数组
     pallets: '',
     // LTL多货物支持
     cargoItems: [
@@ -125,12 +125,13 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     '其他 (Other)'
   ];
 
-  // 地址类型选项
-  const locationTypes = [
-    { value: 'commercial', label: '商业地址 (Commercial)', icon: Building },
-    { value: 'residential', label: '住宅地址 (Residential)', icon: Home },
-    { value: 'elevator', label: '需要升降机 (Elevator Required)', icon: Layers },
-    { value: 'gated', label: '有门禁/安保 (Gated/Secured)', icon: Shield }
+  // 地址类型选项 - 改为勾选形式
+  const locationTypeOptions = [
+    { value: 'appointment', label: '预约', icon: Clock },
+    { value: 'commercial', label: '商业地址', icon: Building },
+    { value: 'residential', label: '住宅地址', icon: Home },
+    { value: 'gated', label: '门禁', icon: Shield },
+    { value: 'elevator', label: '升降机', icon: Layers }
   ];
 
   // NMFC分类代码映射表 - 基于密度
@@ -413,6 +414,32 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     setFormData(updatedData);
   };
 
+  // 处理地址类型勾选变化
+  const handleLocationTypeChange = (locationType, fieldName) => {
+    return (e) => {
+      const isChecked = e.target.checked;
+      setFormData(prev => {
+        const currentTypes = prev[fieldName] || [];
+        if (isChecked) {
+          // 添加类型
+          if (!currentTypes.includes(locationType)) {
+            return {
+              ...prev,
+              [fieldName]: [...currentTypes, locationType]
+            };
+          }
+        } else {
+          // 移除类型
+          return {
+            ...prev,
+            [fieldName]: currentTypes.filter(type => type !== locationType)
+          };
+        }
+        return prev;
+      });
+    };
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -452,8 +479,9 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         return;
       }
     } else {
-      // FTL验证 - 移除不再必需的字段
-      const missingFields = requiredFields.filter(field => !formData[field]);
+      // FTL验证 - 包含车型要求
+      const requiredFieldsFTL = [...requiredFields, 'truckType'];
+      const missingFields = requiredFieldsFTL.filter(field => !formData[field]);
       if (missingFields.length > 0) {
         alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
         return;
@@ -548,8 +576,8 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       cargoValue: '',
       shippingNumber: '',
       weightKg: '',
-      originLocationType: 'commercial',
-      destinationLocationType: 'commercial',
+      originLocationTypes: [],
+      destinationLocationTypes: [],
       pallets: '',
       cargoItems: [
         {
@@ -720,38 +748,40 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
             </div>
           </div>
-                                 {/* 地址类型 */}
-              <div className="location-types">
+                                 {/* 地址类型 - 改为勾选形式 */}
+              <div className="location-types-section">
                 <h4>地址类型 (Location Types)</h4>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>起点类型 (Origin Type)</label>
-                    <select
-                      name="originLocationType"
-                      value={formData.originLocationType}
-                      onChange={handleInputChange}
-                    >
-                      {locationTypes.map(type => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
+                <div className="location-types-grid">
+                  <div className="location-type-group">
+                    <label className="location-type-header">起点类型 (Origin)</label>
+                    <div className="checkbox-options">
+                      {locationTypeOptions.map(option => (
+                        <label key={option.value} className="checkbox-option">
+                          <input
+                            type="checkbox"
+                            checked={formData.originLocationTypes.includes(option.value)}
+                            onChange={handleLocationTypeChange(option.value, 'originLocationTypes')}
+                          />
+                          <span className="checkbox-label">{option.label}</span>
+                        </label>
                       ))}
-                    </select>
+                    </div>
                   </div>
 
-                  <div className="form-group">
-                    <label>终点类型 (Destination Type)</label>
-                    <select
-                      name="destinationLocationType"
-                      value={formData.destinationLocationType}
-                      onChange={handleInputChange}
-                    >
-                      {locationTypes.map(type => (
-                        <option key={type.value} value={type.value}>
-                          {type.label}
-                        </option>
+                  <div className="location-type-group">
+                    <label className="location-type-header">终点类型 (Destination)</label>
+                    <div className="checkbox-options">
+                      {locationTypeOptions.map(option => (
+                        <label key={option.value} className="checkbox-option">
+                          <input
+                            type="checkbox"
+                            checked={formData.destinationLocationTypes.includes(option.value)}
+                            onChange={handleLocationTypeChange(option.value, 'destinationLocationTypes')}
+                          />
+                          <span className="checkbox-label">{option.label}</span>
+                        </label>
                       ))}
-                    </select>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -761,22 +791,27 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           <div className="form-section">
             <h3>货物信息 (Commodity Information)</h3>
             <div className="form-grid">
-              <div className="form-group">
-                <label>
-                  <Truck size={16} />
-                  车型要求 (Equipment Type) 
-                </label>
-                <select
-                  name="truckType"
-                  value={formData.truckType}
-                  onChange={handleInputChange}
-                >
-                  <option value="">请选择车型要求</option>
-                  {truckTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>              
+              {/* 车型要求 - 只在FTL时显示且必填 */}
+              {formData.serviceType === 'FTL' && (
+                <div className="form-group">
+                  <label>
+                    <Truck size={16} />
+                    车型要求 (Equipment Type) <span className="required">*</span>
+                  </label>
+                  <select
+                    name="truckType"
+                    value={formData.truckType}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">请选择车型要求</option>
+                    {truckTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
               <div className="form-group">
                 <label>
                   <Package size={16} />
@@ -1430,6 +1465,89 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
             flex-direction: column;
             align-items: stretch;
           }
+        }
+
+        /* 地址类型勾选框样式 */
+        .location-types-section {
+          margin: 1.5rem 0;
+          padding: 1rem;
+          background: #f9f9f9;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+        }
+
+        .location-types-section h4 {
+          margin: 0 0 1rem 0;
+          color: #333;
+          font-size: 1rem;
+          font-weight: 600;
+        }
+
+        .location-types-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1.5rem;
+        }
+
+        .location-type-group {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .location-type-header {
+          font-weight: 600;
+          color: #333;
+          font-size: 0.9rem;
+          margin: 0;
+        }
+
+        .checkbox-options {
+          display: flex;
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .checkbox-option {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          padding: 0.25rem;
+          border-radius: 4px;
+          transition: background-color 0.2s ease;
+        }
+
+        .checkbox-option:hover {
+          background-color: rgba(52, 199, 89, 0.1);
+        }
+
+        .checkbox-option input[type="checkbox"] {
+          width: 16px;
+          height: 16px;
+          accent-color: #34C759;
+          cursor: pointer;
+        }
+
+        .checkbox-label {
+          font-size: 0.85rem;
+          color: #555;
+          cursor: pointer;
+          user-select: none;
+        }
+
+        @media (max-width: 768px) {
+          .location-types-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
+
+          .checkbox-label {
+            font-size: 0.8rem;
+          }
+        }
+
+        .service-type-selection {
         }
       `}</style>
     </div>
