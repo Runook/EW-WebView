@@ -37,30 +37,57 @@ import { useAuth } from '../contexts/AuthContext';
 import './PlatformPage.css';
 import './FreightBoard.css';
 
+/**
+ * 陆运信息平台主组件
+ * 
+ * 功能概述：
+ * - 显示货源和车源信息列表
+ * - 支持搜索、筛选、排序功能
+ * - 提供发布货源/车源的模态框
+ * - 支持查看详细信息
+ * - 自动生成EWID编号和发布时间显示
+ * 
+ * 主要状态：
+ * - activeTab: 当前标签页 (loads/trucks)
+ * - loads/trucks: 数据列表
+ * - filters: 筛选条件
+ * - searchQuery: 搜索关键词
+ * - modal状态: 控制各种模态框显示
+ * 
+ * 核心功能：
+ * - 数据获取 (fetchLoads/fetchTrucks)
+ * - 数据筛选和排序 (filterData)
+ * - EWID生成 (generateEWID)
+ * - 发布时间格式化 (formatPublicationDate)
+ */
 const FreightBoard = () => {
-  // const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState('loads');
-  const [searchQuery, setSearchQuery] = useState('');
+  // === 状态管理 ===
+  // 基础UI状态
+  const [activeTab, setActiveTab] = useState('loads'); // 当前激活的标签页 ('loads' | 'trucks')
+  const [loading, setLoading] = useState(true); // 数据加载状态
+  const [error, setError] = useState(null); // 错误信息
+
+  // 模态框状态
   const [isPostLoadModalOpen, setIsPostLoadModalOpen] = useState(false);
   const [isPostTruckModalOpen, setIsPostTruckModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [userPosts, setUserPosts] = useState([]);
-  const [loads, setLoads] = useState([]);
-  const [trucks, setTrucks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  // 简化的筛选条件
+  const [selectedItem, setSelectedItem] = useState(null); // 详情模态框中选中的项目
+
+  // 数据状态
+  const [loads, setLoads] = useState([]); // 货源列表
+  const [trucks, setTrucks] = useState([]); // 车源列表
+
+  // 搜索和筛选状态
+  const [searchQuery, setSearchQuery] = useState(''); // 搜索关键词
   const [filters, setFilters] = useState({
     search: '',
-    origin: '',
-    destination: '',
-    serviceType: '', // FTL, LTL
-    dateFrom: '',
-    dateTo: ''
+    origin: '', // 起始地筛选
+    destination: '', // 目的地筛选
+    serviceType: '', // 服务类型筛选 (FTL/LTL)
+    dateFrom: '', // 开始日期筛选
+    dateTo: '' // 结束日期筛选
   });
-  const [sortBy, setSortBy] = useState('date'); // date, rate, weight
+  const [sortBy, setSortBy] = useState('date'); // 排序方式 ('date' | 'rate' | 'weight')
 
   const { isAuthenticated } = useAuth();
 
@@ -100,7 +127,11 @@ const FreightBoard = () => {
     }
   };
 
-  // API调用函数
+  // === 数据获取函数 ===
+  /**
+   * 获取货源数据
+   * @returns {Promise<Array>} 货源列表
+   */
   const fetchLoads = async () => {
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
@@ -112,167 +143,15 @@ const FreightBoard = () => {
       return data.data || [];
     } catch (error) {
       console.error('获取货源信息失败:', error);
-      return [
-        {
-          id: 1,
-          origin: '洛杉矶港 (Port of LA)',
-          destination: '芝加哥 (Chicago, IL)',
-          distance: '2,015英里',
-          pickupDate: '2024-03-15',
-          deliveryDate: '2024-03-18',
-          weight: '45,000 lb',
-          commodity: '汽车配件 (Auto Parts)',
-          rate: '$3,200',
-          company: 'Pacific Logistics',
-          phone: '(213) 555-0123',
-          contactEmail: 'dispatch@pacificlogistics.com',
-          postedTime: '2小时前',
-          EWID: 'EW-LA-240315-001',
-          serviceType: 'FTL',
-          cargoValue: '$85,000 货值',
-          truckType: '干货车 (Dry Van)'
-        },
-        {
-          id: 2,
-          origin: '达拉斯 (Dallas, TX)',
-          destination: '迈阿密 (Miami, FL)',
-          distance: '1,307英里',
-          pickupDate: '2024-03-16',
-          deliveryDate: '2024-03-19',
-          weight: '52,000 lb',
-          commodity: '电子设备 (Electronics)',
-          rate: '$2,800',
-          company: 'Texas Express',
-          phone: '(214) 555-0145',
-          contactEmail: 'loads@texasexpress.com',
-          postedTime: '45分钟前',
-          EWID: 'EW-TX-240316-002',
-          serviceType: 'FTL',
-          cargoValue: '$120,000 货值',
-          truckType: '冷藏车 (Refrigerated)'
-        },
-        {
-          id: 3,
-          origin: '西雅图 (Seattle, WA)',
-          destination: '凤凰城 (Phoenix, AZ)',
-          distance: '1,422英里',
-          pickupDate: '2024-03-17',
-          deliveryDate: '2024-03-20',
-          weight: '8,500 lb',
-          commodity: '机械设备 (Machinery)',
-          freightClass: '70',
-          rate: '$1,250',
-          company: 'Northwest Freight',
-          phone: '(206) 555-0167',
-          contactEmail: 'operations@nwfreight.com',
-          postedTime: '1天前',
-          EWID: 'EW-WA-240317-003',
-          serviceType: 'LTL',
-          pallets: 6,
-          truckType: '平板车 (Flatbed)'
-        },
-        {
-          id: 4,
-          origin: '亚特兰大 (Atlanta, GA)',
-          destination: '丹佛 (Denver, CO)',
-          distance: '1,398英里',
-          pickupDate: '2024-03-18',
-          deliveryDate: '2024-03-21',
-          weight: '48,000 lb',
-          commodity: '建筑材料 (Building Materials)',
-          rate: '$2,950',
-          company: 'Southern Transport',
-          phone: '(404) 555-0189',
-          contactEmail: 'dispatch@southerntransport.com',
-          postedTime: '3小时前',
-          EWID: 'EW-GA-240318-004',
-          serviceType: 'FTL',
-          cargoValue: '$75,000 货值',
-          truckType: '平板车 (Flatbed)'
-        },
-        {
-          id: 5,
-          origin: '休斯顿 (Houston, TX)',
-          destination: '纽约 (New York, NY)',
-          distance: '1,628英里',
-          pickupDate: '2024-03-19',
-          deliveryDate: '2024-03-22',
-          weight: '44,000 lb',
-          commodity: '化工原料 (Chemicals)',
-          rate: '$3,100',
-          company: 'Gulf Coast Logistics',
-          phone: '(713) 555-0201',
-          contactEmail: 'loads@gulfcoastlog.com',
-          postedTime: '6小时前',
-          EWID: 'EW-TX-240319-005',
-          serviceType: 'FTL',
-          cargoValue: '$95,000 货值',
-          truckType: '危险品车 (Hazmat)'
-        },
-        {
-          id: 6,
-          origin: '盐湖城 (Salt Lake City, UT)',
-          destination: '拉斯维加斯 (Las Vegas, NV)',
-          distance: '421英里',
-          pickupDate: '2024-03-20',
-          deliveryDate: '2024-03-21',
-          weight: '12,800 lb',
-          commodity: '纺织品 (Textiles)',
-          freightClass: '110',
-          rate: '$890',
-          company: 'Mountain Freight',
-          phone: '(801) 555-0223',
-          contactEmail: 'dispatch@mountainfreight.com',
-          postedTime: '2天前',
-          EWID: 'EW-UT-240320-006',
-          serviceType: 'LTL',
-          pallets: 8,
-          truckType: '干货车 (Dry Van)'
-        },
-        {
-          id: 7,
-          origin: '波特兰 (Portland, OR)',
-          destination: '洛杉矶 (Los Angeles, CA)',
-          distance: '964英里',
-          pickupDate: '2024-03-21',
-          deliveryDate: '2024-03-23',
-          weight: '15,600 lb',
-          commodity: '家具 (Furniture)',
-          freightClass: '125',
-          rate: '$1,450',
-          company: 'Pacific Northwest Logistics',
-          phone: '(503) 555-0245',
-          contactEmail: 'ops@pnwlogistics.com',
-          postedTime: '8小时前',
-          EWID: 'EW-OR-240321-007',
-          serviceType: 'LTL',
-          pallets: 10,
-          truckType: '升降尾板 (Liftgate Required)'
-        },
-        {
-          id: 8,
-          origin: '底特律 (Detroit, MI)',
-          destination: '纳什维尔 (Nashville, TN)',
-          distance: '456英里',
-          pickupDate: '2024-03-22',
-          deliveryDate: '2024-03-24',
-          weight: '22,000 lb',
-          commodity: '汽车配件 (Auto Parts)',
-          freightClass: '85',
-          rate: '$1,680',
-          company: 'Great Lakes Transport',
-          phone: '(313) 555-0267',
-          contactEmail: 'dispatch@greatlakestransport.com',
-          postedTime: '4小时前',
-          EWID: 'EW-MI-240322-008',
-          serviceType: 'LTL',
-          pallets: 14,
-          truckType: '干货车 (Dry Van)'
-        }
-      ];
+      // 返回模拟数据用于演示
+      return getMockLoadsData();
     }
   };
 
+  /**
+   * 获取车源数据
+   * @returns {Promise<Array>} 车源列表
+   */
   const fetchTrucks = async () => {
     try {
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
@@ -284,97 +163,128 @@ const FreightBoard = () => {
       return data.data || [];
     } catch (error) {
       console.error('获取车源信息失败:', error);
-      return [
-        {
-          id: 1,
-          location: '广东广州',
-          destination: '全国各地',
-          availableDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-          equipment: '厢式货车17.5米',
-          capacity: '32吨',
-          volume: '120立方米',
-          serviceType: 'FTL',
-          rateRange: '3.5-4.2元/公里',
-          company: '粤运物流',
-          rating: 4.8,
-          phone: '020-8888-6666',
-          preferredLanes: '珠三角至长三角、京津冀',
-          specialServices: '双司机配送，GPS定位'
-        },
-        {
-          id: 2,
-          location: '浙江杭州',
-          destination: '华东地区',
-          availableDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
-          equipment: '冷藏车13米',
-          capacity: '25',
-          volume: '85立方米',
-          serviceType: 'FTL',
-          rateRange: '4.0-5.5元/公里',
-          company: '江南冷链',
-          rating: 4.9,
-          phone: '0571-7777-8888',
-          preferredLanes: '长三角冷链专线',
-          specialServices: '恒温控制，食品级运输'
-        },
-        {
-          id: 3,
-          location: '河北石家庄',
-          destination: '华北华中',
-          availableDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-          equipment: '零担专线',
-          capacity: '20吨',
-          volume: '60立方米',
-          serviceType: 'LTL',
-          rateRange: '0.8-1.5元/公斤',
-          company: '华北零担',
-          rating: 4.7,
-          phone: '0311-6666-9999',
-          preferredLanes: '京津冀至中原地区',
-          specialServices: '门到门配送，代收货款'
-        },
-        {
-          id: 4,
-          location: '四川成都',
-          destination: '西南各省',
-          availableDate: new Date(Date.now() + 4 * 86400000).toISOString().split('T')[0],
-          equipment: '高栏车13米',
-          capacity: '30吨',
-          volume: '100立方米',
-          serviceType: 'FTL',
-          rateRange: '3.8-4.5元/公里',
-          company: '川渝运输',
-          rating: 4.6,
-          phone: '028-5555-7777',
-          preferredLanes: '西南环线，川渝云贵',
-          specialServices: '山区运输经验，安全可靠'
-        },
-        {
-          id: 5,
-          location: '山东青岛',
-          destination: '华东华北',
-          availableDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
-          equipment: '平板车16米',
-          capacity: '35吨',
-          volume: '150立方米',
-          serviceType: 'FTL',
-          rateRange: '4.2-5.0元/公里',
-          company: '齐鲁重载',
-          rating: 4.8,
-          phone: '0532-9999-8888',
-          preferredLanes: '环渤海经济圈',
-          specialServices: '重件运输，专业绑扎'
-        }
-      ];
+      // 返回模拟数据用于演示
+      return getMockTrucksData();
     }
   };
 
-  // 初始化数据
+  /**
+   * 获取模拟货源数据
+   * @returns {Array} 模拟货源数组
+   */
+  const getMockLoadsData = () => [
+    {
+      id: 1,
+      origin: '洛杉矶港 (Port of LA)',
+      destination: '芝加哥 (Chicago, IL)',
+      pickupDate: '2024-03-15',
+      weight: '45,000 lb',
+      commodity: '汽车配件 (Auto Parts)',
+      rate: '$3,200',
+      company: 'Pacific Logistics',
+      phone: '(213) 555-0123',
+      postedTime: '2小时前',
+      EWID: 'EW-LA-240315-001',
+      serviceType: 'FTL',
+      cargoValue: '$85,000',
+      truckType: '干货车 (Dry Van)',
+      originalData: {
+        deliveryDate: '2024-03-18',
+        shippingNumber: 'FTL-2024-0315-001',
+        contactEmail: 'dispatch@pacificlogistics.com',
+        notes: '包含时效性要求，请按时交货'
+      }
+    },
+    {
+      id: 2,
+      origin: '达拉斯 (Dallas, TX)',
+      destination: '迈阿密 (Miami, FL)',
+      pickupDate: '2024-03-16',
+      weight: '52,000 lb',
+      commodity: '电子设备 (Electronics)',
+      rate: '$2,800',
+      company: 'Texas Express',
+      phone: '(214) 555-0145',
+      postedTime: '45分钟前',
+      EWID: 'EW-TX-240316-002',
+      serviceType: 'FTL',
+      cargoValue: '$120,000',
+      truckType: '冷藏车 (Refrigerated)'
+    },
+    {
+      id: 3,
+      origin: '西雅图 (Seattle, WA)',
+      destination: '凤凰城 (Phoenix, AZ)',
+      pickupDate: '2024-03-17',
+      weight: '8,500 lb',
+      commodity: '机械设备 (Machinery)',
+      freightClass: '70',
+      rate: '$1,250',
+      company: 'Northwest Freight',
+      phone: '(206) 555-0167',
+      postedTime: '1天前',
+      EWID: 'EW-WA-240317-003',
+      serviceType: 'LTL',
+      pallets: 6,
+      truckType: '平板车 (Flatbed)',
+      originalData: {
+        length: '48',
+        width: '40',
+        height: '60',
+        volume: '46.67',
+        density: '182.14',
+        fragile: true,
+        stackable: false,
+        shippingNumber: 'SH-2024-0317-001',
+        contactEmail: 'contact@northwestfreight.com',
+        notes: '特殊包装要求，需防潮处理'
+      }
+    }
+  ];
+
+  /**
+   * 获取模拟车源数据
+   * @returns {Array} 模拟车源数组
+   */
+  const getMockTrucksData = () => [
+    {
+      id: 1,
+      location: '广东广州',
+      destination: '全国各地',
+      availableDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      equipment: '厢式货车17.5米',
+      capacity: '32吨',
+      serviceType: 'FTL',
+      rateRange: '3.5-4.2元/公里',
+      company: '粤运物流',
+      rating: 4.8,
+      phone: '020-8888-6666'
+    },
+    {
+      id: 2,
+      location: '浙江杭州',
+      destination: '华东地区',
+      availableDate: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
+      equipment: '冷藏车13米',
+      capacity: '25吨',
+      serviceType: 'FTL',
+      rateRange: '4.0-5.5元/公里',
+      company: '江南冷链',
+      rating: 4.9,
+      phone: '0571-7777-8888'
+    }
+  ];
+
+  // === 组件初始化 ===
+  /**
+   * 组件初始化 - 加载货源和车源数据
+   */
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         setError(null);
+        // 并行加载货源和车源数据
         const [loadData, truckData] = await Promise.all([
           fetchLoads(),
           fetchTrucks()
@@ -392,14 +302,19 @@ const FreightBoard = () => {
     loadData();
   }, []);
 
+  // === 事件处理函数 ===
+  /**
+   * 处理筛选条件变化
+   * @param {string} key - 筛选字段名
+   * @param {string} value - 筛选值
+   */
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const applyFilters = () => {
-    // Implementation of applyFilters function
-  };
-
+  /**
+   * 重置所有筛选条件
+   */
   const resetFilters = () => {
     const resetState = {
       search: '',
@@ -413,43 +328,46 @@ const FreightBoard = () => {
     setSearchQuery('');
   };
 
+  /**
+   * 处理发布货源/车源
+   * @param {Object} postData - 发布的数据
+   */
   const handlePostSubmit = async (postData) => {
     try {
-      console.log('发布的数据:', postData); // 调试日志
+      console.log('发布的数据:', postData);
 
       if (postData.type === 'load') {
+        // 创建新的货源记录
         const newLoad = {
           id: Date.now(),
           origin: postData.origin,
           destination: postData.destination,
           pickupDate: postData.requiredDate,
           deliveryDate: postData.deliveryDate,
-          distance: '距离计算中',
           rate: postData.maxRate || '预估价格',
-          rateValue: parseFloat(postData.maxRate?.replace(/[^\d.]/g, '')) || 0,
           weight: postData.weight,
-          weightValue: parseFloat(postData.weight?.replace(/[^\d.]/g, '')) || 0,
           serviceType: postData.serviceType,
           equipment: postData.truckType || '标准货车',
           company: postData.companyName,
-          rating: 4.5,
           phone: postData.contactPhone,
+          contactEmail: postData.contactEmail,
           commodity: postData.cargoType,
           pallets: postData.originalData?.pallets || '',
-          requirements: postData.specialRequirements || postData.notes || '',
-          freightClass: postData.originalData?.freightClass || postData.originalData?.calculatedClass || '',
-          nmfcClass: postData.originalData?.calculatedClass || '',
-          density: postData.originalData?.calculatedDensity || '',
-          stackable: postData.originalData?.stackable || true,
           cargoValue: postData.cargoValue || postData.originalData?.cargoValue || '',
           shippingNumber: postData.shippingNumber || postData.originalData?.shippingNumber || '',
+          notes: postData.specialRequirements || postData.notes || '',
+          truckType: postData.truckType,
+          freightClass: postData.originalData?.freightClass || postData.originalData?.calculatedClass || '',
           EWID: generateEWID(),
           publicationDate: new Date().toISOString(),
-          postedTime: '刚刚发布'
+          postedTime: '刚刚发布',
+          // 保存完整的原始数据供详情页使用
+          originalData: postData.originalData || postData
         };
-        console.log('创建的新货源:', newLoad); // 调试日志
+        console.log('创建的新货源:', newLoad);
         setLoads(prev => [newLoad, ...prev]);
       } else {
+        // 创建新的车源记录
         const newTruck = {
           id: Date.now(),
           location: postData.currentLocation || postData.origin,
@@ -457,19 +375,18 @@ const FreightBoard = () => {
           availableDate: postData.availableDate,
           equipment: postData.equipment || postData.truckType,
           capacity: postData.capacity,
-          volume: postData.volume || '',
           serviceType: postData.serviceType,
           rateRange: postData.rateRange || postData.rate,
           company: postData.companyName,
-          rating: 4.5,
           phone: postData.contactPhone,
-          preferredLanes: postData.originalData?.preferredLanes || `${postData.preferredOrigin || '任意地点'} 至 ${postData.preferredDestination || '全国各地'}`,
-          specialServices: postData.truckFeatures || postData.specialServices || '',
+          contactEmail: postData.contactEmail,
           EWID: generateEWID(),
           publicationDate: new Date().toISOString(),
-          postedTime: '刚刚发布'
+          postedTime: '刚刚发布',
+          // 保存完整的原始数据供详情页使用
+          originalData: postData.originalData || postData
         };
-        console.log('创建的新车源:', newTruck); // 调试日志
+        console.log('创建的新车源:', newTruck);
         setTrucks(prev => [newTruck, ...prev]);
       }
 
@@ -480,47 +397,48 @@ const FreightBoard = () => {
     }
   };
 
+  // === 数据处理函数 ===
+  /**
+   * 过滤和排序数据
+   * @param {Array} data - 原始数据数组
+   * @returns {Array} 过滤和排序后的数据
+   */
   const filterData = (data) => {
     let filteredData = data.filter(item => {
-      // 搜索过滤 - 扩展搜索字段
+      // 搜索关键词匹配
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase();
         const matchesSearch = 
           item.origin?.toLowerCase().includes(searchLower) ||
           item.destination?.toLowerCase().includes(searchLower) ||
           item.location?.toLowerCase().includes(searchLower) ||
-          item.currentLocation?.toLowerCase().includes(searchLower) ||
           item.equipment?.toLowerCase().includes(searchLower) ||
-          item.truckType?.toLowerCase().includes(searchLower) ||
-          item.cargoType?.toLowerCase().includes(searchLower) ||
           item.commodity?.toLowerCase().includes(searchLower) ||
-          item.company?.toLowerCase().includes(searchLower) ||
-          item.companyName?.toLowerCase().includes(searchLower) ||
-          item.specialServices?.toLowerCase().includes(searchLower) ||
-          item.preferredLanes?.toLowerCase().includes(searchLower);
+          item.company?.toLowerCase().includes(searchLower);
         
         if (!matchesSearch) return false;
       }
 
-      // 基础筛选条件
+      // 起始地筛选
       if (filters.origin && 
           !item.origin?.toLowerCase().includes(filters.origin.toLowerCase()) && 
           !item.location?.toLowerCase().includes(filters.origin.toLowerCase())) return false;
       
+      // 目的地筛选
       if (filters.destination && 
           !item.destination?.toLowerCase().includes(filters.destination.toLowerCase())) return false;
       
       // 服务类型筛选
       if (filters.serviceType && item.serviceType !== filters.serviceType) return false;
 
-      // 取货日期范围筛选
+      // 日期范围筛选
       if (filters.dateFrom && new Date(item.pickupDate) < new Date(filters.dateFrom)) return false;
       if (filters.dateTo && new Date(item.pickupDate) > new Date(filters.dateTo)) return false;
 
       return true;
     });
 
-    // 排序功能 - 扩展排序选项
+    // 数据排序
     if (sortBy) {
       filteredData.sort((a, b) => {
         switch (sortBy) {
@@ -528,9 +446,13 @@ const FreightBoard = () => {
             return new Date(b.pickupDate || b.availableDate || b.postedDate) - 
                    new Date(a.pickupDate || a.availableDate || a.postedDate);
           case 'rate':
-            return (a.rateValue || a.maxRate || 0) - (b.rateValue || b.maxRate || 0);
+            const aRate = parseFloat((a.rate || a.rateRange || '0').replace(/[^\d.]/g, ''));
+            const bRate = parseFloat((b.rate || b.rateRange || '0').replace(/[^\d.]/g, ''));
+            return aRate - bRate;
           case 'weight':
-            return (b.weightValue || b.weight || 0) - (a.weightValue || a.weight || 0);
+            const aWeight = parseFloat((a.weight || '0').replace(/[^\d.]/g, ''));
+            const bWeight = parseFloat((b.weight || '0').replace(/[^\d.]/g, ''));
+            return bWeight - aWeight;
           default:
             return 0;
         }
@@ -540,37 +462,10 @@ const FreightBoard = () => {
     return filteredData;
   };
 
-  const filteredLoads = filterData(loads);
-  const filteredTrucks = filterData(trucks);
-
-  const hasAppliedFilters = Object.values(filters).some(value => value !== '');
-
-  const getFilterDescription = () => {
-    const descriptions = [];
-    if (filters.origin) descriptions.push(`起始: ${filters.origin}`);
-    if (filters.destination) descriptions.push(`目的: ${filters.destination}`);
-    if (filters.serviceType) descriptions.push(`服务: ${filters.serviceType === 'FTL' ? '整车' : '零担'}`);
-    if (filters.dateFrom) descriptions.push(`取货从: ${filters.dateFrom}`);
-    if (filters.dateTo) descriptions.push(`取货到: ${filters.dateTo}`);
-    if (searchQuery) descriptions.push(`搜索: ${searchQuery}`);
-    
-    return descriptions.length > 0 
-      ? `应用的筛选条件: ${descriptions.join(', ')}`
-      : '';
-  };
-
-  // 获取地址类型图标
-  const getLocationIcon = (locationType) => {
-    switch (locationType) {
-      case 'Residential': return <Home size={12} />;
-      case 'Commercial': return <Building size={12} />;
-      case 'Elevator Required': return <Layers size={12} />;
-      case 'Gated/Secured': return <Shield size={12} />;
-      default: return <Building size={12} />;
-    }
-  };
-
-  // 处理发布按钮点击
+  // === 模态框事件处理 ===
+  /**
+   * 处理发布货源按钮点击
+   */
   const handlePostLoadClick = () => {
     if (!isAuthenticated) {
       alert('请先登录再发布货源信息');
@@ -579,6 +474,9 @@ const FreightBoard = () => {
     setIsPostLoadModalOpen(true);
   };
 
+  /**
+   * 处理发布车源按钮点击
+   */
   const handlePostTruckClick = () => {
     if (!isAuthenticated) {
       alert('请先登录再发布车源信息');
@@ -587,16 +485,29 @@ const FreightBoard = () => {
     setIsPostTruckModalOpen(true);
   };
 
+  /**
+   * 处理详情模态框打开
+   * @param {Object} item - 选中的项目
+   */
   const handleDetailsClick = (item) => {
     setSelectedItem(item);
     setDetailsModalOpen(true);
   };
 
+  /**
+   * 处理详情模态框关闭
+   */
   const handleDetailsClose = () => {
     setDetailsModalOpen(false);
     setSelectedItem(null);
   };
 
+  // === 计算衍生状态 ===
+  const filteredLoads = filterData(loads);
+  const filteredTrucks = filterData(trucks);
+  const hasAppliedFilters = Object.values(filters).some(value => value !== '') || searchQuery;
+
+  // === 加载和错误状态渲染 ===
   if (loading) {
     return (
       <div className="freight-board">
@@ -625,6 +536,7 @@ const FreightBoard = () => {
     );
   }
 
+  // === 主组件渲染 ===
   return (
     <div className="platform-page freight-board">
       <div className="container">
@@ -807,8 +719,9 @@ const FreightBoard = () => {
           )}
         </div>
 
-        {/* Content */}
+        {/* === 主要内容区域 === */}
         <div className="freight-content">
+          {/* 货源信息列表 */}
           {activeTab === 'loads' && (
             <div className="freight-list">
               {filteredLoads.length === 0 ? (
@@ -820,7 +733,9 @@ const FreightBoard = () => {
               ) : (
                 filteredLoads.map(load => (
                   <div key={load.id} className={`simple-card load-card ${load.serviceType?.toLowerCase()}`}>
+                    {/* 卡片主要信息 */}
                     <div className="card-main">
+                      {/* 服务类型标识 */}
                       <div className="service-type">
                         {load.serviceType === 'FTL' ? (
                           <span className="ftl-badge">
@@ -835,42 +750,44 @@ const FreightBoard = () => {
                         )}
                       </div>
                       
+                      {/* 运输路线 */}
                       <div className="route">
                         <span className="origin">{load.origin}</span>
                         <ArrowRight size={16} />
                         <span className="destination">{load.destination}</span>
                       </div>
                       
+                      {/* 货物重量 */}
                       <div className="weight">
                         <Scale size={14} />
                         {load.weight} lb
                       </div>
                       
+                      {/* 取货日期 */}
                       <div className="date">
                         <Calendar size={14} />
                         <span className="date-text">{load.pickupDate?.split('-').slice(1).join('/') || '未知日期'} 取货</span>
                       </div>
+                      
+                      {/* LTL特有信息：托盘数量 */}
                       {load.serviceType === 'LTL' && (
-                      <div className="Pallets">
-                        <span>板数: {load.pallets || '未知'}</span>
-                      </div>
+                        <div className="Pallets">
+                          <span>板数: {load.pallets || '未知'}</span>
+                        </div>
                       )}
 
-                      {/* 发布时间显示 */}
-                     <div
-  className={`publication-date ${load.serviceType === 'FTL' ? 'ml-offset' : ''}`}
->
-  <Clock size={14} />
-  <span className="publication-text">
-    {load.publicationDate
-      ? formatPublicationDate(load.publicationDate)
-      : (load.postedTime || '未知时间')}
-  </span>
-</div>
-
-
+                      {/* 发布时间 */}
+                      <div className={`publication-date ${load.serviceType === 'FTL' ? 'ml-offset' : ''}`}>
+                        <Clock size={14} />
+                        <span className="publication-text">
+                          {load.publicationDate
+                            ? formatPublicationDate(load.publicationDate)
+                            : (load.postedTime || '未知时间')}
+                        </span>
+                      </div>
                     </div>
                     
+                    {/* 操作按钮 */}
                     <div className="card-actions">
                       <button className="contact-btn" onClick={() => handleDetailsClick(load)}>
                         <Info size={14} />
@@ -887,6 +804,7 @@ const FreightBoard = () => {
             </div>
           )}
 
+          {/* 车源信息列表 */}
           {activeTab === 'trucks' && (
             <div className="freight-list">
               {filteredTrucks.length === 0 ? (
@@ -898,7 +816,9 @@ const FreightBoard = () => {
               ) : (
                 filteredTrucks.map(truck => (
                   <div key={truck.id} className={`simple-card truck-card ${truck.serviceType?.toLowerCase()}`}>
+                    {/* 卡片主要信息 */}
                     <div className="card-main">
+                      {/* 服务类型标识 */}
                       <div className="service-type">
                         <span className="truck-badge">
                           <Truck size={16} />
@@ -906,32 +826,37 @@ const FreightBoard = () => {
                         </span>
                       </div>
                       
+                      {/* 运输路线 */}
                       <div className="route">
                         <span className="origin">{truck.location}</span>
                         <ArrowRight size={16} />
                         <span className="destination">{truck.destination}</span>
                       </div>
                       
+                      {/* 车辆设备 */}
                       <div className="equipment">
                         {truck.equipment}
                       </div>
                       
+                      {/* 载重能力 */}
                       <div className="capacity">
                         <Scale size={14} />
                         {truck.capacity}
                       </div>
                       
+                      {/* 可用日期 */}
                       <div className="date">
                         <Calendar size={14} />
                         <span className="date-text">{truck.availableDate?.split('-').slice(1).join('/') || '未知日期'}</span>
                       </div>
                       
+                      {/* 价格范围 */}
                       <div className="rate">
                         <DollarSign size={16} />
                         <span className="rate-text">{truck.rateRange || '预估价格'}</span>
                       </div>
                       
-                      {/* 发布时间显示 */}
+                      {/* 发布时间 */}
                       <div className="publication-date">
                         <Clock size={14} />
                         <span className="publication-text">
@@ -940,6 +865,7 @@ const FreightBoard = () => {
                       </div>
                     </div>
                     
+                    {/* 操作按钮 */}
                     <div className="card-actions">
                       <button className="contact-btn" onClick={() => handleDetailsClick(truck)}>
                         <Info size={14} />
@@ -958,19 +884,22 @@ const FreightBoard = () => {
         </div>
       </div>
 
-      {/* Modals */}
+      {/* === 模态框组件 === */}
+      {/* 发布货源模态框 */}
       <PostLoadModal 
         isOpen={isPostLoadModalOpen}
         onClose={() => setIsPostLoadModalOpen(false)}
         onSubmit={handlePostSubmit}
       />
       
+      {/* 发布车源模态框 */}
       <PostTruckModal 
         isOpen={isPostTruckModalOpen}
         onClose={() => setIsPostTruckModalOpen(false)}
         onSubmit={handlePostSubmit}
       />
 
+      {/* 详情查看模态框 */}
       <DetailsModal 
         isOpen={detailsModalOpen}
         onClose={handleDetailsClose}
