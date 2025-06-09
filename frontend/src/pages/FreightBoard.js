@@ -841,19 +841,6 @@ const FreightBoard = () => {
                         <span className="destination">{load.destination}</span>
                       </div>
                       
-                      {/* 根据服务类型显示不同信息 */}
-                      {load.serviceType === 'FTL' ? (
-                        <div className="cargo-value">
-                          <DollarSign size={14} />
-                           {load.cargoValue || '无'} （货值）
-                        </div>
-                      ) : (
-                        <div className="nmfc-class">
-                          <Layers size={14} />
-                          Class: {load.freightClass || load.nmfcClass || '未分类'}
-                        </div>
-                      )}
-                      
                       <div className="weight">
                         <Scale size={14} />
                         {load.weight} lb
@@ -868,11 +855,9 @@ const FreightBoard = () => {
                         <span>板数: {load.pallets || '未知'}</span>
                       </div>
                       )}
-                      
 
-                      
                       {/* 发布时间显示 */}
-<div
+                     <div
   className={`publication-date ${load.serviceType === 'FTL' ? 'ml-offset' : ''}`}
 >
   <Clock size={14} />
@@ -882,6 +867,7 @@ const FreightBoard = () => {
       : (load.postedTime || '未知时间')}
   </span>
 </div>
+
 
                     </div>
                     

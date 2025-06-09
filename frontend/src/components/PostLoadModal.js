@@ -35,6 +35,8 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     weight: '',
     cargoValue: '', // FTL 货物估价
     shippingNumber: '', // 初始单号
+    // FTL单位转换辅助字段
+    weightKg: '',
     // LTL专用字段 - 按照NMFC标准
     originLocationType: 'commercial',
     destinationLocationType: 'commercial',
@@ -396,10 +398,19 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
+    let updatedData = {
+      ...formData,
       [name]: type === 'checkbox' ? checked : value
-    }));
+    };
+    
+    // 处理FTL重量单位转换
+    if (name === 'weightKg') {
+      updatedData.weight = convertKgToLbs(value);
+    } else if (name === 'weight' && formData.serviceType === 'FTL') {
+      updatedData.weightKg = convertLbsToKg(value);
+    }
+    
+    setFormData(updatedData);
   };
 
   const handleSubmit = (e) => {
@@ -408,23 +419,23 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     // 基础验证 - 包含所有必填字段
     const requiredFields = [
       'origin', 'destination', 'pickupDate', 
-       'weight', 'companyName', 
+      'weight', 'companyName', 
       'contactPhone', 
     ];
     
     // LTL额外验证
     if (formData.serviceType === 'LTL') {
       // 移除单个重量字段和全局价格字段的验证，改为验证货物项目
-      const requiredFieldsLTL = requiredFields.filter(field => field !== 'weight' && field !== 'maxRate');
+      const requiredFieldsLTL = requiredFields.filter(field => field !== 'weight');
       
-      // 验证每个货物项目
+      // 验证每个货物项目 - 只验证必要字段
       const invalidItems = formData.cargoItems.filter(item => 
-         !item.weight || !item.length || 
+        !item.weight || !item.length || 
         !item.width || !item.height || !item.pallets 
       );
       
       if (invalidItems.length > 0) {
-        alert('请填写所有货物项目的完整信息：描述、重量、尺寸、托盘数量和预估价格');
+        alert('请填写所有货物项目的必要信息：重量、尺寸、托盘数量');
         return;
       }
       
@@ -441,7 +452,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         return;
       }
     } else {
-      // FTL验证保持原样
+      // FTL验证 - 移除不再必需的字段
       const missingFields = requiredFields.filter(field => !formData[field]);
       if (missingFields.length > 0) {
         alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
@@ -536,6 +547,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       weight: '',
       cargoValue: '',
       shippingNumber: '',
+      weightKg: '',
       originLocationType: 'commercial',
       destinationLocationType: 'commercial',
       pallets: '',
@@ -704,7 +716,6 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                   value={formData.deliveryDate}
                   onChange={handleInputChange}
                   min={formData.pickupDate || new Date().toISOString().split('T')[0]}
-                  required
                 />
               </div>
             </div>
@@ -759,7 +770,6 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                   name="truckType"
                   value={formData.truckType}
                   onChange={handleInputChange}
-                  required
                 >
                   <option value="">请选择车型要求</option>
                   {truckTypes.map(type => (
@@ -776,7 +786,6 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                   name="cargoType"
                   value={formData.cargoType}
                   onChange={handleInputChange}
-                  required
                 >
                   <option value="">请选择货物类型</option>
                   {cargoTypes.map(type => (
@@ -791,15 +800,29 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                     <Scale size={16} />
                     重量 (Weight) <span className="required">*</span> (磅)
                   </label>
-                  <input
-                    type="number"
-                    name="weight"
-                    value={formData.weight}
-                    onChange={handleInputChange}
-                    placeholder="输入重量 (lbs)"
-                    min="1"
-                    required
-                  />
+                  <div className="dimension-input-group">
+                    <input
+                      type="number"
+                      name="weight"
+                      value={formData.weight}
+                      onChange={handleInputChange}
+                      placeholder="输入重量 (lbs)"
+                      min="1"
+                      required
+                    />
+                    <div className="conversion-input">
+                      <input
+                        type="number"
+                        name="weightKg"
+                        value={formData.weightKg}
+                        onChange={handleInputChange}
+                        placeholder="kg"
+                        step="0.1"
+                        className="unit-converter"
+                      />
+                      <span className="unit-label">kg</span>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -906,7 +929,6 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                         value={item.description}
                         onChange={(e) => updateCargoItem(item.id, 'description', e.target.value)}
                         placeholder="如：电子设备、机械部件等"
-                        required
                       />
                     </div>
 
