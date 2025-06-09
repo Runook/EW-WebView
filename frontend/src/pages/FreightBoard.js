@@ -64,11 +64,40 @@ const FreightBoard = () => {
 
   const { isAuthenticated } = useAuth();
 
-  // 生成EWID单号
+  // EWID计数器（在实际应用中应该从数据库获取）
+  const [ewidCounter, setEwidCounter] = useState(() => {
+    const saved = localStorage.getItem('ewidCounter');
+    return saved ? parseInt(saved) : 1;
+  });
+
+  // 生成EWID单号 - 从EW000000001开始的顺序编号
   const generateEWID = () => {
-    const timestamp = Date.now().toString();
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `EWID${timestamp.slice(-6)}${random}`;
+    const paddedNumber = ewidCounter.toString().padStart(9, '0');
+    const ewid = `EW${paddedNumber}`;
+    
+    // 更新计数器
+    const newCounter = ewidCounter + 1;
+    setEwidCounter(newCounter);
+    localStorage.setItem('ewidCounter', newCounter.toString());
+    
+    return ewid;
+  };
+
+  // 格式化发布时间
+  const formatPublicationDate = (date) => {
+    const now = new Date();
+    const posted = new Date(date);
+    const diffInHours = Math.floor((now - posted) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) {
+      const diffInMinutes = Math.floor((now - posted) / (1000 * 60));
+      return diffInMinutes <= 0 ? '刚刚发布' : `${diffInMinutes}分钟前`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours}小时前`;
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24);
+      return `${diffInDays}天前`;
+    }
   };
 
   // API调用函数
@@ -413,7 +442,10 @@ const FreightBoard = () => {
           density: postData.originalData?.calculatedDensity || '',
           stackable: postData.originalData?.stackable || true,
           cargoValue: postData.cargoValue || postData.originalData?.cargoValue || '',
-          EWID: generateEWID()
+          shippingNumber: postData.shippingNumber || postData.originalData?.shippingNumber || '',
+          EWID: generateEWID(),
+          publicationDate: new Date().toISOString(),
+          postedTime: '刚刚发布'
         };
         console.log('创建的新货源:', newLoad); // 调试日志
         setLoads(prev => [newLoad, ...prev]);
@@ -433,7 +465,9 @@ const FreightBoard = () => {
           phone: postData.contactPhone,
           preferredLanes: postData.originalData?.preferredLanes || `${postData.preferredOrigin || '任意地点'} 至 ${postData.preferredDestination || '全国各地'}`,
           specialServices: postData.truckFeatures || postData.specialServices || '',
-          EWID: generateEWID()
+          EWID: generateEWID(),
+          publicationDate: new Date().toISOString(),
+          postedTime: '刚刚发布'
         };
         console.log('创建的新车源:', newTruck); // 调试日志
         setTrucks(prev => [newTruck, ...prev]);
@@ -837,13 +871,13 @@ const FreightBoard = () => {
                       
 
                       
-                      {/* EWID单号显示 */}
-                      {(load.ewid || load.EWID) && (
-                        <div className="ewid">
-                          <Hash size={14} />
-                          <span className="ewid-text">{load.ewid || load.EWID}</span>
-                        </div>
-                      )}
+                      {/* 发布时间显示 */}
+                      <div className="publication-date">
+                        <Clock size={14} />
+                        <span className="publication-text">
+                          {load.publicationDate ? formatPublicationDate(load.publicationDate) : (load.postedTime || '未知时间')}
+                        </span>
+                      </div>
                     </div>
                     
                     <div className="card-actions">
@@ -904,6 +938,14 @@ const FreightBoard = () => {
                       <div className="rate">
                         <DollarSign size={16} />
                         <span className="rate-text">{truck.rateRange || '预估价格'}</span>
+                      </div>
+                      
+                      {/* 发布时间显示 */}
+                      <div className="publication-date">
+                        <Clock size={14} />
+                        <span className="publication-text">
+                          {truck.publicationDate ? formatPublicationDate(truck.publicationDate) : (truck.postedTime || '未知时间')}
+                        </span>
                       </div>
                     </div>
                     

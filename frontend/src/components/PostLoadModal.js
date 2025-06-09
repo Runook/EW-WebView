@@ -34,6 +34,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     truckType: '',
     weight: '',
     cargoValue: '', // FTL 货物估价
+    shippingNumber: '', // 初始单号
     // LTL专用字段 - 按照NMFC标准
     originLocationType: 'commercial',
     destinationLocationType: 'commercial',
@@ -54,7 +55,13 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         estimatedRate: '', // 每个货物项目的预估价格
         stackable: true,
         fragile: false,
-        hazmat: false
+        hazmat: false,
+        shippingNumber: '', // LTL货物初始单号
+        // 单位转换辅助字段
+        weightKg: '',
+        lengthCm: '',
+        widthCm: '',
+        heightCm: ''
       }
     ],
     // FTL单货物字段（保留向后兼容）
@@ -145,6 +152,45 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     { minDensity: 1, class: '400', description: 'Class 400 - 塑料制品 (1-2 lbs/cu ft)' },
     { minDensity: 0, class: '500', description: 'Class 500 - 低密度货物 (Under 1 lb/cu ft)' }
   ];
+
+  // 货物估价选项
+  const cargoValueOptions = [
+    { value: '', label: '请选择货物估价范围' },
+    { value: '0k-25k', label: '$0k - $25k' },
+    { value: '25k-50k', label: '$25k - $50k' },
+    { value: '50k-75k', label: '$50k - $75k' },
+    { value: '75k-100k', label: '$75k - $100k' },
+    { value: '100k-125k', label: '$100k - $125k' },
+    { value: '125k-150k', label: '$125k - $150k' },
+    { value: '150k-175k', label: '$150k - $175k' },
+    { value: '175k-200k', label: '$175k - $200k' },
+    { value: '200k-225k', label: '$200k - $225k' },
+    { value: '225k-250k', label: '$225k - $250k' },
+    { value: '250k-500k', label: '$250k - $500k' },
+    { value: '500k-1M', label: '$500k - $1M' },
+    { value: '1M-2M', label: '$1M - $2M' },
+    { value: '2M-3M', label: '$2M - $3M' },
+    { value: '3M-4M', label: '$3M - $4M' },
+    { value: '4M-5M', label: '$4M - $5M' },
+    { value: '5M+', label: '$5M+' }
+  ];
+
+  // 单位转换函数
+  const convertKgToLbs = (kg) => {
+    return kg ? (parseFloat(kg) * 2.20462).toFixed(1) : '';
+  };
+
+  const convertCmToInches = (cm) => {
+    return cm ? (parseFloat(cm) / 2.54).toFixed(1) : '';
+  };
+
+  const convertLbsToKg = (lbs) => {
+    return lbs ? (parseFloat(lbs) / 2.20462).toFixed(1) : '';
+  };
+
+  const convertInchesToCm = (inches) => {
+    return inches ? (parseFloat(inches) * 2.54).toFixed(1) : '';
+  };
 
   // 计算密度和分类代码
   const calculateFreightClass = () => {
@@ -277,7 +323,13 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       estimatedRate: '',
       stackable: true,
       fragile: false,
-      hazmat: false
+      hazmat: false,
+      shippingNumber: '',
+      // 单位转换辅助字段
+      weightKg: '',
+      lengthCm: '',
+      widthCm: '',
+      heightCm: ''
     };
     
     setFormData(prev => ({
@@ -305,15 +357,26 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       ...prev,
       cargoItems: prev.cargoItems.map(item => {
         if (item.id === itemId) {
-          const updatedItem = {
+          let updatedItem = {
             ...item,
             [field]: field === 'stackable' || field === 'fragile' || field === 'hazmat' 
               ? value 
               : value
           };
           
+          // 处理单位转换
+          if (field === 'weightKg') {
+            updatedItem.weight = convertKgToLbs(value);
+          } else if (field === 'lengthCm') {
+            updatedItem.length = convertCmToInches(value);
+          } else if (field === 'widthCm') {
+            updatedItem.width = convertCmToInches(value);
+          } else if (field === 'heightCm') {
+            updatedItem.height = convertCmToInches(value);
+          }
+          
           // 如果更新的是尺寸或重量相关字段，重新计算分类
-          if (['weight', 'length', 'width', 'height', 'hazmat', 'fragile'].includes(field)) {
+          if (['weight', 'length', 'width', 'height', 'hazmat', 'fragile', 'weightKg', 'lengthCm', 'widthCm', 'heightCm'].includes(field)) {
             return calculateCargoItemClass(updatedItem);
           }
           
@@ -472,6 +535,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       truckType: '',
       weight: '',
       cargoValue: '',
+      shippingNumber: '',
       originLocationType: 'commercial',
       destinationLocationType: 'commercial',
       pallets: '',
@@ -490,7 +554,13 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           estimatedRate: '',
           stackable: true,
           fragile: false,
-          hazmat: false
+          hazmat: false,
+          shippingNumber: '',
+          // 单位转换辅助字段
+          weightKg: '',
+          lengthCm: '',
+          widthCm: '',
+          heightCm: ''
         }
       ],
       length: '',
@@ -580,7 +650,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <MapPin size={16} />
-                  起点 (Origin) *
+                  起点 (Origin) <span className="required">*</span>
                 </label>
                 <input
                   type="text"
@@ -595,7 +665,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <MapPin size={16} />
-                  终点 (Destination) *
+                  终点 (Destination) <span className="required">*</span>
                 </label>
                 <input
                   type="text"
@@ -611,7 +681,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Calendar size={16} />
-                  取货日期 (Pickup Date) *
+                  取货日期 (Pickup Date) <span className="required">*</span>
                 </label>
                 <input
                   type="date"
@@ -626,7 +696,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Calendar size={16} />
-                  送达日期 (Delivery Date) 
+                  送达日期 (Delivery Date) <span className="required">*</span>
                 </label>
                 <input
                   type="date"
@@ -683,7 +753,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Truck size={16} />
-                  车型要求 (Equipment Type) 
+                  车型要求 (Equipment Type) <span className="required">*</span>
                 </label>
                 <select
                   name="truckType"
@@ -700,7 +770,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Package size={16} />
-                  货物类型 (Commodity Type) 
+                  货物类型 (Commodity Type) <span className="required">*</span>
                 </label>
                 <select
                   name="cargoType"
@@ -719,7 +789,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                 <div className="form-group">
                   <label>
                     <Scale size={16} />
-                    重量 (Weight) * (磅)
+                    重量 (Weight) <span className="required">*</span> (磅)
                   </label>
                   <input
                     type="number"
@@ -739,12 +809,32 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                     <DollarSign size={16} />
                     货物估价 (Cargo Value)
                   </label>
-                  <input
-                    type="text"
+                  <select
                     name="cargoValue"
                     value={formData.cargoValue}
                     onChange={handleInputChange}
-                    placeholder="如：$50,000 或 50万元"
+                  >
+                    {cargoValueOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {formData.serviceType === 'FTL' && (
+                <div className="form-group">
+                  <label>
+                    <Hash size={16} />
+                    初始单号 (Shipping Number)
+                  </label>
+                  <input
+                    type="text"
+                    name="shippingNumber"
+                    value={formData.shippingNumber}
+                    onChange={handleInputChange}
+                    placeholder="如：SH123456789"
                   />
                 </div>
               )}
@@ -793,32 +883,12 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                     <h4 style={{ margin: 0, color: '#34C759' }}>
                       货物 #{index + 1}
                     </h4>
-                    {formData.cargoItems.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeCargoItem(item.id)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          padding: '0.25rem 0.5rem',
-                          background: '#ff4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.8rem'
-                        }}
-                      >
-                        <Minus size={14} />
-                        删除
-                      </button>
-                    )}
+
                   </div>
 
                   <div className="form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                     <div className="form-group">
-                      <label>托板数量 (Pallets) *</label>
+                      <label>托板数量 (Pallets) <span className="required">*</span></label>
                       <input
                         type="number"
                         value={item.pallets}
@@ -829,8 +899,8 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                       />
                     </div>
 
-                                        <div className="form-group">
-                      <label>货物描述 (Description) </label>
+                    <div className="form-group">
+                      <label>货物描述 (Description) <span className="required">*</span></label>
                       <input
                         type="text"
                         value={item.description}
@@ -839,57 +909,133 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                         required
                       />
                     </div>
+
+                    <div className="form-group">
+                      <label>
+                        <Hash size={16} />
+                        初始单号 (Shipping Number)
+                      </label>
+                      <input
+                        type="text"
+                        value={item.shippingNumber}
+                        onChange={(e) => updateCargoItem(item.id, 'shippingNumber', e.target.value)}
+                        placeholder="如：SH123456789"
+                      />
+                    </div>
                   </div>
 
                   <div className="form-grid dimensions-grid">
                     <div className="form-group">
-                      <label>重量 (Weight) * (磅)</label>
-                      <input
-                        type="number"
-                        value={item.weight}
-                        onChange={(e) => updateCargoItem(item.id, 'weight', e.target.value)}
-                        placeholder="重量 (lbs)"
-                        min="1"
-                        step="0.1"
-                        required
-                      />
+                      <label>重量 (Weight) <span className="required">*</span> (磅)</label>
+                      <div className="dimension-input-group">
+                        <input
+                          type="number"
+                          value={item.weight}
+                          onChange={(e) => updateCargoItem(item.id, 'weight', e.target.value)}
+                          placeholder="重量 (lbs)"
+                          min="1"
+                          step="0.1"
+                          required
+                        />
+                        <div className="conversion-input">
+                          <input
+                            type="number"
+                            value={item.weightKg}
+                            onChange={(e) => updateCargoItem(item.id, 'weightKg', e.target.value)}
+                            placeholder="kg"
+                            step="0.1"
+                            className="unit-converter"
+                          />
+                          <span className="unit-label">kg</span>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="form-group">
-                      <label>长度 (Length) * (英寸)</label>
-                      <input
-                        type="number"
-                        value={item.length}
-                        onChange={(e) => updateCargoItem(item.id, 'length', e.target.value)}
-                        placeholder="长度 (inches)"
-                        min="1"
-                        step="0.1"
-                        required
-                      />
+                      <label>长度 (Length) <span className="required">*</span> (英寸)</label>
+                      <div className="dimension-input-group">
+                        <input
+                          type="number"
+                          value={item.length}
+                          onChange={(e) => updateCargoItem(item.id, 'length', e.target.value)}
+                          placeholder="长度 (inches)"
+                          min="1"
+                          step="0.1"
+                          required
+                        />
+                        <div className="conversion-input">
+                          <input
+                            type="number"
+                            value={item.lengthCm}
+                            onChange={(e) => updateCargoItem(item.id, 'lengthCm', e.target.value)}
+                            placeholder="cm"
+                            step="0.1"
+                            className="unit-converter"
+                          />
+                          <span className="unit-label">cm</span>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="form-group">
-                      <label>宽度 (Width) * (英寸)</label>
-                      <input
-                        type="number"
-                        value={item.width}
-                        onChange={(e) => updateCargoItem(item.id, 'width', e.target.value)}
-                        placeholder="宽度 (inches)"
-                        min="1"
-                        step="0.1"
-                        required
-                      />
+                      <label>宽度 (Width) <span className="required">*</span> (英寸)</label>
+                      <div className="dimension-input-group">
+                        <input
+                          type="number"
+                          value={item.width}
+                          onChange={(e) => updateCargoItem(item.id, 'width', e.target.value)}
+                          placeholder="宽度 (inches)"
+                          min="1"
+                          step="0.1"
+                          required
+                        />
+                        <div className="conversion-input">
+                          <input
+                            type="number"
+                            value={item.widthCm}
+                            onChange={(e) => updateCargoItem(item.id, 'widthCm', e.target.value)}
+                            placeholder="cm"
+                            step="0.1"
+                            className="unit-converter"
+                          />
+                          <span className="unit-label">cm</span>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="form-group">
-                      <label>高度 (Height) * (英寸)</label>
+                      <label>高度 (Height) <span className="required">*</span> (英寸)</label>
+                      <div className="dimension-input-group">
+                        <input
+                          type="number"
+                          value={item.height}
+                          onChange={(e) => updateCargoItem(item.id, 'height', e.target.value)}
+                          placeholder="高度 (inches)"
+                          min="1"
+                          step="0.1"
+                          required
+                        />
+                        <div className="conversion-input">
+                          <input
+                            type="number"
+                            value={item.heightCm}
+                            onChange={(e) => updateCargoItem(item.id, 'heightCm', e.target.value)}
+                            placeholder="cm"
+                            step="0.1"
+                            className="unit-converter"
+                          />
+                          <span className="unit-label">cm</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label>预估价格 (Estimated Rate) <span className="required">*</span></label>
                       <input
-                        type="number"
-                        value={item.height}
-                        onChange={(e) => updateCargoItem(item.id, 'height', e.target.value)}
-                        placeholder="高度 (inches)"
-                        min="1"
-                        step="0.1"
+                        type="text"
+                        value={item.estimatedRate}
+                        onChange={(e) => updateCargoItem(item.id, 'estimatedRate', e.target.value)}
+                        placeholder="如：$500"
                         required
                       />
                     </div>
@@ -975,6 +1121,27 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                   <Plus size={16} />
                   添加货物
                 </button>
+                                    {formData.cargoItems.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeCargoItem(item.id)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          padding: '0.25rem 0.5rem',
+                          background: '#ff4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.8rem'
+                        }}
+                      >
+                        <Minus size={14} />
+                        删除
+                      </button>
+                    )}
                     </div>
                   </div>
                 </div>
@@ -991,7 +1158,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Building size={16} />
-                  发布人名称 (Contact Name) *
+                  发布人名称 (Contact Name) <span className="required">*</span>
                 </label>
                 <input
                   type="text"
@@ -1006,7 +1173,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Phone size={16} />
-                  发布人电话 (Phone) *
+                  发布人电话 (Phone) <span className="required">*</span>
                 </label>
                 <input
                   type="tel"
@@ -1032,7 +1199,8 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <DollarSign size={16} />
-                  {formData.serviceType === 'LTL' ? '参考价格 (总预估运费，选填)' : '预估运费 (Estimated Rate) *'}
+                  {formData.serviceType === 'LTL' ? '参考价格 (总预估运费，选填)' : '预估运费 (Estimated Rate) '}
+                  {formData.serviceType === 'FTL' && <span className="required">*</span>}
                 </label>
                 <input
                   type="text"
@@ -1091,6 +1259,42 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           color: #333;
           font-size: 1.2rem;
           font-weight: 600;
+        }
+
+        .required {
+          color: #ff4444;
+          font-weight: bold;
+        }
+
+        .dimension-input-group {
+          display: flex;
+          gap: 0.5rem;
+          align-items: center;
+        }
+
+        .dimension-input-group > input {
+          flex: 1;
+        }
+
+        .conversion-input {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          min-width: 80px;
+        }
+
+        .unit-converter {
+          width: 60px !important;
+          padding: 0.25rem !important;
+          font-size: 0.8rem !important;
+          border: 1px solid #ddd !important;
+          border-radius: 4px !important;
+        }
+
+        .unit-label {
+          font-size: 0.8rem;
+          color: #666;
+          min-width: 20px;
         }
 
         .service-type-selection {
@@ -1221,6 +1425,11 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
           .location-type-grid {
             grid-template-columns: 1fr;
+          }
+
+          .dimension-input-group {
+            flex-direction: column;
+            align-items: stretch;
           }
         }
       `}</style>
