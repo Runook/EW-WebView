@@ -18,9 +18,11 @@ import {
   DollarSign,
   Clock,
   Plus,
-  Minus
+  Minus,
+  Search
 } from 'lucide-react';
 import './Modal.css';
+import { searchZipCodes } from '../data/zipCodes';
 
 const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -92,6 +94,14 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     density: 0,
     suggestedClass: '',
     classDescription: ''
+  });
+
+  // 地址建议状态
+  const [addressSuggestions, setAddressSuggestions] = useState({
+    origin: [],
+    destination: [],
+    showOrigin: false,
+    showDestination: false
   });
 
   // 货物类型选项 - 按照NMFC标准分类
@@ -440,6 +450,53 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     };
   };
 
+  // 地址搜索函数
+  const searchAddresses = (query, field) => {
+    if (!query || query.length < 2) {
+      setAddressSuggestions(prev => ({
+        ...prev,
+        [field]: [],
+        [`show${field.charAt(0).toUpperCase() + field.slice(1)}`]: false
+      }));
+      return;
+    }
+
+    const suggestions = searchZipCodes(query, 8); // 限制显示8个建议
+
+    setAddressSuggestions(prev => ({
+      ...prev,
+      [field]: suggestions,
+      [`show${field.charAt(0).toUpperCase() + field.slice(1)}`]: suggestions.length > 0
+    }));
+  };
+
+  // 处理地址输入变化
+  const handleAddressInput = (e, field) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, [field]: value }));
+    searchAddresses(value, field);
+  };
+
+  // 选择地址建议
+  const selectAddressSuggestion = (suggestion, field) => {
+    setFormData(prev => ({ ...prev, [field]: suggestion.display }));
+    setAddressSuggestions(prev => ({
+      ...prev,
+      [field]: [],
+      [`show${field.charAt(0).toUpperCase() + field.slice(1)}`]: false
+    }));
+  };
+
+  // 隐藏建议（延迟执行，允许点击）
+  const hideSuggestions = (field) => {
+    setTimeout(() => {
+      setAddressSuggestions(prev => ({
+        ...prev,
+        [`show${field.charAt(0).toUpperCase() + field.slice(1)}`]: false
+      }));
+    }, 200);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -687,34 +744,76 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           <div className="form-section">
             <h3>基础信息 (Basic Information)</h3>
             <div className="form-grid">
-              <div className="form-group">
+              <div className="form-group address-input-group">
                 <label>
                   <MapPin size={16} />
                   起点 (Origin) <span className="required">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="origin"
-                  value={formData.origin}
-                  onChange={handleInputChange}
-                  placeholder="输入城市或邮编 (City, State or ZIP)"
-                  required
-                />
+                <div className="address-input-container">
+                  <input
+                    type="text"
+                    name="origin"
+                    value={formData.origin}
+                    onChange={(e) => handleAddressInput(e, 'origin')}
+                    onBlur={() => hideSuggestions('origin')}
+                    placeholder="输入城市、州名或邮编 (e.g., Los Angeles, CA or 90210)"
+                    required
+                  />
+                  <Search size={16} className="search-icon" />
+                  {addressSuggestions.showOrigin && addressSuggestions.origin.length > 0 && (
+                    <div className="address-suggestions">
+                      {addressSuggestions.origin.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="suggestion-item"
+                          onMouseDown={() => selectAddressSuggestion(suggestion, 'origin')}
+                        >
+                          <div className="suggestion-main">
+                            <MapPin size={14} />
+                            <span className="city-state">{suggestion.city}, {suggestion.state}</span>
+                          </div>
+                          <span className="zip-code">ZIP: {suggestion.zip}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="form-group">
+              <div className="form-group address-input-group">
                 <label>
                   <MapPin size={16} />
                   终点 (Destination) <span className="required">*</span>
                 </label>
-                <input
-                  type="text"
-                  name="destination"
-                  value={formData.destination}
-                  onChange={handleInputChange}
-                  placeholder="输入城市或邮编 (City, State or ZIP)"
-                  required
-                />
+                <div className="address-input-container">
+                  <input
+                    type="text"
+                    name="destination"
+                    value={formData.destination}
+                    onChange={(e) => handleAddressInput(e, 'destination')}
+                    onBlur={() => hideSuggestions('destination')}
+                    placeholder="输入城市、州名或邮编 (e.g., Chicago, IL or 60601)"
+                    required
+                  />
+                  <Search size={16} className="search-icon" />
+                  {addressSuggestions.showDestination && addressSuggestions.destination.length > 0 && (
+                    <div className="address-suggestions">
+                      {addressSuggestions.destination.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="suggestion-item"
+                          onMouseDown={() => selectAddressSuggestion(suggestion, 'destination')}
+                        >
+                          <div className="suggestion-main">
+                            <MapPin size={14} />
+                            <span className="city-state">{suggestion.city}, {suggestion.state}</span>
+                          </div>
+                          <span className="zip-code">ZIP: {suggestion.zip}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               
 
@@ -1548,6 +1647,86 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         }
 
         .service-type-selection {
+        }
+
+        /* 地址输入组件样式 */
+        .address-input-group {
+          position: relative;
+        }
+
+        .address-input-container {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
+        .address-input-container input {
+          padding-right: 2.5rem;
+          width: 100%;
+        }
+
+        .search-icon {
+          position: absolute;
+          right: 0.75rem;
+          color: #666;
+          pointer-events: none;
+        }
+
+        .address-suggestions {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          max-height: 200px;
+          overflow-y: auto;
+          z-index: 1000;
+        }
+
+        .suggestion-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.75rem;
+          cursor: pointer;
+          border-bottom: 1px solid #f0f0f0;
+          transition: background-color 0.2s ease;
+        }
+
+        .suggestion-item:last-child {
+          border-bottom: none;
+        }
+
+        .suggestion-item:hover {
+          background-color: #f8f9fa;
+        }
+
+        .suggestion-main {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          flex: 1;
+        }
+
+        .suggestion-main svg {
+          color: #34C759;
+          flex-shrink: 0;
+        }
+
+        .city-state {
+          font-weight: 500;
+          color: #333;
+        }
+
+        .zip-code {
+          font-size: 0.8rem;
+          color: #666;
+          background: #f0f0f0;
+          padding: 0.2rem 0.5rem;
+          border-radius: 3px;
         }
       `}</style>
     </div>
