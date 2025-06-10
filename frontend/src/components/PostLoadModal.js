@@ -970,7 +970,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                     <div className="form-group">
                       <label>
                         <Hash size={16} />
-                        初始单号 (Shipping Number)
+                        初始单号 (Shipper)
                       </label>
                       <input
                         type="text"
