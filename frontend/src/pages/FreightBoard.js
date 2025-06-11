@@ -775,31 +775,35 @@ const FreightBoard = () => {
                       {/* 货物重量 */}
                       <div className="weight">
                         <Scale size={14} />
-                        {load.weight} lb
+                        {load.weight} lbs
                       </div>
                       
-                      {/* 取货日期和距离 */}
+                      {/* 取货日期 */}
                       <div className="date">
                         <Calendar size={14} />
                         <span className="date-text">
                           {load.pickupDate?.split('-').slice(1).join('/') || '未知日期'} 取货
-                          {load.distanceInfo && (
-                            <span className="distance-badge">
-                              • {load.distanceInfo.distance}
-                            </span>
-                          )}
                         </span>
+                      </div>
+                      
+                      {/* 距离信息 */}
+                      <div className="distance-info">
+                        {load.distanceInfo && (
+                          <span className="distance-badge">
+                            {load.distanceInfo.distance}
+                          </span>
+                        )}
                       </div>
                       
                       {/* LTL特有信息：托盘数量 */}
                       {load.serviceType === 'LTL' && (
-                        <div className="Pallets">
+                        <div className="pallets">
                           <span>板数: {load.pallets || '未知'}</span>
                         </div>
                       )}
 
                       {/* 发布时间 */}
-                      <div className={`publication-date ${load.serviceType === 'FTL' ? 'ml-offset' : ''}`}>
+                      <div className="publication-date">
                         <Clock size={14} />
                         <span className="publication-text">
                           {load.publicationDate

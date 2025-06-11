@@ -778,66 +778,144 @@
   color: #666;
 }
 
-/* 桌面版布局优化 */
+/* 桌面版布局优化 - 使用 Grid 布局确保列对齐 */
 @media (min-width: 769px) {
   .card-main {
-    display: flex;
+    display: grid;
+    grid-template-columns: 
+      130px          /* 服务类型列 */
+      1fr            /* 路线列 - 自适应剩余空间 */
+      100px          /* 重量列 */
+      120px          /* 取货日期列 */
+      100px          /* 距离列 */
+      140px;         /* 发布时间列 */
+    gap: 0.75rem;
     align-items: center;
-    gap: 1.5rem;
     flex: 1;
   }
 
-  .card-main > * {
-    flex-shrink: 0;
+  /* 确保每个元素在正确的列中 */
+  .card-main .service-type {
+    grid-column: 1;
+    justify-self: start;
   }
 
-  .service-type {
-    min-width: 120px;
+  .card-main .route {
+    grid-column: 2;
+    justify-self: start;
+    min-width: 0; /* 允许文本截断 */
   }
 
-  .route {
-    min-width: 160px;
+  .card-main .weight,
+  .card-main .capacity {
+    grid-column: 3;
+    justify-self: start;
+    min-width: 0;
   }
 
-  .cargo-type, .equipment {
-    min-width: 100px;
+  .card-main .date {
+    grid-column: 4;
+    justify-self: start;
+    min-width: 0;
   }
-  .ml-offset {
-  margin-left: 6em; /* 4个汉字宽度，1em ≈ 1个字符宽度 */
+
+  /* 距离信息单独一列 */
+  .card-main .distance-info {
+    grid-column: 5;
+    justify-self: center;
+    min-width: 0;
+  }
+
+  .card-main .publication-date {
+    grid-column: 6;
+    justify-self: start;
+    min-width: 0;
+  }
+
+  /* 其他元素（如货物类型、托盘等）放在第二行 */
+  .card-main .cargo-type,
+  .card-main .equipment,
+  .card-main .cargo-value,
+  .card-main .nmfc-class,
+  .card-main .pallets {
+    grid-column: 2 / 4; /* 跨越路线和重量列 */
+    grid-row: 2;
+    justify-self: start;
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 0.25rem;
+  }
+
+  /* 如果有 EWID，放在底部跨所有列 */
+  .card-main .ewid {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-self: center;
+    margin-top: 0.5rem;
+  }
+
+  /* 路线文本截断处理 */
+  .route .origin,
+  .route .destination {
+    max-width: 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
-
-
-  .weight, .capacity {
-    min-width: 80px;
-  }
-
-  .date {
-    min-width: 80px;
-  }
-
-  .price, .rate {
-    min-width: 100px;
-  }
-
-  .cargo-value, .nmfc-class {
-    min-width: 120px;
-  }
-
-  .ewid {
-    min-width: 120px;
-  }
-  
-} 
 
 /* 距离显示样式 */
 .distance-badge {
   background: linear-gradient(135deg, #34C759, #28a745);
   color: white;
-  padding: 0.2rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 10px;
+  font-size: 0.75rem;
   font-weight: 600;
-  margin-left: 0.5rem;
   display: inline-block;
   box-shadow: 0 1px 3px rgba(52, 199, 89, 0.3);
+  white-space: nowrap;
+  text-align: center;
+  min-width: 60px;
+}
+
+.distance-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 车源卡片的特殊布局 */
+.truck-card .card-main {
+  grid-template-columns: 
+    130px          /* 服务类型列 */
+    1fr            /* 路线列 - 自适应剩余空间 */
+    100px          /* 载重能力列 */
+    120px          /* 可用日期列 */
+    100px          /* 价格列 */
+    140px;         /* 发布时间列 */
+}
+
+.truck-card .card-main .equipment {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start;
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 0.25rem;
+}
+
+.truck-card .card-main .rate {
+  grid-column: 5; /* 放在距离列位置 */
+  grid-row: 1;
+  justify-self: center;
+  font-size: 0.9rem;
+  color: #e65100;
+  font-weight: 600;
+}
+
+/* 确保距离徽章不会破坏布局 */
+.distance-badge {
+  display: inline-block;
+  white-space: nowrap;
 } 
