@@ -811,18 +811,20 @@ const FreightBoard = () => {
                             : (load.postedTime || '未知时间')}
                         </span>
                       </div>
-                    </div>
-                    
-                    {/* 操作按钮 */}
-                    <div className="card-actions">
-                      <button className="contact-btn" onClick={() => handleDetailsClick(load)}>
+
+                      {/* 详情按钮 */}
+                      <button className="details-btn" onClick={() => handleDetailsClick(load)}>
                         <Info size={14} />
                         详情
                       </button>
-                      <button className="quote-btn">
-                        <MessageCircle size={14} />
-                        询价
-                      </button>
+
+                      {/* 询价按钮 */}
+                      <div className="quote-btn-col">
+                        <button className="quote-btn">
+                          <MessageCircle size={14} />
+                          询价
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -889,18 +891,20 @@ const FreightBoard = () => {
                           {truck.publicationDate ? formatPublicationDate(truck.publicationDate) : (truck.postedTime || '未知时间')}
                         </span>
                       </div>
-                    </div>
-                    
-                    {/* 操作按钮 */}
-                    <div className="card-actions">
-                      <button className="contact-btn" onClick={() => handleDetailsClick(truck)}>
+
+                      {/* 详情按钮 */}
+                      <button className="details-btn" onClick={() => handleDetailsClick(truck)}>
                         <Info size={14} />
                         详情
                       </button>
-                      <button className="quote-btn">
-                        <MessageCircle size={14} />
-                        询价
-                      </button>
+
+                      {/* 询价按钮 */}
+                      <div className="quote-btn-col">
+                        <button className="quote-btn">
+                          <MessageCircle size={14} />
+                          询价
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))
