@@ -1,24 +1,98 @@
-/* 陆运信息平台样式 - 重新设计 */
-.freight-board {
-  padding: 2rem 0;
-  min-height: 80vh;
+/* 陆运信息平台样式 - 深度优化版 */
+
+/* ===== CSS 变量定义 ===== */
+:root {
+  /* 颜色变量 */
+  --primary-green: #34C759;
+  --secondary-green: #2ecc71;
+  --text-primary: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --text-muted: #666;
+  --text-gray: #888;
+  --text-light: #999;
+  --border-color: #e5e5e7;
+  --border-light: #ddd;
+  --bg-white: white;
+  --bg-gray: #f8f9fa;
+  --bg-light: #f5f5f5;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --orange-price: #e65100;
+  
+  /* 尺寸变量 */
+  --font-xs: 0.75rem;
+  --font-sm: 0.8rem;
+  --font-md: 0.9rem;
+  --font-base: 1rem;
+  --font-lg: 1.1rem;
+  --font-xl: 1.8rem;
+  --font-2xl: 2.5rem;
+  
+  --gap-xs: 0.25rem;
+  --gap-sm: 0.5rem;
+  --gap-md: 0.75rem;
+  --gap-lg: 1rem;
+  --gap-xl: 1.5rem;
+  --gap-2xl: 2rem;
+  --gap-3xl: 3rem;
+  
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  
+  --shadow-sm: 0 1px 4px var(--shadow-color);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  
+  /* 网格变量 */
+  --grid-cols-desktop: 130px 1fr 100px 120px 100px 140px 80px 80px;
+  --grid-cols-mobile: 1fr 1fr;
 }
 
+/* ===== 通用工具类 ===== */
+.flex-center {
+  display: flex;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-wrap {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== 基础布局 ===== */
+.freight-board,
 .platform-page {
   min-height: 80vh;
-  padding: 2rem 0;
+  padding: var(--gap-2xl) 0;
 }
 
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 var(--gap-lg);
 }
 
-/* Header */
+/* ===== Header 区域 ===== */
 .platform-header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: var(--gap-3xl);
 }
 
 .platform-icon {
@@ -27,34 +101,34 @@
   justify-content: center;
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #34C759, #30D158);
-  border-radius: 20px;
-  margin-bottom: 1.5rem;
-  color: white;
+  background: linear-gradient(135deg, var(--primary-green), #30D158);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--gap-xl);
+  color: var(--bg-white);
 }
 
 .platform-title {
-  font-size: 2.5rem;
+  font-size: var(--font-2xl);
   font-weight: 700;
-  color: #1d1d1f;
-  margin-bottom: 1rem;
+  color: var(--text-primary);
+  margin-bottom: var(--gap-lg);
 }
 
 .platform-description {
-  font-size: 1.1rem;
-  color: #6e6e73;
+  font-size: var(--font-lg);
+  color: var(--text-secondary);
   max-width: 600px;
   margin: 0 auto;
 }
 
-/* Tabs */
+/* ===== 标签页和操作按钮 ===== */
 .board-tabs {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
+  gap: var(--gap-sm);
+  margin-bottom: var(--gap-2xl);
   background: #f5f5f7;
-  padding: 0.25rem;
-  border-radius: 12px;
+  padding: var(--gap-xs);
+  border-radius: var(--radius-lg);
 }
 
 .tab {
@@ -62,43 +136,42 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+  gap: var(--gap-sm);
+  padding: var(--gap-md) var(--gap-lg);
+  border-radius: var(--radius-md);
   background: none;
   border: none;
-  color: #6e6e73;
+  color: var(--text-secondary);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .tab.active {
-  background: #34C759;
-  color: white;
+  background: var(--primary-green);
+  color: var(--bg-white);
 }
 
 .tab-count {
   background: rgba(255, 255, 255, 0.3);
   padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  border-radius: var(--radius-lg);
+  font-size: var(--font-sm);
 }
 
-/* Post Actions */
 .post-actions {
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: var(--gap-lg);
+  margin-bottom: var(--gap-2xl);
 }
 
 .post-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  gap: var(--gap-sm);
+  padding: var(--gap-md) var(--gap-xl);
+  border-radius: var(--radius-md);
   font-weight: 600;
   transition: all 0.3s ease;
 }
@@ -107,79 +180,76 @@
   transform: translateY(-2px);
 }
 
-/* 搜索筛选区域 - 简洁版 */
+/* ===== 搜索筛选区域 ===== */
 .search-filter-section {
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
+  background: var(--bg-gray);
+  border-radius: var(--radius-lg);
+  padding: var(--gap-xl);
+  margin-bottom: var(--gap-2xl);
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  background: white;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  padding: var(--gap-md) var(--gap-lg);
+  margin-bottom: var(--gap-lg);
   border: 2px solid transparent;
   transition: border-color 0.3s ease;
 }
 
 .search-bar:focus-within {
-  border-color: #34C759;
+  border-color: var(--primary-green);
 }
 
 .search-bar svg {
-  color: #34C759;
-  margin-right: 0.5rem;
+  color: var(--primary-green);
+  margin-right: var(--gap-sm);
 }
 
 .search-bar input {
   flex: 1;
   border: none;
   outline: none;
-  font-size: 1rem;
+  font-size: var(--font-base);
 }
 
 .filters-row {
   display: flex;
-  gap: 1rem;
+  gap: var(--gap-lg);
   align-items: center;
   flex-wrap: wrap;
 }
 
+.filters-row select,
+.date-range input {
+  padding: var(--gap-sm) var(--gap-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-white);
+  font-size: var(--font-md);
+}
+
 .filters-row select {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  font-size: 0.9rem;
   min-width: 120px;
 }
 
 .date-range {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-}
-
-.date-range input {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.9rem;
+  gap: var(--gap-sm);
 }
 
 .reset-btn {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  color: #666;
+  gap: var(--gap-sm);
+  padding: var(--gap-sm) var(--gap-lg);
+  background: var(--bg-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -188,12 +258,12 @@
   background: #e0e0e0;
 }
 
-/* 活跃筛选标签 */
+/* ===== 活跃筛选标签 ===== */
 .active-filters {
-  margin-top: 1rem;
+  margin-top: var(--gap-lg);
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: var(--gap-lg);
   flex-wrap: wrap;
 }
 
@@ -204,58 +274,58 @@
 
 .filter-tags {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--gap-sm);
   flex-wrap: wrap;
 }
 
 .filter-tag {
-  background: white;
-  border: 1px solid #34C759;
-  border-radius: 20px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.8rem;
+  background: var(--bg-white);
+  border: 1px solid var(--primary-green);
+  border-radius: var(--radius-xl);
+  padding: var(--gap-xs) var(--gap-md);
+  font-size: var(--font-sm);
   color: #2e7d32;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--gap-sm);
 }
 
 .filter-tag button {
   background: none;
   border: none;
-  color: #999;
+  color: var(--text-light);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--font-md);
 }
 
-/* 内容区域 */
+/* ===== 内容区域 ===== */
 .freight-content {
-  margin-bottom: 2rem;
+  margin-bottom: var(--gap-2xl);
 }
 
 .freight-list {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--gap-md);
 }
 
-/* 超简洁卡片样式 */
+/* ===== 卡片基础样式 ===== */
 .simple-card {
-  background: white;
-  border: 1px solid #e5e5e7;
-  border-radius: 8px;
-  padding: 1rem;
+  background: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: var(--gap-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .simple-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-color: #34C759;
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-green);
 }
 
 .simple-card.ftl {
@@ -263,25 +333,25 @@
 }
 
 .simple-card.ltl {
-  border-left: 4px solid #34C759;
+  border-left: 4px solid var(--primary-green);
 }
 
 .card-main {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: var(--grid-cols-mobile);
   grid-template-rows: auto auto auto auto;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  gap: var(--gap-sm);
+  margin-bottom: var(--gap-md);
   align-items: center;
 }
 
-/* 服务类型标识 */
+/* ===== 服务类型徽章 ===== */
 .service-type span {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
+  gap: var(--gap-sm);
+  padding: var(--gap-sm) var(--gap-lg);
+  border-radius: var(--radius-xl);
   font-weight: 600;
   font-size: 0.85rem;
   white-space: nowrap;
@@ -294,7 +364,7 @@
 
 .ltl-badge {
   background: #e8f5e8;
-  color: #34C759;
+  color: var(--primary-green);
 }
 
 .truck-badge {
@@ -302,107 +372,56 @@
   color: #7b1fa2;
 }
 
-/* 路线信息 */
-.route {
+/* ===== 通用元素基础样式 ===== */
+.route,
+.weight, .capacity,
+.date,
+.price, .rate,
+.publication-date,
+.ewid,
+.cargo-type, .equipment,
+.cargo-value,
+.pallets,
+.nmfc-class {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--gap-xs);
+}
+
+/* 具体元素样式 */
+.route {
   font-weight: 600;
   color: #333;
   min-width: 160px;
 }
 
 .route svg {
-  color: #999;
+  color: var(--text-light);
 }
 
-/* 货物/设备类型 */
-.cargo-type, .equipment {
-  font-size: 0.9rem;
-  color: #666;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.cargo-value {
-  font-size: 0.9rem;
-  color: #666;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pallets {
-  font-size: 0.9rem;
-  color: #666;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.nmfc-class {
-  font-size: 0.9rem;
-  color: #34C759;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* 重量/载重 */
-.weight, .capacity {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: #666;
-  font-size: 0.9rem;
-  min-width: 80px;
-}
-
-/* 日期 */
+.weight, .capacity,
 .date {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: #666;
-  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-size: var(--font-md);
   min-width: 80px;
 }
 
-/* 价格 */
 .price, .rate {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
   font-weight: 700;
-  color: #e65100;
-  font-size: 1rem;
+  color: var(--orange-price);
+  font-size: var(--font-base);
   min-width: 100px;
 }
 
-/* 发布时间 */
 .publication-date {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: #888;
-  font-size: 0.8rem;
+  color: var(--text-gray);
+  font-size: var(--font-sm);
   font-weight: 500;
-  background: #f8f9fa;
-  padding: 0.25rem 0.5rem;
+  background: var(--bg-gray);
+  padding: var(--gap-xs) var(--gap-sm);
   border-radius: 4px;
   border: 1px solid #e9ecef;
-  min-width: 100px;
+  min-width: 120px;
 }
 
 .publication-text {
@@ -410,18 +429,14 @@
   letter-spacing: 0.25px;
 }
 
-/* EWID单号 */
 .ewid {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: #666;
-  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
   font-weight: 500;
-  background: #f5f5f5;
-  padding: 0.25rem 0.5rem;
+  background: var(--bg-light);
+  padding: var(--gap-xs) var(--gap-sm);
   border-radius: 4px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-light);
   min-width: 120px;
 }
 
@@ -430,30 +445,36 @@
   letter-spacing: 0.5px;
 }
 
-/* 紧急程度 */
-.urgency {
-  background: #ffeb3b;
-  color: #f57c00;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
+
+.nmfc-class {
+  color: var(--primary-green);
   font-weight: 600;
 }
 
-/* 操作按钮 - 移动端保留 */
+.urgency {
+  background: #ffeb3b;
+  color: #f57c00;
+  padding: var(--gap-xs) var(--gap-md);
+  border-radius: var(--radius-lg);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+/* ===== 操作按钮 - 移动端 ===== */
 .card-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--gap-sm);
   flex-shrink: 0;
 }
 
-.contact-btn, .card-actions .quote-btn {
+.contact-btn, 
+.card-actions .quote-btn,
+.details-btn, 
+.quote-btn-col .quote-btn {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
+  gap: var(--gap-xs);
+  border-radius: var(--radius-sm);
   font-weight: 600;
   border: none;
   cursor: pointer;
@@ -461,430 +482,88 @@
   white-space: nowrap;
 }
 
-.contact-btn {
-  background: #34C759;
-  color: white;
-}
-
-.contact-btn:hover {
-  background: #2ecc71;
-}
-
+.contact-btn, 
 .card-actions .quote-btn {
-  background: white;
-  color: #666;
-  border: 1px solid #ddd;
+  padding: var(--gap-sm) var(--gap-lg);
+  font-size: 0.85rem;
 }
 
-.card-actions .quote-btn:hover {
-  background: #f5f5f5;
+.details-btn, 
+.quote-btn-col .quote-btn {
+  justify-content: center;
+  padding: 0.4rem 0.6rem;
+  font-size: var(--font-sm);
+  min-width: 70px;
+  height: 32px;
 }
 
-/* 空状态 */
+.contact-btn,
+.details-btn {
+  background: var(--primary-green);
+  color: var(--bg-white);
+}
+
+.contact-btn:hover,
+.details-btn:hover {
+  background: var(--secondary-green);
+  transform: translateY(-1px);
+}
+
+.card-actions .quote-btn,
+.quote-btn-col .quote-btn {
+  background: var(--bg-white);
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+}
+
+.card-actions .quote-btn:hover,
+.quote-btn-col .quote-btn:hover {
+  background: var(--bg-light);
+  transform: translateY(-1px);
+}
+
+/* ===== 空状态和加载状态 ===== */
 .empty-state {
   text-align: center;
-  padding: 3rem;
-  color: #666;
+  padding: var(--gap-3xl);
+  color: var(--text-muted);
 }
 
 .empty-state svg {
-  margin-bottom: 1rem;
+  margin-bottom: var(--gap-lg);
 }
 
 .empty-state h3 {
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--gap-sm);
   color: #333;
 }
 
-/* Loading 和 Error 状态 */
 .loading-container, .error-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 400px;
   flex-direction: column;
-  padding: 2rem;
+  padding: var(--gap-2xl);
 }
 
 .error-container button {
-  margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: #34C759;
-  color: white;
+  margin-top: var(--gap-lg);
+  padding: var(--gap-md) var(--gap-xl);
+  background: var(--primary-green);
+  color: var(--bg-white);
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .platform-page {
-    padding: 1rem 0;
-  }
-
-  .container {
-    padding: 0 0.75rem;
-  }
-
-  .platform-title {
-    font-size: 1.8rem;
-  }
-
-  .platform-description {
-    font-size: 1rem;
-  }
-
-  .search-filter-section {
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .filters-row {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .filters-row select, .date-range input, .reset-btn {
-    width: 100%;
-    padding: 0.75rem;
-    font-size: 1rem;
-  }
-
-  .freight-list {
-    gap: 0.75rem;
-  }
-
-  .simple-card {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 0.75rem;
-  }
-
-  .card-main {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto auto auto;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-    align-items: center;
-  }
-
-  /* 第一行：起点终点（左） + 服务类型（右） */
-  .card-main .route {
-    grid-column: 1;
-    grid-row: 1;
-    justify-self: start;
-    margin-bottom: 0;
-  }
-
-  .card-main .service-type {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: end;
-  }
-
-  /* 第二行：货物类型 + 重量 */
-  .card-main .cargo-type,
-  .card-main .equipment,
-  .card-main .cargo-value,
-  .card-main .nmfc-class {
-    font-size: 0.75rem;
-    grid-column: 1 / 2;
-    grid-row: 2 / 3;
-  }
-
-  .card-main .weight,
-  .card-main .capacity {
-    grid-column: 2;
-    grid-row: 2;
-    justify-self: end;
-  }
-
-  /* 第三行：日期 + 价格 */
-  .card-main .date {
-    grid-column: 1;
-    grid-row: 3;
-    justify-self: start;
-  }
-
-  .card-main .price,
-  .card-main .rate {
-    grid-column: 2;
-    grid-row: 3;
-    justify-self: end;
-  }
-
-  /* 第四行：EWID（跨两列） */
-  .card-main .ewid {
-    grid-column: 1 / -1;
-    grid-row: 4;
-    justify-self: center;
-    margin-top: 0.25rem;
-    min-width: auto;
-    font-size: 0.75rem;
-  }
-
-
-  .service-type span {
-    font-size: 0.75rem;
-    padding: 0.3rem 0.6rem;
-  }
-
-  .route {
-    min-width: auto;
-    font-size: 0.85rem;
-  }
-
-  .card-main .cargo-type,
-  .card-main .equipment,
-  .card-main .weight,
-  .card-main .capacity,
-  .card-main .date {
-    min-width: auto;
-    font-size: 0.75rem;
-  }
-
-  .card-main .price,
-  .card-main .rate {
-    font-size: 0.9rem;
-    font-weight: 700;
-    min-width: auto;
-  }
-
-  .card-actions {
-    justify-content: space-between;
-  }
-
-  .contact-btn, .card-actions .quote-btn {
-    flex: 1;
-    justify-content: center;
-    font-size: 0.8rem;
-    padding: 0.6rem;
-  }
-}
-
-/* 小屏手机优化 */
-@media (max-width: 480px) {
-  .container {
-    padding: 0 0.5rem;
-  }
-
-  .platform-title {
-    font-size: 1.5rem;
-  }
-
-  .search-filter-section {
-    padding: 0.75rem;
-  }
-
-  .filters-row select, .date-range input, .reset-btn {
-    padding: 0.6rem;
-    font-size: 0.9rem;
-  }
-
-  .freight-list {
-    gap: 0.75rem;
-  }
-
-  .simple-card {
-    padding: 0.6rem;
-  }
-
-  .card-main {
-    gap: 0.4rem;
-    margin-bottom: 0.6rem;
-  }
-
-  .service-type span {
-    font-size: 0.75rem;
-    padding: 0.3rem 0.6rem;
-  }
-
-  .route {
-    font-size: 0.85rem;
-  }
-
-  .card-main .cargo-type,
-  .card-main .equipment,
-  .card-main .cargo-value,
-  .card-main .pallets
-  .card-main .nmfc-class,
-  .card-main .weight,
-  .card-main .capacity,
-  .card-main .date {
-    font-size: 0.75rem;
-  }
-
-  .card-main .price,
-  .card-main .rate {
-    font-size: 0.9rem;
-  }
-
-  .contact-btn, .card-actions .quote-btn {
-    font-size: 0.75rem;
-    padding: 0.5rem;
-  }
-}
-
-/* 确保价格和日期元素始终可见 */
-.simple-card .price,
-.simple-card .rate,
-.simple-card .date {
-  display: flex !important;
-  align-items: center;
-  gap: 0.25rem;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-.simple-card .price,
-.simple-card .rate {
-  font-weight: 700;
-  color: #e65100;
-  font-size: 1rem;
-}
-
-.simple-card .date {
-  color: #666;
-  font-size: 0.9rem;
-}
-
-/* 确保文本内容显示 */
-.price-text,
-.rate-text,
-.date-text {
-  display: inline !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-  color: inherit;
-  font-size: inherit;
-  font-weight: inherit;
-}
-
-.price-text,
-.rate-text {
-  color: #e65100;
-  font-weight: 700;
-}
-
-.date-text {
-  color: #666;
-}
-
-/* 桌面版布局优化 - 使用 Grid 布局确保列对齐 */
-@media (min-width: 769px) {
-  .card-main {
-    display: grid;
-    grid-template-columns: 
-      130px          /* 服务类型列 */
-      1fr            /* 路线列 - 自适应剩余空间 */
-      100px          /* 重量列 */
-      120px          /* 取货日期列 */
-      100px          /* 距离列 */
-      140px          /* 发布时间列 */
-      80px           /* 详情按钮列 */
-      80px;          /* 询价按钮列 */
-    gap: 0.75rem;
-    align-items: center;
-    flex: 1;
-  }
-
-  /* 确保每个元素在正确的列中 */
-  .card-main .service-type {
-    grid-column: 1;
-    justify-self: start;
-  }
-
-  .card-main .route {
-    grid-column: 2;
-    justify-self: start;
-    min-width: 0; /* 允许文本截断 */
-  }
-
-  .card-main .weight,
-  .card-main .capacity {
-    grid-column: 3;
-    justify-self: start;
-    min-width: 0;
-  }
-
-  .card-main .date {
-    grid-column: 4;
-    justify-self: start;
-    min-width: 0;
-  }
-
-  /* 距离信息单独一列 */
-  .card-main .distance-info {
-    grid-column: 5;
-    justify-self: center;
-    min-width: 0;
-  }
-
-  .card-main .publication-date {
-    grid-column: 6;
-    justify-self: start;
-    min-width: 0;
-  }
-
-  /* 详情按钮列 */
-  .card-main .details-btn {
-    grid-column: 7;
-    justify-self: center;
-    min-width: 0;
-  }
-
-  /* 询价按钮列 */
-  .card-main .quote-btn-col {
-    grid-column: 8;
-    justify-self: center;
-    min-width: 0;
-  }
-
-  /* 其他元素（如货物类型、托盘等）放在第二行 */
-  .card-main .cargo-type,
-  .card-main .equipment,
-  .card-main .cargo-value,
-  .card-main .nmfc-class,
-  .card-main .pallets {
-    grid-column: 2 / 4; /* 跨越路线和重量列 */
-    grid-row: 2;
-    justify-self: start;
-    font-size: 0.85rem;
-    color: #888;
-    margin-top: 0.25rem;
-  }
-
-  /* 如果有 EWID，放在底部跨所有列 */
-  .card-main .ewid {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    justify-self: center;
-    margin-top: 0.5rem;
-  }
-
-  /* 路线文本截断处理 */
-  .route .origin,
-  .route .destination {
-    max-width: 100px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  /* 隐藏原来的card-actions，在桌面端使用网格布局的按钮 */
-  .card-actions {
-    display: none;
-  }
-}
-
-/* 距离显示样式 */
+/* ===== 距离徽章 ===== */
 .distance-badge {
-  background: linear-gradient(135deg, #34C759, #28a745);
-  color: white;
+  background: linear-gradient(135deg, var(--primary-green), #28a745);
+  color: var(--bg-white);
   padding: 0.2rem 0.4rem;
   border-radius: 10px;
-  font-size: 0.75rem;
+  font-size: var(--font-xs);
   font-weight: 600;
   display: inline-block;
   box-shadow: 0 1px 3px rgba(52, 199, 89, 0.3);
@@ -899,78 +578,209 @@
   align-items: center;
 }
 
-/* 车源卡片的特殊布局 */
-.truck-card .card-main {
-  grid-template-columns: 
-    130px          /* 服务类型列 */
-    1fr            /* 路线列 - 自适应剩余空间 */
-    100px          /* 载重能力列 */
-    120px          /* 可用日期列 */
-    100px          /* 价格列 */
-    140px          /* 发布时间列 */
-    80px           /* 详情按钮列 */
-    80px;          /* 询价按钮列 */
+/* ===== 桌面版网格布局 ===== */
+@media (min-width: 769px) {
+  .card-main {
+    display: grid;
+    grid-template-columns: var(--grid-cols-desktop);
+    gap: var(--gap-md);
+    align-items: center;
+    flex: 1;
+  }
+
+  /* 网格元素定位 - 使用变量减少重复 */
+  .card-main .service-type { grid-column: 1; justify-self: start; }
+  .card-main .route { grid-column: 2; justify-self: start; min-width: 0; }
+  .card-main .weight,
+  .card-main .capacity { grid-column: 4; justify-self: start; min-width: 0; }
+  .card-main .date { grid-column: 5; justify-self: start; min-width: 0; }
+  .card-main .distance-info { grid-column: 6; justify-self: center; min-width: 0; }
+  .card-main .publication-date { grid-column: 7; justify-self: start; min-width: 90px; }
+  .card-main .details-btn { grid-column: 8; justify-self: center; min-width: 0; }
+  .card-main .quote-btn-col { grid-column: 9; justify-self: center; min-width: 0; }
+  .card-main .pallets {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: start;
+    font-size: 0.85rem;
+    color: var(--text-gray);
+    margin-top: var(--gap-xs);
+  }
+
+  /* 隐藏移动端操作按钮 */
+  .card-actions {
+    display: none;
+  }
+
+  /* 车源卡片特殊布局 */
+  .truck-card .card-main {
+    grid-template-columns: var(--grid-cols-desktop);
+  }
+
+  .truck-card .card-main .equipment {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    font-size: 0.85rem;
+    color: var(--text-gray);
+    margin-top: var(--gap-xs);
+  }
+
+  .truck-card .card-main .rate {
+    grid-column: 5;
+    grid-row: 1;
+    justify-self: center;
+    font-size: var(--font-md);
+    color: var(--orange-price);
+    font-weight: 600;
+  }
 }
 
-.truck-card .card-main .equipment {
-  grid-column: 2;
-  grid-row: 2;
-  justify-self: start;
-  font-size: 0.85rem;
-  color: #888;
-  margin-top: 0.25rem;
+/* ===== 移动端响应式布局 ===== */
+@media (max-width: 768px) {
+  .platform-page { padding: var(--gap-lg) 0; }
+  .container { padding: 0 var(--gap-md); }
+  .platform-title { font-size: var(--font-xl); }
+  .platform-description { font-size: var(--font-base); }
+  
+  .search-filter-section {
+    padding: var(--gap-lg);
+    margin-bottom: var(--gap-xl);
+  }
+
+  .filters-row {
+    flex-direction: column;
+    gap: var(--gap-md);
+  }
+
+  .filters-row select, 
+  .date-range input, 
+  .reset-btn {
+    width: 100%;
+    padding: var(--gap-md);
+    font-size: var(--font-base);
+  }
+
+  .freight-list { gap: var(--gap-md); }
+
+  .simple-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: var(--gap-md);
+    display: flex;
+  }
+
+  .card-main {
+    display: grid !important;
+    grid-template-columns: var(--grid-cols-mobile);
+    grid-template-rows: auto auto auto auto;
+    gap: var(--gap-sm);
+    margin-bottom: var(--gap-md);
+    align-items: center;
+  }
+
+  /* 移动端网格布局 */
+  .card-main .route { grid-column: 1; grid-row: 1; justify-self: start; }
+  .card-main .service-type { grid-column: 2; grid-row: 1; justify-self: end; }
+  
+  .card-main .cargo-type,
+  .card-main .equipment,
+  .card-main .cargo-value,
+  .card-main .nmfc-class { 
+    font-size: var(--font-xs); 
+    grid-column: 1; 
+    grid-row: 2; 
+  }
+  
+  .card-main .weight,
+  .card-main .capacity { grid-column: 2; grid-row: 2; justify-self: end; }
+  
+  .card-main .date { grid-column: 1; grid-row: 3; justify-self: start; }
+  .card-main .price,
+  .card-main .rate { grid-column: 2; grid-row: 3; justify-self: end; }
+  
+  .card-main .ewid {
+    grid-column: 1 / -1;
+    grid-row: 4;
+    justify-self: center;
+    margin-top: var(--gap-xs);
+    min-width: auto;
+    font-size: var(--font-xs);
+  }
+
+  /* 移动端元素调整 */
+  .service-type span { 
+    font-size: var(--font-xs); 
+    padding: 0.3rem 0.6rem; 
+  }
+  
+  .route { 
+    min-width: auto; 
+    font-size: 0.85rem; 
+  }
+  
+  .card-main .cargo-type,
+  .card-main .equipment,
+  .card-main .weight,
+  .card-main .capacity,
+  .card-main .date { 
+    min-width: auto; 
+    font-size: var(--font-xs); 
+  }
+  
+  .card-main .price,
+  .card-main .rate { 
+    font-size: var(--font-md); 
+    font-weight: 700; 
+    min-width: auto; 
+  }
+
+  .card-actions { 
+    justify-content: space-between; 
+  }
+  
+  .contact-btn, 
+  .card-actions .quote-btn {
+    flex: 1;
+    justify-content: center;
+    font-size: var(--font-sm);
+    padding: 0.6rem;
+  }
 }
 
-.truck-card .card-main .rate {
-  grid-column: 5; /* 放在价格列位置 */
-  grid-row: 1;
-  justify-self: center;
-  font-size: 0.9rem;
-  color: #e65100;
-  font-weight: 600;
-}
+/* ===== 小屏手机优化 ===== */
+@media (max-width: 480px) {
+  .container { padding: 0 var(--gap-sm); }
+  .platform-title { font-size: 1.5rem; }
+  .search-filter-section { padding: var(--gap-md); }
+  
+  .filters-row select, 
+  .date-range input, 
+  .reset-btn {
+    padding: 0.6rem;
+    font-size: var(--font-md);
+  }
 
-/* 确保距离徽章不会破坏布局 */
-.distance-badge {
-  display: inline-block;
-  white-space: nowrap;
-}
+  .simple-card { padding: 0.6rem; }
+  .card-main { gap: 0.4rem; margin-bottom: 0.6rem; }
+  
+  .service-type span { 
+    font-size: var(--font-xs); 
+    padding: 0.3rem 0.6rem; 
+  }
+  
+  .route { font-size: 0.85rem; }
+  
 
-/* 网格中的按钮样式 - 与其他元素保持一致 */
-.details-btn, .quote-btn-col .quote-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.25rem;
-  padding: 0.4rem 0.6rem;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  min-width: 70px;
-  height: 32px;
-}
-
-.details-btn {
-  background: #34C759;
-  color: white;
-}
-
-.details-btn:hover {
-  background: #2ecc71;
-  transform: translateY(-1px);
-}
-
-.quote-btn-col .quote-btn {
-  background: white;
-  color: #666;
-  border: 1px solid #ddd;
-}
-
-.quote-btn-col .quote-btn:hover {
-  background: #f5f5f5;
-  transform: translateY(-1px);
+  
+  .card-main .price,
+  .card-main .rate { 
+    font-size: var(--font-md); 
+  }
+  
+  .contact-btn, 
+  .card-actions .quote-btn {
+    font-size: var(--font-xs);
+    padding: var(--gap-sm);
+  }
 } 

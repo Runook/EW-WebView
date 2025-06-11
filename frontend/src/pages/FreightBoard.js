@@ -771,7 +771,14 @@ const FreightBoard = () => {
                         <ArrowRight size={16} />
                         <span className="destination">{load.destinationDisplay || load.destination}</span>
                       </div>
-                      
+
+                      {/* LTL特有信息：托盘数量 */}
+                      {load.serviceType === 'LTL' && (
+                        <div className="pallets">
+                          <span>板数: {load.pallets || '未知'}</span>
+                        </div>
+                      )}
+                                           
                       {/* 货物重量 */}
                       <div className="weight">
                         <Scale size={14} />
@@ -795,12 +802,6 @@ const FreightBoard = () => {
                         )}
                       </div>
                       
-                      {/* LTL特有信息：托盘数量 */}
-                      {load.serviceType === 'LTL' && (
-                        <div className="pallets">
-                          <span>板数: {load.pallets || '未知'}</span>
-                        </div>
-                      )}
 
                       {/* 发布时间 */}
                       <div className="publication-date">
