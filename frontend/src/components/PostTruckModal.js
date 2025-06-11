@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, MapPin, Calendar, DollarSign, Truck, Star, Scale, Box } from 'lucide-react';
+import { X, MapPin, Calendar, DollarSign, Truck, Star, Scale, Box, Navigation } from 'lucide-react';
 import './Modal.css';
+import { GoogleMapsAddressInput, GoogleMapsRoute } from './GoogleMapsAddressInput';
 
 const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -21,6 +22,15 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
     companyName: '',
     notes: ''
   });
+
+  // Google Maps 相关状态
+  const [selectedPlaces, setSelectedPlaces] = useState({
+    currentLocation: null,
+    preferredOrigin: null,
+    preferredDestination: null
+  });
+
+  const [showRouteModal, setShowRouteModal] = useState(false);
 
   const serviceTypes = [
     { value: 'FTL', label: 'FTL (整车运输)' },
@@ -50,6 +60,41 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  // Google Maps 地址选择处理
+  const handleCurrentLocationSelected = (placeData) => {
+    setSelectedPlaces(prev => ({
+      ...prev,
+      currentLocation: placeData
+    }));
+  };
+
+  const handlePreferredOriginSelected = (placeData) => {
+    setSelectedPlaces(prev => ({
+      ...prev,
+      preferredOrigin: placeData
+    }));
+  };
+
+  const handlePreferredDestinationSelected = (placeData) => {
+    setSelectedPlaces(prev => ({
+      ...prev,
+      preferredDestination: placeData
+    }));
+  };
+
+  // 显示路线功能
+  const showRoute = () => {
+    // 检查是否有Google Maps选择的地址数据，或者至少有输入的地址文本
+    const hasOrigin = selectedPlaces.preferredOrigin || formData.preferredOrigin;
+    const hasDestination = selectedPlaces.preferredDestination || formData.preferredDestination;
+    
+    if (hasOrigin && hasDestination) {
+      setShowRouteModal(true);
+    } else {
+      alert('请先输入常跑起点和终点地址');
+    }
   };
 
   const handleSubmit = (e) => {
@@ -156,20 +201,15 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>
-                  <MapPin size={16} />
-                  当前位置
-                </label>
-                <input
-                  type="text"
-                  name="currentLocation"
-                  value={formData.currentLocation}
-                  onChange={handleChange}
-                  placeholder="当前城市或地区"
-                  required
-                />
-              </div>
+              <GoogleMapsAddressInput
+                label="当前位置"
+                placeholder="输入当前城市名、街道地址或ZIP代码"
+                value={formData.currentLocation}
+                onChange={(value) => setFormData(prev => ({ ...prev, currentLocation: value }))}
+                onPlaceSelected={handleCurrentLocationSelected}
+                required={true}
+                icon={MapPin}
+              />
 
               <div className="form-group">
                 <label>
@@ -277,34 +317,43 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
           <div className="form-section">
             <h3>运营范围</h3>
             <div className="form-grid">
-              <div className="form-group">
-                <label>
-                  <MapPin size={16} />
-                  常跑起点
-                </label>
-                <input
-                  type="text"
-                  name="preferredOrigin"
-                  value={formData.preferredOrigin}
-                  onChange={handleChange}
-                  placeholder="经常发货的地区"
-                />
-              </div>
+              <GoogleMapsAddressInput
+                label="常跑起点"
+                placeholder="经常发货的地区"
+                value={formData.preferredOrigin}
+                onChange={(value) => setFormData(prev => ({ ...prev, preferredOrigin: value }))}
+                onPlaceSelected={handlePreferredOriginSelected}
+                required={false}
+                icon={MapPin}
+              />
 
-              <div className="form-group">
-                <label>
-                  <MapPin size={16} />
-                  常跑终点
-                </label>
-                <input
-                  type="text"
-                  name="preferredDestination"
-                  value={formData.preferredDestination}
-                  onChange={handleChange}
-                  placeholder="经常送货的地区"
-                />
-              </div>
+              <GoogleMapsAddressInput
+                label="常跑终点"
+                placeholder="经常送货的地区"
+                value={formData.preferredDestination}
+                onChange={(value) => setFormData(prev => ({ ...prev, preferredDestination: value }))}
+                onPlaceSelected={handlePreferredDestinationSelected}
+                required={false}
+                icon={MapPin}
+              />
             </div>
+
+            {/* 路线查看按钮 */}
+            {formData.preferredOrigin && formData.preferredDestination && (
+              <div className="route-section">
+                <button
+                  type="button"
+                  className="btn route-btn"
+                  onClick={showRoute}
+                >
+                  <Navigation size={16} />
+                  查看常跑路线
+                </button>
+                <p className="route-description">
+                  点击查看Google Maps导航路线和距离估算
+                </p>
+              </div>
+            )}
 
             <div className="form-group full-width">
               <label>
@@ -379,6 +428,15 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
           </div>
         </form>
       </div>
+
+      {/* Google Maps 路线模态框 */}
+      {showRouteModal && (
+        <GoogleMapsRoute
+          origin={selectedPlaces.preferredOrigin || { address: formData.preferredOrigin }}
+          destination={selectedPlaces.preferredDestination || { address: formData.preferredDestination }}
+          onClose={() => setShowRouteModal(false)}
+        />
+      )}
     </div>
   );
 };

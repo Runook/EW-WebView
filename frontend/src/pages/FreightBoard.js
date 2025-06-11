@@ -316,16 +316,26 @@ const FreightBoard = () => {
    * 重置所有筛选条件
    */
   const resetFilters = () => {
-    const resetState = {
+    setSearchQuery('');
+    setFilters({
       search: '',
       origin: '',
       destination: '',
       serviceType: '',
       dateFrom: '',
       dateTo: ''
-    };
-    setFilters(resetState);
-    setSearchQuery('');
+    });
+    setSortBy('date');
+  };
+
+  /**
+   * Apply filters - currently filtering is reactive so this is mainly for enter key support
+   * Could be extended in the future for manual filter application or search actions
+   */
+  const applyFilters = () => {
+    // Filtering is already reactive through filteredLoads/filteredTrucks computed properties
+    // This function is mainly here to support the Enter key functionality in search
+    // Could be extended in the future for additional search logic if needed
   };
 
   /**

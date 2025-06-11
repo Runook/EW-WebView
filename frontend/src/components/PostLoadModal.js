@@ -19,10 +19,10 @@ import {
   Clock,
   Plus,
   Minus,
-  Search
+  Navigation
 } from 'lucide-react';
 import './Modal.css';
-import { searchZipCodes } from '../data/zipCodes';
+import { GoogleMapsAddressInput, GoogleMapsRoute } from './GoogleMapsAddressInput';
 
 const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -96,13 +96,13 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     classDescription: ''
   });
 
-  // 地址建议状态
-  const [addressSuggestions, setAddressSuggestions] = useState({
-    origin: [],
-    destination: [],
-    showOrigin: false,
-    showDestination: false
+  // Google Maps 相关状态
+  const [selectedPlaces, setSelectedPlaces] = useState({
+    origin: null,
+    destination: null
   });
+
+  const [showRouteModal, setShowRouteModal] = useState(false);
 
   // 货物类型选项 - 按照NMFC标准分类
   const cargoTypes = [
@@ -450,51 +450,52 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     };
   };
 
-  // 地址搜索函数
-  const searchAddresses = (query, field) => {
-    if (!query || query.length < 2) {
-      setAddressSuggestions(prev => ({
-        ...prev,
-        [field]: [],
-        [`show${field.charAt(0).toUpperCase() + field.slice(1)}`]: false
-      }));
-      return;
+  // Google Maps 地址选择处理
+  const handleOriginPlaceSelected = (placeData) => {
+    setSelectedPlaces(prev => ({
+      ...prev,
+      origin: placeData
+    }));
+  };
+
+  const handleDestinationPlaceSelected = (placeData) => {
+    setSelectedPlaces(prev => ({
+      ...prev,
+      destination: placeData
+    }));
+  };
+
+  // 显示路线功能
+  const showRoute = () => {
+    // 检查是否有Google Maps选择的地址数据，或者至少有输入的地址文本
+    const hasOrigin = selectedPlaces.origin || formData.origin;
+    const hasDestination = selectedPlaces.destination || formData.destination;
+    
+    if (hasOrigin && hasDestination) {
+      setShowRouteModal(true);
+    } else {
+      alert('请先输入起点和终点地址');
     }
-
-    const suggestions = searchZipCodes(query, 8); // 限制显示8个建议
-
-    setAddressSuggestions(prev => ({
-      ...prev,
-      [field]: suggestions,
-      [`show${field.charAt(0).toUpperCase() + field.slice(1)}`]: suggestions.length > 0
-    }));
   };
 
-  // 处理地址输入变化
+  // 地址搜索函数 - 保留为了向后兼容，但不再使用
+  const searchAddresses = (query, field) => {
+    // 已由 GoogleMapsAddressInput 组件处理
+  };
+
+  // 处理地址输入变化 - 保留为了向后兼容，但不再使用
   const handleAddressInput = (e, field) => {
-    const value = e.target.value;
-    setFormData(prev => ({ ...prev, [field]: value }));
-    searchAddresses(value, field);
+    // 已由 GoogleMapsAddressInput 组件处理
   };
 
-  // 选择地址建议
+  // 选择地址建议 - 保留为了向后兼容，但不再使用
   const selectAddressSuggestion = (suggestion, field) => {
-    setFormData(prev => ({ ...prev, [field]: suggestion.display }));
-    setAddressSuggestions(prev => ({
-      ...prev,
-      [field]: [],
-      [`show${field.charAt(0).toUpperCase() + field.slice(1)}`]: false
-    }));
+    // 已由 GoogleMapsAddressInput 组件处理
   };
 
-  // 隐藏建议（延迟执行，允许点击）
+  // 隐藏建议 - 保留为了向后兼容，但不再使用
   const hideSuggestions = (field) => {
-    setTimeout(() => {
-      setAddressSuggestions(prev => ({
-        ...prev,
-        [`show${field.charAt(0).toUpperCase() + field.slice(1)}`]: false
-      }));
-    }, 200);
+    // 已由 GoogleMapsAddressInput 组件处理
   };
 
   const handleSubmit = (e) => {
@@ -744,78 +745,25 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           <div className="form-section">
             <h3>基础信息 (Basic Information)</h3>
             <div className="form-grid">
-              <div className="form-group address-input-group">
-                <label>
-                  <MapPin size={16} />
-                  起点 (Origin) <span className="required">*</span>
-                </label>
-                <div className="address-input-container">
-                  <input
-                    type="text"
-                    name="origin"
-                    value={formData.origin}
-                    onChange={(e) => handleAddressInput(e, 'origin')}
-                    onBlur={() => hideSuggestions('origin')}
-                    placeholder="输入城市、州名或邮编 (e.g., Los Angeles, CA or 90210)"
-                    required
-                  />
-                  <Search size={16} className="search-icon" />
-                  {addressSuggestions.showOrigin && addressSuggestions.origin.length > 0 && (
-                    <div className="address-suggestions">
-                      {addressSuggestions.origin.map((suggestion, index) => (
-                        <div
-                          key={index}
-                          className="suggestion-item"
-                          onMouseDown={() => selectAddressSuggestion(suggestion, 'origin')}
-                        >
-                          <div className="suggestion-main">
-                            <MapPin size={14} />
-                            <span className="city-state">{suggestion.city}, {suggestion.state}</span>
-                          </div>
-                          <span className="zip-code">ZIP: {suggestion.zip}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <GoogleMapsAddressInput
+                label="起点 (Origin)"
+                placeholder="输入城市名、街道地址或ZIP代码"
+                value={formData.origin}
+                onChange={(value) => setFormData(prev => ({ ...prev, origin: value }))}
+                onPlaceSelected={handleOriginPlaceSelected}
+                required={true}
+                icon={MapPin}
+              />
 
-              <div className="form-group address-input-group">
-                <label>
-                  <MapPin size={16} />
-                  终点 (Destination) <span className="required">*</span>
-                </label>
-                <div className="address-input-container">
-                  <input
-                    type="text"
-                    name="destination"
-                    value={formData.destination}
-                    onChange={(e) => handleAddressInput(e, 'destination')}
-                    onBlur={() => hideSuggestions('destination')}
-                    placeholder="输入城市、州名或邮编 (e.g., Chicago, IL or 60601)"
-                    required
-                  />
-                  <Search size={16} className="search-icon" />
-                  {addressSuggestions.showDestination && addressSuggestions.destination.length > 0 && (
-                    <div className="address-suggestions">
-                      {addressSuggestions.destination.map((suggestion, index) => (
-                        <div
-                          key={index}
-                          className="suggestion-item"
-                          onMouseDown={() => selectAddressSuggestion(suggestion, 'destination')}
-                        >
-                          <div className="suggestion-main">
-                            <MapPin size={14} />
-                            <span className="city-state">{suggestion.city}, {suggestion.state}</span>
-                          </div>
-                          <span className="zip-code">ZIP: {suggestion.zip}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              
+              <GoogleMapsAddressInput
+                label="终点 (Destination)"
+                placeholder="输入城市名、街道地址或ZIP代码"
+                value={formData.destination}
+                onChange={(value) => setFormData(prev => ({ ...prev, destination: value }))}
+                onPlaceSelected={handleDestinationPlaceSelected}
+                required={true}
+                icon={MapPin}
+              />
 
               <div className="form-group">
                 <label>
@@ -846,45 +794,24 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                 />
               </div>
             </div>
-          </div>
-                                 {/* 地址类型 - 改为勾选形式 */}
-              <div className="location-types-section">
-                <h4>地址类型 (Location Types)</h4>
-                <div className="location-types-grid">
-                  <div className="location-type-group">
-                    <label className="location-type-header">起点类型 (Origin)</label>
-                    <div className="checkbox-options">
-                      {locationTypeOptions.map(option => (
-                        <label key={option.value} className="checkbox-option">
-                          <input
-                            type="checkbox"
-                            checked={formData.originLocationTypes.includes(option.value)}
-                            onChange={handleLocationTypeChange(option.value, 'originLocationTypes')}
-                          />
-                          <span className="checkbox-label">{option.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
 
-                  <div className="location-type-group">
-                    <label className="location-type-header">终点类型 (Destination)</label>
-                    <div className="checkbox-options">
-                      {locationTypeOptions.map(option => (
-                        <label key={option.value} className="checkbox-option">
-                          <input
-                            type="checkbox"
-                            checked={formData.destinationLocationTypes.includes(option.value)}
-                            onChange={handleLocationTypeChange(option.value, 'destinationLocationTypes')}
-                          />
-                          <span className="checkbox-label">{option.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+            {/* 路线查看按钮 */}
+            {formData.origin && formData.destination && (
+              <div className="route-section">
+                <button
+                  type="button"
+                  className="btn route-btn"
+                  onClick={showRoute}
+                >
+                  <Navigation size={16} />
+                  查看导航路线
+                </button>
+                <p className="route-description">
+                  点击查看Google Maps导航路线和距离估算
+                </p>
               </div>
- 
+            )}
+          </div>
 
           {/* 货物信息 */}
           <div className="form-section">
@@ -1728,7 +1655,53 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           padding: 0.2rem 0.5rem;
           border-radius: 3px;
         }
+
+        /* 路线查看按钮样式 */
+        .route-section {
+          margin-top: 1.5rem;
+          padding: 1rem;
+          background: #f8f9fa;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+          text-align: center;
+        }
+
+        .route-btn {
+          background: linear-gradient(135deg, #34C759, #28a745);
+          color: white;
+          border: none;
+          padding: 0.75rem 1.5rem;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+        }
+
+        .route-btn:hover {
+          background: linear-gradient(135deg, #28a745, #1e7e34);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(52, 199, 89, 0.4);
+        }
+
+        .route-description {
+          margin: 0.75rem 0 0 0;
+          color: #666;
+          font-size: 0.9rem;
+        }
       `}</style>
+
+      {/* Google Maps 路线模态框 */}
+      {showRouteModal && (
+        <GoogleMapsRoute
+          origin={selectedPlaces.origin || { address: formData.origin }}
+          destination={selectedPlaces.destination || { address: formData.destination }}
+          onClose={() => setShowRouteModal(false)}
+        />
+      )}
     </div>
   );
 };

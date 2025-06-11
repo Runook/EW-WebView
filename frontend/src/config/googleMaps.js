@@ -1,0 +1,145 @@
+// Google Maps API 配置
+// 请在此处添加您的 Google Maps API Key
+export const GOOGLE_MAPS_CONFIG = {
+  // 🔑 在这里添加您的 Google Maps API Key
+  API_KEY: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'AIzaSyB-uQvzsiFeJOr37qYg2EenJbaKUG7-KfE',
+  
+  // Google Maps 库配置
+  LIBRARIES: ['places', 'geometry'],
+  
+  // 地图默认配置
+  DEFAULT_CENTER: {
+    lat: 39.8283, // 美国中心位置
+    lng: -98.5795
+  },
+  
+  // 地图样式选项
+  MAP_OPTIONS: {
+    zoom: 4,
+    disableDefaultUI: false,
+    zoomControl: true,
+    streetViewControl: false,
+    fullscreenControl: false,
+    mapTypeControl: false,
+    gestureHandling: 'cooperative'
+  },
+
+  // 地址搜索配置
+  AUTOCOMPLETE_OPTIONS: {
+    componentRestrictions: { country: 'us' },
+    fields: ['address_components', 'geometry', 'place_id', 'formatted_address'],
+    types: ['address']
+  }
+};
+
+// API Key 验证函数
+export const validateApiKey = () => {
+  const apiKey = GOOGLE_MAPS_CONFIG.API_KEY;
+  
+  if (!apiKey) {
+    console.error('❌ Google Maps API Key 未设置');
+    return false;
+  }
+  
+  if (apiKey.length < 30) {
+    console.error('❌ Google Maps API Key 格式不正确，长度过短');
+    return false;
+  }
+  
+  if (!apiKey.startsWith('AIza')) {
+    console.error('❌ Google Maps API Key 格式不正确，应以 "AIza" 开头');
+    return false;
+  }
+  
+  console.log('✅ API Key 格式验证通过:', apiKey.substring(0, 10) + '...');
+  return true;
+};
+
+// Google Maps API 加载函数
+export const loadGoogleMapsScript = () => {
+  return new Promise((resolve, reject) => {
+    console.log('🚀 开始加载 Google Maps API...');
+    
+    // 验证 API Key
+    if (!validateApiKey()) {
+      reject(new Error('API Key 验证失败'));
+      return;
+    }
+
+    // 检查是否已经加载
+    if (window.google && window.google.maps) {
+      console.log('✅ Google Maps API 已经加载');
+      resolve(window.google);
+      return;
+    }
+
+    // 检查是否已经有脚本标签
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    if (existingScript) {
+      console.log('📄 发现已存在的 Google Maps 脚本，等待加载完成...');
+      existingScript.addEventListener('load', () => {
+        console.log('✅ 已存在脚本加载完成');
+        resolve(window.google);
+      });
+      existingScript.addEventListener('error', (e) => {
+        console.error('❌ 已存在脚本加载失败:', e);
+        reject(new Error('Google Maps 脚本加载失败'));
+      });
+      return;
+    }
+
+    // 创建唯一的回调函数名
+    const callbackName = `initGoogleMap_${Date.now()}`;
+    console.log('📝 创建回调函数:', callbackName);
+    
+    // 构建完整的 API URL
+    const apiUrl = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_CONFIG.API_KEY}&libraries=${GOOGLE_MAPS_CONFIG.LIBRARIES.join(',')}&callback=${callbackName}`;
+    console.log('🔗 API URL:', apiUrl.replace(GOOGLE_MAPS_CONFIG.API_KEY, 'AIza****'));
+    
+    // 创建新的脚本标签
+    const script = document.createElement('script');
+    script.src = apiUrl;
+    script.async = true;
+    script.defer = true;
+
+    // 全局回调函数
+    window[callbackName] = () => {
+      console.log('✅ Google Maps API 回调函数执行成功');
+      delete window[callbackName]; // 清理回调函数
+      
+      // 验证 Google Maps 对象
+      if (window.google && window.google.maps) {
+        console.log('✅ Google Maps 对象验证成功');
+        console.log('📚 可用的 Google Maps 服务:', Object.keys(window.google.maps));
+        resolve(window.google);
+      } else {
+        console.error('❌ Google Maps 对象验证失败');
+        reject(new Error('Google Maps 对象未正确初始化'));
+      }
+    };
+
+    script.onerror = (event) => {
+      console.error('❌ Google Maps 脚本加载失败:', event);
+      console.error('🔍 可能的原因:');
+      console.error('   1. API Key 无效或已过期');
+      console.error('   2. 未启用必要的 Google Maps API');
+      console.error('   3. Google Cloud 项目未配置账单');
+      console.error('   4. 网络连接问题');
+      console.error('   5. API 配额已用完');
+      
+      delete window[callbackName]; // 清理回调函数
+      reject(new Error('Google Maps API 加载失败 - 请检查控制台错误信息'));
+    };
+
+    console.log('📤 正在添加 Google Maps 脚本到页面...');
+    document.head.appendChild(script);
+    
+    // 设置超时
+    setTimeout(() => {
+      if (!window.google || !window.google.maps) {
+        console.error('⏱️ Google Maps API 加载超时');
+        reject(new Error('Google Maps API 加载超时'));
+      }
+    }, 10000); // 10秒超时
+  });
+}; 
