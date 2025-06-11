@@ -233,6 +233,56 @@ const DetailsModal = ({ isOpen, onClose, item }) => {
                 value={getValue(item.destination)} 
               />
             </div>
+            
+            {/* 地址类型要求显示 */}
+            {(getOriginalValue('originLocationTypes') || getOriginalValue('destinationLocationTypes')) && (
+              <div className="location-requirements">
+                {getOriginalValue('originLocationTypes') && getOriginalValue('originLocationTypes').length > 0 && (
+                  <div className="requirement-section">
+                    <span className="requirement-label">起点要求：</span>
+                    <div className="requirement-tags">
+                      {getOriginalValue('originLocationTypes').map(type => {
+                        const typeLabels = {
+                          'appointment': '预约',
+                          'commercial': '商业地址', 
+                          'residential': '住宅地址',
+                          'gated': '门禁',
+                          'elevator': '升降机'
+                        };
+                        return (
+                          <span key={type} className="requirement-tag">
+                            {typeLabels[type] || type}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                
+                {getOriginalValue('destinationLocationTypes') && getOriginalValue('destinationLocationTypes').length > 0 && (
+                  <div className="requirement-section">
+                    <span className="requirement-label">终点要求：</span>
+                    <div className="requirement-tags">
+                      {getOriginalValue('destinationLocationTypes').map(type => {
+                        const typeLabels = {
+                          'appointment': '预约',
+                          'commercial': '商业地址', 
+                          'residential': '住宅地址',
+                          'gated': '门禁',
+                          'elevator': '升降机'
+                        };
+                        return (
+                          <span key={type} className="requirement-tag">
+                            {typeLabels[type] || type}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div className="info-row">
               <InfoRow 
                 label={isLoad ? "取货日期" : "可用日期"} 

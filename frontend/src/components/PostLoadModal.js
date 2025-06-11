@@ -915,6 +915,55 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
             </div>
 
+            {/* 地址类型选择 - 新增的多选功能 */}
+            <div className="location-types-section">
+              <h4>
+                <Info size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                地址类型特殊要求 (Location Type Requirements)
+              </h4>
+              <div className="location-types-grid">
+                <div className="location-type-group">
+                  <h5 className="location-type-header">起点要求 (Origin Requirements)</h5>
+                  <div className="checkbox-options">
+                    {locationTypeOptions.map(option => {
+                      const IconComponent = option.icon;
+                      return (
+                        <label key={`origin-${option.value}`} className="checkbox-option">
+                          <input
+                            type="checkbox"
+                            checked={formData.originLocationTypes.includes(option.value)}
+                            onChange={handleLocationTypeChange(option.value, 'originLocationTypes')}
+                          />
+                          <IconComponent size={14} />
+                          <span className="checkbox-label">{option.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="location-type-group">
+                  <h5 className="location-type-header">终点要求 (Destination Requirements)</h5>
+                  <div className="checkbox-options">
+                    {locationTypeOptions.map(option => {
+                      const IconComponent = option.icon;
+                      return (
+                        <label key={`destination-${option.value}`} className="checkbox-option">
+                          <input
+                            type="checkbox"
+                            checked={formData.destinationLocationTypes.includes(option.value)}
+                            onChange={handleLocationTypeChange(option.value, 'destinationLocationTypes')}
+                          />
+                          <IconComponent size={14} />
+                          <span className="checkbox-label">{option.label}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* 路线查看按钮 */}
             {formData.origin && formData.destination && (
               <div className="route-section">

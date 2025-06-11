@@ -460,6 +460,9 @@ const FreightBoard = () => {
           case 'date':
             return new Date(b.pickupDate || b.availableDate || b.postedDate) - 
                    new Date(a.pickupDate || a.availableDate || a.postedDate);
+          case 'publication':
+            return new Date(b.publicationDate || b.postedTime || b.pickupDate || b.availableDate) - 
+                   new Date(a.publicationDate || a.postedTime || a.pickupDate || a.availableDate);
           case 'rate':
             const aRate = parseFloat((a.rate || a.rateRange || '0').replace(/[^\d.]/g, ''));
             const bRate = parseFloat((b.rate || b.rateRange || '0').replace(/[^\d.]/g, ''));
@@ -682,6 +685,7 @@ const FreightBoard = () => {
 
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
               <option value="date">按日期排序</option>
+              <option value="publication">按发布时间排序</option>
               <option value="rate">按价格排序</option>
               <option value="weight">按重量排序</option>
             </select>
