@@ -23,55 +23,80 @@ const GoogleMapsAddressInput = ({
 
   // Initialize Google Maps services
   useEffect(() => {
+    console.log('GoogleMapsAddressInput: Initializing...');
     if (window.google && window.google.maps) {
+      console.log('Google Maps API already loaded');
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
       placesService.current = new window.google.maps.places.PlacesService(
         document.createElement('div')
       );
+      console.log('Services initialized successfully');
     } else {
-      // Load Google Maps API if not already loaded
+      console.log('Loading Google Maps API...');
       loadGoogleMapsAPI();
     }
   }, []);
 
   const loadGoogleMapsAPI = () => {
-    if (window.google) return;
+    if (window.google) {
+      console.log('Google Maps API already exists');
+      return;
+    }
 
+    console.log('Creating Google Maps API script...');
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
     script.async = true;
     script.defer = true;
     script.onload = () => {
+      console.log('Google Maps API loaded successfully');
       autocompleteService.current = new window.google.maps.places.AutocompleteService();
       placesService.current = new window.google.maps.places.PlacesService(
         document.createElement('div')
       );
+      console.log('Services initialized after API load');
+    };
+    script.onerror = (error) => {
+      console.error('Failed to load Google Maps API:', error);
     };
     document.head.appendChild(script);
   };
 
   const searchPlaces = (query) => {
-    if (!query || query.length < 3 || !autocompleteService.current) {
+    console.log('Searching for:', query);
+    
+    if (!query || query.length < 3) {
+      console.log('Query too short, skipping search');
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    if (!autocompleteService.current) {
+      console.error('AutocompleteService not initialized');
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
 
     setLoading(true);
+    console.log('Making autocomplete request...');
 
     const request = {
       input: query,
-      componentRestrictions: { country: 'us' }, // 可以根据需要调整国家限制
       types: ['address', 'establishment', 'geocode']
     };
 
     autocompleteService.current.getPlacePredictions(request, (predictions, status) => {
       setLoading(false);
+      console.log('Autocomplete response:', { status, predictions });
       
       if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+        console.log('Found', predictions.length, 'suggestions');
         setSuggestions(predictions.slice(0, 8)); // 限制显示8个建议
         setShowSuggestions(true);
       } else {
+        console.warn('No suggestions found or error:', status);
         setSuggestions([]);
         setShowSuggestions(false);
       }
