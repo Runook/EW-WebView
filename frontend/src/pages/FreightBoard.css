@@ -27,6 +27,8 @@
   --font-xl: 1.8rem;
   --font-2xl: 2.5rem;
   
+  /* 间距和边距变量 */ 
+  --gap-xxs: 0.005rem;
   --gap-xs: 0.25rem;
   --gap-sm: 0.5rem;
   --gap-md: 0.75rem;
@@ -315,11 +317,13 @@
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   padding: var(--gap-lg);
+  padding-bottom: var(--gap-xxs);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   transition: all 0.2s ease;
   box-shadow: var(--shadow-sm);
+  
 }
 
 .simple-card:hover {
@@ -341,8 +345,9 @@
   grid-template-columns: var(--grid-cols-mobile);
   grid-template-rows: auto auto auto auto;
   gap: var(--gap-sm);
-  margin-bottom: var(--gap-md);
+  margin-bottom: 0;
   align-items: center;
+  
 }
 
 /* ===== 服务类型徽章 ===== */

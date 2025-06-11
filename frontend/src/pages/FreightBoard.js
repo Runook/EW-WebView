@@ -778,7 +778,7 @@ const FreightBoard = () => {
                           <span>板数: {load.pallets || '未知'}</span>
                         </div>
                       )}
-                                           
+
                       {/* 货物重量 */}
                       <div className="weight">
                         <Scale size={14} />
