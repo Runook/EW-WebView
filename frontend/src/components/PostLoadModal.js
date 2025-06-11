@@ -22,7 +22,7 @@ import {
   Navigation
 } from 'lucide-react';
 import './Modal.css';
-import { GoogleMapsAddressInput, GoogleMapsRoute } from './GoogleMapsAddressInput';
+import { GoogleMapsAddressInput, GoogleMapsRoute, calculateDistance, geocodeAddress } from './GoogleMapsAddressInput';
 
 const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -103,6 +103,13 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
   });
 
   const [showRouteModal, setShowRouteModal] = useState(false);
+  
+  // 距离信息状态
+  const [distanceInfo, setDistanceInfo] = useState(null);
+  const [calculatingDistance, setCalculatingDistance] = useState(false);
+  
+  // 提交处理状态
+  const [submitting, setSubmitting] = useState(false);
 
   // 货物类型选项 - 按照NMFC标准分类
   const cargoTypes = [
@@ -452,17 +459,53 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
   // Google Maps 地址选择处理
   const handleOriginPlaceSelected = (placeData) => {
-    setSelectedPlaces(prev => ({
-      ...prev,
-      origin: placeData
-    }));
+    setSelectedPlaces(prev => {
+      const newState = {
+        ...prev,
+        origin: placeData
+      };
+      
+      // 如果两个地址都已选择，计算距离
+      if (newState.destination) {
+        calculateDistanceBetweenPoints(placeData, newState.destination);
+      }
+      
+      return newState;
+    });
   };
 
   const handleDestinationPlaceSelected = (placeData) => {
-    setSelectedPlaces(prev => ({
-      ...prev,
-      destination: placeData
-    }));
+    setSelectedPlaces(prev => {
+      const newState = {
+        ...prev,
+        destination: placeData
+      };
+      
+      // 如果两个地址都已选择，计算距离
+      if (newState.origin) {
+        calculateDistanceBetweenPoints(newState.origin, placeData);
+      }
+      
+      return newState;
+    });
+  };
+
+  // 计算两点之间的距离
+  const calculateDistanceBetweenPoints = async (origin, destination) => {
+    try {
+      setCalculatingDistance(true);
+      const result = await calculateDistance(
+        origin.fullAddress || origin.displayAddress,
+        destination.fullAddress || destination.displayAddress
+      );
+      setDistanceInfo(result);
+      console.log('距离计算结果:', result);
+    } catch (error) {
+      console.error('距离计算失败:', error);
+      setDistanceInfo(null);
+    } finally {
+      setCalculatingDistance(false);
+    }
   };
 
   // 显示路线功能
@@ -498,54 +541,106 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     // 已由 GoogleMapsAddressInput 组件处理
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 基础验证 - 包含所有必填字段
-    const requiredFields = [
-      'origin', 'destination', 'pickupDate', 
-      'weight', 'companyName', 
-      'contactPhone', 
-    ];
+    // 防止重复提交
+    if (submitting) return;
     
-    // LTL额外验证
-    if (formData.serviceType === 'LTL') {
-      // 移除单个重量字段和全局价格字段的验证，改为验证货物项目
-      const requiredFieldsLTL = requiredFields.filter(field => field !== 'weight');
+    setSubmitting(true);
+    
+    try {
+      // 基础验证 - 包含所有必填字段
+      const requiredFields = [
+        'origin', 'destination', 'pickupDate', 
+        'weight', 'companyName', 
+        'contactPhone', 
+      ];
       
-      // 验证每个货物项目 - 只验证必要字段
-      const invalidItems = formData.cargoItems.filter(item => 
-        !item.weight || !item.length || 
-        !item.width || !item.height || !item.pallets 
-      );
-      
-      if (invalidItems.length > 0) {
-        alert('请填写所有货物项目的必要信息：重量、尺寸、托盘数量');
-        return;
+      // LTL额外验证
+      if (formData.serviceType === 'LTL') {
+        // 移除单个重量字段和全局价格字段的验证，改为验证货物项目
+        const requiredFieldsLTL = requiredFields.filter(field => field !== 'weight');
+        
+        // 验证每个货物项目 - 只验证必要字段
+        const invalidItems = formData.cargoItems.filter(item => 
+          !item.weight || !item.length || 
+          !item.width || !item.height || !item.pallets 
+        );
+        
+        if (invalidItems.length > 0) {
+          alert('请填写所有货物项目的必要信息：重量、尺寸、托盘数量');
+          return;
+        }
+        
+        // 检查是否都计算出了分类代码
+        const unclassifiedItems = formData.cargoItems.filter(item => !item.freightClass);
+        if (unclassifiedItems.length > 0) {
+          alert('请确保所有货物项目都已计算出NMFC分类代码');
+          return;
+        }
+        
+        const missingFields = requiredFieldsLTL.filter(field => !formData[field]);
+        if (missingFields.length > 0) {
+          alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
+          return;
+        }
+      } else {
+        // FTL验证 - 包含车型要求
+        const requiredFieldsFTL = [...requiredFields, 'truckType'];
+        const missingFields = requiredFieldsFTL.filter(field => !formData[field]);
+        if (missingFields.length > 0) {
+          alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
+          return;
+        }
       }
-      
-      // 检查是否都计算出了分类代码
-      const unclassifiedItems = formData.cargoItems.filter(item => !item.freightClass);
-      if (unclassifiedItems.length > 0) {
-        alert('请确保所有货物项目都已计算出NMFC分类代码');
-        return;
-      }
-      
-      const missingFields = requiredFieldsLTL.filter(field => !formData[field]);
-      if (missingFields.length > 0) {
-        alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
-        return;
-      }
-    } else {
-      // FTL验证 - 包含车型要求
-      const requiredFieldsFTL = [...requiredFields, 'truckType'];
-      const missingFields = requiredFieldsFTL.filter(field => !formData[field]);
-      if (missingFields.length > 0) {
-        alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
-        return;
-      }
-    }
 
+      // 自动处理地址和距离计算
+      console.log('开始处理地址和距离计算...');
+      
+      let originData = selectedPlaces.origin;
+      let destinationData = selectedPlaces.destination;
+      let calculatedDistance = distanceInfo;
+
+      // 如果没有从建议中选择地址，则进行地理编码
+      if (!originData && formData.origin) {
+        console.log('地理编码起点地址:', formData.origin);
+        originData = await geocodeAddress(formData.origin);
+      }
+
+      if (!destinationData && formData.destination) {
+        console.log('地理编码终点地址:', formData.destination);
+        destinationData = await geocodeAddress(formData.destination);
+      }
+
+      // 如果还没有距离信息，则计算距离
+      if (!calculatedDistance && originData && destinationData) {
+        console.log('计算两地距离...');
+        calculatedDistance = await calculateDistance(
+          originData.fullAddress || originData.displayAddress || formData.origin,
+          destinationData.fullAddress || destinationData.displayAddress || formData.destination
+        );
+      }
+
+      console.log('地址和距离处理完成:', { originData, destinationData, calculatedDistance });
+
+      // 现在处理提交数据
+      await processFormSubmission(originData, destinationData, calculatedDistance);
+      
+    } catch (error) {
+      console.error('处理地址或距离时出错:', error);
+      // 即使地址处理失败，也允许继续提交，但提醒用户
+      const proceed = confirm('地址解析或距离计算失败，是否继续发布？（将使用原始地址信息）');
+      if (proceed) {
+        await processFormSubmission(selectedPlaces.origin, selectedPlaces.destination, distanceInfo);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // 处理表单提交的核心逻辑
+  const processFormSubmission = async (originData, destinationData, calculatedDistance) => {
     // 根据服务类型处理提交数据
     if (formData.serviceType === 'LTL') {
       // LTL: 为每个货物项目创建单独的提交数据
@@ -554,6 +649,11 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           type: 'load',
           origin: formData.origin,
           destination: formData.destination,
+          // 新增格式化地址字段
+          originDisplay: originData?.displayAddress || formData.origin,
+          destinationDisplay: destinationData?.displayAddress || formData.destination,
+          // 距离信息
+          distanceInfo: calculatedDistance,
           requiredDate: formData.pickupDate,
           weight: item.weight,
           cargoType: `${formData.cargoType} - ${item.description}`,
@@ -583,7 +683,11 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
             pallets: item.pallets,
             stackable: item.stackable,
             fragile: item.fragile,
-            hazmat: item.hazmat
+            hazmat: item.hazmat,
+            // 完整地址信息
+            fullOrigin: originData?.fullAddress || formData.origin,
+            fullDestination: destinationData?.fullAddress || formData.destination,
+            selectedPlaces: { origin: originData, destination: destinationData }
           }
         };
         
@@ -595,6 +699,11 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         type: 'load',
         origin: formData.origin,
         destination: formData.destination,
+        // 新增格式化地址字段
+        originDisplay: originData?.displayAddress || formData.origin,
+        destinationDisplay: destinationData?.displayAddress || formData.destination,
+        // 距离信息
+        distanceInfo: calculatedDistance,
         requiredDate: formData.pickupDate,
         weight: formData.weight,
         cargoType: formData.cargoType,
@@ -611,7 +720,11 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           calculatedDensity: densityInfo.density,
           calculatedClass: densityInfo.suggestedClass,
           classDescription: densityInfo.classDescription,
-          cargoValue: formData.cargoValue
+          cargoValue: formData.cargoValue,
+          // 完整地址信息
+          fullOrigin: originData?.fullAddress || formData.origin,
+          fullDestination: destinationData?.fullAddress || formData.destination,
+          selectedPlaces: { origin: originData, destination: destinationData }
         }
       };
       
@@ -684,6 +797,13 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       suggestedClass: '',
       classDescription: ''
     });
+
+    setSelectedPlaces({
+      origin: null,
+      destination: null
+    });
+
+    setDistanceInfo(null);
   };
 
   if (!isOpen) return null;
@@ -809,6 +929,27 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                 <p className="route-description">
                   点击查看Google Maps导航路线和距离估算
                 </p>
+                
+                {/* 距离显示 */}
+                {calculatingDistance && (
+                  <div className="distance-calculating">
+                    <div className="loading-spinner-small"></div>
+                    <span>正在计算距离...</span>
+                  </div>
+                )}
+                
+                {distanceInfo && (
+                  <div className="distance-info">
+                    <div className="distance-summary">
+                      <span className="distance-text">
+                        <strong>距离:</strong> {distanceInfo.distance}
+                      </span>
+                      <span className="duration-text">
+                        <strong>预计时间:</strong> {distanceInfo.duration}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1286,11 +1427,18 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           </div>
 
           <div className="modal-actions">
-            <button type="button" onClick={onClose} className="btn secondary">
+            <button type="button" onClick={onClose} className="btn secondary" disabled={submitting}>
               取消 (Cancel)
             </button>
-            <button type="submit" className="btn primary">
-              发布货源 (Post Load)
+            <button type="submit" className="btn primary" disabled={submitting}>
+              {submitting ? (
+                <>
+                  <div className="loading-spinner-small"></div>
+                  正在处理地址信息...
+                </>
+              ) : (
+                '发布货源 (Post Load)'
+              )}
             </button>
           </div>
         </form>
@@ -1691,6 +1839,58 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           margin: 0.75rem 0 0 0;
           color: #666;
           font-size: 0.9rem;
+        }
+
+        /* 距离计算样式 */
+        .distance-calculating {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          margin-top: 1rem;
+          padding: 0.75rem;
+          background: #e3f2fd;
+          border-radius: 6px;
+          color: #1976d2;
+          font-size: 0.9rem;
+        }
+
+        .loading-spinner-small {
+          width: 16px;
+          height: 16px;
+          border: 2px solid #bbdefb;
+          border-top: 2px solid #1976d2;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+        }
+
+        .distance-info {
+          margin-top: 1rem;
+          padding: 1rem;
+          background: linear-gradient(135deg, #e8f5e8, #f0faf0);
+          border: 1px solid #34C759;
+          border-radius: 8px;
+        }
+
+        .distance-summary {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 1rem;
+          text-align: center;
+        }
+
+        .distance-text, .duration-text {
+          background: white;
+          padding: 0.75rem;
+          border-radius: 6px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          font-size: 0.9rem;
+        }
+
+        .distance-text strong, .duration-text strong {
+          color: #34C759;
+          display: block;
+          margin-bottom: 0.25rem;
         }
       `}</style>
 

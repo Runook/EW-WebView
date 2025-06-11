@@ -352,6 +352,11 @@ const FreightBoard = () => {
           id: Date.now(),
           origin: postData.origin,
           destination: postData.destination,
+          // 新的格式化地址字段
+          originDisplay: postData.originDisplay || postData.origin,
+          destinationDisplay: postData.destinationDisplay || postData.destination,
+          // 距离信息
+          distanceInfo: postData.distanceInfo,
           pickupDate: postData.requiredDate,
           deliveryDate: postData.deliveryDate,
           rate: postData.maxRate || '预估价格',
@@ -760,11 +765,11 @@ const FreightBoard = () => {
                         )}
                       </div>
                       
-                      {/* 运输路线 */}
+                      {/* 运输路线 - 使用格式化地址 */}
                       <div className="route">
-                        <span className="origin">{load.origin}</span>
+                        <span className="origin">{load.originDisplay || load.origin}</span>
                         <ArrowRight size={16} />
-                        <span className="destination">{load.destination}</span>
+                        <span className="destination">{load.destinationDisplay || load.destination}</span>
                       </div>
                       
                       {/* 货物重量 */}
@@ -773,10 +778,17 @@ const FreightBoard = () => {
                         {load.weight} lb
                       </div>
                       
-                      {/* 取货日期 */}
+                      {/* 取货日期和距离 */}
                       <div className="date">
                         <Calendar size={14} />
-                        <span className="date-text">{load.pickupDate?.split('-').slice(1).join('/') || '未知日期'} 取货</span>
+                        <span className="date-text">
+                          {load.pickupDate?.split('-').slice(1).join('/') || '未知日期'} 取货
+                          {load.distanceInfo && (
+                            <span className="distance-badge">
+                              • {load.distanceInfo.distance}
+                            </span>
+                          )}
+                        </span>
                       </div>
                       
                       {/* LTL特有信息：托盘数量 */}

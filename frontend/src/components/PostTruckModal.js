@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, MapPin, Calendar, DollarSign, Truck, Star, Scale, Box, Navigation } from 'lucide-react';
 import './Modal.css';
-import { GoogleMapsAddressInput, GoogleMapsRoute } from './GoogleMapsAddressInput';
+import { GoogleMapsAddressInput, GoogleMapsRoute, calculateDistance, geocodeAddress } from './GoogleMapsAddressInput';
 
 const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -31,6 +31,10 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
   });
 
   const [showRouteModal, setShowRouteModal] = useState(false);
+  
+  // 距离信息状态
+  const [distanceInfo, setDistanceInfo] = useState(null);
+  const [calculatingDistance, setCalculatingDistance] = useState(false);
 
   const serviceTypes = [
     { value: 'FTL', label: 'FTL (整车运输)' },
@@ -97,7 +101,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // 验证必填字段
@@ -113,35 +117,124 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
       return;
     }
 
-    // 转换为后端API期望的格式
-    const submitData = {
-      type: 'truck',
-      // 后端必填字段
-      origin: formData.currentLocation,
-      destination: formData.preferredDestination || '全国各地',
-      availableDate: formData.availableDate,
-      truckType: formData.equipment,
-      capacity: formData.capacity,
-      rate: formData.rateRange,
-      serviceType: formData.serviceType,
-      companyName: formData.companyName,
-      contactPhone: formData.contactPhone,
-      // 可选字段
-      contactEmail: formData.contactEmail || '',
-      driverLicense: '',
-      truckFeatures: formData.specialServices || '',
-      notes: formData.notes || '',
-      // 保留原始数据用于显示
-      originalData: {
-        ...formData,
-        id: Date.now(),
-        postedDate: new Date().toISOString(),
-        location: formData.currentLocation,
-        preferredLanes: `${formData.preferredOrigin || '任意地点'} 至 ${formData.preferredDestination || '全国各地'}`
-      }
-    };
+    // 自动处理地址和距离计算
+    try {
+      console.log('开始处理车源地址信息...');
+      
+      let currentLocationData = selectedPlaces.currentLocation;
+      let preferredOriginData = selectedPlaces.preferredOrigin;
+      let preferredDestinationData = selectedPlaces.preferredDestination;
+      let calculatedDistance = distanceInfo;
 
-    onSubmit(submitData);
+      // 如果没有从建议中选择地址，则进行地理编码
+      if (!currentLocationData && formData.currentLocation) {
+        console.log('地理编码当前位置:', formData.currentLocation);
+        currentLocationData = await geocodeAddress(formData.currentLocation);
+      }
+
+      if (!preferredOriginData && formData.preferredOrigin) {
+        console.log('地理编码常跑起点:', formData.preferredOrigin);
+        preferredOriginData = await geocodeAddress(formData.preferredOrigin);
+      }
+
+      if (!preferredDestinationData && formData.preferredDestination) {
+        console.log('地理编码常跑终点:', formData.preferredDestination);
+        preferredDestinationData = await geocodeAddress(formData.preferredDestination);
+      }
+
+      // 如果还没有距离信息且有常跑起点和终点，则计算距离
+      if (!calculatedDistance && preferredOriginData && preferredDestinationData) {
+        console.log('计算常跑路线距离...');
+        calculatedDistance = await calculateDistance(
+          preferredOriginData.fullAddress || preferredOriginData.displayAddress || formData.preferredOrigin,
+          preferredDestinationData.fullAddress || preferredDestinationData.displayAddress || formData.preferredDestination
+        );
+      }
+
+      console.log('车源地址处理完成:', { currentLocationData, preferredOriginData, preferredDestinationData, calculatedDistance });
+
+      // 转换为后端API期望的格式
+      const submitData = {
+        type: 'truck',
+        // 后端必填字段
+        origin: formData.currentLocation,
+        destination: formData.preferredDestination || '全国各地',
+        // 新增格式化地址字段
+        originDisplay: currentLocationData?.displayAddress || formData.currentLocation,
+        destinationDisplay: preferredDestinationData?.displayAddress || formData.preferredDestination || '全国各地',
+        // 距离信息（常跑路线的距离）
+        distanceInfo: calculatedDistance,
+        availableDate: formData.availableDate,
+        truckType: formData.equipment,
+        capacity: formData.capacity,
+        rate: formData.rateRange,
+        serviceType: formData.serviceType,
+        companyName: formData.companyName,
+        contactPhone: formData.contactPhone,
+        // 可选字段
+        contactEmail: formData.contactEmail || '',
+        driverLicense: '',
+        truckFeatures: formData.specialServices || '',
+        notes: formData.notes || '',
+        // 保留原始数据用于显示
+        originalData: {
+          ...formData,
+          id: Date.now(),
+          postedDate: new Date().toISOString(),
+          location: formData.currentLocation,
+          preferredLanes: `${formData.preferredOrigin || '任意地点'} 至 ${formData.preferredDestination || '全国各地'}`,
+          // 完整地址信息
+          fullCurrentLocation: currentLocationData?.fullAddress || formData.currentLocation,
+          fullPreferredOrigin: preferredOriginData?.fullAddress || formData.preferredOrigin,
+          fullPreferredDestination: preferredDestinationData?.fullAddress || formData.preferredDestination,
+          selectedPlaces: { 
+            currentLocation: currentLocationData, 
+            preferredOrigin: preferredOriginData, 
+            preferredDestination: preferredDestinationData 
+          }
+        }
+      };
+
+      onSubmit(submitData);
+      
+    } catch (error) {
+      console.error('处理车源地址时出错:', error);
+      // 即使地址处理失败，也允许继续提交，但提醒用户
+      const proceed = confirm('地址解析失败，是否继续发布？（将使用原始地址信息）');
+      if (!proceed) {
+        return;
+      }
+
+      // 使用原始数据提交
+      const submitData = {
+        type: 'truck',
+        origin: formData.currentLocation,
+        destination: formData.preferredDestination || '全国各地',
+        originDisplay: formData.currentLocation,
+        destinationDisplay: formData.preferredDestination || '全国各地',
+        distanceInfo: null,
+        availableDate: formData.availableDate,
+        truckType: formData.equipment,
+        capacity: formData.capacity,
+        rate: formData.rateRange,
+        serviceType: formData.serviceType,
+        companyName: formData.companyName,
+        contactPhone: formData.contactPhone,
+        contactEmail: formData.contactEmail || '',
+        driverLicense: '',
+        truckFeatures: formData.specialServices || '',
+        notes: formData.notes || '',
+        originalData: {
+          ...formData,
+          id: Date.now(),
+          postedDate: new Date().toISOString(),
+          location: formData.currentLocation,
+          preferredLanes: `${formData.preferredOrigin || '任意地点'} 至 ${formData.preferredDestination || '全国各地'}`
+        }
+      };
+
+      onSubmit(submitData);
+    }
     
     // 重置表单
     setFormData({
@@ -162,6 +255,14 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
       companyName: '',
       notes: ''
     });
+
+    setSelectedPlaces({
+      currentLocation: null,
+      preferredOrigin: null,
+      preferredDestination: null
+    });
+
+    setDistanceInfo(null);
     onClose();
   };
 

@@ -828,3 +828,16 @@
   }
   
 } 
+
+/* 距离显示样式 */
+.distance-badge {
+  background: linear-gradient(135deg, #34C759, #28a745);
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+  display: inline-block;
+  box-shadow: 0 1px 3px rgba(52, 199, 89, 0.3);
+} 

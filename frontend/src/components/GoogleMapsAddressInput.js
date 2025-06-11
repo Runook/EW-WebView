@@ -2,6 +2,49 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MapPin, Search, Navigation, Map } from 'lucide-react';
 import './GoogleMapsAddressInput.css';
 
+// 从地址组件中提取城市、州、邮编信息
+const extractAddressComponents = (addressComponents) => {
+  let city = '';
+  let state = '';
+  let zipcode = '';
+  
+  if (addressComponents) {
+    addressComponents.forEach(component => {
+      const types = component.types;
+      
+      if (types.includes('locality')) {
+        city = component.long_name;
+      } else if (types.includes('sublocality_level_1') && !city) {
+        city = component.long_name;
+      } else if (types.includes('administrative_area_level_2') && !city) {
+        city = component.long_name;
+      }
+      
+      if (types.includes('administrative_area_level_1')) {
+        state = component.short_name;
+      }
+      
+      if (types.includes('postal_code')) {
+        zipcode = component.long_name;
+      }
+    });
+  }
+  
+  return { city, state, zipcode };
+};
+
+// 格式化显示地址为 "City, State zipcode" 格式
+const formatDisplayAddress = (addressComponents) => {
+  const { city, state, zipcode } = extractAddressComponents(addressComponents);
+  
+  let displayAddress = '';
+  if (city) displayAddress += city;
+  if (state) displayAddress += (displayAddress ? ', ' : '') + state;
+  if (zipcode) displayAddress += (displayAddress ? ' ' : '') + zipcode;
+  
+  return displayAddress || '地址未知';
+};
+
 // Google Maps Address Input Component
 const GoogleMapsAddressInput = ({ 
   label, 
@@ -120,15 +163,19 @@ const GoogleMapsAddressInput = ({
         { placeId: prediction.place_id },
         (place, status) => {
           if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+            const displayAddress = formatDisplayAddress(place.address_components);
+            
             if (onPlaceSelected) {
               onPlaceSelected({
-                address: selectedValue,
+                fullAddress: selectedValue, // 完整地址用于详情页
+                displayAddress: displayAddress, // 格式化地址用于卡片显示
                 placeId: prediction.place_id,
                 location: {
                   lat: place.geometry.location.lat(),
                   lng: place.geometry.location.lng()
                 },
-                place: place
+                place: place,
+                addressComponents: place.address_components
               });
             }
           }
@@ -341,4 +388,73 @@ const GoogleMapsRoute = ({ origin, destination, onClose }) => {
   );
 };
 
-export { GoogleMapsAddressInput, GoogleMapsRoute }; 
+// 地理编码文本地址，获取格式化信息
+const geocodeAddress = async (address) => {
+  return new Promise((resolve, reject) => {
+    if (!window.google || !window.google.maps) {
+      reject(new Error('Google Maps API not loaded'));
+      return;
+    }
+
+    const geocoder = new window.google.maps.Geocoder();
+    
+    geocoder.geocode({ address: address }, (results, status) => {
+      if (status === 'OK' && results && results.length > 0) {
+        const result = results[0];
+        const displayAddress = formatDisplayAddress(result.address_components);
+        
+        resolve({
+          fullAddress: result.formatted_address,
+          displayAddress: displayAddress,
+          location: {
+            lat: result.geometry.location.lat(),
+            lng: result.geometry.location.lng()
+          },
+          place: result,
+          addressComponents: result.address_components
+        });
+      } else {
+        reject(new Error('无法找到地址: ' + status));
+      }
+    });
+  });
+};
+
+// 距离计算工具函数
+const calculateDistance = async (origin, destination) => {
+  return new Promise((resolve, reject) => {
+    if (!window.google || !window.google.maps) {
+      reject(new Error('Google Maps API not loaded'));
+      return;
+    }
+
+    const service = new window.google.maps.DistanceMatrixService();
+    
+    service.getDistanceMatrix({
+      origins: [origin],
+      destinations: [destination],
+      travelMode: window.google.maps.TravelMode.DRIVING,
+      unitSystem: window.google.maps.UnitSystem.IMPERIAL,
+      avoidHighways: false,
+      avoidTolls: false
+    }, (response, status) => {
+      if (status === 'OK') {
+        const element = response.rows[0].elements[0];
+        if (element.status === 'OK') {
+          resolve({
+            distance: element.distance.text,
+            duration: element.duration.text,
+            distanceValue: element.distance.value, // 米为单位
+            durationValue: element.duration.value  // 秒为单位
+          });
+        } else {
+          reject(new Error('无法计算距离'));
+        }
+      } else {
+        reject(new Error('距离计算服务错误: ' + status));
+      }
+    });
+  });
+};
+
+export { GoogleMapsAddressInput, GoogleMapsRoute, calculateDistance, geocodeAddress }; 
