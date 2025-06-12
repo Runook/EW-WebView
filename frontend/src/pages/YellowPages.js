@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
+  ArrowLeft, 
+  Plus, 
   Search, 
   MapPin, 
   Phone, 
@@ -8,581 +10,610 @@ import {
   Star,
   Building,
   Users,
-  Plus,
   Eye,
   Heart,
-  Share2,
-  Verified
+  ChevronRight
 } from 'lucide-react';
 import './YellowPages.css';
 
 const YellowPages = () => {
+  const [currentView, setCurrentView] = useState('main'); // 'main', 'category', 'subcategory'
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
   const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({
-    category: '',
-    city: '',
-    serviceType: '',
-    scale: '',
-    certification: ''
-  });
-  const [selectedCompany, setSelectedCompany] = useState(null);
   const [showPublishModal, setShowPublishModal] = useState(false);
 
-  // 企业类别
-  const categories = [
-    '全部类别', '运输公司', '货运代理', '仓储服务', '物流园区', 
-    '供应链管理', '国际货运', '快递配送', '冷链物流', '危险品运输'
-  ];
-
-  // 服务类型
-  const serviceTypes = [
-    '全部服务', '陆运服务', '海运服务', '空运服务', '多式联运',
-    '仓储配送', '报关清关', '保险服务', '金融服务', '信息服务'
-  ];
-
-  // 企业规模
-  const scales = [
-    '全部规模', '大型企业', '中型企业', '小型企业', '微型企业'
-  ];
-
-  // 模拟企业数据
-  const mockCompanies = [
-    {
-      id: 1,
-      name: '东方物流集团有限公司',
-      category: '运输公司',
-      description: '专业提供全国整车零担运输服务，拥有自营车队800台，覆盖全国主要城市',
-      logo: '/api/placeholder/80/80',
-      rating: 4.8,
-      reviews: 1250,
-      address: '上海市浦东新区张江高科技园区',
-      city: '上海',
-      phone: '021-12345678',
-      email: 'info@eastlogistics.com',
-      website: 'www.eastlogistics.com',
-      services: ['陆运服务', '仓储配送', '供应链管理'],
-      scale: '大型企业',
-      certification: ['ISO9001', 'CNAS认证', '危险品运输'],
-      establishedYear: 2008,
-      employeeCount: '1000+',
-      verified: true,
-      views: 15680,
-      favorites: 234
+  // 根据图片定义的分类结构
+  const categories = {
+    '物流货运': {
+      color: '#FF6B35',
+      subcategories: ['陆运服务', '海运服务', '空运服务', '多式联运']
     },
-    {
-      id: 2,
-      name: '中海国际货运代理',
-      category: '货运代理',
-      description: '专业国际货运代理，主营中美、中欧海运专线，提供门到门服务',
-      logo: '/api/placeholder/80/80',
-      rating: 4.6,
-      reviews: 890,
-      address: '深圳市南山区蛇口港',
-      city: '深圳',
-      phone: '0755-88888888',
-      email: 'service@chinaocean.com',
-      website: 'www.chinaocean.com',
-      services: ['海运服务', '报关清关', '国际货运'],
-      scale: '中型企业',
-      certification: ['NVOCC', 'IATA', 'WCA'],
-      establishedYear: 2012,
-      employeeCount: '200-500',
-      verified: true,
-      views: 12340,
-      favorites: 189
+    '仓储货代': {
+      color: '#F7931E', 
+      subcategories: ['收货仓', '海外仓', '货代公司']
     },
-    {
-      id: 3,
-      name: '快达冷链物流',
-      category: '冷链物流',
-      description: '专业冷链运输服务商，覆盖生鲜、医药、化工等温控货物运输',
-      logo: '/api/placeholder/80/80',
-      rating: 4.7,
-      reviews: 567,
-      address: '北京市大兴区亦庄经济开发区',
-      city: '北京',
-      phone: '010-66666666',
-      email: 'cold@quickdelivery.com',
-      website: 'www.quickcold.com',
-      services: ['冷链物流', '医药运输', '生鲜配送'],
-      scale: '中型企业',
-      certification: ['GSP认证', 'HACCP', '医药运输'],
-      establishedYear: 2015,
-      employeeCount: '100-200',
-      verified: true,
-      views: 9876,
-      favorites: 156
+    '报关清关': {
+      color: '#FFD23F',
+      subcategories: ['中美清关行', 'T86']
+    },
+    '卡车服务': {
+      color: '#06FFA5',
+      subcategories: ['买卖车行', '维修保养', '交通罚单', '拖车服务', '配件装潢']
+    },
+    '保险服务': {
+      color: '#4ECDC4',
+      subcategories: ['汽车保险', '人身保险', '其他保险']
+    },
+    '金融服务': {
+      color: '#45B7D1',
+      subcategories: ['设备', '仓库', '生意', '等金融贷款', '税务会计', '理财']
+    },
+    '技术服务': {
+      color: '#96CEB4',
+      subcategories: ['软件商', '设备商', '硬件配件商']
+    },
+    '律师服务': {
+      color: '#FFEAA7',
+      subcategories: ['交通意外伤害', '综合律师', '民诉律师', '商业律师', '华人事务所']
     }
-  ];
+  };
 
-  // 获取企业列表 - API接口
-  const fetchCompanies = useCallback(async () => {
-    setLoading(true);
+  // 模拟公司数据
+  const mockCompanies = {
+    '陆运服务': [
+      {
+        id: 1,
+        name: '东方物流集团',
+        description: '专业提供全国整车零担运输服务，拥有自营车队800台',
+        address: '上海市浦东新区张江高科技园区',
+        phone: '021-12345678',
+        email: 'info@eastlogistics.com',
+        website: 'www.eastlogistics.com',
+        rating: 4.8,
+        reviews: 125,
+        verified: true
+      },
+      {
+        id: 2,
+        name: '快运通物流',
+        description: '专注于城际快运，覆盖华东地区主要城市',
+        address: '江苏省苏州市工业园区',
+        phone: '0512-88888888',
+        email: 'service@kuaiyuntong.com',
+        website: 'www.kuaiyuntong.com',
+        rating: 4.5,
+        reviews: 89,
+        verified: true
+      }
+    ],
+    '海运服务': [
+      {
+        id: 3,
+        name: '中海国际货运',
+        description: '专业国际海运代理，主营中美、中欧航线',
+        address: '深圳市南山区蛇口港',
+        phone: '0755-66666666',
+        email: 'info@chinaocean.com',
+        website: 'www.chinaocean.com',
+        rating: 4.7,
+        reviews: 156,
+        verified: true
+      }
+    ],
+    '中美清关行': [
+      {
+        id: 4,
+        name: '美中通关服务',
+        description: '专业中美清关服务，快速通关，安全可靠',
+        address: '洛杉矶市中心商业区',
+        phone: '+1-213-555-0123',
+        email: 'info@uscnclearing.com',
+        website: 'www.uscnclearing.com',
+        rating: 4.6,
+        reviews: 78,
+        verified: true
+      }
+    ],
+    '维修保养': [
+      {
+        id: 5,
+        name: '金牌卡车维修中心',
+        description: '专业卡车维修保养，24小时道路救援',
+        address: '休斯顿市工业区',
+        phone: '+1-713-555-0456',
+        email: 'service@goldtruck.com',
+        website: 'www.goldtruck.com',
+        rating: 4.4,
+        reviews: 92,
+        verified: true
+      }
+    ],
+    '汽车保险': [
+      {
+        id: 6,
+        name: '太平洋保险经纪',
+        description: '专业汽车保险服务，理赔快速，服务周到',
+        address: '旧金山市金融区',
+        phone: '+1-415-555-0789',
+        email: 'info@pacificins.com',
+        website: 'www.pacificins.com',
+        rating: 4.3,
+        reviews: 134,
+        verified: true
+      }
+    ],
+    '税务会计': [
+      {
+        id: 7,
+        name: '华美金融咨询',
+        description: '专业税务会计服务，为华人企业提供全方位服务',
+        address: '纽约市曼哈顿唐人街',
+        phone: '+1-212-555-0321',
+        email: 'info@sinoamfinance.com',
+        website: 'www.sinoamfinance.com',
+        rating: 4.5,
+        reviews: 67,
+        verified: true
+      }
+    ],
+    '软件商': [
+      {
+        id: 8,
+        name: '智联物流科技',
+        description: '专业物流管理软件开发，TMS、WMS系统定制',
+        address: '西雅图市科技园区',
+        phone: '+1-206-555-0654',
+        email: 'info@smartlogis.com',
+        website: 'www.smartlogis.com',
+        rating: 4.8,
+        reviews: 45,
+        verified: true
+      }
+    ],
+    '华人事务所': [
+      {
+        id: 9,
+        name: '华人法律事务所',
+        description: '专业华人律师团队，精通中美法律',
+        address: '芝加哥市法律区',
+        phone: '+1-312-555-0987',
+        email: 'info@chineselaw.com',
+        website: 'www.chineselaw.com',
+        rating: 4.9,
+        reviews: 89,
+        verified: true
+      }
+    ]
+  };
+
+  // 从API获取公司数据
+  const fetchCompanies = async () => {
+    if (!selectedSubcategory) return;
+    
     try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch('/api/yellow-pages/companies', {
-      //   method: 'GET',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   }
-      // });
-      // const data = await response.json();
-      
-      // 模拟API延迟
-      setTimeout(() => {
-        setCompanies(mockCompanies);
-        setLoading(false);
-      }, 1000);
+      const response = await fetch(`/api/companies/subcategory/${encodeURIComponent(selectedSubcategory)}?search=${encodeURIComponent(searchQuery)}`);
+      if (response.ok) {
+        const result = await response.json();
+        setCompanies(result.data || []);
+      } else {
+        // 如果API失败，使用模拟数据
+        setCompanies(mockCompanies[selectedSubcategory] || []);
+      }
     } catch (error) {
-      console.error('获取企业列表失败:', error);
-      setLoading(false);
+      console.error('获取公司数据失败:', error);
+      // 使用模拟数据作为后备
+      setCompanies(mockCompanies[selectedSubcategory] || []);
     }
-  }, []);
+  };
 
-  // 页面加载时获取企业数据
+  // 当选择的子分类或搜索查询改变时获取数据
   useEffect(() => {
-    fetchCompanies();
-  }, [fetchCompanies]);
-
-  // 搜索企业 - API接口
-  const searchCompanies = async () => {
-    setLoading(true);
-    try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch('/api/yellow-pages/search', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     query: searchQuery,
-      //     filters: filters
-      //   })
-      // });
-      // const data = await response.json();
-      
-      // 模拟搜索逻辑
-      let filteredCompanies = mockCompanies;
-      
-      if (searchQuery) {
-        filteredCompanies = filteredCompanies.filter(company =>
-          company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          company.description.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-      }
-      
-      if (filters.category && filters.category !== '全部类别') {
-        filteredCompanies = filteredCompanies.filter(company =>
-          company.category === filters.category
-        );
-      }
-      
-      if (filters.city) {
-        filteredCompanies = filteredCompanies.filter(company =>
-          company.city.includes(filters.city)
-        );
-      }
-      
-      setTimeout(() => {
-        setCompanies(filteredCompanies);
-        setLoading(false);
-      }, 500);
-    } catch (error) {
-      console.error('搜索失败:', error);
-      setLoading(false);
-    }
-  };
-
-  // 查看企业详情 - API接口
-  const viewCompanyDetails = async (companyId) => {
-    try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch(`/api/yellow-pages/companies/${companyId}`, {
-      //   method: 'GET',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   }
-      // });
-      // const data = await response.json();
-      
-      const company = mockCompanies.find(c => c.id === companyId);
-      setSelectedCompany(company);
-      
-      // 增加浏览量
-      // await fetch(`/api/yellow-pages/companies/${companyId}/view`, {
-      //   method: 'POST'
-      // });
-    } catch (error) {
-      console.error('获取企业详情失败:', error);
-    }
-  };
-
-  // 收藏企业 - API接口
-  const favoriteCompany = async (companyId) => {
-    try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch(`/api/yellow-pages/companies/${companyId}/favorite`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   }
-      // });
-      
-      console.log('收藏企业:', companyId);
-    } catch (error) {
-      console.error('收藏失败:', error);
-    }
-  };
-
-  // 发布企业信息 - API接口
-  const publishCompany = async (companyData) => {
-    try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch('/api/yellow-pages/companies', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(companyData)
-      // });
-      // const data = await response.json();
-      
-      console.log('发布企业信息:', companyData);
-      setShowPublishModal(false);
-      // 刷新列表
+    if (selectedSubcategory) {
       fetchCompanies();
+    }
+  }, [selectedSubcategory, searchQuery]);
+
+  // 搜索过滤（用于模拟数据）
+  const filteredCompanies = companies.length > 0 ? companies : 
+    (mockCompanies[selectedSubcategory] || []).filter(company =>
+      company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      company.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+  // 发布公司信息
+  const handlePublishCompany = async (companyData) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('请先登录');
+        return;
+      }
+
+      const response = await fetch('/api/companies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(companyData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert('企业信息发布成功！');
+        setShowPublishModal(false);
+        // 如果当前在相同的子分类，刷新数据
+        if (selectedSubcategory === companyData.subcategory) {
+          fetchCompanies();
+        }
+      } else {
+        const error = await response.json();
+        alert(error.message || '发布失败');
+      }
     } catch (error) {
-      console.error('发布失败:', error);
+      console.error('发布公司信息失败:', error);
+      alert('发布失败，请稍后重试');
     }
   };
 
-  const handleSearch = () => {
-    searchCompanies();
-  };
-
-  const handleFilterChange = (filterType, value) => {
-    setFilters({
-      ...filters,
-      [filterType]: value
-    });
-  };
-
-  return (
-    <div className="yellow-pages">
-      {/* 页面头部 */}
+  // 主页面 - 显示所有一级分类
+  const renderMainView = () => (
+    <div className="yellow-pages-main">
       <div className="page-header">
-        <div className="container">
-          <h1>商家黄页</h1>
-          <p>物流行业企业信息发布平台，提供全面的物流服务商查询和企业展示服务</p>
+        <h1>商家黄页</h1>
+        <p>选择服务分类，查找专业的物流服务商</p>
+      </div>
+
+      <div className="categories-grid">
+        {Object.entries(categories).map(([categoryName, categoryData]) => (
+          <div 
+            key={categoryName}
+            className="category-card"
+            style={{ borderLeftColor: categoryData.color }}
+            onClick={() => {
+              setSelectedCategory(categoryName);
+              setCurrentView('category');
+            }}
+          >
+            <div className="category-header">
+              <h3>{categoryName}</h3>
+              <ChevronRight size={20} />
+            </div>
+            <div className="subcategories-preview">
+              {categoryData.subcategories.slice(0, 3).map(sub => (
+                <span key={sub} className="subcategory-tag">{sub}</span>
+              ))}
+              {categoryData.subcategories.length > 3 && (
+                <span className="more-tag">+{categoryData.subcategories.length - 3}</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // 分类页面 - 显示选中分类的所有二级分类
+  const renderCategoryView = () => (
+    <div className="yellow-pages-category">
+      <div className="page-header">
+        <div className="header-top">
+          <button 
+            className="back-button"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('分类页面返回按钮被点击');
+              
+              setCurrentView('main');
+              setSelectedCategory(null);
+            }}
+          >
+            <ArrowLeft size={20} />
+            返回
+          </button>
+        </div>
+        <div className="header-content">
+          <h1>{selectedCategory}</h1>
+          <p>选择具体的服务类别</p>
         </div>
       </div>
 
-      {/* 搜索区域 */}
-      <div className="search-section">
-        <div className="container">
-          <div className="search-bar">
-            <div className="search-input-group">
-              <Search size={20} />
-              <input
-                type="text"
-                placeholder="搜索企业名称、服务类型或关键词"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <button className="search-btn" onClick={handleSearch}>
-                搜索
-              </button>
+      <div className="subcategories-grid">
+        {categories[selectedCategory]?.subcategories.map(subcategory => {
+          const companyCount = mockCompanies[subcategory]?.length || 0;
+          return (
+            <div 
+              key={subcategory}
+              className="subcategory-card"
+              onClick={() => {
+                setSelectedSubcategory(subcategory);
+                setCurrentView('subcategory');
+              }}
+            >
+              <div className="subcategory-header">
+                <h3>{subcategory}</h3>
+                <ChevronRight size={20} />
+              </div>
+              <div className="company-count">
+                {companyCount} 家企业
+              </div>
             </div>
-          </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
-          {/* 筛选器 */}
-          <div className="filters">
-            <select 
-              value={filters.category} 
-              onChange={(e) => handleFilterChange('category', e.target.value)}
-            >
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
+  // 子分类页面 - 显示该服务类别下的公司列表
+  const renderSubcategoryView = () => (
+    <div className="yellow-pages-subcategory">
+      <div className="page-header">
+        <div className="header-top">
+          <button 
+            className="back-button"
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('子分类页面返回按钮被点击');
+              
+              setCurrentView('category');
+              setSelectedSubcategory(null);
+              setCompanies([]);
+              setSearchQuery('');
+            }}
+          >
+            <ArrowLeft size={20} />
+            返回 {selectedCategory}
+          </button>
+        </div>
+        <div className="header-content">
+          <h1>{selectedSubcategory}</h1>
+          <p>共找到 {filteredCompanies.length} 家企业</p>
+        </div>
+      </div>
 
-            <input
-              type="text"
-              placeholder="城市"
-              value={filters.city}
-              onChange={(e) => handleFilterChange('city', e.target.value)}
-            />
+      <div className="controls-section">
+        <div className="search-bar">
+          <Search size={20} />
+          <input
+            type="text"
+            placeholder="搜索企业名称或服务..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <button 
+          className="publish-button"
+          onClick={() => setShowPublishModal(true)}
+        >
+          <Plus size={20} />
+          发布企业信息
+        </button>
+      </div>
 
-            <select 
-              value={filters.serviceType} 
-              onChange={(e) => handleFilterChange('serviceType', e.target.value)}
-            >
-              {serviceTypes.map(service => (
-                <option key={service} value={service}>{service}</option>
-              ))}
-            </select>
+      <div className="companies-list">
+        {filteredCompanies.length > 0 ? (
+          filteredCompanies.map(company => (
+            <div key={company.id} className="company-card">
+              <div className="company-header">
+                <div className="company-basic">
+                  <h3>{company.name}</h3>
+                  {company.verified && <span className="verified-badge">已验证</span>}
+                  <div className="company-rating">
+                    <Star size={14} fill="currentColor" />
+                    <span>{company.rating}</span>
+                    <span>({company.reviews}评价)</span>
+                  </div>
+                </div>
+              </div>
 
-            <select 
-              value={filters.scale} 
-              onChange={(e) => handleFilterChange('scale', e.target.value)}
-            >
-              {scales.map(scale => (
-                <option key={scale} value={scale}>{scale}</option>
-              ))}
-            </select>
-          </div>
+              <p className="company-description">{company.description}</p>
 
-          {/* 发布按钮 */}
-          <div className="publish-section">
+              <div className="company-contact">
+                <div className="contact-item">
+                  <MapPin size={16} />
+                  <span>{company.address}</span>
+                </div>
+                <div className="contact-item">
+                  <Phone size={16} />
+                  <span>{company.phone}</span>
+                </div>
+                <div className="contact-item">
+                  <Mail size={16} />
+                  <span>{company.email}</span>
+                </div>
+                {company.website && (
+                  <div className="contact-item">
+                    <Globe size={16} />
+                    <span>{company.website}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="company-actions">
+                <button className="action-button">
+                  <Eye size={16} />
+                  查看详情
+                </button>
+                <button className="action-button">
+                  <Heart size={16} />
+                  收藏
+                </button>
+                <button className="contact-button">
+                  联系企业
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="no-companies">
+            <Building size={64} />
+            <h3>暂无企业信息</h3>
+            <p>成为第一个在此分类发布信息的企业</p>
             <button 
-              className="publish-btn"
+              className="publish-button"
               onClick={() => setShowPublishModal(true)}
             >
               <Plus size={20} />
               发布企业信息
             </button>
           </div>
-        </div>
-      </div>
-
-      <div className="container">
-        {/* 企业列表 */}
-        <div className="companies-grid">
-          {loading ? (
-            <div className="loading">
-              <div className="spinner"></div>
-              <p>加载中...</p>
-            </div>
-          ) : (
-            companies.map(company => (
-              <div key={company.id} className="company-card">
-                <div className="company-header">
-                  <img src={company.logo} alt={company.name} className="company-logo" />
-                  <div className="company-basic">
-                    <div className="company-name">
-                      <h3>{company.name}</h3>
-                      {company.verified && <Verified size={16} className="verified-icon" />}
-                    </div>
-                    <div className="company-rating">
-                      <Star size={14} fill="currentColor" />
-                      <span>{company.rating}</span>
-                      <span>({company.reviews}评价)</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="company-info">
-                  <p className="company-description">{company.description}</p>
-                  
-                  <div className="company-details">
-                    <div className="detail-item">
-                      <Building size={14} />
-                      <span>{company.category}</span>
-                    </div>
-                    <div className="detail-item">
-                      <MapPin size={14} />
-                      <span>{company.city}</span>
-                    </div>
-                    <div className="detail-item">
-                      <Users size={14} />
-                      <span>{company.employeeCount}人</span>
-                    </div>
-                  </div>
-
-                  <div className="company-services">
-                    {company.services.slice(0, 3).map(service => (
-                      <span key={service} className="service-tag">{service}</span>
-                    ))}
-                    {company.services.length > 3 && (
-                      <span className="more-services">+{company.services.length - 3}</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="company-actions">
-                  <div className="company-stats">
-                    <span><Eye size={14} /> {company.views}</span>
-                    <span><Heart size={14} /> {company.favorites}</span>
-                  </div>
-                  
-                  <div className="action-buttons">
-                    <button 
-                      className="btn-icon"
-                      onClick={() => favoriteCompany(company.id)}
-                    >
-                      <Heart size={16} />
-                    </button>
-                    <button className="btn-icon">
-                      <Share2 size={16} />
-                    </button>
-                    <button 
-                      className="btn-primary"
-                      onClick={() => viewCompanyDetails(company.id)}
-                    >
-                      查看详情
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {companies.length === 0 && !loading && (
-          <div className="no-results">
-            <Building size={64} />
-            <h3>暂无企业信息</h3>
-            <p>试试调整搜索条件或发布您的企业信息</p>
-          </div>
         )}
       </div>
+    </div>
+  );
 
-      {/* 企业详情模态框 */}
-      {selectedCompany && (
-        <div className="modal-overlay" onClick={() => setSelectedCompany(null)}>
-          <div className="modal-content company-detail-modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{selectedCompany.name}</h2>
-              <button onClick={() => setSelectedCompany(null)}>×</button>
-            </div>
-            
-            <div className="modal-body">
-              <div className="company-detail-content">
-                <div className="company-main-info">
-                  <img src={selectedCompany.logo} alt={selectedCompany.name} />
-                  <div className="basic-info">
-                    <div className="rating">
-                      <Star size={16} fill="currentColor" />
-                      <span>{selectedCompany.rating}</span>
-                      <span>({selectedCompany.reviews}评价)</span>
-                    </div>
-                    <p>{selectedCompany.description}</p>
-                  </div>
+  // 发布企业信息模态框
+  const renderPublishModal = () => {
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      
+      const companyData = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        subcategory: formData.get('subcategory'),
+        phone: formData.get('phone'),
+        email: formData.get('email'),
+        address: formData.get('address'),
+        website: formData.get('website') || ''
+      };
+
+      // 根据子分类确定主分类
+      let category = '';
+      for (const [catName, catData] of Object.entries(categories)) {
+        if (catData.subcategories.includes(companyData.subcategory)) {
+          category = catName;
+          break;
+        }
+      }
+      companyData.category = category;
+
+      handlePublishCompany(companyData);
+    };
+
+    return (
+      <div className="modal-overlay" onClick={() => setShowPublishModal(false)}>
+        <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>发布企业信息</h2>
+            <button onClick={() => setShowPublishModal(false)}>×</button>
+          </div>
+          
+          <div className="modal-body">
+            <form className="publish-form" onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>企业名称 *</label>
+                <input 
+                  type="text" 
+                  name="name"
+                  placeholder="请输入企业全称" 
+                  required 
+                />
+              </div>
+
+              <div className="form-group">
+                <label>服务分类 *</label>
+                <select name="subcategory" required defaultValue={selectedSubcategory || ''}>
+                  <option value="">请选择服务分类</option>
+                  {Object.entries(categories).map(([categoryName, categoryData]) => (
+                    <optgroup key={categoryName} label={categoryName}>
+                      {categoryData.subcategories.map(sub => (
+                        <option key={sub} value={sub}>{sub}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>企业简介 *</label>
+                <textarea 
+                  name="description"
+                  placeholder="请简要介绍您的企业主营业务和优势"
+                  rows="4"
+                  required
+                ></textarea>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>联系电话 *</label>
+                  <input 
+                    type="tel" 
+                    name="phone"
+                    placeholder="请输入联系电话" 
+                    required 
+                  />
                 </div>
-
-                <div className="company-details-grid">
-                  <div className="detail-section">
-                    <h4>联系信息</h4>
-                    <div className="contact-info">
-                      <div><Phone size={16} /> {selectedCompany.phone}</div>
-                      <div><Mail size={16} /> {selectedCompany.email}</div>
-                      <div><Globe size={16} /> {selectedCompany.website}</div>
-                      <div><MapPin size={16} /> {selectedCompany.address}</div>
-                    </div>
-                  </div>
-
-                  <div className="detail-section">
-                    <h4>企业信息</h4>
-                    <div className="enterprise-info">
-                      <div>成立年份：{selectedCompany.establishedYear}</div>
-                      <div>企业规模：{selectedCompany.scale}</div>
-                      <div>员工人数：{selectedCompany.employeeCount}</div>
-                      <div>主营业务：{selectedCompany.category}</div>
-                    </div>
-                  </div>
-
-                  <div className="detail-section">
-                    <h4>服务项目</h4>
-                    <div className="services-list">
-                      {selectedCompany.services.map(service => (
-                        <span key={service} className="service-tag">{service}</span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="detail-section">
-                    <h4>资质认证</h4>
-                    <div className="certifications">
-                      {selectedCompany.certification.map(cert => (
-                        <span key={cert} className="cert-tag">{cert}</span>
-                      ))}
-                    </div>
-                  </div>
+                <div className="form-group">
+                  <label>邮箱地址 *</label>
+                  <input 
+                    type="email" 
+                    name="email"
+                    placeholder="请输入企业邮箱" 
+                    required 
+                  />
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* 发布企业信息模态框 */}
-      {showPublishModal && (
-        <div className="modal-overlay" onClick={() => setShowPublishModal(false)}>
-          <div className="modal-content publish-modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>发布企业信息</h2>
-              <button onClick={() => setShowPublishModal(false)}>×</button>
-            </div>
-            
-            <div className="modal-body">
-              <div className="publish-form">
-                <div className="form-group">
-                  <label>企业名称</label>
-                  <input type="text" placeholder="请输入企业全称" />
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>企业类别</label>
-                    <select>
-                      {categories.slice(1).map(category => (
-                        <option key={category} value={category}>{category}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>企业规模</label>
-                    <select>
-                      {scales.slice(1).map(scale => (
-                        <option key={scale} value={scale}>{scale}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>企业简介</label>
-                  <textarea placeholder="请简要介绍您的企业主营业务和优势"></textarea>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>联系电话</label>
-                    <input type="tel" placeholder="请输入联系电话" />
-                  </div>
-                  <div className="form-group">
-                    <label>邮箱地址</label>
-                    <input type="email" placeholder="请输入企业邮箱" />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>企业地址</label>
-                  <input type="text" placeholder="请输入详细地址" />
-                </div>
-
-                <div className="form-actions">
-                  <button 
-                    className="btn-secondary" 
-                    onClick={() => setShowPublishModal(false)}
-                  >
-                    取消
-                  </button>
-                  <button 
-                    className="btn-primary"
-                    onClick={() => publishCompany({})}
-                  >
-                    立即发布
-                  </button>
-                </div>
+              <div className="form-group">
+                <label>企业地址 *</label>
+                <input 
+                  type="text" 
+                  name="address"
+                  placeholder="请输入详细地址" 
+                  required 
+                />
               </div>
-            </div>
+
+              <div className="form-group">
+                <label>企业网站</label>
+                <input 
+                  type="url" 
+                  name="website"
+                  placeholder="请输入企业网站（可选）" 
+                />
+              </div>
+
+              <div className="form-actions">
+                <button 
+                  type="button"
+                  className="cancel-button" 
+                  onClick={() => setShowPublishModal(false)}
+                >
+                  取消
+                </button>
+                <button 
+                  type="submit"
+                  className="submit-button"
+                >
+                  立即发布
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      )}
+      </div>
+    );
+  };
+
+  // 调试信息
+  console.log('当前视图:', currentView);
+  console.log('选中分类:', selectedCategory);
+  console.log('选中子分类:', selectedSubcategory);
+
+  return (
+    <div className="yellow-pages">
+      {currentView === 'main' && renderMainView()}
+      {currentView === 'category' && renderCategoryView()}
+      {currentView === 'subcategory' && renderSubcategoryView()}
+      {showPublishModal && renderPublishModal()}
     </div>
   );
 };

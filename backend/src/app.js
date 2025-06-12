@@ -4,10 +4,23 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+
+// MongoDB 连接
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ew-logistics';
+
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('✅ MongoDB connected successfully');
+  })
+  .catch((error) => {
+    console.error('❌ MongoDB connection failed:', error.message);
+    // 不退出进程，允许应用继续运行（使用模拟数据）
+  });
 
 // 安全中间件
 app.use(helmet());
@@ -55,7 +68,8 @@ app.get('/api', (req, res) => {
       airfreight: '/api/airfreight',
       freight: '/api/freight',
       users: '/api/users',
-      companies: '/api/companies'
+      companies: '/api/companies',
+      yellowpages: '/api/yellowpages'
     }
   });
 });
@@ -65,9 +79,9 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/seafreight', require('./routes/seafreight'));
 app.use('/api/landfreight', require('./routes/landfreight'));
 app.use('/api/airfreight', require('./routes/airfreight'));
+app.use('/api/companies', require('./routes/companies'));
 // app.use('/api/freight', require('./routes/freight'));
 // app.use('/api/users', require('./routes/users'));
-// app.use('/api/companies', require('./routes/companies'));
 
 // 404 处理
 app.use('*', (req, res) => {
