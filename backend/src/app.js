@@ -68,8 +68,7 @@ app.get('/api', (req, res) => {
       airfreight: '/api/airfreight',
       freight: '/api/freight',
       users: '/api/users',
-      companies: '/api/companies',
-      yellowpages: '/api/yellowpages'
+      companies: '/api/companies'
     }
   });
 });
