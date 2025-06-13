@@ -28,7 +28,7 @@ const YellowPages = () => {
   const categories = {
     '物流货运': {
       color: '#FF6B35',
-      subcategories: ['陆运服务', '海运服务', '空运服务', '多式联运']
+      subcategories: ['陆运公司', '海运公司', '空运公司', '多式联运公司']
     },
     '仓储货代': {
       color: '#F7931E', 
@@ -57,12 +57,17 @@ const YellowPages = () => {
     '律师服务': {
       color: '#FFEAA7',
       subcategories: ['交通意外伤害', '综合律师', '民诉律师', '商业律师', '华人事务所']
+    },
+    '其他服务': {
+      color: '#FF6B6B',
+      subcategories: []
     }
+    
   };
 
   // 模拟公司数据
   const mockCompanies = {
-    '陆运服务': [
+    '陆运公司': [
       {
         id: 1,
         name: '东方物流集团',

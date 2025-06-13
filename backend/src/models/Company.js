@@ -16,7 +16,7 @@ const companySchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['物流货运', '仓储货代', '报关清关', '卡车服务', '保险服务', '金融服务', '技术服务', '律师服务']
+    enum: ['物流货运', '仓储货代', '报关清关', '卡车服务', '保险服务', '金融服务', '技术服务', '律师服务', '其他']
   },
   subcategory: {
     type: String,
