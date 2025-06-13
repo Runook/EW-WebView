@@ -114,7 +114,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #28a745;
+  background: #667eea;
   color: white;
   border: none;
   border-radius: 10px;
@@ -127,7 +127,7 @@
 }
 
 .post-button:hover {
-  background: #218838;
+  background: #5a6fd8;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
 }
@@ -181,8 +181,8 @@
 }
 
 .job-salary {
-  background: #e8f5e8;
-  color: #28a745;
+  background: white;
+  color: red;
   padding: 6px 12px;
   border-radius: 6px;
   font-weight: 600;
