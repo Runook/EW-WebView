@@ -26,10 +26,6 @@ const YellowPages = () => {
 
   // 根据图片定义的分类结构
   const categories = {
-    '物流货运': {
-      color: '#FF6B35',
-      subcategories: ['陆运公司', '海运公司', '空运公司', '多式联运公司']
-    },
     '仓储货代': {
       color: '#F7931E', 
       subcategories: ['收货仓', '海外仓', '货代公司']
