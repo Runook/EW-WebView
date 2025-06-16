@@ -9,7 +9,7 @@
 
 /* 页面头部 */
 .page-header-jobs {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
   border-radius: 16px;
   padding: 40px;
   text-align: center;
@@ -349,9 +349,8 @@
 }
 
 .apply-button {
-  background: #667eea;
+  background: #28a745;
   color: white;
-  border: none;
   border-radius: 8px;
   padding: 10px 20px;
   font-weight: 500;
@@ -360,14 +359,12 @@
 }
 
 .apply-button:hover {
-  background: #5a6fd8;
+  background: #218838;
   transform: translateY(-1px);
 }
 
 .contact-button {
-  background: transparent;
-  color: #667eea;
-  border: 1px solid #667eea;
+  background: #28a745;
   border-radius: 8px;
   padding: 10px 20px;
   font-weight: 500;
@@ -376,7 +373,7 @@
 }
 
 .contact-button:hover {
-  background: #667eea;
+  background: #218838;
   color: white;
 }
 
@@ -483,8 +480,8 @@
 }
 
 .view-button {
-  background: transparent;
-  color: #6c757d;
+  background: #28a745;
+  color: #ffffff;
   border: 1px solid #dee2e6;
   border-radius: 8px;
   padding: 10px 20px;
@@ -494,8 +491,8 @@
 }
 
 .view-button:hover {
-  background: #f8f9fa;
-  border-color: #adb5bd;
+  background: #218838;
+  transform: translateY(-1px);
 }
 
 /* 空状态 */

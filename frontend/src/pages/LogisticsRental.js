@@ -15,39 +15,140 @@ import {
   Phone,
   Calendar,
   ChevronRight,
-  Wrench
+  Wrench,
+  X,
+  Send,
+  ChevronDown,
+  Briefcase,
+  Building
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import './LogisticsRental.css';
 
 const LogisticsRental = () => {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState('equipment'); // equipment 或 demands
-  const [equipment, setEquipment] = useState([]);
-  const [demands, setDemands] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('rental'); // 'rental' 或 'sale'
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({
-    category: '',
-    city: '',
-    priceRange: '',
-    condition: '',
-    brand: '',
-    rentType: ''
-  });
+  const [showFilters, setShowFilters] = useState(false);
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [rentalItems, setRentalItems] = useState([]);
+  const [saleItems, setSaleItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [showPublishModal, setShowPublishModal] = useState(false);
-  const [publishType, setPublishType] = useState('equipment'); // equipment 或 demand
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // 设备类别
-  const categories = [
-    '全部类别', '运输车辆', '仓储设备', '装卸设备', '包装设备', 
-    '称重设备', '安全设备', '办公设备', '配件耗材', '其他设备'
+  // 筛选条件状态
+  const [filters, setFilters] = useState({
+    category: '',       // 分类
+    location: '',       // 地点
+    priceRange: '',     // 价格范围
+    condition: '',      // 设备状态
+    brand: '',          // 品牌
+    rentalPeriod: '',   // 租期
+    publishTime: ''     // 发布时间
+  });
+
+  // 物流出租分类
+  const rentalCategories = [
+    '卡车',
+    '叉车',
+    '仓库/物流园区',
+    '船舶/飞机',
+    '车架/车身',
+    '海柜干柜',
+    '特殊设备',
+    '第三方物流',
+    '家庭仓/车库/停车场',
+    '卡车车位',
+    '仓库/海外仓'
   ];
 
-  // 价格范围
+  // 物流出售分类
+  const saleCategories = [
+    '卡车出售',
+    '叉车货架',
+    '仓库/海外仓',
+    '配件零件',
+    '车架',
+    '海柜干柜',
+    '特殊设备',
+    '公司MC DOT',
+    '清库存',
+    '生意买卖/转让',
+    '地区分站加盟',
+    '出FBA预约'
+  ];
+
+  // 卡车类型（用于卡车分类的细分）
+  const truckTypes = [
+    '轻型卡车',
+    '中型卡车', 
+    '重型卡车',
+    '货车',
+    '轻型厢式卡车',
+    '中型厢式卡车',
+    '平头卡车',
+    '冷藏车',
+    '平板车',
+    '日间驾驶室',
+    '卧铺车',
+    '场地卡车'
+  ];
+
+  // 仓库服务类型
+  const warehouseTypes = [
+    '常温储存',
+    '拆箱',
+    'FDA认证',
+    '食品级',
+    '高价值',
+    '长期储存',
+    '户外储存',
+    '超大件搬运',
+    '码垛',
+    '拣选包装',
+    '产品返工',
+    '短期储存',
+    '温控',
+    '转运',
+    'USDA认证'
+  ];
+
+  // 拖车类型
+  const trailerTypes = [
+    '干货车',
+    '平板拖车',
+    '冷藏拖车',
+    '油罐车',
+    '汽车运输车',
+    '其他'
+  ];
+
+  // 专业设备类型
+  const specializedEquipment = [
+    '起重机卡车',
+    '工程车',
+    '轻中型卡车',
+    '重型卡车',
+    '其他'
+  ];
+
+  // 地点选项
+  const locations = [
+    '洛杉矶', '纽约', '旧金山', '芝加哥', '休斯顿', '凤凰城', 
+    '费城', '圣安东尼奥', '圣地亚哥', '达拉斯', '圣何塞', '奥斯汀',
+    '杰克逊维尔', '印第安纳波利斯', '旧金山湾区', '西雅图', '丹佛',
+    '华盛顿', '波士顿', '纳什维尔', '巴尔的摩', '俄克拉荷马城',
+    '路易斯维尔', '波特兰', '拉斯维加斯', '密尔沃基', '阿尔伯克基',
+    '图森', '弗雷斯诺', '萨克拉门托', '堪萨斯城', '梅萨', '亚特兰大',
+    '奥马哈', '科罗拉多斯普林斯', '罗利', '迈阿密', '克利夫兰',
+    '弗吉尼亚海滩', '明尼阿波利斯', '新奥尔良'
+  ];
+
+  // 价格范围选项
   const priceRanges = [
-    '不限', '1000元以下', '1000-5000元', '5000-1万元', '1-5万元', '5-10万元', '10万元以上'
+    '不限', '$500以下/月', '$500-1000/月', '$1000-2000/月', '$2000-5000/月', 
+    '$5000-10000/月', '$10000以上/月', '$5000以下', '$5000-10000', 
+    '$10000-50000', '$50000-100000', '$100000以上'
   ];
 
   // 设备状态
@@ -55,967 +156,793 @@ const LogisticsRental = () => {
     '不限', '全新', '9成新', '8成新', '7成新', '6成新以下'
   ];
 
-  // 租赁类型
-  const rentTypes = [
-    '不限', '短期租赁', '长期租赁', '分期购买', '融资租赁', '一次性购买'
+  // 租期选项
+  const rentalPeriods = [
+    '不限', '按天', '按周', '按月', '按季度', '按年', '长期租赁'
   ];
 
-  // 模拟设备数据
-  const mockEquipment = [
+  // 发布时间选项
+  const publishTimeOptions = ['全部时间', '今天', '3天内', '1周内', '1个月内'];
+
+  // 模拟出租数据
+  const mockRentalItems = [
     {
       id: 1,
-      title: '福田欧马可货车出租',
-      category: '运输车辆',
-      brand: '福田',
-      model: '欧马可BJ1048',
-      year: 2022,
+      title: '重型冷藏车出租',
+      category: '卡车',
+      subCategory: '冷藏车',
+      location: '洛杉矶',
+      price: '$2500/月',
       condition: '9成新',
-      price: 500,
-      priceUnit: '天',
-      rentType: '短期租赁',
-      location: '北京市朝阳区',
-      city: '北京',
-      description: '4.2米厢式货车，载重3.5吨，车况良好，手续齐全，可长短租',
-      images: ['/api/placeholder/300/200'],
+      brand: '沃尔沃',
+      description: '2020年沃尔沃重型冷藏车，温度控制-18℃至+25℃，适合生鲜配送',
       specifications: {
-        '车长': '4.2米',
-        '载重': '3.5吨',
-        '排量': '2.8L',
-        '变速箱': '手动'
+        year: '2020年',
+        make: '沃尔沃',
+        model: 'VNL 760',
+        mileage: '15万英里',
+        engine: '沃尔沃D13发动机',
+        transmission: '自动变速箱',
+        temperatureRange: '-18℃至+25℃'
       },
-      owner: {
-        name: '张师傅',
-        company: '快运车队',
-        phone: '138****1234',
-        rating: 4.8,
-        reviews: 156
-      },
-      available: true,
-      publishDate: '2024-01-01',
-      views: 234,
-      favorites: 45,
-      tags: ['手续齐全', '车况良好', '可长租', '价格优惠']
+      images: ['truck1.jpg'],
+      publishDate: '2024-01-10',
+      posted: '2天前',
+      views: 125,
+      contact: {
+        name: '张经理',
+        company: '冷链物流公司',
+        phone: '(123) 456-7890'
+      }
     },
     {
       id: 2,
-      title: '二手叉车转让',
-      category: '装卸设备',
-      brand: '杭叉',
-      model: 'CPCD30',
-      year: 2020,
-      condition: '8成新',
-      price: 35000,
-      priceUnit: '台',
-      rentType: '一次性购买',
-      location: '上海市嘉定区',
-      city: '上海',
-      description: '3吨电动叉车，使用时间短，保养良好，价格可议',
-      images: ['/api/placeholder/300/200'],
+      title: '大型仓库出租',
+      category: '仓库/物流园区',
+      subCategory: '常温储存',
+      location: '纽约',
+      price: '$8000/月',
+      condition: '全新',
+      brand: '',
+      description: '10000平方英尺现代化仓库，配备装卸平台，适合电商仓储',
       specifications: {
-        '载重': '3吨',
-        '提升高度': '3米',
-        '动力类型': '电动',
-        '工作时间': '8小时/天'
+        area: '10000平方英尺',
+        height: '24英尺',
+        doors: '6个装卸门',
+        parking: '20个停车位',
+        services: ['常温储存', '拣选包装', '短期储存']
       },
-      owner: {
-        name: '李经理',
-        company: '物流设备公司',
-        phone: '159****5678',
-        rating: 4.6,
-        reviews: 89
-      },
-      available: true,
-      publishDate: '2024-01-02',
-      views: 178,
-      favorites: 23,
-      tags: ['保养良好', '价格可议', '支持试用', '可开发票']
+      images: ['warehouse1.jpg'],
+      publishDate: '2024-01-11',
+      posted: '1天前',
+      views: 89,
+      contact: {
+        name: '李总',
+        company: '仓储管理公司',
+        phone: '(234) 567-8901'
+      }
     },
     {
       id: 3,
-      title: '仓储货架批量出售',
-      category: '仓储设备',
-      brand: '定制',
-      model: '中型货架',
-      year: 2023,
-      condition: '全新',
-      price: 180,
-      priceUnit: '组',
-      rentType: '一次性购买',
-      location: '广州市白云区',
-      city: '广州',
-      description: '仓库搬迁，大量货架低价处理，规格齐全，质量保证',
-      images: ['/api/placeholder/300/200'],
+      title: '叉车短期租赁',
+      category: '叉车',
+      subCategory: '电动叉车',
+      location: '旧金山',
+      price: '$150/天',
+      condition: '8成新',
+      brand: '丰田',
+      description: '丰田电动叉车，载重2吨，适合仓库作业',
       specifications: {
-        '高度': '2米',
-        '长度': '2米',
-        '深度': '0.6米',
-        '载重': '500kg/层'
+        capacity: '2吨',
+        liftHeight: '3米',
+        power: '电动',
+        battery: '锂电池',
+        runtime: '8小时'
       },
-      owner: {
-        name: '王总',
-        company: '大型仓储企业',
-        phone: '135****9012',
-        rating: 4.9,
-        reviews: 67
-      },
-      available: true,
-      publishDate: '2024-01-03',
-      views: 456,
-      favorites: 78,
-      tags: ['批量优惠', '质量保证', '规格齐全', '急售']
+      images: ['forklift1.jpg'],
+      publishDate: '2024-01-09',
+      posted: '3天前',
+      views: 67,
+      contact: {
+        name: '王师傅',
+        company: '设备租赁公司',
+        phone: '(345) 678-9012'
+      }
     }
   ];
 
-  // 模拟需求数据
-  const mockDemands = [
+  // 模拟出售数据
+  const mockSaleItems = [
     {
       id: 1,
-      title: '长期租赁冷藏车',
-      category: '运输车辆',
-      specifications: '7.6米冷藏车，温度控制-18℃至+25℃',
-      budget: '3000-4000元/月',
-      location: '深圳市南山区',
-      city: '深圳',
-      duration: '12个月',
-      urgent: true,
-      description: '电商公司需要长期租赁冷藏车进行生鲜配送，要求车况良好，手续齐全',
-      requirements: [
-        '车长7.6米左右',
-        '温度控制范围-18℃至+25℃',
-        '车况良好，年限不超过5年',
-        '手续齐全，可开发票'
-      ],
-      contact: {
-        name: '陈经理',
-        company: '鲜果优选',
-        phone: '189****3456'
+      title: '2019年肯沃斯T680卡车出售',
+      category: '卡车出售',
+      subCategory: '重型卡车',
+      location: '芝加哥',
+      price: '$85000',
+      condition: '8成新',
+      brand: '肯沃斯',
+      description: '2019年肯沃斯T680，里程35万英里，保养良好，手续齐全',
+      specifications: {
+        year: '2019年',
+        make: '肯沃斯',
+        model: 'T680',
+        mileage: '35万英里',
+        engine: 'PACCAR MX-13',
+        transmission: '18速手动',
+        vin: 'VIN12345678901234567'
       },
-      publishDate: '2024-01-01',
-      validUntil: '2024-02-01',
-      views: 89,
-      responses: 12
+      images: ['truck_sale1.jpg'],
+      publishDate: '2024-01-08',
+      posted: '4天前',
+      views: 156,
+      contact: {
+        name: '陈老板',
+        company: '二手车行',
+        phone: '(456) 789-0123'
+      }
     },
     {
       id: 2,
-      title: '求购二手打包机',
-      category: '包装设备',
-      specifications: '半自动打包机，适用于纸箱打包',
-      budget: '5000-8000元',
-      location: '杭州市余杭区',
-      city: '杭州',
-      duration: '立即购买',
-      urgent: false,
-      description: '小型物流公司扩张，需要购买二手打包机设备',
-      requirements: [
-        '半自动或全自动打包机',
-        '适用于纸箱打包',
-        '使用年限不超过3年',
-        '功能正常，有保修'
-      ],
+      title: '物流公司MC DOT出售',
+      category: '公司MC DOT',
+      subCategory: 'MC权限',
+      location: '休斯顿',
+      price: '$15000',
+      condition: '全新',
+      brand: '',
+      description: '正规物流公司MC DOT权限转让，运营记录良好，保险齐全',
+      specifications: {
+        mcNumber: 'MC-123456',
+        dotNumber: 'DOT-789012',
+        operatingYears: '5年',
+        safetyRating: 'Satisfactory',
+        insurance: '100万美元',
+        authority: 'Property'
+      },
+      images: ['mc_dot1.jpg'],
+      publishDate: '2024-01-07',
+      posted: '5天前',
+      views: 234,
       contact: {
         name: '刘总',
-        company: '顺达物流',
-        phone: '158****7890'
+        company: '物流咨询公司',
+        phone: '(567) 890-1234'
+      }
+    },
+    {
+      id: 3,
+      title: '仓库货架清仓出售',
+      category: '叉车货架',
+      subCategory: '重型货架',
+      location: '凤凰城',
+      price: '$50/组',
+      condition: '7成新',
+      brand: '钢铁侠',
+      description: '重型货架批量出售，高3米，承重2吨/层，适合仓库使用',
+      specifications: {
+        height: '3米',
+        width: '2.5米',
+        depth: '1米',
+        capacity: '2吨/层',
+        material: '钢材',
+        quantity: '50组'
       },
-      publishDate: '2024-01-02',
-      validUntil: '2024-01-16',
-      views: 67,
-      responses: 8
+      images: ['rack1.jpg'],
+      publishDate: '2024-01-06',
+      posted: '6天前',
+      views: 78,
+      contact: {
+        name: '赵经理',
+        company: '仓储设备公司',
+        phone: '(678) 901-2345'
+      }
     }
   ];
 
-  // 页面加载时获取数据
   useEffect(() => {
-    if (activeTab === 'equipment') {
-      fetchEquipment();
-    } else {
-      fetchDemands();
-    }
-  }, [activeTab]);
+    setRentalItems(mockRentalItems);
+    setSaleItems(mockSaleItems);
+  }, []);
 
-  // 获取设备列表 - API接口
-  const fetchEquipment = async () => {
-    setLoading(true);
-    try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch('/api/logistics-rental/equipment', {
-      //   method: 'GET',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   }
-      // });
-      // const data = await response.json();
-      
-      setTimeout(() => {
-        setEquipment(mockEquipment);
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error('获取设备列表失败:', error);
-      setLoading(false);
-    }
-  };
-
-  // 获取需求列表 - API接口
-  const fetchDemands = async () => {
-    setLoading(true);
-    try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch('/api/logistics-rental/demands', {
-      //   method: 'GET',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   }
-      // });
-      // const data = await response.json();
-      
-      setTimeout(() => {
-        setDemands(mockDemands);
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error('获取需求列表失败:', error);
-      setLoading(false);
-    }
-  };
-
-  // 搜索设备/需求 - API接口
-  const searchItems = async () => {
-    setLoading(true);
-    try {
-      const endpoint = activeTab === 'equipment' ? '/api/logistics-rental/equipment/search' : '/api/logistics-rental/demands/search';
-      // TODO: 替换为真实API调用
-      // const response = await fetch(endpoint, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     query: searchQuery,
-      //     filters: filters
-      //   })
-      // });
-      // const data = await response.json();
-      
-      // 模拟搜索逻辑
-      const sourceData = activeTab === 'equipment' ? mockEquipment : mockDemands;
-      let filteredData = sourceData;
-      
+  // 筛选函数
+  const applyFilters = (items) => {
+    return items.filter(item => {
+      // 搜索关键词匹配
       if (searchQuery) {
-        filteredData = filteredData.filter(item =>
-          item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.description.toLowerCase().includes(searchQuery.toLowerCase())
-        );
+        const searchLower = searchQuery.toLowerCase();
+        const matchesSearch = 
+          item.title?.toLowerCase().includes(searchLower) ||
+          item.category?.toLowerCase().includes(searchLower) ||
+          item.brand?.toLowerCase().includes(searchLower) ||
+          item.description?.toLowerCase().includes(searchLower);
+        
+        if (!matchesSearch) return false;
       }
-      
-      if (filters.category && filters.category !== '全部类别') {
-        filteredData = filteredData.filter(item =>
-          item.category === filters.category
-        );
-      }
-      
-      if (filters.city) {
-        filteredData = filteredData.filter(item =>
-          item.city.includes(filters.city)
-        );
-      }
-      
-      setTimeout(() => {
-        if (activeTab === 'equipment') {
-          setEquipment(filteredData);
-        } else {
-          setDemands(filteredData);
+
+      // 分类筛选
+      if (filters.category && item.category !== filters.category) return false;
+
+      // 地点筛选
+      if (filters.location && item.location !== filters.location) return false;
+
+      // 设备状态筛选
+      if (filters.condition && item.condition !== filters.condition) return false;
+
+      // 品牌筛选
+      if (filters.brand && item.brand !== filters.brand) return false;
+
+      // 发布时间筛选
+      if (filters.publishTime && filters.publishTime !== '全部时间') {
+        const publishDate = new Date(item.publishDate);
+        const now = new Date();
+        const diffTime = Math.abs(now - publishDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        switch (filters.publishTime) {
+          case '今天':
+            if (diffDays > 1) return false;
+            break;
+          case '3天内':
+            if (diffDays > 3) return false;
+            break;
+          case '1周内':
+            if (diffDays > 7) return false;
+            break;
+          case '1个月内':
+            if (diffDays > 30) return false;
+            break;
         }
-        setLoading(false);
-      }, 500);
-    } catch (error) {
-      console.error('搜索失败:', error);
-      setLoading(false);
-    }
-  };
-
-  // 联系设备所有者 - API接口
-  const contactOwner = async (itemId) => {
-    try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch(`/api/logistics-rental/contact/${itemId}`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     message: 'interested',
-      //     userInfo: 'currentUserInfo'
-      //   })
-      // });
-      
-      console.log('联系设备所有者:', itemId);
-      alert('联系信息已发送，请等待回复');
-    } catch (error) {
-      console.error('联系失败:', error);
-    }
-  };
-
-  // 收藏设备/需求 - API接口
-  const favoriteItem = async (itemId, type) => {
-    try {
-      const endpoint = `/api/logistics-rental/${type}/${itemId}/favorite`;
-      // TODO: 替换为真实API调用
-      // const response = await fetch(endpoint, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   }
-      // });
-      
-      console.log('收藏:', type, itemId);
-    } catch (error) {
-      console.error('收藏失败:', error);
-    }
-  };
-
-  // 发布设备/需求 - API接口
-  const publishItem = async (itemData, type) => {
-    try {
-      const endpoint = `/api/logistics-rental/${type}`;
-      // TODO: 替换为真实API调用
-      // const response = await fetch(endpoint, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(itemData)
-      // });
-      
-      console.log('发布:', type, itemData);
-      setShowPublishModal(false);
-      // 刷新列表
-      if (type === 'equipment') {
-        fetchEquipment();
-      } else {
-        fetchDemands();
       }
-    } catch (error) {
-      console.error('发布失败:', error);
-    }
-  };
 
-  const handleSearch = () => {
-    searchItems();
-  };
+      // 价格范围筛选
+      if (filters.priceRange && filters.priceRange !== '不限') {
+        const itemPrice = item.price || '';
+        const priceNum = parseInt(itemPrice.replace(/[^\d]/g, ''));
+        
+        if (activeTab === 'rental') {
+          switch (filters.priceRange) {
+            case '$500以下/月':
+              if (priceNum >= 500) return false;
+              break;
+            case '$500-1000/月':
+              if (priceNum < 500 || priceNum > 1000) return false;
+              break;
+            case '$1000-2000/月':
+              if (priceNum < 1000 || priceNum > 2000) return false;
+              break;
+            case '$2000-5000/月':
+              if (priceNum < 2000 || priceNum > 5000) return false;
+              break;
+            case '$5000-10000/月':
+              if (priceNum < 5000 || priceNum > 10000) return false;
+              break;
+            case '$10000以上/月':
+              if (priceNum < 10000) return false;
+              break;
+          }
+        } else {
+          switch (filters.priceRange) {
+            case '$5000以下':
+              if (priceNum >= 5000) return false;
+              break;
+            case '$5000-10000':
+              if (priceNum < 5000 || priceNum > 10000) return false;
+              break;
+            case '$10000-50000':
+              if (priceNum < 10000 || priceNum > 50000) return false;
+              break;
+            case '$50000-100000':
+              if (priceNum < 50000 || priceNum > 100000) return false;
+              break;
+            case '$100000以上':
+              if (priceNum < 100000) return false;
+              break;
+          }
+        }
+      }
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setSearchQuery('');
-    setFilters({
-      category: '',
-      city: '',
-      priceRange: '',
-      condition: '',
-      brand: '',
-      rentType: ''
+      return true;
     });
   };
 
+  // 过滤数据
+  const filteredRentalItems = applyFilters(rentalItems);
+  const filteredSaleItems = applyFilters(saleItems);
+
+  // 处理筛选条件变化
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  // 清除所有筛选条件
+  const clearAllFilters = () => {
+    setFilters({
+      category: '',
+      location: '',
+      priceRange: '',
+      condition: '',
+      brand: '',
+      rentalPeriod: '',
+      publishTime: ''
+    });
+    setSearchQuery('');
+  };
+
+  // 检查是否有活跃的筛选条件
+  const hasActiveFilters = () => {
+    return searchQuery || Object.values(filters).some(value => value !== '');
+  };
+
+  // 获取当前分类选项
+  const getCurrentCategories = () => {
+    return activeTab === 'rental' ? rentalCategories : saleCategories;
+  };
+
+  // 获取当前价格范围选项
+  const getCurrentPriceRanges = () => {
+    if (activeTab === 'rental') {
+      return ['不限', '$500以下/月', '$500-1000/月', '$1000-2000/月', '$2000-5000/月', '$5000-10000/月', '$10000以上/月'];
+    } else {
+      return ['不限', '$5000以下', '$5000-10000', '$10000-50000', '$50000-100000', '$100000以上'];
+    }
+  };
+
+  // 获取当前数据
+  const getCurrentItems = () => {
+    return activeTab === 'rental' ? filteredRentalItems : filteredSaleItems;
+  };
+
+  // 发布信息
+  const handlePost = (formData) => {
+    const newItem = {
+      id: (activeTab === 'rental' ? rentalItems.length : saleItems.length) + 1,
+      title: formData.get('title'),
+      category: formData.get('category'),
+      subCategory: formData.get('subCategory'),
+      location: formData.get('location'),
+      price: formData.get('price'),
+      condition: formData.get('condition'),
+      brand: formData.get('brand'),
+      description: formData.get('description'),
+      specifications: {},
+      images: [],
+      publishDate: new Date().toISOString().split('T')[0],
+      posted: '刚刚',
+      views: 0,
+      contact: {
+        name: formData.get('contactName'),
+        company: formData.get('company'),
+        phone: formData.get('phone')
+      }
+    };
+
+    if (activeTab === 'rental') {
+      setRentalItems([newItem, ...rentalItems]);
+    } else {
+      setSaleItems([newItem, ...saleItems]);
+    }
+    setShowPostModal(false);
+  };
+
+  // 查看详情
+  const handleViewDetails = (item) => {
+    setSelectedItem(item);
+    setShowDetailModal(true);
+  };
+
   return (
-    <div className="logistics-rental">
+    <div className="logistics-rental-page">
       {/* 页面头部 */}
-      <div className="page-header">
-        <div className="container">
+      <div className="page-header-rental">
+        <div className="header-content">
           <h1>物流租售</h1>
-          <p>物流设备拥有者发布租赁信息，需求方发布租赁需求，提供设备租售撮合服务</p>
+          <p>专业的物流设备租赁与买卖平台</p>
         </div>
       </div>
 
-      <div className="container">
-        {/* 标签切换 */}
-        <div className="tab-navigation">
+      {/* 切换标签 */}
+      <div className="tab-switcher">
+        <button 
+          className={`tab-button ${activeTab === 'rental' ? 'active' : ''}`}
+          onClick={() => setActiveTab('rental')}
+        >
+          <Building size={20} />
+          物流出租
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'sale' ? 'active' : ''}`}
+          onClick={() => setActiveTab('sale')}
+        >
+          <Package size={20} />
+          物流出售
+        </button>
+      </div>
+
+      {/* 搜索和控制区域 */}
+      <div className="controls-section">
+        <div className="search-bar">
+          <Search size={20} />
+          <input
+            type="text"
+            placeholder={activeTab === 'rental' ? '搜索租赁设备...' : '搜索出售物品...'}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <div className="control-buttons">
           <button 
-            className={`tab-btn ${activeTab === 'equipment' ? 'active' : ''}`}
-            onClick={() => handleTabChange('equipment')}
+            className={`filter-button ${showFilters ? 'active' : ''}`}
+            onClick={() => setShowFilters(!showFilters)}
           >
-            <Truck size={20} />
-            设备出租/出售
+            <Filter size={20} />
+            筛选
+            <ChevronDown size={16} className={showFilters ? 'rotated' : ''} />
           </button>
+          
           <button 
-            className={`tab-btn ${activeTab === 'demands' ? 'active' : ''}`}
-            onClick={() => handleTabChange('demands')}
+            className="post-button"
+            onClick={() => setShowPostModal(true)}
           >
-            <Settings size={20} />
-            租赁需求
+            <Plus size={20} />
+            {activeTab === 'rental' ? '发布出租' : '发布出售'}
           </button>
         </div>
       </div>
 
-      {/* 搜索区域 */}
-      <div className="search-section">
-        <div className="container">
-          <div className="search-bar">
-            <div className="search-input-group">
-              <Search size={20} />
-              <input
-                type="text"
-                placeholder={
-                  activeTab === 'equipment' 
-                    ? "搜索设备名称、品牌或关键词" 
-                    : "搜索需求类型或关键词"
-                }
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <button className="search-btn" onClick={handleSearch}>
-                搜索
+      {/* 筛选面板 */}
+      {showFilters && (
+        <div className="filters-panel">
+          <div className="filters-grid">
+            <div className="filter-group">
+              <label>分类</label>
+              <select 
+                value={filters.category} 
+                onChange={(e) => handleFilterChange('category', e.target.value)}
+              >
+                <option value="">全部分类</option>
+                {getCurrentCategories().map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label>地点</label>
+              <select 
+                value={filters.location} 
+                onChange={(e) => handleFilterChange('location', e.target.value)}
+              >
+                <option value="">全部地点</option>
+                {locations.map(location => (
+                  <option key={location} value={location}>{location}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label>价格范围</label>
+              <select 
+                value={filters.priceRange} 
+                onChange={(e) => handleFilterChange('priceRange', e.target.value)}
+              >
+                <option value="">全部价格</option>
+                {getCurrentPriceRanges().map(range => (
+                  <option key={range} value={range}>{range}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="filter-group">
+              <label>设备状态</label>
+              <select 
+                value={filters.condition} 
+                onChange={(e) => handleFilterChange('condition', e.target.value)}
+              >
+                <option value="">全部状态</option>
+                {conditions.slice(1).map(condition => (
+                  <option key={condition} value={condition}>{condition}</option>
+                ))}
+              </select>
+            </div>
+
+            {activeTab === 'rental' && (
+              <div className="filter-group">
+                <label>租期</label>
+                <select 
+                  value={filters.rentalPeriod} 
+                  onChange={(e) => handleFilterChange('rentalPeriod', e.target.value)}
+                >
+                  <option value="">全部租期</option>
+                  {rentalPeriods.slice(1).map(period => (
+                    <option key={period} value={period}>{period}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="filter-group">
+              <label>发布时间</label>
+              <select 
+                value={filters.publishTime} 
+                onChange={(e) => handleFilterChange('publishTime', e.target.value)}
+              >
+                <option value="">全部时间</option>
+                {publishTimeOptions.slice(1).map(time => (
+                  <option key={time} value={time}>{time}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {hasActiveFilters() && (
+            <div className="filter-actions">
+              <span className="filter-count">
+                找到 {getCurrentItems().length} 条结果
+              </span>
+              <button className="clear-filters" onClick={clearAllFilters}>
+                清除筛选
               </button>
             </div>
-          </div>
+          )}
+        </div>
+      )}
 
-          {/* 筛选器 */}
-          <div className="filters">
-            <select 
-              value={filters.category} 
-              onChange={(e) => setFilters({...filters, category: e.target.value})}
-            >
-              {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
-              ))}
-            </select>
+      {/* 内容区域 */}
+      <div className="content-area">
+        <div className="items-list">
+          {getCurrentItems().map(item => (
+            <div key={item.id} className="item-card">
+              <div className="item-header">
+                <div className="item-title">
+                  <h3>{item.title}</h3>
+                  <span className="item-category">{item.category}</span>
+                  {item.subCategory && (
+                    <span className="item-subcategory">{item.subCategory}</span>
+                  )}
+                </div>
+                <div className="item-price">{item.price}</div>
+              </div>
+              
+              <div className="item-details">
+                <div className="detail-item">
+                  <MapPin size={16} />
+                  <span>{item.location}</span>
+                </div>
+                <div className="detail-item">
+                  <Settings size={16} />
+                  <span>{item.condition}</span>
+                </div>
+                {item.brand && (
+                  <div className="detail-item">
+                    <Truck size={16} />
+                    <span>{item.brand}</span>
+                  </div>
+                )}
+                <div className="detail-item posted">
+                  <Calendar size={16} />
+                  <span>{item.posted}</span>
+                </div>
+              </div>
 
-            <input
-              type="text"
-              placeholder="城市"
-              value={filters.city}
-              onChange={(e) => setFilters({...filters, city: e.target.value})}
-            />
+              <p className="item-description">{item.description}</p>
 
-            {activeTab === 'equipment' && (
-              <>
-                <select 
-                  value={filters.condition} 
-                  onChange={(e) => setFilters({...filters, condition: e.target.value})}
-                >
-                  <option value="">设备状态</option>
-                  {conditions.slice(1).map(condition => (
-                    <option key={condition} value={condition}>{condition}</option>
-                  ))}
-                </select>
+              <div className="item-footer">
+                <div className="item-stats">
+                  <span><Eye size={14} /> {item.views}浏览</span>
+                  <span>{item.contact.name} · {item.contact.company}</span>
+                </div>
+                
+                <div className="item-actions">
+                  <button className="contact-button">
+                    <Phone size={16} />
+                    联系卖家
+                  </button>
+                  <button 
+                    className="details-button"
+                    onClick={() => handleViewDetails(item)}
+                  >
+                    查看详情
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
 
-                <select 
-                  value={filters.rentType} 
-                  onChange={(e) => setFilters({...filters, rentType: e.target.value})}
-                >
-                  <option value="">租赁类型</option>
-                  {rentTypes.slice(1).map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </>
-            )}
-
-            <select 
-              value={filters.priceRange} 
-              onChange={(e) => setFilters({...filters, priceRange: e.target.value})}
-            >
-              <option value="">价格范围</option>
-              {priceRanges.slice(1).map(range => (
-                <option key={range} value={range}>{range}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* 发布按钮 */}
-          <div className="publish-section">
-            <button 
-              className="publish-btn"
-              onClick={() => {
-                setPublishType(activeTab === 'equipment' ? 'equipment' : 'demand');
-                setShowPublishModal(true);
-              }}
-            >
-              <Plus size={20} />
-              {activeTab === 'equipment' ? '发布设备信息' : '发布租赁需求'}
-            </button>
-          </div>
+          {getCurrentItems().length === 0 && (
+            <div className="empty-state">
+              {activeTab === 'rental' ? <Building size={64} /> : <Package size={64} />}
+              <h3>暂无{activeTab === 'rental' ? '租赁' : '出售'}信息</h3>
+              <p>试试调整搜索条件或发布您的{activeTab === 'rental' ? '出租' : '出售'}信息</p>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="container">
-        {/* 内容区域 */}
-        {activeTab === 'equipment' ? (
-          // 设备列表
-          <div className="equipment-grid">
-            {loading ? (
-              <div className="loading">
-                <div className="spinner"></div>
-                <p>加载中...</p>
-              </div>
-            ) : (
-              equipment.map(item => (
-                <div key={item.id} className="equipment-card">
-                  <div className="equipment-image">
-                    <img src={item.images[0]} alt={item.title} />
-                    <div className="condition-tag">{item.condition}</div>
-                    {!item.available && <div className="unavailable-overlay">已租出</div>}
-                  </div>
-
-                  <div className="equipment-content">
-                    <div className="equipment-header">
-                      <h3 className="equipment-title">{item.title}</h3>
-                      <div className="price">
-                        <span className="amount">¥{item.price}</span>
-                        <span className="unit">/{item.priceUnit}</span>
-                      </div>
-                    </div>
-
-                    <div className="equipment-info">
-                      <div className="info-item">
-                        <Package size={14} />
-                        <span>{item.brand} {item.model} · {item.year}年</span>
-                      </div>
-                      <div className="info-item">
-                        <MapPin size={14} />
-                        <span>{item.location}</span>
-                      </div>
-                      <div className="info-item">
-                        <Wrench size={14} />
-                        <span>{item.rentType}</span>
-                      </div>
-                    </div>
-
-                    <p className="equipment-description">{item.description}</p>
-
-                    <div className="equipment-tags">
-                      {item.tags.slice(0, 3).map(tag => (
-                        <span key={tag} className="tag">{tag}</span>
-                      ))}
-                    </div>
-
-                    <div className="owner-info">
-                      <div className="owner-basic">
-                        <strong>{item.owner.name}</strong>
-                        <span>· {item.owner.company}</span>
-                      </div>
-                      <div className="owner-rating">
-                        <Star size={12} fill="currentColor" />
-                        <span>{item.owner.rating}</span>
-                        <span>({item.owner.reviews}评价)</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="equipment-footer">
-                    <div className="equipment-stats">
-                      <span><Calendar size={14} /> {item.publishDate}</span>
-                      <span><Eye size={14} /> {item.views}</span>
-                      <span><Heart size={14} /> {item.favorites}</span>
-                    </div>
-                    
-                    <div className="equipment-actions">
-                      <button 
-                        className="btn-icon"
-                        onClick={() => favoriteItem(item.id, 'equipment')}
-                      >
-                        <Heart size={16} />
-                      </button>
-                      <button 
-                        className="btn-secondary"
-                        onClick={() => setSelectedItem(item)}
-                      >
-                        查看详情
-                      </button>
-                      <button 
-                        className="btn-primary"
-                        onClick={() => contactOwner(item.id)}
-                        disabled={!item.available}
-                      >
-                        <Phone size={16} />
-                        联系租主
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          // 需求列表
-          <div className="demands-list">
-            {loading ? (
-              <div className="loading">
-                <div className="spinner"></div>
-                <p>加载中...</p>
-              </div>
-            ) : (
-              demands.map(demand => (
-                <div key={demand.id} className="demand-card">
-                  <div className="demand-header">
-                    <div className="demand-title">
-                      <h3>{demand.title}</h3>
-                      {demand.urgent && <span className="urgent-tag">急需</span>}
-                    </div>
-                    <div className="demand-budget">{demand.budget}</div>
-                  </div>
-
-                  <div className="demand-content">
-                    <div className="demand-info">
-                      <div className="info-item">
-                        <Package size={14} />
-                        <span>{demand.category}</span>
-                      </div>
-                      <div className="info-item">
-                        <MapPin size={14} />
-                        <span>{demand.location}</span>
-                      </div>
-                      <div className="info-item">
-                        <Clock size={14} />
-                        <span>{demand.duration}</span>
-                      </div>
-                    </div>
-
-                    <div className="demand-specifications">
-                      <strong>需求规格：</strong>
-                      <span>{demand.specifications}</span>
-                    </div>
-
-                    <p className="demand-description">{demand.description}</p>
-
-                    <div className="demand-requirements">
-                      <strong>具体要求：</strong>
-                      <ul>
-                        {demand.requirements.map((req, index) => (
-                          <li key={index}>{req}</li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="contact-info">
-                      <strong>联系人：</strong>
-                      <span>{demand.contact.name} · {demand.contact.company}</span>
-                    </div>
-                  </div>
-
-                  <div className="demand-footer">
-                    <div className="demand-stats">
-                      <span><Calendar size={14} /> {demand.publishDate}</span>
-                      <span><Eye size={14} /> {demand.views}浏览</span>
-                      <span><Phone size={14} /> {demand.responses}响应</span>
-                      <span className="valid-until">有效期至 {demand.validUntil}</span>
-                    </div>
-                    
-                    <div className="demand-actions">
-                      <button 
-                        className="btn-icon"
-                        onClick={() => favoriteItem(demand.id, 'demand')}
-                      >
-                        <Heart size={16} />
-                      </button>
-                      <button 
-                        className="btn-primary"
-                        onClick={() => contactOwner(demand.id)}
-                      >
-                        响应需求
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {/* 空状态 */}
-        {((activeTab === 'equipment' && equipment.length === 0) || 
-          (activeTab === 'demands' && demands.length === 0)) && !loading && (
-          <div className="no-results">
-            {activeTab === 'equipment' ? <Truck size={64} /> : <Settings size={64} />}
-            <h3>暂无{activeTab === 'equipment' ? '设备' : '需求'}信息</h3>
-            <p>试试调整搜索条件或发布您的{activeTab === 'equipment' ? '设备信息' : '租赁需求'}</p>
-          </div>
-        )}
-      </div>
-
-      {/* 设备详情模态框 */}
-      {selectedItem && (
-        <div className="modal-overlay" onClick={() => setSelectedItem(null)}>
-          <div className="modal-content equipment-detail-modal" onClick={e => e.stopPropagation()}>
+      {/* 发布模态框 */}
+      {showPostModal && (
+        <div className="modal-overlay" onClick={() => setShowPostModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{selectedItem.title}</h2>
-              <button onClick={() => setSelectedItem(null)}>×</button>
+              <h2>{activeTab === 'rental' ? '发布出租信息' : '发布出售信息'}</h2>
+              <button onClick={() => setShowPostModal(false)}>
+                <X size={24} />
+              </button>
             </div>
             
-            <div className="modal-body">
-              <div className="equipment-detail-content">
-                <div className="detail-images">
-                  <img src={selectedItem.images[0]} alt={selectedItem.title} />
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handlePost(new FormData(e.target));
+            }}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>标题 *</label>
+                  <input type="text" name="title" required placeholder="如：重型冷藏车出租" />
                 </div>
-
-                <div className="detail-info">
-                  <div className="price-section">
-                    <div className="price-big">
-                      ¥{selectedItem.price}
-                      <span className="unit">/{selectedItem.priceUnit}</span>
-                    </div>
-                    <div className="price-tags">
-                      <span className="condition-tag">{selectedItem.condition}</span>
-                      <span className="rent-type-tag">{selectedItem.rentType}</span>
-                    </div>
-                  </div>
-
-                  <div className="basic-info">
-                    <h4>基本信息</h4>
-                    <div className="info-grid">
-                      <div className="info-item">
-                        <span className="label">品牌型号：</span>
-                        <span>{selectedItem.brand} {selectedItem.model}</span>
-                      </div>
-                      <div className="info-item">
-                        <span className="label">生产年份：</span>
-                        <span>{selectedItem.year}年</span>
-                      </div>
-                      <div className="info-item">
-                        <span className="label">设备状态：</span>
-                        <span>{selectedItem.condition}</span>
-                      </div>
-                      <div className="info-item">
-                        <span className="label">所在位置：</span>
-                        <span>{selectedItem.location}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="specifications">
-                    <h4>设备规格</h4>
-                    <div className="spec-grid">
-                      {Object.entries(selectedItem.specifications).map(([key, value]) => (
-                        <div key={key} className="spec-item">
-                          <span className="spec-label">{key}：</span>
-                          <span className="spec-value">{value}</span>
-                        </div>
+                
+                <div className="form-group">
+                  <label>分类 *</label>
+                  <select name="category" required>
+                    <option value="">请选择分类</option>
+                    {getCurrentCategories().map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>地点 *</label>
+                    <select name="location" required>
+                      <option value="">请选择地点</option>
+                      {locations.map(location => (
+                        <option key={location} value={location}>{location}</option>
                       ))}
-                    </div>
+                    </select>
                   </div>
-
-                  <div className="description">
-                    <h4>详细描述</h4>
-                    <p>{selectedItem.description}</p>
-                  </div>
-
-                  <div className="tags-section">
-                    <h4>特色标签</h4>
-                    <div className="tags">
-                      {selectedItem.tags.map(tag => (
-                        <span key={tag} className="tag">{tag}</span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="owner-section">
-                    <h4>设备所有者</h4>
-                    <div className="owner-detail">
-                      <div className="owner-info">
-                        <div className="name-company">
-                          <strong>{selectedItem.owner.name}</strong>
-                          <span>{selectedItem.owner.company}</span>
-                        </div>
-                        <div className="rating">
-                          <Star size={16} fill="currentColor" />
-                          <span>{selectedItem.owner.rating}</span>
-                          <span>({selectedItem.owner.reviews}评价)</span>
-                        </div>
-                      </div>
-                    </div>
+                  <div className="form-group">
+                    <label>{activeTab === 'rental' ? '租金' : '价格'} *</label>
+                    <input type="text" name="price" required placeholder={activeTab === 'rental' ? '如：$2500/月' : '如：$85000'} />
                   </div>
                 </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>设备状态 *</label>
+                    <select name="condition" required>
+                      <option value="">请选择</option>
+                      {conditions.slice(1).map(condition => (
+                        <option key={condition} value={condition}>{condition}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>品牌</label>
+                    <input type="text" name="brand" placeholder="如：沃尔沃" />
+                  </div>
+                </div>
+                
+                <div className="form-group">
+                  <label>详细描述 *</label>
+                  <textarea name="description" required placeholder="详细描述设备信息、技术参数、使用条件等..."></textarea>
+                </div>
+                
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>联系人 *</label>
+                    <input type="text" name="contactName" required placeholder="如：张经理" />
+                  </div>
+                  <div className="form-group">
+                    <label>公司名称</label>
+                    <input type="text" name="company" placeholder="如：冷链物流公司" />
+                  </div>
+                </div>
+                
+                <div className="form-group">
+                  <label>联系电话 *</label>
+                  <input type="tel" name="phone" required placeholder="如：(123) 456-7890" />
+                </div>
               </div>
-
-              <div className="modal-actions">
-                <button 
-                  className="btn-icon"
-                  onClick={() => favoriteItem(selectedItem.id, 'equipment')}
-                >
-                  <Heart size={20} />
+              
+              <div className="form-actions">
+                <button type="button" className="cancel-button" onClick={() => setShowPostModal(false)}>
+                  取消
                 </button>
-                <button 
-                  className="btn-primary btn-large"
-                  onClick={() => contactOwner(selectedItem.id)}
-                  disabled={!selectedItem.available}
-                >
-                  <Phone size={20} />
-                  联系租主
+                <button type="submit" className="submit-button">
+                  <Send size={16} />
+                  发布
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
 
-      {/* 发布模态框 */}
-      {showPublishModal && (
-        <div className="modal-overlay" onClick={() => setShowPublishModal(false)}>
-          <div className="modal-content publish-modal" onClick={e => e.stopPropagation()}>
+      {/* 详情模态框 */}
+      {showDetailModal && selectedItem && (
+        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{publishType === 'equipment' ? '发布设备信息' : '发布租赁需求'}</h2>
-              <button onClick={() => setShowPublishModal(false)}>×</button>
+              <h2>{selectedItem.title}</h2>
+              <button onClick={() => setShowDetailModal(false)}>
+                <X size={24} />
+              </button>
             </div>
             
             <div className="modal-body">
-              {publishType === 'equipment' ? (
-                <div className="publish-form">
-                  <div className="form-group">
-                    <label>设备标题</label>
-                    <input type="text" placeholder="请输入设备名称和简要描述" />
-                  </div>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>设备类别</label>
-                      <select>
-                        {categories.slice(1).map(category => (
-                          <option key={category} value={category}>{category}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>设备品牌</label>
-                      <input type="text" placeholder="请输入品牌" />
-                    </div>
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>型号规格</label>
-                      <input type="text" placeholder="请输入型号" />
-                    </div>
-                    <div className="form-group">
-                      <label>生产年份</label>
-                      <input type="number" placeholder="请输入年份" />
-                    </div>
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>设备状态</label>
-                      <select>
-                        {conditions.slice(1).map(condition => (
-                          <option key={condition} value={condition}>{condition}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>租赁类型</label>
-                      <select>
-                        {rentTypes.slice(1).map(type => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>价格</label>
-                      <input type="number" placeholder="请输入价格" />
-                    </div>
-                    <div className="form-group">
-                      <label>价格单位</label>
-                      <select>
-                        <option value="天">天</option>
-                        <option value="月">月</option>
-                        <option value="年">年</option>
-                        <option value="台">台</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>所在位置</label>
-                    <input type="text" placeholder="请输入详细地址" />
-                  </div>
-
-                  <div className="form-group">
-                    <label>设备描述</label>
-                    <textarea placeholder="请详细描述设备的功能、特点和使用情况"></textarea>
-                  </div>
-
-                  <div className="form-actions">
-                    <button 
-                      className="btn-secondary" 
-                      onClick={() => setShowPublishModal(false)}
-                    >
-                      取消
-                    </button>
-                    <button 
-                      className="btn-primary"
-                      onClick={() => publishItem({}, 'equipment')}
-                    >
-                      立即发布
-                    </button>
-                  </div>
+              <div className="detail-price">{selectedItem.price}</div>
+              
+              <div className="detail-info">
+                <div className="info-row">
+                  <span className="label">分类：</span>
+                  <span>{selectedItem.category}</span>
                 </div>
-              ) : (
-                <div className="publish-form">
-                  <div className="form-group">
-                    <label>需求标题</label>
-                    <input type="text" placeholder="请输入需求标题" />
+                {selectedItem.subCategory && (
+                  <div className="info-row">
+                    <span className="label">细分：</span>
+                    <span>{selectedItem.subCategory}</span>
                   </div>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>设备类别</label>
-                      <select>
-                        {categories.slice(1).map(category => (
-                          <option key={category} value={category}>{category}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>预算范围</label>
-                      <input type="text" placeholder="如：5000-8000元/月" />
-                    </div>
+                )}
+                <div className="info-row">
+                  <span className="label">地点：</span>
+                  <span>{selectedItem.location}</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">状态：</span>
+                  <span>{selectedItem.condition}</span>
+                </div>
+                {selectedItem.brand && (
+                  <div className="info-row">
+                    <span className="label">品牌：</span>
+                    <span>{selectedItem.brand}</span>
                   </div>
+                )}
+              </div>
 
-                  <div className="form-group">
-                    <label>设备规格</label>
-                    <input type="text" placeholder="请描述所需设备的规格要求" />
-                  </div>
+              <div className="detail-description">
+                <h4>详细描述</h4>
+                <p>{selectedItem.description}</p>
+              </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>使用地点</label>
-                      <input type="text" placeholder="请输入使用地点" />
-                    </div>
-                    <div className="form-group">
-                      <label>使用时长</label>
-                      <input type="text" placeholder="如：6个月、长期等" />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>需求描述</label>
-                    <textarea placeholder="请详细描述您的需求和用途"></textarea>
-                  </div>
-
-                  <div className="form-group">
-                    <label>具体要求</label>
-                    <textarea placeholder="请列出对设备的具体要求，如品牌、年限、功能等"></textarea>
-                  </div>
-
-                  <div className="form-actions">
-                    <button 
-                      className="btn-secondary" 
-                      onClick={() => setShowPublishModal(false)}
-                    >
-                      取消
-                    </button>
-                    <button 
-                      className="btn-primary"
-                      onClick={() => publishItem({}, 'demand')}
-                    >
-                      立即发布
-                    </button>
+              {selectedItem.specifications && Object.keys(selectedItem.specifications).length > 0 && (
+                <div className="detail-specifications">
+                  <h4>技术参数</h4>
+                  <div className="specs-grid">
+                    {Object.entries(selectedItem.specifications).map(([key, value]) => (
+                      <div key={key} className="spec-item">
+                        <span className="spec-label">{key}：</span>
+                        <span className="spec-value">{Array.isArray(value) ? value.join(', ') : value}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
+
+              <div className="detail-contact">
+                <h4>联系信息</h4>
+                <div className="contact-info">
+                  <div><strong>联系人：</strong>{selectedItem.contact.name}</div>
+                  {selectedItem.contact.company && (
+                    <div><strong>公司：</strong>{selectedItem.contact.company}</div>
+                  )}
+                  <div><strong>电话：</strong>{selectedItem.contact.phone}</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="form-actions">
+              <button className="contact-button">
+                <Phone size={16} />
+                联系卖家
+              </button>
+              <button className="favorite-button">
+                <Heart size={16} />
+                收藏
+              </button>
             </div>
           </div>
         </div>

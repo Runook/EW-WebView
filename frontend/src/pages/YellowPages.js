@@ -26,6 +26,7 @@ const YellowPages = () => {
 
   // 根据图片定义的分类结构
   const categories = {
+
     '仓储货代': {
       color: '#F7931E', 
       subcategories: ['收货仓', '海外仓', '货代公司']
@@ -262,7 +263,7 @@ const YellowPages = () => {
   // 主页面 - 显示所有一级分类
   const renderMainView = () => (
     <div className="yellow-pages-main">
-      <div className="page-header">
+      <div className="yellow-page-header">
         <h1>商家黄页</h1>
         <p>选择服务分类，查找专业的物流服务商</p>
       </div>
@@ -299,7 +300,7 @@ const YellowPages = () => {
   // 分类页面 - 显示选中分类的所有二级分类
   const renderCategoryView = () => (
     <div className="yellow-pages-category">
-      <div className="page-header">
+      <div className="yellow-page-header">
         <div className="header-top">
           <button 
             className="back-button"
@@ -352,7 +353,7 @@ const YellowPages = () => {
   // 子分类页面 - 显示该服务类别下的公司列表
   const renderSubcategoryView = () => (
     <div className="yellow-pages-subcategory">
-      <div className="page-header">
+      <div className="yellow-page-header">
         <div className="header-top">
           <button 
             className="back-button"
