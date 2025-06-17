@@ -20,7 +20,11 @@ import {
   Send,
   ChevronDown,
   Briefcase,
-  Building
+  Building,
+  Upload,
+  Image as ImageIcon,
+  Camera,
+  ChevronLeft
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import './LogisticsRental.css';
@@ -35,6 +39,13 @@ const LogisticsRental = () => {
   const [saleItems, setSaleItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // 发布表单状态
+  const [postForm, setPostForm] = useState({
+    images: [],
+    coverImageIndex: 0
+  });
 
   // 筛选条件状态
   const [filters, setFilters] = useState({
@@ -164,7 +175,7 @@ const LogisticsRental = () => {
   // 发布时间选项
   const publishTimeOptions = ['全部时间', '今天', '3天内', '1周内', '1个月内'];
 
-  // 模拟出租数据
+  // 模拟出租数据（添加多张图片）
   const mockRentalItems = [
     {
       id: 1,
@@ -185,7 +196,13 @@ const LogisticsRental = () => {
         transmission: '自动变速箱',
         temperatureRange: '-18℃至+25℃'
       },
-      images: ['truck1.jpg'],
+      images: [
+        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop'
+      ],
+      coverImageIndex: 0,
       publishDate: '2024-01-10',
       posted: '2天前',
       views: 125,
@@ -212,7 +229,12 @@ const LogisticsRental = () => {
         parking: '20个停车位',
         services: ['常温储存', '拣选包装', '短期储存']
       },
-      images: ['warehouse1.jpg'],
+      images: [
+        'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&h=600&fit=crop'
+      ],
+      coverImageIndex: 0,
       publishDate: '2024-01-11',
       posted: '1天前',
       views: 89,
@@ -239,7 +261,11 @@ const LogisticsRental = () => {
         battery: '锂电池',
         runtime: '8小时'
       },
-      images: ['forklift1.jpg'],
+      images: [
+        'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1605902711834-8b11c3e3ef75?w=800&h=600&fit=crop'
+      ],
+      coverImageIndex: 0,
       publishDate: '2024-01-09',
       posted: '3天前',
       views: 67,
@@ -251,7 +277,7 @@ const LogisticsRental = () => {
     }
   ];
 
-  // 模拟出售数据
+  // 模拟出售数据（添加多张图片）
   const mockSaleItems = [
     {
       id: 1,
@@ -272,7 +298,12 @@ const LogisticsRental = () => {
         transmission: '18速手动',
         vin: 'VIN12345678901234567'
       },
-      images: ['truck_sale1.jpg'],
+      images: [
+        'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&h=600&fit=crop'
+      ],
+      coverImageIndex: 0,
       publishDate: '2024-01-08',
       posted: '4天前',
       views: 156,
@@ -300,7 +331,10 @@ const LogisticsRental = () => {
         insurance: '100万美元',
         authority: 'Property'
       },
-      images: ['mc_dot1.jpg'],
+      images: [
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop'
+      ],
+      coverImageIndex: 0,
       publishDate: '2024-01-07',
       posted: '5天前',
       views: 234,
@@ -328,7 +362,11 @@ const LogisticsRental = () => {
         material: '钢材',
         quantity: '50组'
       },
-      images: ['rack1.jpg'],
+      images: [
+        'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=800&h=600&fit=crop',
+        'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=800&h=600&fit=crop'
+      ],
+      coverImageIndex: 0,
       publishDate: '2024-01-06',
       posted: '6天前',
       views: 78,
@@ -344,6 +382,48 @@ const LogisticsRental = () => {
     setRentalItems(mockRentalItems);
     setSaleItems(mockSaleItems);
   }, []);
+
+  // 处理照片上传
+  const handleImageUpload = (event) => {
+    const files = Array.from(event.target.files);
+    
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPostForm(prev => ({
+            ...prev,
+            images: [...prev.images, {
+              file: file,
+              url: e.target.result,
+              name: file.name
+            }]
+          }));
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  };
+
+  // 删除照片
+  const removeImage = (index) => {
+    setPostForm(prev => {
+      const newImages = prev.images.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        images: newImages,
+        coverImageIndex: prev.coverImageIndex >= newImages.length ? 0 : prev.coverImageIndex
+      };
+    });
+  };
+
+  // 设置封面照片
+  const setCoverImage = (index) => {
+    setPostForm(prev => ({
+      ...prev,
+      coverImageIndex: index
+    }));
+  };
 
   // 筛选函数
   const applyFilters = (items) => {
@@ -496,6 +576,14 @@ const LogisticsRental = () => {
     return activeTab === 'rental' ? filteredRentalItems : filteredSaleItems;
   };
 
+  // 重置发布表单
+  const resetPostForm = () => {
+    setPostForm({
+      images: [],
+      coverImageIndex: 0
+    });
+  };
+
   // 发布信息
   const handlePost = (formData) => {
     const newItem = {
@@ -509,7 +597,8 @@ const LogisticsRental = () => {
       brand: formData.get('brand'),
       description: formData.get('description'),
       specifications: {},
-      images: [],
+      images: postForm.images.map(img => img.url),
+      coverImageIndex: postForm.coverImageIndex,
       publishDate: new Date().toISOString().split('T')[0],
       posted: '刚刚',
       views: 0,
@@ -526,12 +615,31 @@ const LogisticsRental = () => {
       setSaleItems([newItem, ...saleItems]);
     }
     setShowPostModal(false);
+    resetPostForm();
   };
 
   // 查看详情
   const handleViewDetails = (item) => {
     setSelectedItem(item);
+    setCurrentImageIndex(0);
     setShowDetailModal(true);
+  };
+
+  // 图片导航
+  const nextImage = () => {
+    if (selectedItem && selectedItem.images.length > 1) {
+      setCurrentImageIndex((prev) => 
+        prev === selectedItem.images.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const prevImage = () => {
+    if (selectedItem && selectedItem.images.length > 1) {
+      setCurrentImageIndex((prev) => 
+        prev === 0 ? selectedItem.images.length - 1 : prev - 1
+      );
+    }
   };
 
   return (
@@ -697,57 +805,83 @@ const LogisticsRental = () => {
         <div className="items-list">
           {getCurrentItems().map(item => (
             <div key={item.id} className="item-card">
-              <div className="item-header">
-                <div className="item-title">
-                  <h3>{item.title}</h3>
-                  <span className="item-category">{item.category}</span>
-                  {item.subCategory && (
-                    <span className="item-subcategory">{item.subCategory}</span>
-                  )}
-                </div>
-                <div className="item-price">{item.price}</div>
-              </div>
-              
-              <div className="item-details">
-                <div className="detail-item">
-                  <MapPin size={16} />
-                  <span>{item.location}</span>
-                </div>
-                <div className="detail-item">
-                  <Settings size={16} />
-                  <span>{item.condition}</span>
-                </div>
-                {item.brand && (
-                  <div className="detail-item">
-                    <Truck size={16} />
-                    <span>{item.brand}</span>
+              {/* 添加图片显示区域 */}
+              <div className="item-image">
+                {item.images && item.images.length > 0 ? (
+                  <img 
+                    src={item.images[item.coverImageIndex || 0]} 
+                    alt={item.title}
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop';
+                    }}
+                  />
+                ) : (
+                  <div className="no-image">
+                    <ImageIcon size={48} />
+                    <span>暂无图片</span>
                   </div>
                 )}
-                <div className="detail-item posted">
-                  <Calendar size={16} />
-                  <span>{item.posted}</span>
-                </div>
+                {item.images && item.images.length > 1 && (
+                  <div className="image-count">
+                    <Camera size={14} />
+                    {item.images.length}
+                  </div>
+                )}
               </div>
 
-              <p className="item-description">{item.description}</p>
-
-              <div className="item-footer">
-                <div className="item-stats">
-                  <span><Eye size={14} /> {item.views}浏览</span>
-                  <span>{item.contact.name} · {item.contact.company}</span>
+              <div className="item-content">
+                <div className="item-header">
+                  <div className="item-title">
+                    <h3>{item.title}</h3>
+                    <span className="item-category">{item.category}</span>
+                    {item.subCategory && (
+                      <span className="item-subcategory">{item.subCategory}</span>
+                    )}
+                  </div>
+                  <div className="item-price">{item.price}</div>
                 </div>
                 
-                <div className="item-actions">
-                  <button className="contact-button">
-                    <Phone size={16} />
-                    联系卖家
-                  </button>
-                  <button 
-                    className="details-button"
-                    onClick={() => handleViewDetails(item)}
-                  >
-                    查看详情
-                  </button>
+                <div className="item-details">
+                  <div className="detail-item">
+                    <MapPin size={16} />
+                    <span>{item.location}</span>
+                  </div>
+                  <div className="detail-item">
+                    <Settings size={16} />
+                    <span>{item.condition}</span>
+                  </div>
+                  {item.brand && (
+                    <div className="detail-item">
+                      <Truck size={16} />
+                      <span>{item.brand}</span>
+                    </div>
+                  )}
+                  <div className="detail-item posted">
+                    <Calendar size={16} />
+                    <span>{item.posted}</span>
+                  </div>
+                </div>
+
+                <p className="item-description">{item.description}</p>
+
+                <div className="item-footer">
+                  <div className="item-stats">
+                    <span><Eye size={14} /> {item.views}浏览</span>
+                    <span>{item.contact.name} · {item.contact.company}</span>
+                  </div>
+                  
+                  <div className="item-actions">
+                    <button className="contact-button">
+                      <Phone size={16} />
+                      联系卖家
+                    </button>
+                    <button 
+                      className="details-button"
+                      onClick={() => handleViewDetails(item)}
+                    >
+                      查看详情
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -769,7 +903,10 @@ const LogisticsRental = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{activeTab === 'rental' ? '发布出租信息' : '发布出售信息'}</h2>
-              <button onClick={() => setShowPostModal(false)}>
+              <button onClick={() => {
+                setShowPostModal(false);
+                resetPostForm();
+              }}>
                 <X size={24} />
               </button>
             </div>
@@ -779,6 +916,57 @@ const LogisticsRental = () => {
               handlePost(new FormData(e.target));
             }}>
               <div className="modal-body">
+                {/* 照片上传区域 */}
+                <div className="form-group">
+                  <label>照片上传</label>
+                  <div className="image-upload-area">
+                    <input
+                      type="file"
+                      id="image-upload"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                    />
+                    <label htmlFor="image-upload" className="upload-button">
+                      <Upload size={20} />
+                      点击上传照片
+                    </label>
+                    <p className="upload-hint">支持多张照片，建议尺寸800x600，格式JPG/PNG</p>
+                  </div>
+
+                  {/* 照片预览区域 */}
+                  {postForm.images.length > 0 && (
+                    <div className="image-preview-area">
+                      <div className="image-grid">
+                        {postForm.images.map((image, index) => (
+                          <div key={index} className="image-preview-item">
+                            <img src={image.url} alt={`预览 ${index + 1}`} />
+                            <div className="image-actions">
+                              <button
+                                type="button"
+                                className={`cover-button ${postForm.coverImageIndex === index ? 'active' : ''}`}
+                                onClick={() => setCoverImage(index)}
+                                title="设为封面"
+                              >
+                                {postForm.coverImageIndex === index ? '封面' : '设为封面'}
+                              </button>
+                              <button
+                                type="button"
+                                className="remove-button"
+                                onClick={() => removeImage(index)}
+                                title="删除"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="form-group">
                   <label>标题 *</label>
                   <input type="text" name="title" required placeholder="如：重型冷藏车出租" />
@@ -849,7 +1037,10 @@ const LogisticsRental = () => {
               </div>
               
               <div className="form-actions">
-                <button type="button" className="cancel-button" onClick={() => setShowPostModal(false)}>
+                <button type="button" className="cancel-button" onClick={() => {
+                  setShowPostModal(false);
+                  resetPostForm();
+                }}>
                   取消
                 </button>
                 <button type="submit" className="submit-button">
@@ -874,6 +1065,51 @@ const LogisticsRental = () => {
             </div>
             
             <div className="modal-body">
+              {/* 图片展示区域 */}
+              {selectedItem.images && selectedItem.images.length > 0 && (
+                <div className="detail-images">
+                  <div className="main-image">
+                    <img 
+                      src={selectedItem.images[currentImageIndex]} 
+                      alt={`${selectedItem.title} - 图片 ${currentImageIndex + 1}`}
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop';
+                      }}
+                    />
+                    {selectedItem.images.length > 1 && (
+                      <>
+                        <button className="image-nav prev" onClick={prevImage}>
+                          <ChevronLeft size={24} />
+                        </button>
+                        <button className="image-nav next" onClick={nextImage}>
+                          <ChevronRight size={24} />
+                        </button>
+                        <div className="image-indicator">
+                          {currentImageIndex + 1} / {selectedItem.images.length}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  
+                  {selectedItem.images.length > 1 && (
+                    <div className="image-thumbnails">
+                      {selectedItem.images.map((image, index) => (
+                        <img
+                          key={index}
+                          src={image}
+                          alt={`缩略图 ${index + 1}`}
+                          className={currentImageIndex === index ? 'active' : ''}
+                          onClick={() => setCurrentImageIndex(index)}
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=150&h=100&fit=crop';
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="detail-price">{selectedItem.price}</div>
               
               <div className="detail-info">
