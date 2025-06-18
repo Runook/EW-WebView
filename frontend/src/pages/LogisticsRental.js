@@ -26,11 +26,11 @@ import {
   Camera,
   ChevronLeft
 } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+
 import './LogisticsRental.css';
 
 const LogisticsRental = () => {
-  const { t } = useLanguage();
+
   const [activeTab, setActiveTab] = useState('rental'); // 'rental' 或 'sale'
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);

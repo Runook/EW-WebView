@@ -1,35 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
 import './Footer.css';
 
 const Footer = () => {
-  const { t } = useLanguage();
   const currentYear = new Date().getFullYear();
 
   const quickLinks = [
-    { label: t('nav.home'), path: '/' },
-    { label: t('nav.services'), path: '/services' },
-    { label: t('nav.landWarehouse'), path: '/land-warehouse' },
-    { label: t('nav.seaportQuery'), path: '/seaport-query' },
-    { label: t('nav.airportQuery'), path: '/airport-query' },
-    { label: t('nav.contact'), path: '/contact' }
+    { label: '首页', path: '/' },
+    { label: '服务', path: '/services' },
+    { label: '陆运仓库', path: '/land-warehouse' },
+    { label: '海港查询', path: '/seaport-query' },
+    { label: '机场查询', path: '/airport-query' },
+    { label: '联系我们', path: '/contact' }
   ];
 
   const services = [
-    t('home.services.oceanFreight'),
-    t('home.services.truckLoads'),
-    t('home.services.warehousing'),
-    t('services.airFreight.title'),
-    t('services.lastMile.title')
+    '海运货运',
+    '陆运货运',
+    '仓储服务',
+    '空运货运',
+    '最后一公里配送'
   ];
 
   const legalLinks = [
-    t('footer.privacyPolicy'),
-    t('footer.termsOfService'),
-    t('footer.cookiePolicy'),
-    t('footer.compliance')
+    '隐私政策',
+    '服务条款',
+    'Cookie政策',
+    '合规声明'
   ];
 
   return (
@@ -43,12 +41,12 @@ const Footer = () => {
                 <img src="/logo.png" alt="EWLogistics Logo" className="footer-logo-image" />
               </div>
               <div className="footer-logo-text">
-                <span className="footer-logo-main">{t('logo.main')}</span>
-                <span className="footer-logo-sub">{t('logo.sub')}</span>
+                <span className="footer-logo-main">EW物流</span>
+                <span className="footer-logo-sub">专业物流服务</span>
               </div>
             </Link>
             <p className="footer-description">
-              {t('footer.description')}
+              为全球客户提供专业、高效、可靠的物流运输服务，致力于成为您最信赖的物流合作伙伴。
             </p>
             <div className="footer-contact">
               <div className="contact-item">
@@ -68,7 +66,7 @@ const Footer = () => {
 
           {/* Quick Links */}
           <div className="footer-section">
-            <h3 className="footer-title">{t('footer.quickLinks')}</h3>
+            <h3 className="footer-title">快速链接</h3>
             <ul className="footer-links">
               {quickLinks.map((link) => (
                 <li key={link.path}>
@@ -82,7 +80,7 @@ const Footer = () => {
 
           {/* Services */}
           <div className="footer-section">
-            <h3 className="footer-title">{t('footer.services')}</h3>
+            <h3 className="footer-title">服务项目</h3>
             <ul className="footer-links">
               {services.map((service) => (
                 <li key={service}>
@@ -96,7 +94,7 @@ const Footer = () => {
 
           {/* Legal & Support */}
           <div className="footer-section">
-            <h3 className="footer-title">{t('footer.legal')}</h3>
+            <h3 className="footer-title">法律条款</h3>
             <ul className="footer-links">
               {legalLinks.map((link) => (
                 <li key={link}>
@@ -107,7 +105,7 @@ const Footer = () => {
               ))}
             </ul>
             <div className="footer-certifications">
-              <p className="certification-title">{t('footer.licenses')}</p>
+              <p className="certification-title">运营许可证</p>
               <div className="certifications">
                 <span>MC #: 1094635</span>
                 <span>Broker MC #: 1281963</span>
@@ -121,7 +119,7 @@ const Footer = () => {
         <div className="footer-bottom">
           <div className="footer-bottom-content">
             <p className="copyright">
-              © {currentYear} {t('footer.copyright')}
+              © {currentYear} EW物流平台. 保留所有权利.
             </p>
             <div className="social-links">
               <button className="social-link" aria-label="Facebook" type="button">

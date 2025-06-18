@@ -11,19 +11,19 @@ import {
   Play,
   Pause
 } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+
 import './Home.css';
 
 const Home = () => {
-  const { t } = useLanguage();
+
   const videoRef = useRef(null);
   const contentRef = useRef(null);
 
   const stats = [
-    { icon: <Users size={24} />, number: '10,000+', label: t('home.stats.customers') },
-    { icon: <Globe size={24} />, number: '50+', label: t('home.stats.countries') },
-    { icon: <Clock size={24} />, number: '24/7', label: t('home.stats.support') },
-    { icon: <Shield size={24} />, number: '99.9%', label: t('home.stats.delivery') }
+    { icon: <Users size={24} />, number: '10,000+', label: '合作客户' },
+    { icon: <Globe size={24} />, number: '50+', label: '服务国家' },
+    { icon: <Clock size={24} />, number: '24/7', label: '客户支持' },
+    { icon: <Shield size={24} />, number: '99.9%', label: '准时送达' }
   ];
 
   const scrollToContent = () => {

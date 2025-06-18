@@ -17,11 +17,11 @@ import {
   Hash,
   Award
 } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
+
 import './Forum.css';
 
 const Forum = () => {
-  const { t } = useLanguage();
+
   const [activeTab, setActiveTab] = useState('hot'); // hot, latest, following
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);

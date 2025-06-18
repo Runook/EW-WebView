@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { Phone, Mail, MapPin, Clock, MessageCircle, Send } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
 import './Contact.css';
 
 const Contact = () => {
-  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -23,14 +21,13 @@ const Contact = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // 这里可以添加表单提交逻辑
-    // console.log('Form submitted:', formData);
     alert('感谢您的留言！我们会尽快回复您。');
     setFormData({
       name: '',
       email: '',
       phone: '',
       company: '',
+      service: '',
       message: ''
     });
   };
@@ -38,38 +35,38 @@ const Contact = () => {
   const contactInfo = [
     {
       icon: <Phone size={24} />,
-      title: t('contact.phone'),
+      title: '联系电话',
       details: '+1 (718) 386-7888',
-      description: 'Mon-Fri from 8am to 6pm EST'
+      description: '周一至周五 8:00-18:00 EST'
     },
     {
       icon: <Mail size={24} />,
-      title: t('contact.email'),
+      title: '邮箱地址',
       details: 'info@ewlogistics.com',
-      description: 'Online support'
+      description: '在线支持'
     },
     {
       icon: <MapPin size={24} />,
-      title: t('contact.office'),
+      title: '办公地址',
       details: 'Hauppauge, New York',
       description: 'United States'
     },
     {
       icon: <Clock size={24} />,
-      title: t('contact.workingHours'),
-      details: 'Mon-Fri: 8am-6pm EST',
-      description: 'Saturday: 9am-2pm EST'
+      title: '工作时间',
+      details: '周一至周五: 8:00-18:00 EST',
+      description: '周六: 9:00-14:00 EST'
     }
   ];
 
   const services = [
-    t('home.services.oceanFreight'),
-    t('home.services.truckLoads') + ' (FTL/LTL)',
-    t('home.services.fbaShipping'),
-    t('home.services.warehousing'),
-    t('services.airFreight.title'),
-    t('services.lastMile.title'),
-    t('contact.other')
+    '海运货运',
+    '陆运货运 (FTL/LTL)',
+    'FBA配送',
+    '仓储服务',
+    '空运货运',
+    '最后一公里配送',
+    '其他服务'
   ];
 
   return (
@@ -77,18 +74,18 @@ const Contact = () => {
       <div className="container">
         {/* Header */}
         <div className="contact-header">
-          <h1 className="contact-title">{t('contact.title')}</h1>
+          <h1 className="contact-title">联系我们</h1>
           <p className="contact-description">
-            {t('contact.description')}
+            随时联系我们的专业团队，获取个性化的物流解决方案和报价
           </p>
         </div>
 
         <div className="contact-content">
           {/* Contact Info */}
           <div className="contact-info">
-            <h2 className="info-title">{t('contact.getInTouch')}</h2>
+            <h2 className="info-title">联系方式</h2>
             <p className="info-description">
-              {t('contact.ready')}
+              我们随时准备为您提供专业的物流服务
             </p>
 
             <div className="contact-cards">
@@ -109,26 +106,26 @@ const Contact = () => {
             <div className="quick-actions">
               <button className="btn btn-primary">
                 <MessageCircle size={20} />
-                {t('contact.startChat')}
+                开始聊天
               </button>
               <button className="btn btn-secondary">
                 <Phone size={20} />
-                {t('header.callNow')}
+                立即致电
               </button>
             </div>
           </div>
 
           {/* Contact Form */}
           <div className="contact-form">
-            <h2 className="form-title">{t('contact.sendMessage')}</h2>
+            <h2 className="form-title">发送消息</h2>
             <p className="form-description">
-              {t('contact.formDescription')}
+              请填写以下表单，我们会尽快回复您的咨询
             </p>
 
             <form onSubmit={handleSubmit} className="form">
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="name">{t('contact.fullName')} *</label>
+                  <label htmlFor="name">姓名 *</label>
                   <input
                     type="text"
                     id="name"
@@ -139,7 +136,7 @@ const Contact = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="email">{t('contact.emailAddress')} *</label>
+                  <label htmlFor="email">邮箱地址 *</label>
                   <input
                     type="email"
                     id="email"
@@ -153,7 +150,7 @@ const Contact = () => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="company">{t('contact.companyName')}</label>
+                  <label htmlFor="company">公司名称</label>
                   <input
                     type="text"
                     id="company"
@@ -163,7 +160,7 @@ const Contact = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="phone">{t('contact.phoneNumber')}</label>
+                  <label htmlFor="phone">联系电话</label>
                   <input
                     type="tel"
                     id="phone"
@@ -175,14 +172,14 @@ const Contact = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="service">{t('contact.serviceInterest')}</label>
+                <label htmlFor="service">感兴趣的服务</label>
                 <select
                   id="service"
                   name="service"
                   value={formData.service}
                   onChange={handleInputChange}
                 >
-                  <option value="">{t('contact.selectService')}</option>
+                  <option value="">请选择服务类型</option>
                   {services.map((service) => (
                     <option key={service} value={service}>
                       {service}
@@ -192,23 +189,35 @@ const Contact = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="message">{t('contact.message')} *</label>
+                <label htmlFor="message">留言内容 *</label>
                 <textarea
                   id="message"
                   name="message"
                   rows="6"
                   value={formData.message}
                   onChange={handleInputChange}
-                  placeholder={t('contact.messagePlaceholder')}
+                  placeholder="请详细描述您的需求..."
                   required
-                ></textarea>
+                />
               </div>
 
-              <button type="submit" className="btn btn-primary form-submit">
+              <button type="submit" className="btn btn-primary btn-submit">
                 <Send size={20} />
-                {t('contact.sendBtn')}
+                发送消息
               </button>
             </form>
+          </div>
+        </div>
+
+        {/* Map Section */}
+        <div className="map-section">
+          <h2 className="map-title">我们的位置</h2>
+          <div className="map-container">
+            <div className="map-placeholder">
+              <MapPin size={48} />
+              <p>地图功能正在开发中</p>
+              <p>地址：Hauppauge, New York, USA</p>
+            </div>
           </div>
         </div>
       </div>

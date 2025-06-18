@@ -1,6 +1,5 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { LanguageProvider } from './contexts/LanguageContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { Package, BookOpen, Briefcase, ShoppingBag } from 'lucide-react';
 import Header from './components/Header';
@@ -26,9 +25,8 @@ import './App.css';
 
 function App() {
   return (
-    <LanguageProvider>
-      <AuthProvider>
-        <div className="App">
+    <AuthProvider>
+      <div className="App">
           <Header />
           <main>
             <Routes>
@@ -219,7 +217,6 @@ function App() {
           <Footer />
         </div>
       </AuthProvider>
-    </LanguageProvider>
   );
 }
 

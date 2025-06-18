@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, User, LogOut, UserCircle, Settings, ChevronDown } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import './Header.css';
 
@@ -12,7 +11,6 @@ const Header = () => {
   const [hoverTimeout, setHoverTimeout] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const { user, logout, isAuthenticated } = useAuth();
 
   // 点击外部区域关闭菜单
@@ -63,77 +61,77 @@ const Header = () => {
     setIsUserMenuOpen(false);
   }, [location.pathname]);
 
-  // 新的二级菜单结构
+  // 导航菜单结构
   const menuStructure = [
     {
       id: 'home',
-      label: t('nav.home'),
+      label: '首页',
       path: '/',
       type: 'single'
     },
     {
       id: 'landServices',
-      label: t('nav.landServices'),
+      label: '陆运服务',
       type: 'dropdown',
       items: [
-        { path: '/freight-board', label: t('nav.landServices.platform') },
-        { path: '/land-warehouse', label: t('nav.landServices.warehouse') }
+        { path: '/freight-board', label: '陆运信息平台' },
+        { path: '/land-warehouse', label: '陆运仓库查询' }
       ]
     },
     {
       id: 'oceanServices',
-      label: t('nav.oceanServices'),
+      label: '海运服务',
       type: 'dropdown',
       items: [
-        { path: '/sea-freight', label: t('nav.oceanServices.platform') },
-        { path: '/seaport-query', label: t('nav.oceanServices.seaport') }
+        { path: '/sea-freight', label: '海运信息平台' },
+        { path: '/seaport-query', label: '海港查询' }
       ]
     },
     {
       id: 'airServices',
-      label: t('nav.airServices'),
+      label: '空运服务',
       type: 'dropdown',
       items: [
-        { path: '/air-platform', label: t('nav.airServices.platform') },
-        { path: '/airport-query', label: t('nav.airServices.airport') }
+        { path: '/air-platform', label: '空运信息平台' },
+        { path: '/airport-query', label: '机场查询' }
       ]
     },
     {
       id: 'multimodal',
-      label: t('nav.multimodal'),
+      label: '多式联运',
       type: 'dropdown',
       items: [
-        { path: '/ddp-service', label: t('nav.multimodal.ddp') },
-        { path: '/ddu-service', label: t('nav.multimodal.ddu') },
-        { path: '/ldp-service', label: t('nav.multimodal.ldp') }
+        { path: '/ddp-service', label: '双清包服务' },
+        { path: '/ddu-service', label: '单清包服务' },
+        { path: '/ldp-service', label: '港口货服务' }
       ]
     },
     {
       id: 'infoServices',
-      label: t('nav.infoServices'),
+      label: '信息服务',
       type: 'dropdown',
       items: [
-        { path: '/yellow-pages', label: t('nav.infoServices.yellowPages') },
-        { path: '/jobs', label: t('nav.infoServices.jobs') },
-        { path: '/logistics-rental', label: t('nav.infoServices.logistics') },
-        { path: '/forum', label: t('nav.infoServices.forum') }
+        { path: '/yellow-pages', label: '黄页查询' },
+        { path: '/jobs', label: '物流招聘' },
+        { path: '/logistics-rental', label: '物流租售' },
+        { path: '/forum', label: '物流论坛' }
       ]
     },
     {
       id: 'account',
-      label: t('nav.account'),
+      label: '我的',
       type: 'dropdown',
       items: [
-        { path: '/my-points', label: t('nav.account.points') },
-        { path: '/recharge', label: t('nav.account.recharge') },
-        { path: '/my-posts', label: t('nav.account.myPosts') },
-        { path: '/favorites', label: t('nav.account.favorites') },
-        { path: '/my-recruitment', label: t('nav.account.myRecruitment') },
-        { path: '/my-job-search', label: t('nav.account.myJobSearch') },
-        { path: '/certification', label: t('nav.account.certification') },
-        { path: '/contact', label: t('nav.account.contact') },
-        { path: '/business', label: t('nav.account.business') },
-        { path: '/invite-rewards', label: t('nav.account.invite') }
+        { path: '/my-points', label: '我的积分' },
+        { path: '/recharge', label: '我要充值' },
+        { path: '/my-posts', label: '我的发布' },
+        { path: '/favorites', label: '我的收藏' },
+        { path: '/my-recruitment', label: '我的招聘' },
+        { path: '/my-job-search', label: '我的求职' },
+        { path: '/certification', label: '我的认证' },
+        { path: '/contact', label: '联系我们' },
+        { path: '/business', label: '商务合作' },
+        { path: '/invite-rewards', label: '邀请奖励' }
       ]
     }
   ];
@@ -226,8 +224,8 @@ const Header = () => {
               <img src="/logo.png" alt="EWLogistics Logo" className="logo-image" />
             </div>
             <div className="logo-text">
-              <span className="logo-main">{t('logo.main')}</span>
-              <span className="logo-sub">{t('logo.sub')}</span>
+              <span className="logo-main">EW物流</span>
+              <span className="logo-sub">专业物流服务</span>
             </div>
           </Link>
 
