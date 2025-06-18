@@ -1,0 +1,679 @@
+/* 
+ * =============================================================================
+ * PostLoadModal.css - 货源发布模态框样式
+ * =============================================================================
+ * 
+ * 从PostLoadModal.js中提取的内联样式，改善代码可维护性
+ * 总行数从2000+减少，样式与逻辑分离
+ * 
+ * =============================================================================
+ */
+
+/* ====== 模态框基础样式 ====== */
+.large-modal {
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* ====== 表单区块样式 ====== */
+.form-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.form-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.form-section h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.required {
+  color: #ff4444;
+  font-weight: bold;
+}
+
+/* ====== 尺寸输入组件样式 ====== */
+.dimension-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.dimension-input-group > input {
+  flex: 1;
+}
+
+.conversion-input {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 80px;
+}
+
+.unit-converter {
+  width: 60px !important;
+  padding: 0.25rem !important;
+  font-size: 0.8rem !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+}
+
+.unit-label {
+  font-size: 0.8rem;
+  color: #666;
+  min-width: 20px;
+}
+
+/* ====== 服务类型选择样式 ====== */
+.service-type-selection {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.service-type-option {
+  display: block;
+  padding: 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.service-type-option:hover {
+  border-color: #34C759;
+  background-color: #f8f9fa;
+}
+
+.service-type-option.selected {
+  border-color: #34C759;
+  background-color: #e8f5e8;
+}
+
+.service-type-option input[type="radio"] {
+  display: none;
+}
+
+.service-type-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.service-type-content > svg {
+  color: #34C759;
+  flex-shrink: 0;
+}
+
+.service-type-content strong {
+  color: #333;
+  margin-bottom: 0.25rem;
+  display: block;
+}
+
+.service-type-content p {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* ====== 表单网格布局 ====== */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+/* ====== 地址类型选择样式 ====== */
+.location-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.location-type-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.location-type-option:hover {
+  border-color: #34C759;
+  background-color: #f8f9fa;
+}
+
+.location-type-option.selected {
+  border-color: #34C759;
+  background-color: #e8f5e8;
+  color: #2d5016;
+}
+
+.location-type-option input[type="radio"] {
+  display: none;
+}
+
+.location-type-option svg {
+  flex-shrink: 0;
+}
+
+/* ====== 复选框样式 ====== */
+.checkbox-group {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #34C759;
+}
+
+/* ====== 货物项目卡片样式 ====== */
+.cargo-item-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #f9f9f9;
+}
+
+.cargo-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.cargo-item-title {
+  margin: 0;
+  color: #34C759;
+}
+
+.cargo-basic-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* ====== 计算结果展示样式 ====== */
+.calculation-results {
+  background: linear-gradient(135deg, #e8f5e8, #f0faf0);
+  border: 1px solid #34C759;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.calculation-title {
+  margin: 0 0 0.5rem 0;
+  color: #34C759;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.result-item {
+  background: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.result-item.primary {
+  background: #34C759;
+  color: white;
+}
+
+.result-label {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.result-item.primary .result-label {
+  color: white;
+}
+
+.result-value {
+  font-weight: 600;
+}
+
+.result-item.primary .result-value {
+  font-weight: 700;
+}
+
+/* ====== 特殊属性样式 ====== */
+.special-attributes {
+  margin-top: 1rem;
+}
+
+.special-attributes h5 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+/* ====== 货物操作按钮样式 ====== */
+.cargo-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+  margin-top: 1rem;
+}
+
+.add-cargo-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #34C759;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.remove-cargo-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+/* ====== 地址类型勾选框样式 ====== */
+.location-types-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.location-types-section h4 {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.location-types-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.location-type-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.location-type-header {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.checkbox-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.checkbox-option:hover {
+  background-color: rgba(52, 199, 89, 0.1);
+}
+
+.checkbox-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #34C759;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  font-size: 0.85rem;
+  color: #555;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ====== 地址输入组件样式 ====== */
+.address-input-group {
+  position: relative;
+}
+
+.address-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.address-input-container input {
+  padding-right: 2.5rem;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  right: 0.75rem;
+  color: #666;
+  pointer-events: none;
+}
+
+.address-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.suggestion-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: #f8f9fa;
+}
+
+.suggestion-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.suggestion-main svg {
+  color: #34C759;
+  flex-shrink: 0;
+}
+
+.city-state {
+  font-weight: 500;
+  color: #333;
+}
+
+.zip-code {
+  font-size: 0.8rem;
+  color: #666;
+  background: #f0f0f0;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+/* ====== 路线查看按钮样式 ====== */
+.route-section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+.route-btn {
+  background: linear-gradient(135deg, #34C759, #28a745);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+}
+
+.route-btn:hover {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.4);
+}
+
+.route-description {
+  margin: 0.75rem 0 0 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* ====== 距离计算样式 ====== */
+.distance-calculating {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #e3f2fd;
+  border-radius: 6px;
+  color: #1976d2;
+  font-size: 0.9rem;
+}
+
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #bbdefb;
+  border-top: 2px solid #1976d2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.distance-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #e8f5e8, #f0faf0);
+  border: 1px solid #34C759;
+  border-radius: 8px;
+}
+
+.distance-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  text-align: center;
+}
+
+.distance-text, .duration-text {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.9rem;
+}
+
+.distance-text strong, .duration-text strong {
+  color: #34C759;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+/* ====== 动画 ====== */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ====== 响应式设计 ====== */
+@media (max-width: 768px) {
+  .large-modal {
+    max-width: 95vw;
+    margin: 1rem;
+  }
+
+  .service-type-selection,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .location-type-grid,
+  .location-types-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dimension-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cargo-basic-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .results-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .checkbox-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .distance-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .checkbox-label {
+    font-size: 0.8rem;
+  }
+}
+
+/* ====== LTL专用样式 ====== */
+.ltl-section {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.nmfc-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: #e3f2fd;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  color: #1976d2;
+}
+
+.nmfc-info p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.dimensions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .dimensions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ====== 错误确认对话框样式 ====== */
+.error-confirm-modal {
+  max-width: 400px;
+  width: 90%;
+}
+
+.error-confirm-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.error-confirm-content p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #333;
+}
+
+.modal-body {
+  padding: 1rem;
+} 

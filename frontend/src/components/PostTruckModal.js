@@ -35,6 +35,10 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
   // 距离信息状态
   const [distanceInfo, setDistanceInfo] = useState(null);
   const [calculatingDistance, setCalculatingDistance] = useState(false);
+  
+  // 错误确认状态
+  const [showErrorConfirm, setShowErrorConfirm] = useState(false);
+  const [errorData, setErrorData] = useState(null);
 
   const serviceTypes = [
     { value: 'FTL', label: 'FTL (整车运输)' },
@@ -200,43 +204,27 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
     } catch (error) {
       console.error('处理车源地址时出错:', error);
       // 即使地址处理失败，也允许继续提交，但提醒用户
-      const proceed = confirm('地址解析失败，是否继续发布？（将使用原始地址信息）');
-      if (!proceed) {
-        return;
-      }
-
-      // 使用原始数据提交
-      const submitData = {
-        type: 'truck',
-        origin: formData.currentLocation,
-        destination: formData.preferredDestination || '全国各地',
-        originDisplay: formData.currentLocation,
-        destinationDisplay: formData.preferredDestination || '全国各地',
-        distanceInfo: null,
-        availableDate: formData.availableDate,
-        truckType: formData.equipment,
-        capacity: formData.capacity,
-        rate: formData.rateRange,
-        serviceType: formData.serviceType,
-        companyName: formData.companyName,
-        contactPhone: formData.contactPhone,
-        contactEmail: formData.contactEmail || '',
-        driverLicense: '',
-        truckFeatures: formData.specialServices || '',
-        notes: formData.notes || '',
-        originalData: {
-          ...formData,
-          id: Date.now(),
-          postedDate: new Date().toISOString(),
-          location: formData.currentLocation,
-          preferredLanes: `${formData.preferredOrigin || '任意地点'} 至 ${formData.preferredDestination || '全国各地'}`
+      setErrorData({
+        message: '地址解析失败，是否继续发布？（将使用原始地址信息）',
+        onConfirm: () => {
+          setShowErrorConfirm(false);
+          // 执行原始提交逻辑
+          proceedWithOriginalData();
+        },
+        onCancel: () => {
+          setShowErrorConfirm(false);
         }
-      };
-
-      onSubmit(submitData);
+      });
+      setShowErrorConfirm(true);
+      return;
     }
     
-    // 重置表单
+    // 完成后重置表单等
+    resetForm();
+  };
+
+  // 重置表单函数
+  const resetForm = () => {
     setFormData({
       currentLocation: '',
       availableDate: '',
@@ -264,6 +252,40 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
 
     setDistanceInfo(null);
     onClose();
+  };
+
+  // 使用原始数据继续提交的函数
+  const proceedWithOriginalData = () => {
+    // 使用原始数据提交
+    const submitData = {
+      type: 'truck',
+      origin: formData.currentLocation,
+      destination: formData.preferredDestination || '全国各地',
+      originDisplay: formData.currentLocation,
+      destinationDisplay: formData.preferredDestination || '全国各地',
+      distanceInfo: null,
+      availableDate: formData.availableDate,
+      truckType: formData.equipment,
+      capacity: formData.capacity,
+      rate: formData.rateRange,
+      serviceType: formData.serviceType,
+      companyName: formData.companyName,
+      contactPhone: formData.contactPhone,
+      contactEmail: formData.contactEmail || '',
+      driverLicense: '',
+      truckFeatures: formData.specialServices || '',
+      notes: formData.notes || '',
+      originalData: {
+        ...formData,
+        id: Date.now(),
+        postedDate: new Date().toISOString(),
+        location: formData.currentLocation,
+        preferredLanes: `${formData.preferredOrigin || '任意地点'} 至 ${formData.preferredDestination || '全国各地'}`
+      }
+    };
+
+    onSubmit(submitData);
+    resetForm();
   };
 
   if (!isOpen) return null;
@@ -531,15 +553,43 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
       </div>
 
       {/* Google Maps 路线模态框 */}
-      {showRouteModal && (
-        <GoogleMapsRoute
-          origin={selectedPlaces.preferredOrigin || { address: formData.preferredOrigin }}
-          destination={selectedPlaces.preferredDestination || { address: formData.preferredDestination }}
-          onClose={() => setShowRouteModal(false)}
-        />
-      )}
-    </div>
-  );
-};
+              {showRouteModal && (
+          <GoogleMapsRoute
+            origin={selectedPlaces.preferredOrigin || { address: formData.preferredOrigin }}
+            destination={selectedPlaces.preferredDestination || { address: formData.preferredDestination }}
+            onClose={() => setShowRouteModal(false)}
+          />
+        )}
+
+        {/* 错误确认对话框 */}
+        {showErrorConfirm && errorData && (
+          <div className="modal-overlay" style={{ zIndex: 1100 }}>
+            <div className="modal-content error-confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>确认操作</h3>
+                <button className="close-btn" onClick={errorData.onCancel}>
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="error-confirm-content">
+                  <div style={{ color: '#ff6b35', fontSize: '48px' }}>⚠️</div>
+                  <p>{errorData.message}</p>
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" onClick={errorData.onCancel} className="btn secondary">
+                  取消
+                </button>
+                <button type="button" onClick={errorData.onConfirm} className="btn primary">
+                  继续发布
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
 export default PostTruckModal; 

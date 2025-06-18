@@ -1,3 +1,22 @@
+/* 
+ * =============================================================================
+ * PostLoadModal.js - 货源发布模态框组件
+ * =============================================================================
+ * 
+ * 【文件分析】
+ * 总行数: 1954行 - 过于庞大！
+ * 主要功能: 发布货源信息的表单
+ * 支持类型: FTL(整车) 和 LTL(零担)
+ * 
+ * 【可优化点】
+ * 1. 配置数据过多 (约300行) - 应该外部化
+ * 2. 状态管理复杂 (约100行) - 可拆分为多个Hook
+ * 3. 表单处理逻辑重复 - 需要抽象
+ * 4. UI代码冗长 - 应该组件化
+ * 5. 样式代码过多 (约600行) - 应该独立CSS文件
+ * =============================================================================
+ */
+
 import React, { useState, useEffect } from 'react';
 import { 
   X, 
@@ -22,6 +41,7 @@ import {
   Navigation
 } from 'lucide-react';
 import './Modal.css';
+import './PostLoadModal.css'; // ✅ 新增独立样式文件
 import { GoogleMapsAddressInput, GoogleMapsRoute, calculateDistance, geocodeAddress } from './GoogleMapsAddressInput';
 
 const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
@@ -110,6 +130,10 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
   
   // 提交处理状态
   const [submitting, setSubmitting] = useState(false);
+  
+  // 错误确认状态
+  const [showErrorConfirm, setShowErrorConfirm] = useState(false);
+  const [errorData, setErrorData] = useState(null);
 
   // 货物类型选项 - 按照NMFC标准分类
   const cargoTypes = [
@@ -195,45 +219,40 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     { value: '5M+', label: '$5M+' }
   ];
 
-  // 单位转换函数
-  const convertKgToLbs = (kg) => {
-    return kg ? (parseFloat(kg) * 2.20462).toFixed(1) : '';
+  // 单位转换工具
+  const unitConverter = {
+    kgToLbs: (kg) => kg ? (parseFloat(kg) * 2.20462).toFixed(1) : '',
+    lbsToKg: (lbs) => lbs ? (parseFloat(lbs) / 2.20462).toFixed(1) : '',
+    cmToInches: (cm) => cm ? (parseFloat(cm) / 2.54).toFixed(1) : '',
+    inchesToCm: (inches) => inches ? (parseFloat(inches) * 2.54).toFixed(1) : ''
   };
 
-  const convertCmToInches = (cm) => {
-    return cm ? (parseFloat(cm) / 2.54).toFixed(1) : '';
-  };
+  /*
+   * =====================================================================
+   * 业务逻辑函数部分 (约200行) - 🚨 逻辑过于复杂
+   * =====================================================================
+   */
 
-  const convertLbsToKg = (lbs) => {
-    return lbs ? (parseFloat(lbs) / 2.20462).toFixed(1) : '';
-  };
-
-  const convertInchesToCm = (inches) => {
-    return inches ? (parseFloat(inches) * 2.54).toFixed(1) : '';
-  };
-
-  // 计算密度和分类代码
-  const calculateFreightClass = () => {
-    const { weight, length, width, height } = formData;
+  // ====== 密度和分类代码计算 (约50行 - 🤔 算法复杂，是否可以简化？) ======
+  const calculateFreightClass = (data, isItem = false) => {
+    const { weight, length, width, height, hazmat, fragile } = data;
     
-    if (!weight || !length || !width || !height) return;
+    if (!weight || !length || !width || !height) return isItem ? data : null;
     
     const weightNum = parseFloat(weight);
     const lengthNum = parseFloat(length);
     const widthNum = parseFloat(width);
     const heightNum = parseFloat(height);
     
-    if (weightNum <= 0 || lengthNum <= 0 || widthNum <= 0 || heightNum <= 0) return;
+    if (weightNum <= 0 || lengthNum <= 0 || widthNum <= 0 || heightNum <= 0) return isItem ? data : null;
     
-    // 计算立方英尺 (长x宽x高 英寸 / 1728)
+    // 计算立方英尺和密度
     const cubicInches = lengthNum * widthNum * heightNum;
     const cubicFeet = cubicInches / 1728;
-    
-    // 计算密度 (磅/立方英尺)
     const density = weightNum / cubicFeet;
     
     // 根据密度确定分类代码
-    let selectedClass = freightClassMap[freightClassMap.length - 1]; // 默认最低分类
+    let selectedClass = freightClassMap[freightClassMap.length - 1];
     for (const classEntry of freightClassMap) {
       if (density >= classEntry.minDensity) {
         selectedClass = classEntry;
@@ -241,92 +260,34 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       }
     }
     
-    // 危险品或易碎品需要特殊处理
-    let finalClass = selectedClass.class;
-    let classDescription = selectedClass.description;
+    // 危险品或易碎品调整
+    let finalClass = parseFloat(selectedClass.class);
+    if (hazmat) finalClass = Math.max(finalClass, 85);
+    if (fragile) finalClass = Math.max(finalClass, 125);
     
-    if (formData.hazmat) {
-      // 危险品通常分类更高
-      const hazmatClassNum = Math.max(parseFloat(finalClass), 85);
-      finalClass = hazmatClassNum.toString();
-      classDescription += ' (危险品调整)';
-    }
-    
-    if (formData.fragile) {
-      // 易碎品可能需要更高分类
-      const fragileClassNum = Math.max(parseFloat(finalClass), 125);
-      finalClass = fragileClassNum.toString();
-      classDescription += ' (易碎品调整)';
-    }
-    
-    setFormData(prev => ({
-      ...prev,
+    const result = {
       volume: cubicFeet.toFixed(2),
       density: density.toFixed(2),
-      freightClass: finalClass
-    }));
-    
-    setDensityInfo({
-      calculated: true,
-      density: density.toFixed(2),
-      suggestedClass: finalClass,
-      classDescription: classDescription
-    });
-  };
-
-  // 计算单个货物项目的密度和分类代码
-  const calculateCargoItemClass = (item) => {
-    const { weight, length, width, height, hazmat, fragile } = item;
-    
-    if (!weight || !length || !width || !height) return item;
-    
-    const weightNum = parseFloat(weight);
-    const lengthNum = parseFloat(length);
-    const widthNum = parseFloat(width);
-    const heightNum = parseFloat(height);
-    
-    if (weightNum <= 0 || lengthNum <= 0 || widthNum <= 0 || heightNum <= 0) return item;
-    
-    // 计算立方英尺 (长x宽x高 英寸 / 1728)
-    const cubicInches = lengthNum * widthNum * heightNum;
-    const cubicFeet = cubicInches / 1728;
-    
-    // 计算密度 (磅/立方英尺)
-    const density = weightNum / cubicFeet;
-    
-    // 根据密度确定分类代码
-    let selectedClass = freightClassMap[freightClassMap.length - 1]; // 默认最低分类
-    for (const classEntry of freightClassMap) {
-      if (density >= classEntry.minDensity) {
-        selectedClass = classEntry;
-        break;
-      }
-    }
-    
-    // 危险品或易碎品需要特殊处理
-    let finalClass = selectedClass.class;
-    
-    if (hazmat) {
-      // 危险品通常分类更高
-      const hazmatClassNum = Math.max(parseFloat(finalClass), 85);
-      finalClass = hazmatClassNum.toString();
-    }
-    
-    if (fragile) {
-      // 易碎品可能需要更高分类
-      const fragileClassNum = Math.max(parseFloat(finalClass), 125);
-      finalClass = fragileClassNum.toString();
-    }
-    
-    return {
-      ...item,
-      volume: cubicFeet.toFixed(2),
-      density: density.toFixed(2),
-      freightClass: finalClass
+      freightClass: finalClass.toString()
     };
+    
+    if (isItem) {
+      return { ...data, ...result };
+    } else {
+      // 更新FTL表单数据
+      setFormData(prev => ({ ...prev, ...result }));
+      setDensityInfo({
+        calculated: true,
+        density: density.toFixed(2),
+        suggestedClass: finalClass.toString(),
+        classDescription: selectedClass.description + (hazmat || fragile ? ' (特殊货物调整)' : '')
+      });
+    }
   };
 
-  // 添加新的货物项目
+  // ====== LTL货物管理函数 (约50行 - 🤔 是否需要这么复杂的货物管理？) ======
+  
+  // 添加新的货物项目 - 🚨 创建的默认对象过于复杂
   const addCargoItem = () => {
     const newId = Math.max(...formData.cargoItems.map(item => item.id)) + 1;
     const newItem = {
@@ -358,7 +319,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     }));
   };
 
-  // 删除货物项目
+  // 删除货物项目 - ✅ 逻辑简单
   const removeCargoItem = (itemId) => {
     if (formData.cargoItems.length <= 1) {
       alert('至少需要保留一个货物项目');
@@ -371,7 +332,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     }));
   };
 
-  // 更新货物项目
+  // 更新货物项目 - 🚨 逻辑过于复杂，包含单位转换
   const updateCargoItem = (itemId, field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -385,19 +346,17 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           };
           
           // 处理单位转换
-          if (field === 'weightKg') {
-            updatedItem.weight = convertKgToLbs(value);
-          } else if (field === 'lengthCm') {
-            updatedItem.length = convertCmToInches(value);
-          } else if (field === 'widthCm') {
-            updatedItem.width = convertCmToInches(value);
-          } else if (field === 'heightCm') {
-            updatedItem.height = convertCmToInches(value);
-          }
+          const conversionMap = {
+            weightKg: () => updatedItem.weight = unitConverter.kgToLbs(value),
+            lengthCm: () => updatedItem.length = unitConverter.cmToInches(value),
+            widthCm: () => updatedItem.width = unitConverter.cmToInches(value),
+            heightCm: () => updatedItem.height = unitConverter.cmToInches(value)
+          };
+          if (conversionMap[field]) conversionMap[field]();
           
           // 如果更新的是尺寸或重量相关字段，重新计算分类
           if (['weight', 'length', 'width', 'height', 'hazmat', 'fragile', 'weightKg', 'lengthCm', 'widthCm', 'heightCm'].includes(field)) {
-            return calculateCargoItemClass(updatedItem);
+            return calculateFreightClass(updatedItem, true);
           }
           
           return updatedItem;
@@ -407,13 +366,18 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     }));
   };
 
-  // 监听尺寸和重量变化，自动计算
+  // ====== React副作用处理 ======
+  
+  // 监听尺寸和重量变化，自动计算 - 🤔 是否需要实时计算？可能影响性能
   useEffect(() => {
-    if (formData.serviceType === 'LTL') {
-      calculateFreightClass();
+    if (formData.serviceType === 'FTL') {
+      calculateFreightClass(formData, false);
     }
   }, [formData.weight, formData.length, formData.width, formData.height, formData.hazmat, formData.fragile, formData.serviceType]);
 
+  // ====== 表单事件处理函数 (约100行) ======
+  
+  // 通用输入处理 - 🚨 包含了重复的单位转换逻辑
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     let updatedData = {
@@ -423,15 +387,15 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     
     // 处理FTL重量单位转换
     if (name === 'weightKg') {
-      updatedData.weight = convertKgToLbs(value);
+      updatedData.weight = unitConverter.kgToLbs(value);
     } else if (name === 'weight' && formData.serviceType === 'FTL') {
-      updatedData.weightKg = convertLbsToKg(value);
+      updatedData.weightKg = unitConverter.lbsToKg(value);
     }
     
     setFormData(updatedData);
   };
 
-  // 处理地址类型勾选变化
+  // 处理地址类型勾选变化 - 🤔 这个功能是否过于细致？用户真的需要这么多地址类型？
   const handleLocationTypeChange = (locationType, fieldName) => {
     return (e) => {
       const isChecked = e.target.checked;
@@ -457,7 +421,9 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     };
   };
 
-  // Google Maps 地址选择处理
+  // ====== Google Maps 地址处理 (约60行) - 🤔 是否过于复杂？ ======
+  
+  // 起点地址选择处理 - 🚨 包含自动距离计算，可能不必要
   const handleOriginPlaceSelected = (placeData) => {
     setSelectedPlaces(prev => {
       const newState = {
@@ -474,6 +440,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     });
   };
 
+  // 终点地址选择处理 - 🚨 与起点处理逻辑重复
   const handleDestinationPlaceSelected = (placeData) => {
     setSelectedPlaces(prev => {
       const newState = {
@@ -490,7 +457,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     });
   };
 
-  // 计算两点之间的距离
+  // 计算两点之间的距离 - 🤔 这个功能是否必要？可能只是噱头
   const calculateDistanceBetweenPoints = async (origin, destination) => {
     try {
       setCalculatingDistance(true);
@@ -508,7 +475,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     }
   };
 
-  // 显示路线功能
+  // 显示路线功能 - 🤔 是否必要？可能只是炫技
   const showRoute = () => {
     // 检查是否有Google Maps选择的地址数据，或者至少有输入的地址文本
     const hasOrigin = selectedPlaces.origin || formData.origin;
@@ -521,26 +488,13 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     }
   };
 
-  // 地址搜索函数 - 保留为了向后兼容，但不再使用
-  const searchAddresses = (query, field) => {
-    // 已由 GoogleMapsAddressInput 组件处理
-  };
-
-  // 处理地址输入变化 - 保留为了向后兼容，但不再使用
-  const handleAddressInput = (e, field) => {
-    // 已由 GoogleMapsAddressInput 组件处理
-  };
-
-  // 选择地址建议 - 保留为了向后兼容，但不再使用
-  const selectAddressSuggestion = (suggestion, field) => {
-    // 已由 GoogleMapsAddressInput 组件处理
-  };
-
-  // 隐藏建议 - 保留为了向后兼容，但不再使用
-  const hideSuggestions = (field) => {
-    // 已由 GoogleMapsAddressInput 组件处理
-  };
-
+  /*
+   * =====================================================================
+   * 表单提交处理 (约200行) - 🚨 过于复杂，应该拆分
+   * =====================================================================
+   */
+   
+  // 主提交处理函数 - 🚨 过于庞大，包含验证、地址处理、距离计算
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -550,52 +504,46 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     setSubmitting(true);
     
     try {
-      // 基础验证 - 包含所有必填字段
-      const requiredFields = [
-        'origin', 'destination', 'pickupDate', 
-        'weight', 'companyName', 
-        'contactPhone', 
-      ];
-      
-      // LTL额外验证
-      if (formData.serviceType === 'LTL') {
-        // 移除单个重量字段和全局价格字段的验证，改为验证货物项目
-        const requiredFieldsLTL = requiredFields.filter(field => field !== 'weight');
+              // 表单验证函数 - 🚨 逻辑复杂，包含多种验证情况
+        const validateForm = () => {
+        const baseRequiredFields = ['origin', 'destination', 'pickupDate', 'companyName', 'contactPhone'];
         
-        // 验证每个货物项目 - 只验证必要字段
-        const invalidItems = formData.cargoItems.filter(item => 
-          !item.weight || !item.length || 
-          !item.width || !item.height || !item.pallets 
-        );
-        
-        if (invalidItems.length > 0) {
-          alert('请填写所有货物项目的必要信息：重量、尺寸、托盘数量');
-          return;
+        if (formData.serviceType === 'LTL') {
+          // LTL验证
+          const invalidItems = formData.cargoItems.filter(item => 
+            !item.weight || !item.length || !item.width || !item.height || !item.pallets 
+          );
+          if (invalidItems.length > 0) {
+            throw new Error('请填写所有货物项目的必要信息：重量、尺寸、托盘数量');
+          }
+          
+          const unclassifiedItems = formData.cargoItems.filter(item => !item.freightClass);
+          if (unclassifiedItems.length > 0) {
+            throw new Error('请确保所有货物项目都已计算出NMFC分类代码');
+          }
+          
+          const missingFields = baseRequiredFields.filter(field => !formData[field]);
+          if (missingFields.length > 0) {
+            throw new Error(`请填写所有必填字段: ${missingFields.join(', ')}`);
+          }
+        } else {
+          // FTL验证
+          const requiredFields = [...baseRequiredFields, 'weight', 'truckType'];
+          const missingFields = requiredFields.filter(field => !formData[field]);
+          if (missingFields.length > 0) {
+            throw new Error(`请填写所有必填字段: ${missingFields.join(', ')}`);
+          }
         }
-        
-        // 检查是否都计算出了分类代码
-        const unclassifiedItems = formData.cargoItems.filter(item => !item.freightClass);
-        if (unclassifiedItems.length > 0) {
-          alert('请确保所有货物项目都已计算出NMFC分类代码');
-          return;
-        }
-        
-        const missingFields = requiredFieldsLTL.filter(field => !formData[field]);
-        if (missingFields.length > 0) {
-          alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
-          return;
-        }
-      } else {
-        // FTL验证 - 包含车型要求
-        const requiredFieldsFTL = [...requiredFields, 'truckType'];
-        const missingFields = requiredFieldsFTL.filter(field => !formData[field]);
-        if (missingFields.length > 0) {
-          alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
-          return;
-        }
+      };
+
+      try {
+        validateForm();
+      } catch (error) {
+        alert(error.message);
+        return;
       }
 
-      // 自动处理地址和距离计算
+      // 自动处理地址和距离计算 - 🚨 这部分逻辑很复杂，是否真的需要？
       console.log('开始处理地址和距离计算...');
       
       let originData = selectedPlaces.origin;
@@ -630,16 +578,28 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     } catch (error) {
       console.error('处理地址或距离时出错:', error);
       // 即使地址处理失败，也允许继续提交，但提醒用户
-      const proceed = confirm('地址解析或距离计算失败，是否继续发布？（将使用原始地址信息）');
-      if (proceed) {
-        await processFormSubmission(selectedPlaces.origin, selectedPlaces.destination, distanceInfo);
-      }
+      setErrorData({
+        message: '地址解析或距离计算失败，是否继续发布？（将使用原始地址信息）',
+        onConfirm: async () => {
+          setShowErrorConfirm(false);
+          await processFormSubmission(selectedPlaces.origin, selectedPlaces.destination, distanceInfo);
+          setSubmitting(false);
+        },
+        onCancel: () => {
+          setShowErrorConfirm(false);
+          setSubmitting(false);
+        }
+      });
+      setShowErrorConfirm(true);
+      return; // 不要在 finally 中设置 submitting，因为确认对话框还在显示
     } finally {
-      setSubmitting(false);
+      if (!showErrorConfirm) {
+        setSubmitting(false);
+      }
     }
   };
 
-  // 处理表单提交的核心逻辑
+  // 处理表单提交的核心逻辑 - 🚨 超级复杂，包含LTL和FTL不同处理
   const processFormSubmission = async (originData, destinationData, calculatedDistance) => {
     // 根据服务类型处理提交数据
     if (formData.serviceType === 'LTL') {
@@ -806,11 +766,18 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     setDistanceInfo(null);
   };
 
-  if (!isOpen) return null;
+  /*
+   * =====================================================================
+   * UI渲染部分 (约800行) - 🚨 JSX过于庞大，应该组件化
+   * =====================================================================
+   */
+   
+  if (!isOpen) return null; // ✅ 简单的条件渲染
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content large-modal" onClick={(e) => e.stopPropagation()}>
+        {/* ====== 模态框头部 - ✅ 简单 ====== */}
         <div className="modal-header">
           <h2>发布货源信息 (Post Load)</h2>
           <button className="close-btn" onClick={onClose}>
@@ -818,6 +785,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           </button>
         </div>
 
+        {/* ====== 表单主体 - 🚨 超级复杂，应该拆分为多个组件 ====== */}
         <form onSubmit={handleSubmit} className="modal-form">
           {/* 运输类型选择 - 突出显示 */}
           <div className="form-section">
@@ -1146,21 +1114,14 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
 
               {formData.cargoItems.map((item, index) => (
-                <div key={item.id} className="cargo-item-card" style={{
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '8px',
-                  padding: '1rem',
-                  marginBottom: '1rem',
-                  background: '#f9f9f9'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h4 style={{ margin: 0, color: '#34C759' }}>
+                <div key={item.id} className="cargo-item-card">
+                                      <div className="cargo-item-header">
+                    <h4 className="cargo-item-title">
                       货物 #{index + 1}
                     </h4>
-
                   </div>
 
-                  <div className="form-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                  <div className="form-grid cargo-basic-grid">
                     <div className="form-group">
                       <label>托板数量 (Pallets) <span className="required">*</span></label>
                       <input
@@ -1307,39 +1268,33 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
                   {/* 计算结果显示 */}
                   {item.freightClass && (
-                    <div className="calculation-results" style={{
-                      background: 'linear-gradient(135deg, #e8f5e8, #f0faf0)',
-                      border: '1px solid #34C759',
-                      borderRadius: '6px',
-                      padding: '1rem',
-                      marginTop: '1rem'
-                    }}>
-                      <h5 style={{ margin: '0 0 0.5rem 0', color: '#34C759' }}>
-                        <Calculator size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                    <div className="calculation-results">
+                      <h5 className="calculation-title">
+                        <Calculator size={16} />
                         计算结果
                       </h5>
-                      <div className="results-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                        <div style={{ background: 'white', padding: '0.5rem', borderRadius: '4px', textAlign: 'center' }}>
-                          <div style={{ fontSize: '0.8rem', color: '#666' }}>体积</div>
-                          <div style={{ fontWeight: '600' }}>{item.volume} ft³</div>
+                      <div className="results-grid">
+                        <div className="result-item">
+                          <div className="result-label">体积</div>
+                          <div className="result-value">{item.volume} ft³</div>
                         </div>
-                        <div style={{ background: 'white', padding: '0.5rem', borderRadius: '4px', textAlign: 'center' }}>
-                          <div style={{ fontSize: '0.8rem', color: '#666' }}>密度</div>
-                          <div style={{ fontWeight: '600' }}>{item.density} lbs/ft³</div>
+                        <div className="result-item">
+                          <div className="result-label">密度</div>
+                          <div className="result-value">{item.density} lbs/ft³</div>
                         </div>
-                        <div style={{ background: '#34C759', color: 'white', padding: '0.5rem', borderRadius: '4px', textAlign: 'center' }}>
-                          <div style={{ fontSize: '0.8rem' }}>NMFC等级</div>
-                          <div style={{ fontWeight: '700' }}>Class {item.freightClass}</div>
+                        <div className="result-item primary">
+                          <div className="result-label">NMFC等级</div>
+                          <div className="result-value">Class {item.freightClass}</div>
                         </div>
                       </div>
                     </div>
                   )}
 
                   {/* 特殊属性 */}
-                  <div style={{ marginTop: '1rem' }}>
-                    <h5 style={{ margin: '0 0 0.5rem 0', color: '#333' }}>特殊属性 (Special Characteristics)</h5>
-                    <div className="checkbox-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                      <label className="checkbox-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                  <div className="special-attributes">
+                    <h5>特殊属性 (Special Characteristics)</h5>
+                    <div className="checkbox-grid">
+                      <label className="checkbox-item">
                         <input
                           type="checkbox"
                           checked={item.stackable}
@@ -1348,7 +1303,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                         <span>可堆叠</span>
                       </label>
                       
-                      <label className="checkbox-item" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <label className="checkbox-item">
                         <input
                           type="checkbox"
                           checked={item.fragile}
@@ -1357,7 +1312,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                         <span>易碎品</span>
                       </label>
                       
-                      <label className="checkbox-item hazmat" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                      <label className="checkbox-item hazmat">
                         <input
                           type="checkbox"
                           checked={item.hazmat}
@@ -1365,47 +1320,19 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                         />
                         <span>危险品</span>
                       </label>
-                <button
-                  type="button"
-                  onClick={addCargoItem}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    padding: '0.5rem 1rem',
-                    background: '#34C759',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '0.9rem',
-                    fontWeight: '600'
-                  }}
-                >  
-                  <Plus size={16} />
-                  添加货物
-                </button>
-                                    {formData.cargoItems.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeCargoItem(item.id)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.25rem',
-                          padding: '0.25rem 0.5rem',
-                          background: '#ff4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.8rem'
-                        }}
-                      >
-                        <Minus size={14} />
-                        删除
+                    </div>
+                    
+                    <div className="cargo-item-actions">
+                      <button type="button" onClick={addCargoItem} className="btn add-cargo-btn">  
+                        <Plus size={16} />
+                        添加货物
                       </button>
-                    )}
+                      {formData.cargoItems.length > 1 && (
+                        <button type="button" onClick={() => removeCargoItem(item.id)} className="btn remove-cargo-btn">
+                          <Minus size={14} />
+                          删除
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1493,466 +1420,52 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         </form>
       </div>
 
-      <style jsx>{`
-        .large-modal {
-          max-width: 800px;
-          max-height: 90vh;
-          overflow-y: auto;
-        }
-
-        .form-section {
-          margin-bottom: 2rem;
-          padding-bottom: 1.5rem;
-          border-bottom: 1px solid #eee;
-        }
-
-        .form-section:last-child {
-          border-bottom: none;
-          margin-bottom: 0;
-        }
-
-        .form-section h3 {
-          margin: 0 0 1rem 0;
-          color: #333;
-          font-size: 1.2rem;
-          font-weight: 600;
-        }
-
-        .required {
-          color: #ff4444;
-          font-weight: bold;
-        }
-
-        .dimension-input-group {
-          display: flex;
-          gap: 0.5rem;
-          align-items: center;
-        }
-
-        .dimension-input-group > input {
-          flex: 1;
-        }
-
-        .conversion-input {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          min-width: 80px;
-        }
-
-        .unit-converter {
-          width: 60px !important;
-          padding: 0.25rem !important;
-          font-size: 0.8rem !important;
-          border: 1px solid #ddd !important;
-          border-radius: 4px !important;
-        }
-
-        .unit-label {
-          font-size: 0.8rem;
-          color: #666;
-          min-width: 20px;
-        }
-
-        .service-type-selection {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-        }
-
-        .service-type-option {
-          display: block;
-          padding: 1rem;
-          border: 2px solid #e0e0e0;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-        }
-
-        .service-type-option:hover {
-          border-color: #34C759;
-          background-color: #f8f9fa;
-        }
-
-        .service-type-option.selected {
-          border-color: #34C759;
-          background-color: #e8f5e8;
-        }
-
-        .service-type-option input[type="radio"] {
-          display: none;
-        }
-
-        .service-type-content {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-        }
-
-        .service-type-content > svg {
-          color: #34C759;
-          flex-shrink: 0;
-        }
-
-        .service-type-content strong {
-          color: #333;
-          margin-bottom: 0.25rem;
-          display: block;
-        }
-
-        .service-type-content p {
-          color: #666;
-          font-size: 0.9rem;
-          margin: 0;
-        }
-
-        .form-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-          gap: 1rem;
-        }
-
-        .location-type-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 0.5rem;
-          margin-top: 0.5rem;
-        }
-
-        .location-type-option {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.5rem;
-          border: 1px solid #ddd;
-          border-radius: 6px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-size: 0.9rem;
-        }
-
-        .location-type-option:hover {
-          border-color: #34C759;
-          background-color: #f8f9fa;
-        }
-
-        .location-type-option.selected {
-          border-color: #34C759;
-          background-color: #e8f5e8;
-          color: #2d5016;
-        }
-
-        .location-type-option input[type="radio"] {
-          display: none;
-        }
-
-        .location-type-option svg {
-          flex-shrink: 0;
-        }
-
-        .checkbox-group {
-          display: flex;
-          align-items: center;
-        }
-
-        .checkbox-label {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          user-select: none;
-        }
-
-        .checkbox-label input[type="checkbox"] {
-          width: 18px;
-          height: 18px;
-          accent-color: #34C759;
-        }
-
-        @media (max-width: 768px) {
-          .large-modal {
-            max-width: 95vw;
-            margin: 1rem;
-          }
-
-          .service-type-selection,
-          .form-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .location-type-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .dimension-input-group {
-            flex-direction: column;
-            align-items: stretch;
-          }
-        }
-
-        /* 地址类型勾选框样式 */
-        .location-types-section {
-          margin: 1.5rem 0;
-          padding: 1rem;
-          background: #f9f9f9;
-          border-radius: 8px;
-          border: 1px solid #e0e0e0;
-        }
-
-        .location-types-section h4 {
-          margin: 0 0 1rem 0;
-          color: #333;
-          font-size: 1rem;
-          font-weight: 600;
-        }
-
-        .location-types-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1.5rem;
-        }
-
-        .location-type-group {
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-
-        .location-type-header {
-          font-weight: 600;
-          color: #333;
-          font-size: 0.9rem;
-          margin: 0;
-        }
-
-        .checkbox-options {
-          display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-        }
-
-        .checkbox-option {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          padding: 0.25rem;
-          border-radius: 4px;
-          transition: background-color 0.2s ease;
-        }
-
-        .checkbox-option:hover {
-          background-color: rgba(52, 199, 89, 0.1);
-        }
-
-        .checkbox-option input[type="checkbox"] {
-          width: 16px;
-          height: 16px;
-          accent-color: #34C759;
-          cursor: pointer;
-        }
-
-        .checkbox-label {
-          font-size: 0.85rem;
-          color: #555;
-          cursor: pointer;
-          user-select: none;
-        }
-
-        @media (max-width: 768px) {
-          .location-types-grid {
-            grid-template-columns: 1fr;
-            gap: 1rem;
-          }
-
-          .checkbox-label {
-            font-size: 0.8rem;
-          }
-        }
-
-        .service-type-selection {
-        }
-
-        /* 地址输入组件样式 */
-        .address-input-group {
-          position: relative;
-        }
-
-        .address-input-container {
-          position: relative;
-          display: flex;
-          align-items: center;
-        }
-
-        .address-input-container input {
-          padding-right: 2.5rem;
-          width: 100%;
-        }
-
-        .search-icon {
-          position: absolute;
-          right: 0.75rem;
-          color: #666;
-          pointer-events: none;
-        }
-
-        .address-suggestions {
-          position: absolute;
-          top: 100%;
-          left: 0;
-          right: 0;
-          background: white;
-          border: 1px solid #ddd;
-          border-radius: 6px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-          max-height: 200px;
-          overflow-y: auto;
-          z-index: 1000;
-        }
-
-        .suggestion-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 0.75rem;
-          cursor: pointer;
-          border-bottom: 1px solid #f0f0f0;
-          transition: background-color 0.2s ease;
-        }
-
-        .suggestion-item:last-child {
-          border-bottom: none;
-        }
-
-        .suggestion-item:hover {
-          background-color: #f8f9fa;
-        }
-
-        .suggestion-main {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          flex: 1;
-        }
-
-        .suggestion-main svg {
-          color: #34C759;
-          flex-shrink: 0;
-        }
-
-        .city-state {
-          font-weight: 500;
-          color: #333;
-        }
-
-        .zip-code {
-          font-size: 0.8rem;
-          color: #666;
-          background: #f0f0f0;
-          padding: 0.2rem 0.5rem;
-          border-radius: 3px;
-        }
-
-        /* 路线查看按钮样式 */
-        .route-section {
-          margin-top: 1.5rem;
-          padding: 1rem;
-          background: #f8f9fa;
-          border-radius: 8px;
-          border: 1px solid #e0e0e0;
-          text-align: center;
-        }
-
-        .route-btn {
-          background: linear-gradient(135deg, #34C759, #28a745);
-          color: white;
-          border: none;
-          padding: 0.75rem 1.5rem;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          transition: all 0.3s ease;
-          box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
-        }
-
-        .route-btn:hover {
-          background: linear-gradient(135deg, #28a745, #1e7e34);
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(52, 199, 89, 0.4);
-        }
-
-        .route-description {
-          margin: 0.75rem 0 0 0;
-          color: #666;
-          font-size: 0.9rem;
-        }
-
-        /* 距离计算样式 */
-        .distance-calculating {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          margin-top: 1rem;
-          padding: 0.75rem;
-          background: #e3f2fd;
-          border-radius: 6px;
-          color: #1976d2;
-          font-size: 0.9rem;
-        }
-
-        .loading-spinner-small {
-          width: 16px;
-          height: 16px;
-          border: 2px solid #bbdefb;
-          border-top: 2px solid #1976d2;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        .distance-info {
-          margin-top: 1rem;
-          padding: 1rem;
-          background: linear-gradient(135deg, #e8f5e8, #f0faf0);
-          border: 1px solid #34C759;
-          border-radius: 8px;
-        }
-
-        .distance-summary {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 1rem;
-          text-align: center;
-        }
-
-        .distance-text, .duration-text {
-          background: white;
-          padding: 0.75rem;
-          border-radius: 6px;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          font-size: 0.9rem;
-        }
-
-        .distance-text strong, .duration-text strong {
-          color: #34C759;
-          display: block;
-          margin-bottom: 0.25rem;
-        }
-      `}</style>
-
-      {/* Google Maps 路线模态框 */}
-      {showRouteModal && (
-        <GoogleMapsRoute
-          origin={selectedPlaces.origin || { address: formData.origin }}
-          destination={selectedPlaces.destination || { address: formData.destination }}
-          onClose={() => setShowRouteModal(false)}
-        />
-      )}
-    </div>
-  );
-};
+              {/* 
+         * ===============================================================
+         * Google Maps 路线模态框 - 🤔 这个功能真的必要吗？
+         * ===============================================================
+         */}
+        {showRouteModal && (
+          <GoogleMapsRoute
+            origin={selectedPlaces.origin || { address: formData.origin }}
+            destination={selectedPlaces.destination || { address: formData.destination }}
+            onClose={() => setShowRouteModal(false)}
+          />
+        )}
+
+        {/* 
+         * ===============================================================
+         * 错误确认对话框 - ✅ 替换原生 confirm，改善用户体验
+         * ===============================================================
+         */}
+        {showErrorConfirm && errorData && (
+          <div className="modal-overlay" style={{ zIndex: 1100 }}>
+            <div className="modal-content error-confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>确认操作</h3>
+                <button className="close-btn" onClick={errorData.onCancel}>
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="modal-body">
+                <div className="error-confirm-content">
+                  <AlertCircle size={48} color="#ff6b35" />
+                  <p>{errorData.message}</p>
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" onClick={errorData.onCancel} className="btn secondary">
+                  取消
+                </button>
+                <button type="button" onClick={errorData.onConfirm} className="btn primary">
+                  继续发布
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
 export default PostLoadModal; 
