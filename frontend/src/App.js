@@ -5,7 +5,6 @@ import { Package, BookOpen, Briefcase, ShoppingBag } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import Services from './pages/Services';
 import FreightBoard from './pages/FreightBoard';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
@@ -40,7 +39,7 @@ function App() {
               <Route path="/land-warehouse" element={<LandWarehouseQuery />} />
               
               {/* 海运服务 */}
-              <Route path="/services" element={<Services />} />
+              
               <Route path="/seaport-query" element={<SeaportQuery />} />
               <Route path="/sea-freight" element={<SeaFreightPlatform />} />
               
