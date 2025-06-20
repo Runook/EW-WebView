@@ -81,8 +81,11 @@
 /* ===== 基础布局 ===== */
 .freight-board,
 .platform-page {
-  min-height: 80vh;
-  padding: var(--gap-2xl) 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f8f9fa;
+  min-height: 100vh;
 }
 
 .container {
