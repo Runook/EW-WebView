@@ -11,7 +11,6 @@ const Footer = () => {
     { label: '服务', path: '/services' },
     { label: '陆运仓库', path: '/land-warehouse' },
     { label: '海港查询', path: '/seaport-query' },
-    { label: '机场查询', path: '/airport-query' },
     { label: '联系我们', path: '/contact' }
   ];
 
