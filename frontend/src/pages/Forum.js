@@ -327,7 +327,7 @@ const Forum = () => {
       <div className="page-header">
         <div className="container">
           <h1>事件论坛</h1>
-          <p>物流行业交流论坛，分享行业资讯、经验交流、问题解答</p>
+          <p>清乱象，立诚信！物流世界，强者通行！</p>
         </div>
       </div>
 

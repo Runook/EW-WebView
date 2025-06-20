@@ -238,8 +238,7 @@ const AirFreightPlatform = () => {
                   e.target.closest('a').style.color = '#0ea5e9';
                 }}
               >
-                <MessageCircle size={16} />
-                在线咨询
+              
               </a>
             </div>
           </div>
