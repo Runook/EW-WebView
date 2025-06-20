@@ -10,7 +10,6 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import LandWarehouseQuery from './pages/LandWarehouseQuery';
-import SeaportQuery from './pages/SeaportQuery';
 import AirportQuery from './pages/AirportQuery';
 import SeaFreightPlatform from './pages/SeaFreightPlatform';
 import AirFreightPlatform from './pages/AirFreightPlatform';
@@ -40,7 +39,6 @@ function App() {
               
               {/* 海运服务 */}
               
-              <Route path="/seaport-query" element={<SeaportQuery />} />
               <Route path="/sea-freight" element={<SeaFreightPlatform />} />
               
               {/* 空运服务 */}
