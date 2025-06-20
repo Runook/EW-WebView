@@ -10,7 +10,6 @@ import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import LandWarehouseQuery from './pages/LandWarehouseQuery';
-import AirportQuery from './pages/AirportQuery';
 import SeaFreightPlatform from './pages/SeaFreightPlatform';
 import AirFreightPlatform from './pages/AirFreightPlatform';
 import MultimodalPlatform from './pages/MultimodalPlatform';
@@ -43,7 +42,6 @@ function App() {
               
               {/* 空运服务 */}
               <Route path="/air-platform" element={<AirFreightPlatform />} />
-              <Route path="/airport-query" element={<AirportQuery />} />
               <Route path="/air-freight" element={<AirFreightPlatform />} />
               
               {/* 多式联运 */}

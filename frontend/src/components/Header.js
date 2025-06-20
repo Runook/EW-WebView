@@ -93,7 +93,6 @@ const Header = () => {
       type: 'dropdown',
       items: [
         { path: '/air-platform', label: '空运信息平台' },
-        { path: '/airport-query', label: '机场查询' }
       ]
     },
     {
