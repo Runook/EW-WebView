@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MapPin, Search, Navigation, Map } from 'lucide-react';
 import './GoogleMapsAddressInput.css';
+import { getGoogleMapsApiKey } from '../config/googleMaps';
 
 // 从地址组件中提取城市、州、邮编信息
 const extractAddressComponents = (addressComponents) => {
@@ -62,30 +63,14 @@ const GoogleMapsAddressInput = ({
   const autocompleteService = useRef(null);
   const placesService = useRef(null);
 
-  const GOOGLE_MAPS_API_KEY = 'AIzaSyB-uQvzsiFeJOr37qYg2EenJbaKUG7-KfE';
+  const GOOGLE_MAPS_API_KEY = getGoogleMapsApiKey();
 
   // Initialize Google Maps services
-  useEffect(() => {
-    console.log('GoogleMapsAddressInput: Initializing...');
-    if (window.google && window.google.maps) {
-      console.log('Google Maps API already loaded');
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
-      placesService.current = new window.google.maps.places.PlacesService(
-        document.createElement('div')
-      );
-      console.log('Services initialized successfully');
-    } else {
-      console.log('Loading Google Maps API...');
-      loadGoogleMapsAPI();
-    }
-  }, []);
-
-  const loadGoogleMapsAPI = () => {
+  const loadGoogleMapsAPI = React.useCallback(() => {
     if (window.google) {
       console.log('Google Maps API already exists');
       return;
     }
-
     console.log('Creating Google Maps API script...');
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
@@ -103,7 +88,22 @@ const GoogleMapsAddressInput = ({
       console.error('Failed to load Google Maps API:', error);
     };
     document.head.appendChild(script);
-  };
+  }, [GOOGLE_MAPS_API_KEY]);
+
+  useEffect(() => {
+    console.log('GoogleMapsAddressInput: Initializing...');
+    if (window.google && window.google.maps) {
+      console.log('Google Maps API already loaded');
+      autocompleteService.current = new window.google.maps.places.AutocompleteService();
+      placesService.current = new window.google.maps.places.PlacesService(
+        document.createElement('div')
+      );
+      console.log('Services initialized successfully');
+    } else {
+      console.log('Loading Google Maps API...');
+      loadGoogleMapsAPI();
+    }
+  }, [loadGoogleMapsAPI]);
 
   const searchPlaces = (query) => {
     console.log('Searching for:', query);
@@ -238,34 +238,10 @@ const GoogleMapsRoute = ({ origin, destination, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const GOOGLE_MAPS_API_KEY = 'AIzaSyB-uQvzsiFeJOr37qYg2EenJbaKUG7-KfE';
+  const GOOGLE_MAPS_API_KEY = getGoogleMapsApiKey();
 
-  useEffect(() => {
-    if (origin && destination) {
-      initializeMap();
-    }
-  }, [origin, destination]);
-
-  const initializeMap = () => {
-    if (!window.google) {
-      loadGoogleMapsAPI(() => {
-        createMap();
-      });
-    } else {
-      createMap();
-    }
-  };
-
-  const loadGoogleMapsAPI = (callback) => {
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
-    script.async = true;
-    script.defer = true;
-    script.onload = callback;
-    document.head.appendChild(script);
-  };
-
-  const createMap = () => {
+  // GoogleMapsRoute: 修复 useEffect 依赖和函数声明顺序
+  const createMap = React.useCallback(() => {
     if (!mapRef.current) return;
 
     const map = new window.google.maps.Map(mapRef.current, {
@@ -313,7 +289,32 @@ const GoogleMapsRoute = ({ origin, destination, onClose }) => {
         setError('无法计算路线: ' + status);
       }
     });
-  };
+  }, [origin, destination]);
+
+  const loadGoogleMapsAPI = React.useCallback((callback) => {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
+    script.async = true;
+    script.defer = true;
+    script.onload = callback;
+    document.head.appendChild(script);
+  }, [GOOGLE_MAPS_API_KEY]);
+
+  const initializeMap = React.useCallback(() => {
+    if (!window.google) {
+      loadGoogleMapsAPI(() => {
+        createMap();
+      });
+    } else {
+      createMap();
+    }
+  }, [loadGoogleMapsAPI, createMap]);
+
+  useEffect(() => {
+    if (origin && destination) {
+      initializeMap();
+    }
+  }, [origin, destination, initializeMap]);
 
   return (
     <div className="route-modal-overlay" onClick={onClose}>
@@ -457,4 +458,4 @@ const calculateDistance = async (origin, destination) => {
   });
 };
 
-export { GoogleMapsAddressInput, GoogleMapsRoute, calculateDistance, geocodeAddress }; 
+export { GoogleMapsAddressInput, GoogleMapsRoute, calculateDistance, geocodeAddress };

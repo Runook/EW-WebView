@@ -1,8 +1,8 @@
 // Google Maps API 配置
 // 请在此处添加您的 Google Maps API Key
 export const GOOGLE_MAPS_CONFIG = {
-  // 🔑 在这里添加您的 Google Maps API Key
-  API_KEY: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'AIzaSyB-uQvzsiFeJOr37qYg2EenJbaKUG7-KfE',
+  // 🔑 仅从环境变量读取 Google Maps API Key，不再提供硬编码默认值
+  API_KEY: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
   
   // Google Maps 库配置
   LIBRARIES: ['places', 'geometry'],
@@ -142,4 +142,9 @@ export const loadGoogleMapsScript = () => {
       }
     }, 10000); // 10秒超时
   });
-}; 
+};
+
+// 提供统一的 API Key 获取函数
+export const getGoogleMapsApiKey = () => {
+  return GOOGLE_MAPS_CONFIG.API_KEY;
+};
