@@ -37,6 +37,7 @@ const auth = (req, res, next) => {
     
     // 将用户信息添加到请求对象
     req.user = {
+      id: decoded.userId,
       userId: decoded.userId,
       email: decoded.email,
       userType: decoded.userType
@@ -87,6 +88,7 @@ const optionalAuth = (req, res, next) => {
 
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = {
+      id: decoded.userId,
       userId: decoded.userId,
       email: decoded.email,
       userType: decoded.userType
