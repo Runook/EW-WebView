@@ -624,6 +624,8 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
           specialRequirements: formData.notes || '',
           serviceType: formData.serviceType,
           truckType: formData.truckType,
+          pallets: item.pallets,
+
           // 保留原始表单数据用于显示
           originalData: {
             ...formData,

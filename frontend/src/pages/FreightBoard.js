@@ -687,12 +687,14 @@ const FreightBoard = () => {
                       </div>
                       
                       {/* 取货日期 */}
-                      <div className="date">
-                        <Calendar size={14} />
-                        <span className="date-text">
-                          {load.pickupDate?.split('-').slice(1).join('/') || '未知日期'} 取货
-                        </span>
-                      </div>
+<div className="date">
+  <Calendar size={14} />
+  <span className="date-text">
+    {load.pickupDate ? 
+      new Date(load.pickupDate).toLocaleDateString('en-US', {month: '2-digit', day: '2-digit'}) 
+      : '未知日期'} 取货
+  </span>
+</div>
                       
                       {/* 距离信息 */}
                       <div className="distance-info">
@@ -776,9 +778,13 @@ const FreightBoard = () => {
                       
                       {/* 可用日期 */}
                       <div className="date">
-                        <Calendar size={14} />
-                        <span className="date-text">{truck.availableDate?.split('-').slice(1).join('/') || '未知日期'}</span>
-                      </div>
+  <Calendar size={14} />
+  <span className="date-text">
+    {truck.availableDate ? 
+      truck.availableDate.substring(5, 10).replace('-', '/') 
+      : '未知日期'}
+  </span>
+</div>
                       
                       {/* 价格范围 */}
                       <div className="rate">
