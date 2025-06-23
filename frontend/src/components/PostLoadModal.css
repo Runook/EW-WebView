@@ -537,7 +537,7 @@
   animation: spin 1s linear infinite;
 }
 
-.distance-info {
+.modal-content .distance-info {
   margin-top: 1rem;
   padding: 1rem;
   background: linear-gradient(135deg, #e8f5e8, #f0faf0);
