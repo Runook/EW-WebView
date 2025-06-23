@@ -1,199 +1,287 @@
 // 简单的内存存储用户模型
 // 在实际项目中，这应该使用真实的数据库（PostgreSQL, MySQL等）
 
+const { db } = require('../config/database');
+
 class User {
   constructor() {
-    // 内存中的用户数据
-    this.users = [];
-    this.nextId = 1;
+    this.tableName = 'users';
   }
 
   // 创建用户
   async create(userData) {
-    const user = {
-      id: this.nextId++,
-      ...userData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      lastLoginAt: null
-    };
-    
-    this.users.push(user);
-    return user.id;
+    try {
+      // 转换驼峰命名为下划线命名
+      const dbData = {
+        email: userData.email,
+        password: userData.password,
+        first_name: userData.firstName,
+        last_name: userData.lastName,
+        phone: userData.phone,
+        user_type: userData.userType,
+        company_name: userData.companyName,
+        company_type: userData.companyType,
+        address: userData.address,
+        city: userData.city,
+        state: userData.state,
+        zip_code: userData.zipCode,
+        business_license: userData.businessLicense,
+        mc_number: userData.mcNumber,
+        dot_number: userData.dotNumber,
+        is_active: userData.isActive || true,
+        is_verified: userData.isVerified || false
+      };
+
+      const [user] = await db(this.tableName)
+        .insert(dbData)
+        .returning('*');
+      
+      return this._transformUser(user);
+    } catch (error) {
+      console.error('User.create error:', error);
+      throw error;
+    }
   }
 
   // 根据ID查找用户
   async findById(id) {
-    return this.users.find(user => user.id === parseInt(id));
+    try {
+      const user = await db(this.tableName)
+        .where('id', id)
+        .first();
+      
+      return user ? this._transformUser(user) : null;
+    } catch (error) {
+      console.error('User.findById error:', error);
+      throw error;
+    }
   }
 
   // 根据邮箱查找用户
   async findByEmail(email) {
-    return this.users.find(user => user.email.toLowerCase() === email.toLowerCase());
+    try {
+      const user = await db(this.tableName)
+        .where('email', email.toLowerCase())
+        .first();
+      
+      return user ? this._transformUser(user) : null;
+    } catch (error) {
+      console.error('User.findByEmail error:', error);
+      throw error;
+    }
   }
 
   // 根据MC号码查找承运商
   async findByMCNumber(mcNumber) {
-    return this.users.find(user => 
-      user.userType === 'carrier' && user.mcNumber === mcNumber
-    );
+    try {
+      const user = await db(this.tableName)
+        .where({
+          'user_type': 'carrier',
+          'mc_number': mcNumber
+        })
+        .first();
+      
+      return user ? this._transformUser(user) : null;
+    } catch (error) {
+      console.error('User.findByMCNumber error:', error);
+      throw error;
+    }
   }
 
   // 更新用户信息
   async update(id, updates) {
-    const userIndex = this.users.findIndex(user => user.id === parseInt(id));
-    
-    if (userIndex === -1) {
-      throw new Error('用户不存在');
+    try {
+      // 转换驼峰命名为下划线命名
+      const dbUpdates = {};
+      const fieldMapping = {
+        firstName: 'first_name',
+        lastName: 'last_name',
+        userType: 'user_type',
+        companyName: 'company_name',
+        companyType: 'company_type',
+        zipCode: 'zip_code',
+        businessLicense: 'business_license',
+        mcNumber: 'mc_number',
+        dotNumber: 'dot_number',
+        isActive: 'is_active',
+        isVerified: 'is_verified'
+      };
+
+      Object.keys(updates).forEach(key => {
+        const dbKey = fieldMapping[key] || key;
+        dbUpdates[dbKey] = updates[key];
+      });
+
+      dbUpdates.updated_at = new Date();
+
+      const [user] = await db(this.tableName)
+        .where('id', id)
+        .update(dbUpdates)
+        .returning('*');
+
+      if (!user) {
+        throw new Error('用户不存在');
+      }
+
+      return this._transformUser(user);
+    } catch (error) {
+      console.error('User.update error:', error);
+      throw error;
     }
-
-    this.users[userIndex] = {
-      ...this.users[userIndex],
-      ...updates,
-      updatedAt: new Date()
-    };
-
-    return this.users[userIndex];
   }
 
   // 更新最后登录时间
   async updateLastLogin(id) {
-    const userIndex = this.users.findIndex(user => user.id === parseInt(id));
-    
-    if (userIndex !== -1) {
-      this.users[userIndex].lastLoginAt = new Date();
-    }
+    try {
+      const [user] = await db(this.tableName)
+        .where('id', id)
+        .update({
+          last_login_at: new Date(),
+          updated_at: new Date()
+        })
+        .returning('*');
 
-    return this.users[userIndex];
+      return user ? this._transformUser(user) : null;
+    } catch (error) {
+      console.error('User.updateLastLogin error:', error);
+      throw error;
+    }
   }
 
-  // 删除用户（软删除）
+  // 软删除用户
   async softDelete(id) {
-    const userIndex = this.users.findIndex(user => user.id === parseInt(id));
-    
-    if (userIndex === -1) {
-      throw new Error('用户不存在');
+    try {
+      const [user] = await db(this.tableName)
+        .where('id', id)
+        .update({
+          is_active: false,
+          updated_at: new Date()
+        })
+        .returning('*');
+
+      if (!user) {
+        throw new Error('用户不存在');
+      }
+
+      return this._transformUser(user);
+    } catch (error) {
+      console.error('User.softDelete error:', error);
+      throw error;
     }
-
-    this.users[userIndex].isActive = false;
-    this.users[userIndex].updatedAt = new Date();
-
-    return this.users[userIndex];
   }
 
   // 获取所有用户（管理员功能）
   async findAll(filters = {}) {
-    let filteredUsers = [...this.users];
+    try {
+      let query = db(this.tableName);
 
-    // 按用户类型过滤
-    if (filters.userType) {
-      filteredUsers = filteredUsers.filter(user => 
-        user.userType === filters.userType
-      );
+      // 按用户类型过滤
+      if (filters.userType) {
+        query = query.where('user_type', filters.userType);
+      }
+
+      // 按状态过滤
+      if (filters.isActive !== undefined) {
+        query = query.where('is_active', filters.isActive);
+      }
+
+      // 按公司名称搜索
+      if (filters.companyName) {
+        query = query.where('company_name', 'ilike', `%${filters.companyName}%`);
+      }
+
+      const users = await query.select('*');
+      
+      return users.map(user => {
+        const transformed = this._transformUser(user);
+        delete transformed.password; // 移除密码字段
+        return transformed;
+      });
+    } catch (error) {
+      console.error('User.findAll error:', error);
+      throw error;
     }
-
-    // 按状态过滤
-    if (filters.isActive !== undefined) {
-      filteredUsers = filteredUsers.filter(user => 
-        user.isActive === filters.isActive
-      );
-    }
-
-    // 按公司名称搜索
-    if (filters.companyName) {
-      filteredUsers = filteredUsers.filter(user => 
-        user.companyName.toLowerCase().includes(filters.companyName.toLowerCase())
-      );
-    }
-
-    // 移除密码字段
-    return filteredUsers.map(user => {
-      const { password, ...userWithoutPassword } = user;
-      return userWithoutPassword;
-    });
   }
 
   // 统计信息
   async getStats() {
-    const totalUsers = this.users.length;
-    const activeUsers = this.users.filter(user => user.isActive).length;
-    const shippers = this.users.filter(user => user.userType === 'shipper').length;
-    const carriers = this.users.filter(user => user.userType === 'carrier').length;
-    
-    return {
-      totalUsers,
-      activeUsers,
-      inactiveUsers: totalUsers - activeUsers,
-      shippers,
-      carriers
-    };
+    try {
+      const stats = await db(this.tableName)
+        .select(
+          db.raw('COUNT(*) as total_users'),
+          db.raw('COUNT(CASE WHEN is_active = true THEN 1 END) as active_users'),
+          db.raw('COUNT(CASE WHEN user_type = ? THEN 1 END) as shippers', ['shipper']),
+          db.raw('COUNT(CASE WHEN user_type = ? THEN 1 END) as carriers', ['carrier'])
+        )
+        .first();
+
+      return {
+        totalUsers: parseInt(stats.total_users),
+        activeUsers: parseInt(stats.active_users),
+        inactiveUsers: parseInt(stats.total_users) - parseInt(stats.active_users),
+        shippers: parseInt(stats.shippers),
+        carriers: parseInt(stats.carriers)
+      };
+    } catch (error) {
+      console.error('User.getStats error:', error);
+      throw error;
+    }
   }
 
   // 验证用户权限
   async hasPermission(userId, permission) {
-    const user = await this.findById(userId);
-    
-    if (!user || !user.isActive) {
+    try {
+      const user = await this.findById(userId);
+      
+      if (!user || !user.isActive) {
+        return false;
+      }
+
+      // 基本权限检查
+      const userPermissions = {
+        shipper: ['view_own_shipments', 'create_shipment', 'update_own_profile'],
+        carrier: ['view_available_loads', 'bid_on_loads', 'update_own_profile'],
+        admin: ['view_all_users', 'manage_users', 'view_analytics']
+      };
+
+      return userPermissions[user.userType]?.includes(permission) || false;
+    } catch (error) {
+      console.error('User.hasPermission error:', error);
       return false;
     }
-
-    // 基本权限检查
-    const userPermissions = {
-      shipper: ['view_own_shipments', 'create_shipment', 'update_own_profile'],
-      carrier: ['view_available_loads', 'bid_on_loads', 'update_own_profile'],
-      admin: ['view_all_users', 'manage_users', 'view_analytics']
-    };
-
-    return userPermissions[user.userType]?.includes(permission) || false;
   }
 
-  // 清除所有数据（仅用于测试）
-  async clearAll() {
-    this.users = [];
-    this.nextId = 1;
+  // 转换数据库字段为前端字段
+  _transformUser(dbUser) {
+    if (!dbUser) return null;
+
+    return {
+      id: dbUser.id,
+      email: dbUser.email,
+      password: dbUser.password,
+      firstName: dbUser.first_name,
+      lastName: dbUser.last_name,
+      phone: dbUser.phone,
+      userType: dbUser.user_type,
+      companyName: dbUser.company_name,
+      companyType: dbUser.company_type,
+      address: dbUser.address,
+      city: dbUser.city,
+      state: dbUser.state,
+      zipCode: dbUser.zip_code,
+      businessLicense: dbUser.business_license,
+      mcNumber: dbUser.mc_number,
+      dotNumber: dbUser.dot_number,
+      isActive: dbUser.is_active,
+      isVerified: dbUser.is_verified,
+      lastLoginAt: dbUser.last_login_at,
+      createdAt: dbUser.created_at,
+      updatedAt: dbUser.updated_at
+    };
   }
 }
 
 // 创建单例实例
 const userModel = new User();
-
-// 初始化一些测试数据
-userModel.create({
-  email: 'shipper@test.com',
-  password: '$2a$12$4VGZ6hQc5VAl2m5ovDXImeYiY8uvl1Cg2llGhdK53MYO/vMygqM9u', // password: test123
-  firstName: 'John',
-  lastName: 'Doe',
-  phone: '+1234567890',
-  companyName: 'Test Shipping Co.',
-  companyType: 'corporation',
-  userType: 'shipper',
-  address: '123 Main St',
-  city: 'New York',
-  state: 'NY',
-  zipCode: '10001',
-  businessLicense: 'SH123456',
-  isActive: true,
-  isVerified: true
-});
-
-userModel.create({
-  email: 'carrier@test.com',
-  password: '$2a$12$4VGZ6hQc5VAl2m5ovDXImeYiY8uvl1Cg2llGhdK53MYO/vMygqM9u', // password: test123
-  firstName: 'Jane',
-  lastName: 'Smith',
-  phone: '+1987654321',
-  companyName: 'Test Trucking LLC',
-  companyType: 'llc',
-  userType: 'carrier',
-  address: '456 Oak Ave',
-  city: 'Los Angeles',
-  state: 'CA',
-  zipCode: '90001',
-  mcNumber: 'MC123456',
-  dotNumber: 'DOT789012',
-  businessLicense: 'CA987654',
-  isActive: true,
-  isVerified: true
-});
 
 module.exports = userModel; 

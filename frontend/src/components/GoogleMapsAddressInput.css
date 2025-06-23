@@ -9,6 +9,11 @@
   align-items: center;
 }
 
+.address-input-container.error input {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+}
+
 .address-input-container input {
   padding-right: 2.5rem;
   width: 100%;
@@ -16,7 +21,13 @@
   border-radius: 6px;
   padding: 0.75rem;
   font-size: 0.9rem;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.address-input-container input:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
 }
 
 .address-input-container input:focus {
@@ -37,9 +48,80 @@
   animation: spin 1s linear infinite;
 }
 
+.maps-loading-icon {
+  position: absolute;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #34C759;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.maps-status {
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.maps-status.loading {
+  color: #666;
+}
+
+.loading-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #34C759;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.address-error {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  padding: 0.5rem;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #721c24;
+  z-index: 999;
+}
+
+.address-error svg {
+  color: #dc3545;
+  flex-shrink: 0;
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
 }
 
 .address-suggestions {

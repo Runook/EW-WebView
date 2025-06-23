@@ -100,10 +100,7 @@ router.post('/register', [
     }
 
     // 创建用户
-    const userId = await User.create(userData);
-    
-    // 获取完整用户信息
-    const user = await User.findById(userId);
+    const user = await User.create(userData);
     
     // 生成JWT token
     const token = jwt.sign(

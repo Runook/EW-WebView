@@ -1,8 +1,8 @@
 // Google Maps API 配置
 // 请在此处添加您的 Google Maps API Key
 export const GOOGLE_MAPS_CONFIG = {
-  // 🔑 仅从环境变量读取 Google Maps API Key，不再提供硬编码默认值
-  API_KEY: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
+  // 🔑 从环境变量读取 Google Maps API Key，如果没有则使用默认值
+  API_KEY: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 'AIzaSyB-uQvzsiFeJOr37qYg2EenJbaKUG7-KfE',
   
   // Google Maps 库配置
   LIBRARIES: ['places', 'geometry'],
@@ -38,6 +38,12 @@ export const validateApiKey = () => {
   
   if (!apiKey) {
     console.error('❌ Google Maps API Key 未设置');
+    console.warn('💡 请设置环境变量 REACT_APP_GOOGLE_MAPS_API_KEY 或在配置文件中添加API Key');
+    return false;
+  }
+  
+  if (apiKey === 'YOUR_GOOGLE_MAPS_API_KEY_HERE') {
+    console.error('❌ 请替换默认的 Google Maps API Key');
     return false;
   }
   
@@ -126,6 +132,7 @@ export const loadGoogleMapsScript = () => {
       console.error('   3. Google Cloud 项目未配置账单');
       console.error('   4. 网络连接问题');
       console.error('   5. API 配额已用完');
+      console.error('   6. 域名限制问题');
       
       delete window[callbackName]; // 清理回调函数
       reject(new Error('Google Maps API 加载失败 - 请检查控制台错误信息'));
@@ -140,11 +147,42 @@ export const loadGoogleMapsScript = () => {
         console.error('⏱️ Google Maps API 加载超时');
         reject(new Error('Google Maps API 加载超时'));
       }
-    }, 10000); // 10秒超时
+    }, 15000); // 增加到15秒超时
   });
 };
 
 // 提供统一的 API Key 获取函数
 export const getGoogleMapsApiKey = () => {
   return GOOGLE_MAPS_CONFIG.API_KEY;
+};
+
+// 诊断函数
+export const diagnoseGoogleMapsIssues = () => {
+  console.log('🔍 Google Maps 诊断开始...');
+  
+  const apiKey = GOOGLE_MAPS_CONFIG.API_KEY;
+  console.log('📋 API Key:', apiKey ? (apiKey.substring(0, 10) + '...') : '未设置');
+  
+  // 检查环境变量
+  console.log('📋 环境变量 REACT_APP_GOOGLE_MAPS_API_KEY:', 
+    process.env.REACT_APP_GOOGLE_MAPS_API_KEY ? '已设置' : '未设置');
+  
+  // 检查API Key格式
+  validateApiKey();
+  
+  // 检查脚本是否加载
+  const script = document.querySelector('script[src*="maps.googleapis.com"]');
+  console.log('📋 Google Maps 脚本标签:', script ? '存在' : '不存在');
+  
+  // 检查Google对象
+  console.log('📋 window.google:', window.google ? '存在' : '不存在');
+  console.log('📋 window.google.maps:', window.google?.maps ? '存在' : '不存在');
+  
+  if (window.google?.maps) {
+    console.log('📋 Places服务:', window.google.maps.places ? '可用' : '不可用');
+    console.log('📋 Geocoder服务:', window.google.maps.Geocoder ? '可用' : '不可用');
+    console.log('📋 DirectionsService:', window.google.maps.DirectionsService ? '可用' : '不可用');
+  }
+  
+  console.log('🔍 Google Maps 诊断完成');
 };

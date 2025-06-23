@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MapPin, Search, Navigation, Map } from 'lucide-react';
+import { MapPin, Search, Navigation, Map, AlertCircle } from 'lucide-react';
 import './GoogleMapsAddressInput.css';
-import { getGoogleMapsApiKey } from '../config/googleMaps';
+import { getGoogleMapsApiKey, loadGoogleMapsScript, diagnoseGoogleMapsIssues } from '../config/googleMaps';
 
 // 从地址组件中提取城市、州、邮编信息
 const extractAddressComponents = (addressComponents) => {
@@ -59,6 +59,8 @@ const GoogleMapsAddressInput = ({
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [mapsLoaded, setMapsLoaded] = useState(false);
   const inputRef = useRef(null);
   const autocompleteService = useRef(null);
   const placesService = useRef(null);
@@ -66,64 +68,72 @@ const GoogleMapsAddressInput = ({
   const GOOGLE_MAPS_API_KEY = getGoogleMapsApiKey();
 
   // Initialize Google Maps services
-  const loadGoogleMapsAPI = React.useCallback(() => {
-    if (window.google) {
-      console.log('Google Maps API already exists');
-      return;
+  const initializeGoogleMapsServices = () => {
+    try {
+      if (window.google && window.google.maps && window.google.maps.places) {
+        autocompleteService.current = new window.google.maps.places.AutocompleteService();
+        placesService.current = new window.google.maps.places.PlacesService(
+          document.createElement('div')
+        );
+        setMapsLoaded(true);
+        setError(null);
+        console.log('✅ Google Maps 服务初始化成功');
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('❌ Google Maps 服务初始化失败:', err);
+      setError('Google Maps 服务初始化失败');
+      return false;
     }
-    console.log('Creating Google Maps API script...');
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places,geometry`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      console.log('Google Maps API loaded successfully');
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
-      placesService.current = new window.google.maps.places.PlacesService(
-        document.createElement('div')
-      );
-      console.log('Services initialized after API load');
-    };
-    script.onerror = (error) => {
-      console.error('Failed to load Google Maps API:', error);
-    };
-    document.head.appendChild(script);
-  }, [GOOGLE_MAPS_API_KEY]);
+  };
 
   useEffect(() => {
-    console.log('GoogleMapsAddressInput: Initializing...');
+    console.log('🚀 GoogleMapsAddressInput: 开始初始化...');
+    
+    // 运行诊断
+    diagnoseGoogleMapsIssues();
+    
     if (window.google && window.google.maps) {
-      console.log('Google Maps API already loaded');
-      autocompleteService.current = new window.google.maps.places.AutocompleteService();
-      placesService.current = new window.google.maps.places.PlacesService(
-        document.createElement('div')
-      );
-      console.log('Services initialized successfully');
+      console.log('✅ Google Maps API 已存在');
+      initializeGoogleMapsServices();
     } else {
-      console.log('Loading Google Maps API...');
-      loadGoogleMapsAPI();
+      console.log('📥 正在加载 Google Maps API...');
+      setError('正在加载 Google Maps...');
+      
+      loadGoogleMapsScript()
+        .then(() => {
+          console.log('✅ Google Maps API 加载完成');
+          initializeGoogleMapsServices();
+        })
+        .catch((err) => {
+          console.error('❌ Google Maps API 加载失败:', err);
+          setError(`Google Maps 加载失败: ${err.message}`);
+        });
     }
-  }, [loadGoogleMapsAPI]);
+  }, []);
 
   const searchPlaces = (query) => {
-    console.log('Searching for:', query);
+    console.log('🔍 搜索地址:', query);
     
     if (!query || query.length < 3) {
-      console.log('Query too short, skipping search');
+      console.log('查询字符过短，跳过搜索');
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
 
-    if (!autocompleteService.current) {
-      console.error('AutocompleteService not initialized');
+    if (!mapsLoaded || !autocompleteService.current) {
+      console.error('❌ Google Maps 服务未初始化，无法搜索');
+      setError('Google Maps 服务未就绪，请稍后再试');
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
 
     setLoading(true);
-    console.log('Making autocomplete request...');
+    setError(null);
+    console.log('📤 发送自动完成请求...');
 
     const request = {
       input: query,
@@ -132,16 +142,23 @@ const GoogleMapsAddressInput = ({
 
     autocompleteService.current.getPlacePredictions(request, (predictions, status) => {
       setLoading(false);
-      console.log('Autocomplete response:', { status, predictions });
+      console.log('📥 自动完成响应:', { status, predictions });
       
       if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-        console.log('Found', predictions.length, 'suggestions');
+        console.log('✅ 找到', predictions.length, '个地址建议');
         setSuggestions(predictions.slice(0, 8)); // 限制显示8个建议
         setShowSuggestions(true);
-      } else {
-        console.warn('No suggestions found or error:', status);
+        setError(null);
+      } else if (status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+        console.log('📭 未找到匹配的地址');
         setSuggestions([]);
         setShowSuggestions(false);
+        setError('未找到匹配的地址，请尝试其他关键词');
+      } else {
+        console.warn('⚠️ 地址搜索出错:', status);
+        setSuggestions([]);
+        setShowSuggestions(false);
+        setError(`地址搜索失败: ${status}`);
       }
     });
   };
@@ -197,18 +214,39 @@ const GoogleMapsAddressInput = ({
       <label>
         <IconComponent size={16} />
         {label} {required && <span className="required">*</span>}
+        {!mapsLoaded && (
+          <span className="maps-status loading">
+            <div className="loading-dot"></div>
+            加载中...
+          </span>
+        )}
       </label>
-      <div className="address-input-container">
+      <div className={`address-input-container ${error ? 'error' : ''}`}>
         <input
           ref={inputRef}
           type="text"
           value={value}
           onChange={handleInputChange}
           onBlur={hideSuggestions}
-          placeholder={placeholder}
+          placeholder={mapsLoaded ? placeholder : "正在加载 Google Maps..."}
           required={required}
+          disabled={!mapsLoaded}
         />
-        <Search size={16} className={`search-icon ${loading ? 'loading' : ''}`} />
+        
+        {mapsLoaded ? (
+          <Search size={16} className={`search-icon ${loading ? 'loading' : ''}`} />
+        ) : (
+          <div className="maps-loading-icon">
+            <div className="loading-spinner-small"></div>
+          </div>
+        )}
+        
+        {error && (
+          <div className="address-error">
+            <AlertCircle size={16} />
+            <span>{error}</span>
+          </div>
+        )}
         
         {showSuggestions && suggestions.length > 0 && (
           <div className="address-suggestions">

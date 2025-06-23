@@ -4,23 +4,14 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-const mongoose = require('mongoose');
+const { testConnection } = require('./config/database');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// MongoDB 连接
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ew-logistics';
-
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ MongoDB connected successfully');
-  })
-  .catch((error) => {
-    console.error('❌ MongoDB connection failed:', error.message);
-    // 不退出进程，允许应用继续运行（使用模拟数据）
-  });
+// PostgreSQL 连接测试
+testConnection();
 
 // 安全中间件
 app.use(helmet());
@@ -50,7 +41,8 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
+    database: 'PostgreSQL'
   });
 });
 
@@ -59,28 +51,19 @@ app.get('/api', (req, res) => {
   res.json({
     message: 'EW Logistics Platform API',
     version: '1.0.0',
+    database: 'PostgreSQL',
     endpoints: {
       health: '/health',
       api: '/api',
       auth: '/api/auth',
-      seafreight: '/api/seafreight',
-      landfreight: '/api/landfreight',
-      airfreight: '/api/airfreight',
       freight: '/api/freight',
       users: '/api/users',
-      companies: '/api/companies'
     }
   });
 });
 
 // 路由文件
 app.use('/api/auth', require('./routes/auth'));
-app.use('/api/seafreight', require('./routes/seafreight'));
-app.use('/api/landfreight', require('./routes/landfreight'));
-app.use('/api/airfreight', require('./routes/airfreight'));
-app.use('/api/companies', require('./routes/companies'));
-// app.use('/api/freight', require('./routes/freight'));
-// app.use('/api/users', require('./routes/users'));
 
 // 404 处理
 app.use('*', (req, res) => {
@@ -107,10 +90,26 @@ app.use((error, req, res, next) => {
   });
 });
 
+// 优雅关闭
+process.on('SIGINT', async () => {
+  console.log('\n🛑 Gracefully shutting down...');
+  const { closeConnection } = require('./config/database');
+  await closeConnection();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('\n🛑 Gracefully shutting down...');
+  const { closeConnection } = require('./config/database');
+  await closeConnection();
+  process.exit(0);
+});
+
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`🚀 EW Logistics Backend API running on port ${PORT}`);
   console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🐘 Database: PostgreSQL`);
   console.log(`🌐 Health check: http://localhost:${PORT}/health`);
   console.log(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
 });

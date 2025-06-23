@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { Package, BookOpen, Briefcase, ShoppingBag } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
+import Auth from './pages/Auth';
 import FreightBoard from './pages/FreightBoard';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
@@ -20,7 +21,21 @@ import LogisticsRental from './pages/LogisticsRental';
 import Forum from './pages/Forum';
 import './App.css';
 
+// 导入 Google Maps 诊断功能
+import { diagnoseGoogleMapsIssues } from './config/googleMaps';
+
 function App() {
+  useEffect(() => {
+    // 在应用启动时运行 Google Maps 诊断
+    console.log('🚀 EW 物流平台启动');
+    console.log('🔍 运行 Google Maps 诊断...');
+    
+    // 延迟运行诊断，确保页面完全加载
+    setTimeout(() => {
+      diagnoseGoogleMapsIssues();
+    }, 2000);
+  }, []);
+
   return (
     <AuthProvider>
       <div className="App">

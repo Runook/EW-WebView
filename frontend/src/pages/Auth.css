@@ -1,11 +1,61 @@
+/* Auth Wrapper Styles */
+.auth-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding: 2rem 1rem;
+  font-family: var(--font-family);
+}
+
+.auth-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 0.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.auth-tab {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.auth-tab.active {
+  background: var(--primary-green);
+  color: white;
+  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
+}
+
+.auth-tab:hover:not(.active) {
+  background: rgba(52, 199, 89, 0.1);
+  color: var(--primary-green);
+}
+
+.auth-content {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 /* Auth Pages Styles */
 .auth-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: auto;
+  background: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4);
+  padding: 0;
   font-family: var(--font-family);
 }
 
