@@ -65,6 +65,7 @@ app.get('/api', (req, res) => {
 // 路由文件
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/landfreight', require('./routes/landfreight'));
+app.use('/api/companies', require('./routes/companies'));
 
 // 404 处理
 app.use('*', (req, res) => {

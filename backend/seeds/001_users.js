@@ -11,6 +11,7 @@ exports.seed = async function(knex) {
   // 创建测试用户
   const saltRounds = 10;
   const hashedPassword = await bcrypt.hash('password123', saltRounds);
+  const testPassword = await bcrypt.hash('test123', saltRounds);
   
   await knex('users').insert([
     {
@@ -45,6 +46,18 @@ exports.seed = async function(knex) {
       company_name: '示例物流公司',
       contact_phone: '13800138003',
       contact_address: '北京市朝阳区',
+      user_type: 'shipper',
+      is_verified: true,
+      is_active: true
+    },
+    {
+      id: 4,
+      username: 'test_shipper_main',
+      email: 'shipper@test.com',
+      password_hash: testPassword,
+      company_name: '测试物流公司',
+      contact_phone: '13800138004',
+      contact_address: '上海市浦东新区',
       user_type: 'shipper',
       is_verified: true,
       is_active: true

@@ -62,153 +62,47 @@ const YellowPages = () => {
     
   };
 
-  // 模拟公司数据
-  const mockCompanies = {
-    '陆运公司': [
-      {
-        id: 1,
-        name: '东方物流集团',
-        description: '专业提供全国整车零担运输服务，拥有自营车队800台',
-        address: '上海市浦东新区张江高科技园区',
-        phone: '021-12345678',
-        email: 'info@eastlogistics.com',
-        website: 'www.eastlogistics.com',
-        rating: 4.8,
-        reviews: 125,
-        verified: true
-      },
-      {
-        id: 2,
-        name: '快运通物流',
-        description: '专注于城际快运，覆盖华东地区主要城市',
-        address: '江苏省苏州市工业园区',
-        phone: '0512-88888888',
-        email: 'service@kuaiyuntong.com',
-        website: 'www.kuaiyuntong.com',
-        rating: 4.5,
-        reviews: 89,
-        verified: true
-      }
-    ],
-    '海运服务': [
-      {
-        id: 3,
-        name: '中海国际货运',
-        description: '专业国际海运代理，主营中美、中欧航线',
-        address: '深圳市南山区蛇口港',
-        phone: '0755-66666666',
-        email: 'info@chinaocean.com',
-        website: 'www.chinaocean.com',
-        rating: 4.7,
-        reviews: 156,
-        verified: true
-      }
-    ],
-    '中美清关行': [
-      {
-        id: 4,
-        name: '美中通关服务',
-        description: '专业中美清关服务，快速通关，安全可靠',
-        address: '洛杉矶市中心商业区',
-        phone: '+1-213-555-0123',
-        email: 'info@uscnclearing.com',
-        website: 'www.uscnclearing.com',
-        rating: 4.6,
-        reviews: 78,
-        verified: true
-      }
-    ],
-    '维修保养': [
-      {
-        id: 5,
-        name: '金牌卡车维修中心',
-        description: '专业卡车维修保养，24小时道路救援',
-        address: '休斯顿市工业区',
-        phone: '+1-713-555-0456',
-        email: 'service@goldtruck.com',
-        website: 'www.goldtruck.com',
-        rating: 4.4,
-        reviews: 92,
-        verified: true
-      }
-    ],
-    '汽车保险': [
-      {
-        id: 6,
-        name: '太平洋保险经纪',
-        description: '专业汽车保险服务，理赔快速，服务周到',
-        address: '旧金山市金融区',
-        phone: '+1-415-555-0789',
-        email: 'info@pacificins.com',
-        website: 'www.pacificins.com',
-        rating: 4.3,
-        reviews: 134,
-        verified: true
-      }
-    ],
-    '税务会计': [
-      {
-        id: 7,
-        name: '华美金融咨询',
-        description: '专业税务会计服务，为华人企业提供全方位服务',
-        address: '纽约市曼哈顿唐人街',
-        phone: '+1-212-555-0321',
-        email: 'info@sinoamfinance.com',
-        website: 'www.sinoamfinance.com',
-        rating: 4.5,
-        reviews: 67,
-        verified: true
-      }
-    ],
-    '软件商': [
-      {
-        id: 8,
-        name: '智联物流科技',
-        description: '专业物流管理软件开发，TMS、WMS系统定制',
-        address: '西雅图市科技园区',
-        phone: '+1-206-555-0654',
-        email: 'info@smartlogis.com',
-        website: 'www.smartlogis.com',
-        rating: 4.8,
-        reviews: 45,
-        verified: true
-      }
-    ],
-    '华人事务所': [
-      {
-        id: 9,
-        name: '华人法律事务所',
-        description: '专业华人律师团队，精通中美法律',
-        address: '芝加哥市法律区',
-        phone: '+1-312-555-0987',
-        email: 'info@chineselaw.com',
-        website: 'www.chineselaw.com',
-        rating: 4.9,
-        reviews: 89,
-        verified: true
-      }
-    ]
-  };
+  // 统计信息状态
+  const [categoryStats, setCategoryStats] = useState({});
 
   // 从API获取公司数据
   const fetchCompanies = async () => {
     if (!selectedSubcategory) return;
     
     try {
-      const response = await fetch(`/api/companies/subcategory/${encodeURIComponent(selectedSubcategory)}?search=${encodeURIComponent(searchQuery)}`);
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const response = await fetch(`${API_URL}/companies/subcategory/${encodeURIComponent(selectedSubcategory)}?search=${encodeURIComponent(searchQuery)}`);
       if (response.ok) {
         const result = await response.json();
         setCompanies(result.data || []);
       } else {
-        // 如果API失败，使用模拟数据
-        setCompanies(mockCompanies[selectedSubcategory] || []);
+        console.error('获取公司数据失败:', response.status);
+        setCompanies([]);
       }
     } catch (error) {
       console.error('获取公司数据失败:', error);
-      // 使用模拟数据作为后备
-      setCompanies(mockCompanies[selectedSubcategory] || []);
+      setCompanies([]);
     }
   };
+
+  // 获取分类统计数据
+  const fetchCategoryStats = async () => {
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const response = await fetch(`${API_URL}/companies/stats/categories`);
+      if (response.ok) {
+        const result = await response.json();
+        setCategoryStats(result.data || {});
+      }
+    } catch (error) {
+      console.error('获取分类统计失败:', error);
+    }
+  };
+
+  // 组件初始化时获取分类统计
+  useEffect(() => {
+    fetchCategoryStats();
+  }, []);
 
   // 当选择的子分类或搜索查询改变时获取数据
   useEffect(() => {
@@ -217,23 +111,20 @@ const YellowPages = () => {
     }
   }, [selectedSubcategory, searchQuery]);
 
-  // 搜索过滤（用于模拟数据）
-  const filteredCompanies = companies.length > 0 ? companies : 
-    (mockCompanies[selectedSubcategory] || []).filter(company =>
-      company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      company.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+  // 过滤后的公司列表（API已处理搜索，这里主要用于显示）
+  const filteredCompanies = companies;
 
   // 发布公司信息
   const handlePublishCompany = async (companyData) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       if (!token) {
         alert('请先登录');
         return;
       }
 
-      const response = await fetch('/api/companies', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const response = await fetch(`${API_URL}/companies`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -250,6 +141,8 @@ const YellowPages = () => {
         if (selectedSubcategory === companyData.subcategory) {
           fetchCompanies();
         }
+        // 刷新分类统计
+        fetchCategoryStats();
       } else {
         const error = await response.json();
         alert(error.message || '发布失败');
@@ -326,7 +219,7 @@ const YellowPages = () => {
 
       <div className="subcategories-grid">
         {categories[selectedCategory]?.subcategories.map(subcategory => {
-          const companyCount = mockCompanies[subcategory]?.length || 0;
+          const companyCount = categoryStats[selectedCategory]?.[subcategory] || 0;
           return (
             <div 
               key={subcategory}
