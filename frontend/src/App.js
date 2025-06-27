@@ -10,7 +10,6 @@ import FreightBoard from './pages/FreightBoard';
 import Contact from './pages/Contact';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import LandWarehouseQuery from './pages/LandWarehouseQuery';
 import SeaFreightPlatform from './pages/SeaFreightPlatform';
 import AirFreightPlatform from './pages/AirFreightPlatform';
 import MultimodalPlatform from './pages/MultimodalPlatform';
@@ -49,7 +48,7 @@ function App() {
               
               {/* 陆运服务 */}
               <Route path="/freight-board" element={<FreightBoard />} />
-              <Route path="/land-warehouse" element={<LandWarehouseQuery />} />
+             
               
               {/* 海运服务 */}
               

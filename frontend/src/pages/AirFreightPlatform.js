@@ -42,7 +42,7 @@ const AirFreightPlatform = () => {
           </div>
           
           <p style={{ fontSize: '1.1rem', marginBottom: '2rem' }}>
-            我们的开发团队正在全力打造功能完善的空运服务平台，敬请期待！
+            我们的开发团队于06/18/2025开始，正在全力打造功能完善的空运服务平台，敬请期待！
           </p>
 
           {/* 服务特性网格 */}

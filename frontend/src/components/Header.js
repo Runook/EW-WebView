@@ -75,7 +75,7 @@ const Header = () => {
       type: 'dropdown',
       items: [
         { path: '/freight-board', label: '陆运信息平台' },
-        { path: '/land-warehouse', label: '陆运仓库查询' }
+        { path: '/land-warehouse', label: '仓库查询' }
       ]
     },
     {
@@ -84,7 +84,7 @@ const Header = () => {
       type: 'dropdown',
       items: [
         { path: '/sea-freight', label: '海运信息平台' },
-        { path: '/seaport-query', label: '海港查询' }
+        { path: '/seaport-query', label: '港口查询' }
       ]
     },
     {
