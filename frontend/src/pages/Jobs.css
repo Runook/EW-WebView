@@ -349,24 +349,33 @@
 }
 
 .apply-button {
-  background: #28a745;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #007bff;
   color: white;
+  border: none;
   border-radius: 8px;
-  padding: 10px 20px;
+  padding: 10px 16px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .apply-button:hover {
-  background: #218838;
+  background: #0056b3;
   transform: translateY(-1px);
 }
 
 .contact-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   background: #28a745;
+  color: white;
+  border: none;
   border-radius: 8px;
-  padding: 10px 20px;
+  padding: 10px 16px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -374,7 +383,7 @@
 
 .contact-button:hover {
   background: #218838;
-  color: white;
+  transform: translateY(-1px);
 }
 
 /* 简历列表 */

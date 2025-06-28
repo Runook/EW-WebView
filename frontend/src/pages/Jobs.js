@@ -17,6 +17,7 @@ import {
   Send,
   ChevronDown
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 import './Jobs.css';
 
 const Jobs = () => {
@@ -26,6 +27,13 @@ const Jobs = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [resumes, setResumes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const { user, isAuthenticated } = useAuth();
+  
+  // API基础URL
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
   // 筛选条件状态
   const [filters, setFilters] = useState({
@@ -82,158 +90,71 @@ const Jobs = () => {
     '$5000-$6000', '$6000-$8000', '$8000-$10000', '$10000以上'
   ];
 
-  // 模拟招聘数据（更丰富的数据）
-  const mockJobs = [
-    {
-      id: 1,
-      title: 'CLASS A 司机',
-      category: 'CLASS A 司机',
-      company: '顺丰速运',
-      location: '洛杉矶',
-      salary: '$4000-6000/月',
-      type: '全职',
-      experience: '1-3年',
-      posted: '2天前',
-      publishDate: '2024-01-10',
-      description: '负责长途货物运输，要求有CDL-A驾照，工作稳定，福利待遇好'
-    },
-    {
-      id: 2,
-      title: '仓库管理员',
-      category: '文员OP',
-      company: '亚马逊物流',
-      location: '纽约',
-      salary: '$3500-5000/月',
-      type: '全职',
-      experience: '经验不限',
-      posted: '1天前',
-      publishDate: '2024-01-11',
-      description: '负责仓库日常管理，货物入库出库，熟悉仓储系统优先'
-    },
-    {
-      id: 3,
-      title: '客服专员',
-      category: '跟单/客服',
-      company: '联邦快递',
-      location: '旧金山',
-      salary: '$3000-4500/月',
-      type: '全职',
-      experience: '1年以内',
-      posted: '3天前',
-      publishDate: '2024-01-09',
-      description: '处理客户咨询，协调物流问题，中英文流利'
-    },
-    {
-      id: 4,
-      title: 'CLASS B 司机',
-      category: 'CLASS B 司机',
-      company: '优速快递',
-      location: '芝加哥',
-      salary: '$3000-4500/月',
-      type: '全职',
-      experience: '1-3年',
-      posted: '1天前',
-      publishDate: '2024-01-11',
-      description: '负责城市配送，要求有CDL-B驾照，熟悉当地路况'
-    },
-    {
-      id: 5,
-      title: '应收应付会计',
-      category: '应收应付会计',
-      company: '中通快运',
-      location: '休斯顿',
-      salary: '$4500-6000/月',
-      type: '全职',
-      experience: '3-5年',
-      posted: '5天前',
-      publishDate: '2024-01-07',
-      description: '负责公司应收应付账款管理，要求有会计证书'
-    },
-    {
-      id: 6,
-      title: '货运代理',
-      category: '货运代理',
-      company: '德邦物流',
-      location: '凤凰城',
-      salary: '$3500-5500/月',
-      type: '兼职',
-      experience: '1-3年',
-      posted: '4天前',
-      publishDate: '2024-01-08',
-      description: '负责货运业务开发，客户维护，有相关经验优先'
-    },
-    {
-      id: 7,
-      title: 'CLASS D 司机',
-      category: 'CLASS D 司机',
-      company: '韵达快递',
-      location: '费城',
-      salary: '$2500-3500/月',
-      type: '兼职',
-      experience: '经验不限',
-      posted: '6天前',
-      publishDate: '2024-01-06',
-      description: '负责小件包裹配送，时间灵活，适合兼职'
-    },
-    {
-      id: 8,
-      title: '调度找召卡车',
-      category: '调度找召卡车',
-      company: '圆通速递',
-      location: '圣安东尼奥',
-      salary: '$3800-5200/月',
-      type: '全职',
-      experience: '3-5年',
-      posted: '1周前',
-      publishDate: '2024-01-05',
-      description: '负责车辆调度，货物配载，要求有丰富调度经验'
+  // 获取招聘职位数据
+  const fetchJobs = async (filters = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const queryParams = new URLSearchParams();
+      Object.keys(filters).forEach(key => {
+        if (filters[key]) {
+          queryParams.append(key, filters[key]);
+        }
+      });
+      
+      const response = await fetch(`${API_BASE_URL}/jobs?${queryParams.toString()}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setJobs(result.data);
+      } else {
+        throw new Error(result.message || '获取职位数据失败');
+      }
+    } catch (error) {
+      console.error('获取职位数据错误:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  // 模拟简历数据
-  const mockResumes = [
-    {
-      id: 1,
-      name: '张三',
-      position: 'CLASS A 司机',
-      experience: '5年经验',
-      location: '洛杉矶',
-      phone: '(123) 456-7890',
-      email: 'zhangsan@email.com',
-      posted: '1天前',
-      publishDate: '2024-01-11',
-      skills: ['CDL-A驾照', '长途运输', '货物装卸']
-    },
-    {
-      id: 2,
-      name: '李四',
-      position: '仓库主管',
-      experience: '8年经验',
-      location: '纽约',
-      phone: '(234) 567-8901',
-      email: 'lisi@email.com',
-      posted: '2天前',
-      publishDate: '2024-01-10',
-      skills: ['仓储管理', 'WMS系统', '团队管理']
-    },
-    {
-      id: 3,
-      name: '王五',
-      position: '货运代理',
-      experience: '3年经验',
-      location: '旧金山',
-      phone: '(345) 678-9012',
-      email: 'wangwu@email.com',
-      posted: '3天前',
-      publishDate: '2024-01-09',
-      skills: ['客户开发', '业务谈判', '英语流利']
+  // 获取简历数据
+  const fetchResumes = async (filters = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const queryParams = new URLSearchParams();
+      Object.keys(filters).forEach(key => {
+        if (filters[key]) {
+          queryParams.append(key, filters[key]);
+        }
+      });
+      
+      const response = await fetch(`${API_BASE_URL}/resumes?${queryParams.toString()}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setResumes(result.data);
+      } else {
+        throw new Error(result.message || '获取简历数据失败');
+      }
+    } catch (error) {
+      console.error('获取简历数据错误:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   useEffect(() => {
-    setJobs(mockJobs);
-    setResumes(mockResumes);
-  }, []);
+    if (activeTab === 'jobs') {
+      fetchJobs();
+    } else {
+      fetchResumes(); // 获取真实简历数据
+    }
+  }, [activeTab]);
 
   // 筛选函数
   const applyFilters = (items) => {
@@ -334,6 +255,26 @@ const Jobs = () => {
     }));
   };
 
+  // 应用筛选条件
+  useEffect(() => {
+    if (activeTab === 'jobs') {
+      const appliedFilters = {
+        search: searchQuery,
+        category: filters.category,
+        location: filters.location,
+        workType: filters.workType,
+        experience: filters.experience
+      };
+      
+      // 移除空值
+      Object.keys(appliedFilters).forEach(key => {
+        if (!appliedFilters[key]) delete appliedFilters[key];
+      });
+      
+      fetchJobs(appliedFilters);
+    }
+  }, [searchQuery, filters, activeTab]);
+
   // 清除所有筛选条件
   const clearAllFilters = () => {
     setFilters({
@@ -352,39 +293,199 @@ const Jobs = () => {
     return searchQuery || Object.values(filters).some(value => value !== '');
   };
 
-  // 发布职位/简历
-  const handlePost = (formData) => {
-    if (activeTab === 'jobs') {
-      const newJob = {
-        id: jobs.length + 1,
+  // 发布职位
+  const handlePostJob = async (formData) => {
+    try {
+      if (!isAuthenticated) {
+        alert('请先登录再发布职位');
+        return;
+      }
+
+      setLoading(true);
+      
+      const authToken = localStorage.getItem('authToken');
+      const jobData = {
         title: formData.get('title'),
         category: formData.get('category'),
         company: formData.get('company'),
         location: formData.get('location'),
         salary: formData.get('salary'),
-        type: formData.get('type'),
+        workType: formData.get('type'),
         experience: formData.get('experience'),
         description: formData.get('description'),
-        posted: '刚刚',
-        publishDate: new Date().toISOString().split('T')[0]
+        contactPhone: formData.get('contactPhone'),
+        contactEmail: formData.get('contactEmail'),
+        contactPerson: formData.get('contactPerson')
       };
-      setJobs([newJob, ...jobs]);
-    } else {
-      const newResume = {
-        id: resumes.length + 1,
+
+      const response = await fetch(`${API_BASE_URL}/jobs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(jobData)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setShowPostModal(false);
+        fetchJobs(); // 重新获取职位列表
+        alert('职位发布成功！');
+      } else {
+        // 处理验证错误，显示具体错误信息
+        if (result.errors && result.errors.length > 0) {
+          const errorMessages = result.errors.map(error => error.msg).join('\n');
+          throw new Error(`请检查以下信息：\n${errorMessages}`);
+        } else {
+          throw new Error(result.message || '发布失败');
+        }
+      }
+    } catch (error) {
+      console.error('发布职位错误:', error);
+      alert('发布失败: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 发布简历
+  const handlePostResume = async (formData) => {
+    try {
+      if (!isAuthenticated) {
+        alert('请先登录后再发布简历');
+        return;
+      }
+
+      setLoading(true);
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        alert('认证信息已过期，请重新登录');
+        return;
+      }
+
+      const resumeData = {
         name: formData.get('name'),
         position: formData.get('position'),
         experience: formData.get('experience'),
         location: formData.get('location'),
         phone: formData.get('phone'),
         email: formData.get('email'),
-        skills: formData.get('skills').split(',').map(s => s.trim()),
-        posted: '刚刚',
-        publishDate: new Date().toISOString().split('T')[0]
+        skills: formData.get('skills'),
+        summary: formData.get('summary'),
+        expectedSalary: formData.get('expectedSalary'),
+        workTypePreference: formData.get('workTypePreference')
       };
-      setResumes([newResume, ...resumes]);
+
+      const response = await fetch(`${API_BASE_URL}/resumes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(resumeData)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('简历发布成功！');
+        setShowPostModal(false);
+        // 重新获取简历列表
+        await fetchResumes();
+      } else {
+        // 处理验证错误，显示具体错误信息
+        if (result.errors && result.errors.length > 0) {
+          const errorMessages = result.errors.map(error => error.msg).join('\n');
+          throw new Error(`请检查以下信息：\n${errorMessages}`);
+        } else {
+          throw new Error(result.message || '发布简历失败');
+        }
+      }
+    } catch (error) {
+      console.error('发布简历错误:', error);
+      alert(`发布简历失败: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
-    setShowPostModal(false);
+  };
+
+  // 统一发布处理函数
+  const handlePost = (formData) => {
+    if (activeTab === 'jobs') {
+      handlePostJob(formData);
+    } else {
+      handlePostResume(formData);
+    }
+  };
+
+  // 电话联系
+  const handlePhoneContact = (job) => {
+    if (job.contactPhone) {
+      const confirmed = window.confirm(
+        `确定要拨打电话联系招聘方吗？\n\n联系人: ${job.contactPerson || '招聘负责人'}\n电话: ${job.contactPhone}\n公司: ${job.company}\n职位: ${job.title}`
+      );
+      if (confirmed) {
+        window.open(`tel:${job.contactPhone}`);
+      }
+    } else {
+      alert('该职位未提供联系电话');
+    }
+  };
+
+  // 邮件联系
+  const handleEmailContact = (job) => {
+    if (job.contactEmail) {
+      const subject = encodeURIComponent(`应聘职位: ${job.title} - ${job.company}`);
+      const body = encodeURIComponent(
+        `您好，${job.contactPerson || '招聘负责人'}：\n\n我对贵公司发布的"${job.title}"职位很感兴趣，希望能够申请该职位。\n\n职位信息：\n- 公司：${job.company}\n- 地点：${job.location}\n- 薪资：${job.salary}\n\n请问是否方便安排面试？期待您的回复。\n\n谢谢！`
+      );
+      
+      const confirmed = window.confirm(
+        `确定要发送邮件联系招聘方吗？\n\n联系人: ${job.contactPerson || '招聘负责人'}\n邮箱: ${job.contactEmail}\n公司: ${job.company}\n职位: ${job.title}`
+      );
+      
+      if (confirmed) {
+        window.open(`mailto:${job.contactEmail}?subject=${subject}&body=${body}`);
+      }
+    } else {
+      alert('该职位未提供联系邮箱');
+    }
+  };
+
+  // 电话联系求职者
+  const handlePhoneContactResume = (resume) => {
+    if (resume.phone) {
+      const confirmed = window.confirm(
+        `确定要拨打电话联系求职者吗？\n\n姓名: ${resume.name}\n电话: ${resume.phone}\n求职职位: ${resume.position}\n工作经验: ${resume.experience}\n期望地点: ${resume.location}`
+      );
+      if (confirmed) {
+        window.open(`tel:${resume.phone}`);
+      }
+    } else {
+      alert('该求职者未提供联系电话');
+    }
+  };
+
+  // 邮件联系求职者
+  const handleEmailContactResume = (resume) => {
+    if (resume.email) {
+      const subject = encodeURIComponent(`关于您的求职申请: ${resume.position}`);
+      const body = encodeURIComponent(
+        `您好，${resume.name}：\n\n我是招聘负责人，看到您在平台上发布的求职简历，对您的背景很感兴趣。\n\n您的求职信息：\n- 求职职位：${resume.position}\n- 工作经验：${resume.experience}\n- 期望地点：${resume.location}\n- 技能专长：${resume.skills ? resume.skills.join(', ') : '未提供'}\n\n请问您是否有兴趣了解更多工作机会？期待您的回复。\n\n谢谢！`
+      );
+      
+      const confirmed = window.confirm(
+        `确定要发送邮件联系求职者吗？\n\n姓名: ${resume.name}\n邮箱: ${resume.email}\n求职职位: ${resume.position}\n工作经验: ${resume.experience}`
+      );
+      
+      if (confirmed) {
+        window.open(`mailto:${resume.email}?subject=${subject}&body=${body}`);
+      }
+    } else {
+      alert('该求职者未提供联系邮箱');
+    }
   };
 
   return (
@@ -586,8 +687,20 @@ const Jobs = () => {
                 <p className="job-description">{job.description}</p>
 
                 <div className="job-actions">
-                  <button className="apply-button">立即申请</button>
-                  <button className="contact-button">联系HR</button>
+                  <button 
+                    className="apply-button"
+                    onClick={() => handlePhoneContact(job)}
+                  >
+                    <Phone size={16} />
+                    电话联系
+                  </button>
+                  <button 
+                    className="contact-button"
+                    onClick={() => handleEmailContact(job)}
+                  >
+                    <Mail size={16} />
+                    邮件联系
+                  </button>
                 </div>
               </div>
             ))}
@@ -638,8 +751,20 @@ const Jobs = () => {
                 </div>
 
                 <div className="resume-actions">
-                  <button className="contact-button">联系求职者</button>
-                  <button className="view-button">查看详情</button>
+                  <button 
+                    className="contact-button"
+                    onClick={() => handlePhoneContactResume(resume)}
+                  >
+                    <Phone size={16} />
+                    电话联系
+                  </button>
+                  <button 
+                    className="view-button"
+                    onClick={() => handleEmailContactResume(resume)}
+                  >
+                    <Mail size={16} />
+                    邮件联系
+                  </button>
                 </div>
               </div>
             ))}
@@ -734,6 +859,24 @@ const Jobs = () => {
                       <label>职位描述 *</label>
                       <textarea name="description" required placeholder="详细描述职位要求、工作内容、福利待遇等..."></textarea>
                     </div>
+                    
+                    <div className="form-group">
+                      <label>联系信息</label>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>联系人姓名</label>
+                          <input type="text" name="contactPerson" placeholder="如：张经理" />
+                        </div>
+                        <div className="form-group">
+                          <label>联系电话 *</label>
+                          <input type="tel" name="contactPhone" required placeholder="如：(323) 888-1001" />
+                        </div>
+                      </div>
+                      <div className="form-group">
+                        <label>联系邮箱 *</label>
+                        <input type="email" name="contactEmail" required placeholder="如：hr@company.com" />
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -778,6 +921,25 @@ const Jobs = () => {
                     <div className="form-group">
                       <label>技能专长 *</label>
                       <input type="text" name="skills" required placeholder="请用逗号分隔，如：CDL-A驾照, 长途运输, 货物装卸" />
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>期望薪资</label>
+                        <input type="text" name="expectedSalary" placeholder="如：$4000-5000/月" />
+                      </div>
+                      <div className="form-group">
+                        <label>工作类型偏好</label>
+                        <select name="workTypePreference">
+                          <option value="">请选择</option>
+                          {workTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>个人简介</label>
+                      <textarea name="summary" placeholder="简要介绍您的工作经验、技能优势等..."></textarea>
                     </div>
                   </>
                 )}
