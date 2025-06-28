@@ -117,6 +117,14 @@ const Header = () => {
       ]
     },
     {
+      id: 'logisticsTool',
+      label: '物流工具',
+      type: 'dropdown',
+      items: [
+        { path: '/freight-calculator', label: '货运计算器' }
+      ]
+    },
+    {
       id: 'account',
       label: '我的',
       type: 'dropdown',

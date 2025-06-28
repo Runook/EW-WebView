@@ -18,6 +18,7 @@ import YellowPages from './pages/YellowPages';
 import Jobs from './pages/Jobs';
 import LogisticsRental from './pages/LogisticsRental';
 import Forum from './pages/Forum';
+import FreightCalculator from './pages/FreightCalculator';
 import './App.css';
 
 // 导入 Google Maps 诊断功能
@@ -96,6 +97,9 @@ function App() {
               <Route path="/jobs" element={<Jobs />} />
               <Route path="/logistics-rental" element={<LogisticsRental />} />
               <Route path="/forum" element={<Forum />} />
+              
+              {/* 物流工具 */}
+              <Route path="/freight-calculator" element={<FreightCalculator />} />
               
               {/* 我们 */}
               <Route path="/my-points" element={
