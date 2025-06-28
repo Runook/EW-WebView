@@ -185,6 +185,21 @@ const FreightCalculator = () => {
     calculateFreightClass();
   }, [formData.weight, formData.length, formData.width, formData.height, formData.hazmat, formData.fragile]);
 
+  // 当有计算结果时，在移动端自动滚动到结果区域
+  useEffect(() => {
+    if (results.freightClass && window.innerWidth <= 480) {
+      setTimeout(() => {
+        const resultsSection = document.querySelector('.results-section');
+        if (resultsSection) {
+          resultsSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
+      }, 300); // 延迟确保渲染完成
+    }
+  }, [results.freightClass]);
+
   return (
     <div className="freight-calculator-page">
       <div className="container">
