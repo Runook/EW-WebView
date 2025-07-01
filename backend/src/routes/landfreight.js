@@ -296,13 +296,25 @@ router.post('/trucks', auth, async (req, res) => {
     console.log('车源数据:', req.body);
 
     // 验证必填字段
-    const requiredFields = ['currentLocation', 'availableDate', 'equipment', 'capacity', 'serviceType', 'companyName', 'contactPhone'];
+    const requiredFields = [ 
+      'serviceType', 'currentLocation', 'truckType', 'length', 
+      'capacity', 'volume', 'preferredOrigin', 'preferredDestination',
+      'contactName', 'contactPhone'
+    ];
     const missingFields = requiredFields.filter(field => !req.body[field]);
     
     if (missingFields.length > 0) {
       return res.status(400).json({
         success: false,
         message: `缺少必填字段: ${missingFields.join(', ')}`
+      });
+    }
+
+    // 手机号码格式验证 (美国格式 10位数)
+    if (req.body.contactPhone && !/^\d{10}$/.test(req.body.contactPhone.replace(/\D/g, ''))) {
+      return res.status(400).json({
+        success: false,
+        message: '手机号码格式不正确，请输入10位数字'
       });
     }
 

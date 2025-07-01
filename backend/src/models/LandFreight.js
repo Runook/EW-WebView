@@ -307,22 +307,22 @@ class LandFreight {
       // 准备数据库数据
       const dbData = {
         user_id: userId,
-        current_location: truckData.currentLocation || truckData.origin,
-        preferred_destination: truckData.preferredDestination || truckData.destination || '全国各地',
-        available_date: truckData.availableDate,
-        truck_type: truckData.truckType,
-        equipment: truckData.equipment || truckData.truckType,
-        capacity: truckData.capacity,
-        truck_features: truckData.truckFeatures,
-        driver_license: truckData.driverLicense,
         service_type: truckData.serviceType,
-        rate_range: truckData.rateRange,
-        rate: truckData.rate,
-        company_name: truckData.companyName,
+        current_location: truckData.currentLocation,
+        truck_type: truckData.truckType,
+        length: truckData.length,
+        capacity: truckData.capacity,
+        volume: truckData.volume,
+        preferred_origin: truckData.preferredOrigin,
+        preferred_destination: truckData.preferredDestination,
+        contact_name: truckData.contactName,
         contact_phone: truckData.contactPhone,
+        available_date: truckData.availableDate,
+        equipment: truckData.truckType, // 兼容字段
         contact_email: truckData.contactEmail,
-        ewid: ewid,
+        company_name: truckData.companyName,
         notes: truckData.notes,
+        ewid: ewid,
         rating: 0
       };
 
@@ -361,20 +361,20 @@ class LandFreight {
 
       // 准备更新数据
       const updateData = {
-        current_location: truckData.currentLocation || truckData.origin,
-        preferred_destination: truckData.preferredDestination || truckData.destination,
-        available_date: truckData.availableDate,
-        truck_type: truckData.truckType,
-        equipment: truckData.equipment || truckData.truckType,
-        capacity: truckData.capacity,
-        truck_features: truckData.truckFeatures,
-        driver_license: truckData.driverLicense,
         service_type: truckData.serviceType,
-        rate_range: truckData.rateRange,
-        rate: truckData.rate,
-        company_name: truckData.companyName,
+        current_location: truckData.currentLocation,
+        truck_type: truckData.truckType,
+        length: truckData.length,
+        capacity: truckData.capacity,
+        volume: truckData.volume,
+        preferred_origin: truckData.preferredOrigin,
+        preferred_destination: truckData.preferredDestination,
+        contact_name: truckData.contactName,
         contact_phone: truckData.contactPhone,
+        available_date: truckData.availableDate,
+        equipment: truckData.truckType, // 兼容字段
         contact_email: truckData.contactEmail,
+        company_name: truckData.companyName,
         notes: truckData.notes,
         updated_at: knex.fn.now()
       };

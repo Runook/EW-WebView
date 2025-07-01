@@ -808,4 +808,30 @@
 .requirement-tag:hover {
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(52, 199, 89, 0.2);
+}
+
+/* 必填项样式 */
+.required {
+  color: #ff4444;
+  font-weight: bold;
+}
+
+/* 错误状态样式 */
+.form-group input.error,
+.form-group select.error,
+.form-group textarea.error {
+  border-color: #ff4444;
+  background-color: #fff5f5;
+}
+
+.error-message {
+  color: #ff4444;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* 全宽度表单组 */
+.form-group.full-width {
+  grid-column: 1 / -1;
 } 

@@ -1,291 +1,172 @@
 import React, { useState } from 'react';
-import { X, MapPin, Calendar, DollarSign, Truck, Star, Scale, Box, Navigation } from 'lucide-react';
+import { X, MapPin, Calendar, Truck, Scale, Box, User, Phone } from 'lucide-react';
 import './Modal.css';
-import { GoogleMapsAddressInput, GoogleMapsRoute, calculateDistance, geocodeAddress } from './GoogleMapsAddressInput';
+import { GoogleMapsAddressInput } from './GoogleMapsAddressInput';
 
 const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
-    currentLocation: '',
+    serviceType: '',        // 服务类型 - 必填
+    currentLocation: '',    // 当前位置 - 必填
+    truckType: '',         // 车型 - 必填
+    length: '',            // 车长 - 必填
+    capacity: '',          // 载重能力 - 必填
+    volume: '',            // 货仓体积 - 必填
+    preferredOrigin: '',   // 常跑起点 - 必填
+    preferredDestination: '', // 常跑终点 - 必填
+    contactName: '',       // 联系人 - 必填
+    contactPhone: '',      // 手机号码 - 必填
+    // 可选字段
     availableDate: '',
-    serviceType: '', // FTL, LTL 或 FTL/LTL
-    equipment: '',
-    length: '',
-    capacity: '',
-    volume: '',
-    preferredOrigin: '',
-    preferredDestination: '',
-    rateRange: '',
-    specialServices: '',
-    contactName: '',
-    contactPhone: '',
     contactEmail: '',
     companyName: '',
     notes: ''
   });
 
-  // Google Maps 相关状态
-  const [selectedPlaces, setSelectedPlaces] = useState({
-    currentLocation: null,
-    preferredOrigin: null,
-    preferredDestination: null
-  });
+  const [errors, setErrors] = useState({});
 
-  const [showRouteModal, setShowRouteModal] = useState(false);
-  
-  // 距离信息状态
-  const [distanceInfo, setDistanceInfo] = useState(null);
-  const [calculatingDistance, setCalculatingDistance] = useState(false);
-  
-  // 错误确认状态
-  const [showErrorConfirm, setShowErrorConfirm] = useState(false);
-  const [errorData, setErrorData] = useState(null);
-
+  // 服务类型选项
   const serviceTypes = [
     { value: 'FTL', label: 'FTL (整车运输)' },
     { value: 'LTL', label: 'LTL (零担运输)' },
     { value: 'FTL/LTL', label: 'FTL/LTL (都可以)' }
   ];
 
-  const equipmentTypes = [
+  // 车型选项
+  const truckTypes = [
     { value: '厢式货车', label: '厢式货车' },
     { value: '冷藏车', label: '冷藏车' },
     { value: '平板车', label: '平板车' },
     { value: '高栏车', label: '高栏车' },
     { value: '低板车', label: '低板车' },
-    { value: '油罐车', label: '油罐车' }
+    { value: '油罐车', label: '油罐车' },
+    { value: '危险品车', label: '危险品车' },
+    { value: '其他', label: '其他' }
   ];
 
+  // 车长选项
   const truckLengths = [
-    '4.2米', '6.8米', '9.6米', '13米', '17.5米'
+    '4.2米', '6.8米', '9.6米', '13米', '17.5米', '其他'
   ];
 
+  // 载重能力选项
   const capacityRanges = [
-    '5吨以下', '5-10吨', '10-20吨', '20-30吨', '30吨以上'
+    '1吨以下', '1-3吨', '3-5吨', '5-10吨', '10-20吨', '20-30吨', '30吨以上'
+  ];
+
+  // 货仓体积选项
+  const volumeRanges = [
+    '10立方米以下', '10-20立方米', '20-50立方米', '50-100立方米', '100立方米以上'
   ];
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  // Google Maps 地址选择处理
-  const handleCurrentLocationSelected = (placeData) => {
-    setSelectedPlaces(prev => ({
+    const { name, value } = e.target;
+    setFormData(prev => ({
       ...prev,
-      currentLocation: placeData
+      [name]: value
     }));
-  };
-
-  const handlePreferredOriginSelected = (placeData) => {
-    setSelectedPlaces(prev => ({
-      ...prev,
-      preferredOrigin: placeData
-    }));
-  };
-
-  const handlePreferredDestinationSelected = (placeData) => {
-    setSelectedPlaces(prev => ({
-      ...prev,
-      preferredDestination: placeData
-    }));
-  };
-
-  // 显示路线功能
-  const showRoute = () => {
-    // 检查是否有Google Maps选择的地址数据，或者至少有输入的地址文本
-    const hasOrigin = selectedPlaces.preferredOrigin || formData.preferredOrigin;
-    const hasDestination = selectedPlaces.preferredDestination || formData.preferredDestination;
     
-    if (hasOrigin && hasDestination) {
-      setShowRouteModal(true);
-    } else {
-      alert('请先输入常跑起点和终点地址');
+    // 清除该字段的错误
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
     }
+  };
+
+  // 验证表单
+  const validateForm = () => {
+    const newErrors = {};
+    const requiredFields = [
+      'serviceType', 'currentLocation', 'truckType', 'length', 
+      'capacity', 'volume', 'preferredOrigin', 'preferredDestination',
+      'contactName', 'contactPhone'
+    ];
+
+    const fieldLabels = {
+      serviceType: '服务类型',
+      currentLocation: '当前位置',
+      truckType: '车型',
+      length: '车长',
+      capacity: '载重能力',
+      volume: '货仓体积',
+      preferredOrigin: '常跑起点',
+      preferredDestination: '常跑终点',
+      contactName: '联系人',
+      contactPhone: '手机号码'
+    };
+
+    requiredFields.forEach(field => {
+      if (!formData[field] || formData[field].trim() === '') {
+        newErrors[field] = `${fieldLabels[field]}为必填项`;
+      }
+    });
+
+    // 手机号码格式验证 (美国格式 10位数)
+    if (formData.contactPhone && !/^\d{10}$/.test(formData.contactPhone.replace(/\D/g, ''))) {
+      newErrors.contactPhone = '请输入正确的美国手机号码格式(10位数字)';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 验证必填字段
-    const requiredFields = [
-      'currentLocation', 'availableDate', 'equipment', 'capacity', 
-      'rateRange', 'serviceType', 'companyName', 'contactPhone'
-    ];
-    
-    const missingFields = requiredFields.filter(field => !formData[field]);
-    
-    if (missingFields.length > 0) {
-      alert(`请填写所有必填字段: ${missingFields.join(', ')}`);
+    if (!validateForm()) {
       return;
     }
 
-    // 自动处理地址和距离计算
     try {
-      console.log('开始处理车源地址信息...');
+      console.log('开始处理车源信息发布...');
       
-      let currentLocationData = selectedPlaces.currentLocation;
-      let preferredOriginData = selectedPlaces.preferredOrigin;
-      let preferredDestinationData = selectedPlaces.preferredDestination;
-      let calculatedDistance = distanceInfo;
-
-      // 如果没有从建议中选择地址，则进行地理编码
-      if (!currentLocationData && formData.currentLocation) {
-        console.log('地理编码当前位置:', formData.currentLocation);
-        currentLocationData = await geocodeAddress(formData.currentLocation);
-      }
-
-      if (!preferredOriginData && formData.preferredOrigin) {
-        console.log('地理编码常跑起点:', formData.preferredOrigin);
-        preferredOriginData = await geocodeAddress(formData.preferredOrigin);
-      }
-
-      if (!preferredDestinationData && formData.preferredDestination) {
-        console.log('地理编码常跑终点:', formData.preferredDestination);
-        preferredDestinationData = await geocodeAddress(formData.preferredDestination);
-      }
-
-      // 如果还没有距离信息且有常跑起点和终点，则计算距离
-      if (!calculatedDistance && preferredOriginData && preferredDestinationData) {
-        console.log('计算常跑路线距离...');
-        calculatedDistance = await calculateDistance(
-          preferredOriginData.fullAddress || preferredOriginData.displayAddress || formData.preferredOrigin,
-          preferredDestinationData.fullAddress || preferredDestinationData.displayAddress || formData.preferredDestination
-        );
-      }
-
-      console.log('车源地址处理完成:', { currentLocationData, preferredOriginData, preferredDestinationData, calculatedDistance });
-
       // 转换为后端API期望的格式
       const submitData = {
         type: 'truck',
-        // 后端必填字段
-        origin: formData.currentLocation,
-        destination: formData.preferredDestination || '全国各地',
-        // 新增格式化地址字段
-        originDisplay: currentLocationData?.displayAddress || formData.currentLocation,
-        destinationDisplay: preferredDestinationData?.displayAddress || formData.preferredDestination || '全国各地',
-        // 距离信息（常跑路线的距离）
-        distanceInfo: calculatedDistance,
-        availableDate: formData.availableDate,
-        truckType: formData.equipment,
-        capacity: formData.capacity,
-        rate: formData.rateRange,
         serviceType: formData.serviceType,
-        companyName: formData.companyName,
+        currentLocation: formData.currentLocation,
+        truckType: formData.truckType,
+        length: formData.length,
+        capacity: formData.capacity,
+        volume: formData.volume,
+        preferredOrigin: formData.preferredOrigin,
+        preferredDestination: formData.preferredDestination,
+        contactName: formData.contactName,
         contactPhone: formData.contactPhone,
-        // 可选字段
+        availableDate: formData.availableDate || new Date().toISOString().split('T')[0],
         contactEmail: formData.contactEmail || '',
-        driverLicense: '',
-        truckFeatures: formData.specialServices || '',
-        notes: formData.notes || '',
-        // 保留原始数据用于显示
-        originalData: {
-          ...formData,
-          id: Date.now(),
-          postedDate: new Date().toISOString(),
-          location: formData.currentLocation,
-          preferredLanes: `${formData.preferredOrigin || '任意地点'} 至 ${formData.preferredDestination || '全国各地'}`,
-          // 完整地址信息
-          fullCurrentLocation: currentLocationData?.fullAddress || formData.currentLocation,
-          fullPreferredOrigin: preferredOriginData?.fullAddress || formData.preferredOrigin,
-          fullPreferredDestination: preferredDestinationData?.fullAddress || formData.preferredDestination,
-          selectedPlaces: { 
-            currentLocation: currentLocationData, 
-            preferredOrigin: preferredOriginData, 
-            preferredDestination: preferredDestinationData 
-          }
-        }
+        companyName: formData.companyName || '',
+        notes: formData.notes || ''
       };
 
-      onSubmit(submitData);
-      
+      await onSubmit(submitData);
+      resetForm();
     } catch (error) {
-      console.error('处理车源地址时出错:', error);
-      // 即使地址处理失败，也允许继续提交，但提醒用户
-      setErrorData({
-        message: '地址解析失败，是否继续发布？（将使用原始地址信息）',
-        onConfirm: () => {
-          setShowErrorConfirm(false);
-          // 执行原始提交逻辑
-          proceedWithOriginalData();
-        },
-        onCancel: () => {
-          setShowErrorConfirm(false);
-        }
-      });
-      setShowErrorConfirm(true);
-      return;
+      console.error('发布车源失败:', error);
+      alert('发布失败，请重试');
     }
-    
-    // 完成后重置表单等
-    resetForm();
   };
 
-  // 重置表单函数
   const resetForm = () => {
     setFormData({
-      currentLocation: '',
-      availableDate: '',
       serviceType: '',
-      equipment: '',
+      currentLocation: '',
+      truckType: '',
       length: '',
       capacity: '',
       volume: '',
       preferredOrigin: '',
       preferredDestination: '',
-      rateRange: '',
-      specialServices: '',
       contactName: '',
       contactPhone: '',
+      availableDate: '',
       contactEmail: '',
       companyName: '',
       notes: ''
     });
-
-    setSelectedPlaces({
-      currentLocation: null,
-      preferredOrigin: null,
-      preferredDestination: null
-    });
-
-    setDistanceInfo(null);
+    setErrors({});
     onClose();
-  };
-
-  // 使用原始数据继续提交的函数
-  const proceedWithOriginalData = () => {
-    // 使用原始数据提交
-    const submitData = {
-      type: 'truck',
-      origin: formData.currentLocation,
-      destination: formData.preferredDestination || '全国各地',
-      originDisplay: formData.currentLocation,
-      destinationDisplay: formData.preferredDestination || '全国各地',
-      distanceInfo: null,
-      availableDate: formData.availableDate,
-      truckType: formData.equipment,
-      capacity: formData.capacity,
-      rate: formData.rateRange,
-      serviceType: formData.serviceType,
-      companyName: formData.companyName,
-      contactPhone: formData.contactPhone,
-      contactEmail: formData.contactEmail || '',
-      driverLicense: '',
-      truckFeatures: formData.specialServices || '',
-      notes: formData.notes || '',
-      originalData: {
-        ...formData,
-        id: Date.now(),
-        postedDate: new Date().toISOString(),
-        location: formData.currentLocation,
-        preferredLanes: `${formData.preferredOrigin || '任意地点'} 至 ${formData.preferredDestination || '全国各地'}`
-      }
-    };
-
-    onSubmit(submitData);
-    resetForm();
   };
 
   if (!isOpen) return null;
@@ -301,27 +182,29 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="modal-form">
+          {/* 基础信息 */}
           <div className="form-section">
-            <h3>车辆信息</h3>
+            <h3>基础信息</h3>
             <div className="form-grid">
               <div className="form-group">
                 <label>
                   <Truck size={16} />
-                  服务类型
+                  服务类型 <span className="required">*</span>
                 </label>
                 <select
                   name="serviceType"
                   value={formData.serviceType}
                   onChange={handleChange}
-                  required
+                  className={errors.serviceType ? 'error' : ''}
                 >
-                  <option value="">选择服务类型</option>
+                  <option value="">请选择服务类型</option>
                   {serviceTypes.map(type => (
                     <option key={type.value} value={type.value}>
                       {type.label}
                     </option>
                   ))}
                 </select>
+                {errors.serviceType && <div className="error-message">{errors.serviceType}</div>}
               </div>
 
               <GoogleMapsAddressInput
@@ -329,11 +212,190 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                 placeholder="输入当前城市名、街道地址或ZIP代码"
                 value={formData.currentLocation}
                 onChange={(value) => setFormData(prev => ({ ...prev, currentLocation: value }))}
-                onPlaceSelected={handleCurrentLocationSelected}
+                onPlaceSelected={() => {}}
                 required={true}
                 icon={MapPin}
+                className={errors.currentLocation ? 'error' : ''}
               />
+              {errors.currentLocation && <div className="error-message">{errors.currentLocation}</div>}
 
+              <div className="form-group">
+                <label>
+                  <Truck size={16} />
+                  车型 <span className="required">*</span>
+                </label>
+                <select
+                  name="truckType"
+                  value={formData.truckType}
+                  onChange={handleChange}
+                  className={errors.truckType ? 'error' : ''}
+                >
+                  <option value="">请选择车型</option>
+                  {truckTypes.map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.truckType && <div className="error-message">{errors.truckType}</div>}
+              </div>
+
+              <div className="form-group">
+                <label>车长 <span className="required">*</span></label>
+                <select
+                  name="length"
+                  value={formData.length}
+                  onChange={handleChange}
+                  className={errors.length ? 'error' : ''}
+                >
+                  <option value="">请选择车长</option>
+                  {truckLengths.map(length => (
+                    <option key={length} value={length}>
+                      {length}
+                    </option>
+                  ))}
+                </select>
+                {errors.length && <div className="error-message">{errors.length}</div>}
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <Scale size={16} />
+                  载重能力 <span className="required">*</span>
+                </label>
+                <select
+                  name="capacity"
+                  value={formData.capacity}
+                  onChange={handleChange}
+                  className={errors.capacity ? 'error' : ''}
+                >
+                  <option value="">请选择载重能力</option>
+                  {capacityRanges.map(range => (
+                    <option key={range} value={range}>
+                      {range}
+                    </option>
+                  ))}
+                </select>
+                {errors.capacity && <div className="error-message">{errors.capacity}</div>}
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <Box size={16} />
+                  货仓体积 <span className="required">*</span>
+                </label>
+                <select
+                  name="volume"
+                  value={formData.volume}
+                  onChange={handleChange}
+                  className={errors.volume ? 'error' : ''}
+                >
+                  <option value="">请选择货仓体积</option>
+                  {volumeRanges.map(range => (
+                    <option key={range} value={range}>
+                      {range}
+                    </option>
+                  ))}
+                </select>
+                {errors.volume && <div className="error-message">{errors.volume}</div>}
+              </div>
+            </div>
+          </div>
+
+          {/* 运营路线 */}
+          <div className="form-section">
+            <h3>运营路线</h3>
+            <div className="form-grid">
+              <GoogleMapsAddressInput
+                label="常跑起点"
+                placeholder="输入常跑起点城市名、街道地址或ZIP代码"
+                value={formData.preferredOrigin}
+                onChange={(value) => setFormData(prev => ({ ...prev, preferredOrigin: value }))}
+                onPlaceSelected={() => {}}
+                required={true}
+                icon={MapPin}
+                className={errors.preferredOrigin ? 'error' : ''}
+              />
+              {errors.preferredOrigin && <div className="error-message">{errors.preferredOrigin}</div>}
+
+              <GoogleMapsAddressInput
+                label="常跑终点"
+                placeholder="输入常跑终点城市名、街道地址或ZIP代码"
+                value={formData.preferredDestination}
+                onChange={(value) => setFormData(prev => ({ ...prev, preferredDestination: value }))}
+                onPlaceSelected={() => {}}
+                required={true}
+                icon={MapPin}
+                className={errors.preferredDestination ? 'error' : ''}
+              />
+              {errors.preferredDestination && <div className="error-message">{errors.preferredDestination}</div>}
+            </div>
+          </div>
+
+          {/* 联系信息 */}
+          <div className="form-section">
+            <h3>联系信息</h3>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>
+                  <User size={16} />
+                  联系人 <span className="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="contactName"
+                  value={formData.contactName}
+                  onChange={handleChange}
+                  placeholder="请输入联系人姓名"
+                  className={errors.contactName ? 'error' : ''}
+                />
+                {errors.contactName && <div className="error-message">{errors.contactName}</div>}
+              </div>
+
+              <div className="form-group">
+                <label>
+                  <Phone size={16} />
+                  手机号码 <span className="required">*</span>
+                </label>
+                <input
+                  type="tel"
+                  name="contactPhone"
+                  value={formData.contactPhone}
+                  onChange={handleChange}
+                  placeholder="请输入10位美国手机号码"
+                  className={errors.contactPhone ? 'error' : ''}
+                />
+                {errors.contactPhone && <div className="error-message">{errors.contactPhone}</div>}
+              </div>
+
+              <div className="form-group">
+                <label>联系邮箱</label>
+                <input
+                  type="email"
+                  name="contactEmail"
+                  value={formData.contactEmail}
+                  onChange={handleChange}
+                  placeholder="请输入邮箱地址（可选）"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>公司名称</label>
+                <input
+                  type="text"
+                  name="companyName"
+                  value={formData.companyName}
+                  onChange={handleChange}
+                  placeholder="请输入公司名称（可选）"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 其他信息 */}
+          <div className="form-section">
+            <h3>其他信息</h3>
+            <div className="form-grid">
               <div className="form-group">
                 <label>
                   <Calendar size={16} />
@@ -344,205 +406,25 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                   name="availableDate"
                   value={formData.availableDate}
                   onChange={handleChange}
-                  required
+                  min={new Date().toISOString().split('T')[0]}
                 />
               </div>
 
-              <div className="form-group">
-                <label>
-                  <Truck size={16} />
-                  车型
-                </label>
-                <select
-                  name="equipment"
-                  value={formData.equipment}
+              <div className="form-group full-width">
+                <label>备注信息</label>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
                   onChange={handleChange}
-                  required
-                >
-                  <option value="">选择车型</option>
-                  {equipmentTypes.map(type => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>车长</label>
-                <select
-                  name="length"
-                  value={formData.length}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">选择车长</option>
-                  {truckLengths.map(length => (
-                    <option key={length} value={length}>
-                      {length}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <Scale size={16} />
-                  载重能力
-                </label>
-                <select
-                  name="capacity"
-                  value={formData.capacity}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">选择载重</option>
-                  {capacityRanges.map(range => (
-                    <option key={range} value={range}>
-                      {range}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <Box size={16} />
-                  货舱体积 (立方米)
-                </label>
-                <input
-                  type="number"
-                  name="volume"
-                  value={formData.volume}
-                  onChange={handleChange}
-                  placeholder="例如: 45"
-                  step="0.1"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>
-                  <DollarSign size={16} />
-                  运费区间 (¥/公里)
-                </label>
-                <input
-                  type="text"
-                  name="rateRange"
-                  value={formData.rateRange}
-                  onChange={handleChange}
-                  placeholder="例如: ¥6-12/公里"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h3>运营范围</h3>
-            <div className="form-grid">
-              <GoogleMapsAddressInput
-                label="常跑起点"
-                placeholder="经常发货的地区"
-                value={formData.preferredOrigin}
-                onChange={(value) => setFormData(prev => ({ ...prev, preferredOrigin: value }))}
-                onPlaceSelected={handlePreferredOriginSelected}
-                required={false}
-                icon={MapPin}
-              />
-
-              <GoogleMapsAddressInput
-                label="常跑终点"
-                placeholder="经常送货的地区"
-                value={formData.preferredDestination}
-                onChange={(value) => setFormData(prev => ({ ...prev, preferredDestination: value }))}
-                onPlaceSelected={handlePreferredDestinationSelected}
-                required={false}
-                icon={MapPin}
-              />
-            </div>
-
-            {/* 路线查看按钮 */}
-            {formData.preferredOrigin && formData.preferredDestination && (
-              <div className="route-section">
-                <button
-                  type="button"
-                  className="btn route-btn"
-                  onClick={showRoute}
-                >
-                  <Navigation size={16} />
-                  查看常跑路线
-                </button>
-                <p className="route-description">
-                  点击查看Google Maps导航路线和距离估算
-                </p>
-              </div>
-            )}
-
-            <div className="form-group full-width">
-              <label>
-                <Star size={16} />
-                特殊服务
-              </label>
-              <textarea
-                name="specialServices"
-                value={formData.specialServices}
-                onChange={handleChange}
-                placeholder="如: 恒温运输、GPS跟踪、危险品运输资质、保险服务等"
-                rows="3"
-              />
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h3>联系信息</h3>
-            <div className="form-grid">
-              <div className="form-group">
-                <label>公司名称</label>
-                <input
-                  type="text"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>联系人</label>
-                <input
-                  type="text"
-                  name="contactName"
-                  value={formData.contactName}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>手机号码</label>
-                <input
-                  type="tel"
-                  name="contactPhone"
-                  value={formData.contactPhone}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>邮箱</label>
-                <input
-                  type="email"
-                  name="contactEmail"
-                  value={formData.contactEmail}
-                  onChange={handleChange}
+                  placeholder="请输入其他备注信息（可选）"
+                  rows="3"
                 />
               </div>
             </div>
           </div>
 
           <div className="modal-actions">
-            <button type="button" className="btn btn-ghost" onClick={onClose}>
+            <button type="button" onClick={onClose} className="btn btn-secondary">
               取消
             </button>
             <button type="submit" className="btn btn-primary">
@@ -551,45 +433,8 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
           </div>
         </form>
       </div>
-
-      {/* Google Maps 路线模态框 */}
-              {showRouteModal && (
-          <GoogleMapsRoute
-            origin={selectedPlaces.preferredOrigin || { address: formData.preferredOrigin }}
-            destination={selectedPlaces.preferredDestination || { address: formData.preferredDestination }}
-            onClose={() => setShowRouteModal(false)}
-          />
-        )}
-
-        {/* 错误确认对话框 */}
-        {showErrorConfirm && errorData && (
-          <div className="modal-overlay" style={{ zIndex: 1100 }}>
-            <div className="modal-content error-confirm-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>确认操作</h3>
-                <button className="close-btn" onClick={errorData.onCancel}>
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="modal-body">
-                <div className="error-confirm-content">
-                  <div style={{ color: '#ff6b35', fontSize: '48px' }}>⚠️</div>
-                  <p>{errorData.message}</p>
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button type="button" onClick={errorData.onCancel} className="btn secondary">
-                  取消
-                </button>
-                <button type="button" onClick={errorData.onConfirm} className="btn primary">
-                  继续发布
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
+    </div>
+  );
+};
 
 export default PostTruckModal; 
