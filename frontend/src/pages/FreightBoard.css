@@ -185,6 +185,18 @@
   transform: translateY(-2px);
 }
 
+/* 发布按钮颜色联动样式 */
+.post-btn.active-post {
+  background: var(--primary-green) !important;
+  color: var(--bg-white) !important;
+  border-color: var(--primary-green) !important;
+}
+
+.post-btn.active-post:hover {
+  background: var(--secondary-green) !important;
+  border-color: var(--secondary-green) !important;
+}
+
 /* ===== 搜索筛选区域 ===== */
 .search-filter-section {
   background: var(--bg-gray);

@@ -638,14 +638,14 @@ const FreightBoard = () => {
         {/* Post Buttons */}
         <div className="post-actions">
           <button 
-            className="btn btn-primary post-btn"
+            className={`btn post-btn ${activeTab === 'loads' ? 'btn-primary active-post' : 'btn-secondary'}`}
             onClick={handlePostLoadClick}
           >
             <Plus size={18} />
             发布货源信息
           </button>
           <button 
-            className="btn btn-secondary post-btn"
+            className={`btn post-btn ${activeTab === 'trucks' ? 'btn-primary active-post' : 'btn-secondary'}`}
             onClick={handlePostTruckClick}
           >
             <Plus size={18} />
