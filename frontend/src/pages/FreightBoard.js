@@ -77,17 +77,16 @@ const FreightBoard = () => {
   const [loads, setLoads] = useState([]); // 货源列表
   const [trucks, setTrucks] = useState([]); // 车源列表
 
-  // 搜索和筛选状态
-  const [searchQuery, setSearchQuery] = useState(''); // 搜索关键词
+  // 统一的筛选状态管理
   const [filters, setFilters] = useState({
-    search: '',
+    searchQuery: '', // 搜索关键词
     origin: '', // 起始地筛选
     destination: '', // 目的地筛选
     serviceType: '', // 服务类型筛选 (FTL/LTL)
     dateFrom: '', // 开始日期筛选
-    dateTo: '' // 结束日期筛选
+    dateTo: '', // 结束日期筛选
+    sortBy: 'date' // 排序方式
   });
-  const [sortBy, setSortBy] = useState('date'); // 排序方式 ('date' | 'rate' | 'weight')
 
   const { isAuthenticated } = useAuth();
 
@@ -166,8 +165,6 @@ const FreightBoard = () => {
     }
   };
 
-
-
   // === 组件初始化 ===
   /**
    * 组件初始化 - 加载货源和车源数据
@@ -195,13 +192,13 @@ const FreightBoard = () => {
     loadData();
   }, []);
 
-  // === 事件处理函数 ===
+  // === 筛选和搜索功能 ===
   /**
-   * 处理筛选条件变化
+   * 统一的筛选条件更新函数
    * @param {string} key - 筛选字段名
    * @param {string} value - 筛选值
    */
-  const handleFilterChange = (key, value) => {
+  const updateFilter = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
@@ -209,28 +206,253 @@ const FreightBoard = () => {
    * 重置所有筛选条件
    */
   const resetFilters = () => {
-    setSearchQuery('');
     setFilters({
-      search: '',
+      searchQuery: '',
       origin: '',
       destination: '',
       serviceType: '',
       dateFrom: '',
-      dateTo: ''
+      dateTo: '',
+      sortBy: 'date'
     });
-    setSortBy('date');
   };
 
   /**
-   * Apply filters - currently filtering is reactive so this is mainly for enter key support
-   * Could be extended in the future for manual filter application or search actions
+   * 美国50个州及特区的简称列表
    */
-  const applyFilters = () => {
-    // Filtering is already reactive through filteredLoads/filteredTrucks computed properties
-    // This function is mainly here to support the Enter key functionality in search
-    // Could be extended in the future for additional search logic if needed
+  const US_STATES = [
+    { code: 'AL', name: 'Alabama' },
+    { code: 'AK', name: 'Alaska' },
+    { code: 'AZ', name: 'Arizona' },
+    { code: 'AR', name: 'Arkansas' },
+    { code: 'CA', name: 'California' },
+    { code: 'CO', name: 'Colorado' },
+    { code: 'CT', name: 'Connecticut' },
+    { code: 'DE', name: 'Delaware' },
+    { code: 'DC', name: 'District of Columbia' },
+    { code: 'FL', name: 'Florida' },
+    { code: 'GA', name: 'Georgia' },
+    { code: 'HI', name: 'Hawaii' },
+    { code: 'ID', name: 'Idaho' },
+    { code: 'IL', name: 'Illinois' },
+    { code: 'IN', name: 'Indiana' },
+    { code: 'IA', name: 'Iowa' },
+    { code: 'KS', name: 'Kansas' },
+    { code: 'KY', name: 'Kentucky' },
+    { code: 'LA', name: 'Louisiana' },
+    { code: 'ME', name: 'Maine' },
+    { code: 'MD', name: 'Maryland' },
+    { code: 'MA', name: 'Massachusetts' },
+    { code: 'MI', name: 'Michigan' },
+    { code: 'MN', name: 'Minnesota' },
+    { code: 'MS', name: 'Mississippi' },
+    { code: 'MO', name: 'Missouri' },
+    { code: 'MT', name: 'Montana' },
+    { code: 'NE', name: 'Nebraska' },
+    { code: 'NV', name: 'Nevada' },
+    { code: 'NH', name: 'New Hampshire' },
+    { code: 'NJ', name: 'New Jersey' },
+    { code: 'NM', name: 'New Mexico' },
+    { code: 'NY', name: 'New York' },
+    { code: 'NC', name: 'North Carolina' },
+    { code: 'ND', name: 'North Dakota' },
+    { code: 'OH', name: 'Ohio' },
+    { code: 'OK', name: 'Oklahoma' },
+    { code: 'OR', name: 'Oregon' },
+    { code: 'PA', name: 'Pennsylvania' },
+    { code: 'RI', name: 'Rhode Island' },
+    { code: 'SC', name: 'South Carolina' },
+    { code: 'SD', name: 'South Dakota' },
+    { code: 'TN', name: 'Tennessee' },
+    { code: 'TX', name: 'Texas' },
+    { code: 'UT', name: 'Utah' },
+    { code: 'VT', name: 'Vermont' },
+    { code: 'VA', name: 'Virginia' },
+    { code: 'WA', name: 'Washington' },
+    { code: 'WV', name: 'West Virginia' },
+    { code: 'WI', name: 'Wisconsin' },
+    { code: 'WY', name: 'Wyoming' }
+  ];
+
+  /**
+   * 从地址字符串中提取州简称
+   * @param {string} address - 完整地址
+   * @returns {string} 州简称或空字符串
+   */
+  const extractStateFromAddress = (address) => {
+    if (!address) return '';
+    
+    // 尝试匹配常见的地址格式
+    // 例如: "City, State zipcode" 或 "City, State" 或 "City State"
+    const statePatterns = [
+      /,\s*([A-Z]{2})\s*\d{5}/, // "City, CA 90210"
+      /,\s*([A-Z]{2})\s*$/, // "City, CA"
+      /\s([A-Z]{2})\s*\d{5}/, // "City CA 90210"
+      /\s([A-Z]{2})\s*$/ // "City CA"
+    ];
+    
+    for (const pattern of statePatterns) {
+      const match = address.match(pattern);
+      if (match && match[1]) {
+        const stateCode = match[1].toUpperCase();
+        // 验证是否是有效的州简称
+        if (US_STATES.some(state => state.code === stateCode)) {
+          return stateCode;
+        }
+      }
+    }
+    
+    return '';
   };
 
+  /**
+   * 从数据中提取在用的州简称
+   */
+  const getStatesInUse = () => {
+    const statesSet = new Set();
+    
+    // 从货源数据提取州
+    loads.forEach(load => {
+      const originState = extractStateFromAddress(load.origin || load.originDisplay);
+      const destState = extractStateFromAddress(load.destination || load.destinationDisplay);
+      if (originState) statesSet.add(originState);
+      if (destState) statesSet.add(destState);
+    });
+    
+    // 从车源数据提取州
+    trucks.forEach(truck => {
+      const locationState = extractStateFromAddress(truck.location);
+      const destState = extractStateFromAddress(truck.destination);
+      if (locationState) statesSet.add(locationState);
+      if (destState) statesSet.add(destState);
+    });
+    
+    // 返回排序后的在用州列表
+    return Array.from(statesSet).sort();
+  };
+
+
+
+  /**
+   * 改进的数据筛选和排序函数
+   * @param {Array} data - 原始数据数组
+   * @returns {Array} 过滤和排序后的数据
+   */
+  const filterAndSortData = (data) => {
+    let filteredData = data.filter(item => {
+      // 搜索关键词匹配 - 支持多个字段
+      if (filters.searchQuery) {
+        const searchLower = filters.searchQuery.toLowerCase();
+        const searchFields = [
+          item.origin,
+          item.destination,
+          item.location,
+          item.equipment,
+          item.commodity,
+          item.company,
+          item.originDisplay,
+          item.destinationDisplay
+        ].filter(Boolean);
+        
+        const matchesSearch = searchFields.some(field => 
+          field.toLowerCase().includes(searchLower)
+        );
+        
+        if (!matchesSearch) return false;
+      }
+
+      // 起始地州筛选 - 基于州简称匹配
+      if (filters.origin) {
+        const originAddresses = [
+          item.origin,
+          item.location,
+          item.originDisplay
+        ].filter(Boolean);
+        
+        const originMatches = originAddresses.some(address => {
+          const stateCode = extractStateFromAddress(address);
+          return stateCode === filters.origin;
+        });
+        
+        if (!originMatches) return false;
+      }
+      
+      // 目的地州筛选 - 基于州简称匹配
+      if (filters.destination) {
+        const destAddresses = [
+          item.destination,
+          item.destinationDisplay
+        ].filter(Boolean);
+        
+        const destMatches = destAddresses.some(address => {
+          const stateCode = extractStateFromAddress(address);
+          return stateCode === filters.destination;
+        });
+        
+        if (!destMatches) return false;
+      }
+      
+      // 服务类型筛选
+      if (filters.serviceType && item.serviceType !== filters.serviceType) {
+        return false;
+      }
+
+      // 日期范围筛选 - 根据数据类型选择正确的日期字段
+      const itemDate = item.pickupDate || item.availableDate || item.postedDate;
+      
+      if (filters.dateFrom && itemDate) {
+        try {
+          if (new Date(itemDate) < new Date(filters.dateFrom)) return false;
+        } catch (e) {
+          console.warn('Invalid date:', itemDate);
+        }
+      }
+      
+      if (filters.dateTo && itemDate) {
+        try {
+          if (new Date(itemDate) > new Date(filters.dateTo)) return false;
+        } catch (e) {
+          console.warn('Invalid date:', itemDate);
+        }
+      }
+
+      return true;
+    });
+
+    // 数据排序
+    if (filters.sortBy) {
+      filteredData.sort((a, b) => {
+        switch (filters.sortBy) {
+          case 'date':
+            const aDate = new Date(a.pickupDate || a.availableDate || a.postedDate || 0);
+            const bDate = new Date(b.pickupDate || b.availableDate || b.postedDate || 0);
+            return bDate - aDate;
+            
+          case 'publication':
+            const aPubDate = new Date(a.publicationDate || a.postedTime || a.pickupDate || a.availableDate || 0);
+            const bPubDate = new Date(b.publicationDate || b.postedTime || b.pickupDate || b.availableDate || 0);
+            return bPubDate - aPubDate;
+            
+          case 'rate':
+            const aRate = parseFloat((a.rate || a.rateRange || '0').replace(/[^\d.]/g, '')) || 0;
+            const bRate = parseFloat((b.rate || b.rateRange || '0').replace(/[^\d.]/g, '')) || 0;
+            return bRate - aRate;
+            
+          case 'weight':
+            const aWeight = parseFloat((a.weight || a.capacity || '0').replace(/[^\d.]/g, '')) || 0;
+            const bWeight = parseFloat((b.weight || b.capacity || '0').replace(/[^\d.]/g, '')) || 0;
+            return bWeight - aWeight;
+            
+          default:
+            return 0;
+        }
+      });
+    }
+
+    return filteredData;
+  };
+
+  // === 事件处理函数 ===
   /**
    * 处理发布货源/车源
    * @param {Object} postData - 发布的数据
@@ -286,85 +508,24 @@ const FreightBoard = () => {
     }
   };
 
-  // === 数据处理函数 ===
-  /**
-   * 过滤和排序数据
-   * @param {Array} data - 原始数据数组
-   * @returns {Array} 过滤和排序后的数据
-   */
-  const filterData = (data) => {
-    let filteredData = data.filter(item => {
-      // 搜索关键词匹配
-      if (searchQuery) {
-        const searchLower = searchQuery.toLowerCase();
-        const matchesSearch = 
-          item.origin?.toLowerCase().includes(searchLower) ||
-          item.destination?.toLowerCase().includes(searchLower) ||
-          item.location?.toLowerCase().includes(searchLower) ||
-          item.equipment?.toLowerCase().includes(searchLower) ||
-          item.commodity?.toLowerCase().includes(searchLower) ||
-          item.company?.toLowerCase().includes(searchLower);
-        
-        if (!matchesSearch) return false;
-      }
-
-      // 起始地筛选
-      if (filters.origin && 
-          !item.origin?.toLowerCase().includes(filters.origin.toLowerCase()) && 
-          !item.location?.toLowerCase().includes(filters.origin.toLowerCase())) return false;
-      
-      // 目的地筛选
-      if (filters.destination && 
-          !item.destination?.toLowerCase().includes(filters.destination.toLowerCase())) return false;
-      
-      // 服务类型筛选
-      if (filters.serviceType && item.serviceType !== filters.serviceType) return false;
-
-      // 日期范围筛选
-      if (filters.dateFrom && item.pickupDate) {
-        try {
-          if (new Date(item.pickupDate) < new Date(filters.dateFrom)) return false;
-        } catch (e) {
-          console.warn('Invalid pickupDate:', item.pickupDate);
-        }
-      }
-      if (filters.dateTo && item.pickupDate) {
-        try {
-          if (new Date(item.pickupDate) > new Date(filters.dateTo)) return false;
-        } catch (e) {
-          console.warn('Invalid pickupDate:', item.pickupDate);
-        }
-      }
-
-      return true;
-    });
-
-    // 数据排序
-    if (sortBy) {
-      filteredData.sort((a, b) => {
-        switch (sortBy) {
-          case 'date':
-            return new Date(b.pickupDate || b.availableDate || b.postedDate) - 
-                   new Date(a.pickupDate || a.availableDate || a.postedDate);
-          case 'publication':
-            return new Date(b.publicationDate || b.postedTime || b.pickupDate || b.availableDate) - 
-                   new Date(a.publicationDate || a.postedTime || a.pickupDate || a.availableDate);
-          case 'rate':
-            const aRate = parseFloat((a.rate || a.rateRange || '0').replace(/[^\d.]/g, ''));
-            const bRate = parseFloat((b.rate || b.rateRange || '0').replace(/[^\d.]/g, ''));
-            return aRate - bRate;
-          case 'weight':
-            const aWeight = parseFloat((a.weight || '0').replace(/[^\d.]/g, ''));
-            const bWeight = parseFloat((b.weight || '0').replace(/[^\d.]/g, ''));
-            return bWeight - aWeight;
-          default:
-            return 0;
-        }
-      });
-    }
-
-    return filteredData;
-  };
+  // === 计算衍生状态 ===
+  const filteredLoads = filterAndSortData(loads);
+  const filteredTrucks = filterAndSortData(trucks);
+  const hasAppliedFilters = filters.searchQuery || filters.origin || filters.destination || 
+                            filters.serviceType || filters.dateFrom || filters.dateTo || 
+                            filters.sortBy !== 'date';
+  const statesInUse = getStatesInUse();
+  
+  // 调试信息
+  console.log('FreightBoard 筛选状态:', {
+    原始数据: { loads: loads.length, trucks: trucks.length },
+    筛选后: { loads: filteredLoads.length, trucks: filteredTrucks.length },
+    筛选条件: filters,
+    是否有筛选: hasAppliedFilters,
+    在用州数量: statesInUse.length,
+    在用州列表: statesInUse,
+    当前标签: activeTab
+  });
 
   // === 模态框事件处理 ===
   /**
@@ -405,22 +566,6 @@ const FreightBoard = () => {
     setDetailsModalOpen(false);
     setSelectedItem(null);
   };
-
-  // === 计算衍生状态 ===
-  const filteredLoads = filterData(loads);
-  const filteredTrucks = filterData(trucks);
-  const hasAppliedFilters = Object.values(filters).some(value => value !== '') || searchQuery;
-  
-  // 调试信息
-  console.log('FreightBoard state:', {
-    loads: loads.length,
-    trucks: trucks.length,
-    filteredLoads: filteredLoads.length,
-    filteredTrucks: filteredTrucks.length,
-    activeTab,
-    loading,
-    error
-  });
 
   // === 加载和错误状态渲染 ===
   if (loading) {
@@ -514,73 +659,65 @@ const FreightBoard = () => {
             <Search size={20} />
             <input
               type="text"
-              placeholder="搜索起始地、目的地、公司名称..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && applyFilters()}
+              placeholder="搜索起始地、目的地、州、公司名称..."
+              value={filters.searchQuery}
+              onChange={(e) => updateFilter('searchQuery', e.target.value)}
             />
           </div>
 
           <div className="filters-row">
             <select 
               value={filters.origin} 
-              onChange={(e) => handleFilterChange('origin', e.target.value)}
+              onChange={(e) => updateFilter('origin', e.target.value)}
             >
-              <option value="">选择起始地</option>
-              <option value="北京">北京</option>
-              <option value="上海">上海</option>
-              <option value="广州">广州</option>
-              <option value="深圳">深圳</option>
-              <option value="杭州">杭州</option>
-              <option value="南京">南京</option>
-              <option value="成都">成都</option>
-              <option value="重庆">重庆</option>
+              <option value="">选择起始州</option>
+              {US_STATES.map(state => (
+                <option key={state.code} value={state.code}>
+                  {state.code} - {state.name}
+                </option>
+              ))}
             </select>
 
             <select 
               value={filters.destination} 
-              onChange={(e) => handleFilterChange('destination', e.target.value)}
+              onChange={(e) => updateFilter('destination', e.target.value)}
             >
-              <option value="">选择目的地</option>
-              <option value="北京">北京</option>
-              <option value="上海">上海</option>
-              <option value="广州">广州</option>
-              <option value="深圳">深圳</option>
-              <option value="杭州">杭州</option>
-              <option value="南京">南京</option>
-              <option value="成都">成都</option>
-              <option value="重庆">重庆</option>
-              <option value="全国">全国各地</option>
+              <option value="">选择目的州</option>
+              {US_STATES.map(state => (
+                <option key={state.code} value={state.code}>
+                  {state.code} - {state.name}
+                </option>
+              ))}
             </select>
 
             <select 
               value={filters.serviceType} 
-              onChange={(e) => handleFilterChange('serviceType', e.target.value)}
+              onChange={(e) => updateFilter('serviceType', e.target.value)}
             >
               <option value="">全部类型</option>
               <option value="FTL">整车运输</option>
               <option value="LTL">零担运输</option>
             </select>
 
-            {activeTab === 'loads' && (
-              <div className="date-range">
-                <input
-                  type="date"
-                  value={filters.dateFrom}
-                  onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                  placeholder="取货开始日期"
-                />
-                <span>-</span>
-                <input
-                  type="date"
-                  value={filters.dateTo}
-                  onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                  placeholder="取货结束日期"
-                />
-              </div>
-            )}
+            <div className="date-range">
+              <input
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => updateFilter('dateFrom', e.target.value)}
+                placeholder={activeTab === 'loads' ? "取货开始日期" : "可用开始日期"}
+                title={activeTab === 'loads' ? "取货开始日期" : "可用开始日期"}
+              />
+              <span>-</span>
+              <input
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => updateFilter('dateTo', e.target.value)}
+                placeholder={activeTab === 'loads' ? "取货结束日期" : "可用结束日期"}
+                title={activeTab === 'loads' ? "取货结束日期" : "可用结束日期"}
+              />
+            </div>
 
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            <select value={filters.sortBy} onChange={(e) => updateFilter('sortBy', e.target.value)}>
               <option value="date">按日期排序</option>
               <option value="publication">按发布时间排序</option>
               <option value="rate">按价格排序</option>
@@ -600,34 +737,47 @@ const FreightBoard = () => {
                 找到 {activeTab === 'loads' ? filteredLoads.length : filteredTrucks.length} 条结果
               </span>
               <div className="filter-tags">
-                {searchQuery && (
+                {filters.searchQuery && (
                   <span className="filter-tag">
-                    搜索: {searchQuery}
-                    <button onClick={() => setSearchQuery('')}>×</button>
+                    搜索: {filters.searchQuery}
+                    <button onClick={() => updateFilter('searchQuery', '')}>×</button>
                   </span>
                 )}
                 {filters.origin && (
                   <span className="filter-tag">
-                    起始: {filters.origin}
-                    <button onClick={() => handleFilterChange('origin', '')}>×</button>
+                    起始州: {US_STATES.find(state => state.code === filters.origin)?.name || filters.origin}
+                    <button onClick={() => updateFilter('origin', '')}>×</button>
                   </span>
                 )}
                 {filters.destination && (
                   <span className="filter-tag">
-                    目的: {filters.destination}
-                    <button onClick={() => handleFilterChange('destination', '')}>×</button>
+                    目的州: {US_STATES.find(state => state.code === filters.destination)?.name || filters.destination}
+                    <button onClick={() => updateFilter('destination', '')}>×</button>
                   </span>
                 )}
                 {filters.serviceType && (
                   <span className="filter-tag">
                     类型: {filters.serviceType === 'FTL' ? '整车' : '零担'}
-                    <button onClick={() => handleFilterChange('serviceType', '')}>×</button>
+                    <button onClick={() => updateFilter('serviceType', '')}>×</button>
                   </span>
                 )}
                 {(filters.dateFrom || filters.dateTo) && (
                   <span className="filter-tag">
                     日期: {filters.dateFrom || '不限'} - {filters.dateTo || '不限'}
-                    <button onClick={() => { handleFilterChange('dateFrom', ''); handleFilterChange('dateTo', ''); }}>×</button>
+                    <button onClick={() => { 
+                      updateFilter('dateFrom', ''); 
+                      updateFilter('dateTo', ''); 
+                    }}>×</button>
+                  </span>
+                )}
+                {filters.sortBy !== 'date' && (
+                  <span className="filter-tag">
+                    排序: {
+                      filters.sortBy === 'publication' ? '发布时间' :
+                      filters.sortBy === 'rate' ? '价格' :
+                      filters.sortBy === 'weight' ? '重量' : '日期'
+                    }
+                    <button onClick={() => updateFilter('sortBy', 'date')}>×</button>
                   </span>
                 )}
               </div>
