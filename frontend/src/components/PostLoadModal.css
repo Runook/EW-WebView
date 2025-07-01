@@ -191,6 +191,50 @@
   accent-color: #34C759;
 }
 
+/* ====== 地址确认显示样式 ====== */
+.address-confirmation {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #e8f5e8;
+  border-radius: 8px;
+  border-left: 4px solid #34C759;
+}
+
+.address-confirmation h4 {
+  margin: 0 0 0.75rem 0;
+  color: #2d5016;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.confirmed-address {
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.confirmed-address:last-child {
+  margin-bottom: 0;
+}
+
+.confirmed-address strong {
+  color: #2d5016;
+  margin-right: 0.5rem;
+}
+
+.display-address {
+  color: #34C759;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
+
+.full-address {
+  color: #666;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
 /* ====== 货物项目卡片样式 ====== */
 .cargo-item-card {
   border: 2px solid #e0e0e0;

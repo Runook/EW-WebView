@@ -837,7 +837,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
             <div className="form-grid">
               <GoogleMapsAddressInput
                 label="起点 (Origin)"
-                placeholder="输入城市名、街道地址或ZIP代码"
+                placeholder="输入城市名、街道地址或邮编（如：90210 或 123 Main St）"
                 value={formData.origin}
                 onChange={(value) => setFormData(prev => ({ ...prev, origin: value }))}
                 onPlaceSelected={handleOriginPlaceSelected}
@@ -847,7 +847,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
               <GoogleMapsAddressInput
                 label="终点 (Destination)"
-                placeholder="输入城市名、街道地址或ZIP代码"
+                placeholder="输入城市名、街道地址或邮编（如：10001 或 Wall Street）"
                 value={formData.destination}
                 onChange={(value) => setFormData(prev => ({ ...prev, destination: value }))}
                 onPlaceSelected={handleDestinationPlaceSelected}
@@ -933,6 +933,30 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                 </div>
               </div>
             </div>
+
+            {/* 地址确认显示 */}
+            {(selectedPlaces.origin || selectedPlaces.destination) && (
+              <div className="address-confirmation">
+                <h4>
+                  <Info size={16} />
+                  已识别地址
+                </h4>
+                {selectedPlaces.origin && (
+                  <div className="confirmed-address">
+                    <strong>起点:</strong>
+                    <span className="display-address">{selectedPlaces.origin.displayAddress}</span>
+                    <span className="full-address">({selectedPlaces.origin.fullAddress})</span>
+                  </div>
+                )}
+                {selectedPlaces.destination && (
+                  <div className="confirmed-address">
+                    <strong>终点:</strong>
+                    <span className="display-address">{selectedPlaces.destination.displayAddress}</span>
+                    <span className="full-address">({selectedPlaces.destination.fullAddress})</span>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* 路线查看按钮 */}
             {formData.origin && formData.destination && (
