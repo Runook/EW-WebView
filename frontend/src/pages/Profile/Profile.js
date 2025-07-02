@@ -13,7 +13,10 @@ import {
   EyeOff,
   Trash2,
   Star,
-  RefreshCw
+  RefreshCw,
+  Zap,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import './Profile.css';
 
@@ -21,6 +24,7 @@ const Profile = () => {
   const { section } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const [postsFilter, setPostsFilter] = useState('active'); // 'active' 或 'inactive'
   const [userInfo, setUserInfo] = useState(null);
   const [credits, setCredits] = useState(null);
   const [posts, setPosts] = useState(null);
@@ -174,6 +178,40 @@ const Profile = () => {
     }
   };
 
+  // 编辑发布
+  const editPost = (type, item) => {
+    // 根据类型跳转到对应的编辑页面
+    switch (type) {
+      case 'load':
+        navigate('/freight-board', { 
+          state: { editMode: true, editData: item } 
+        });
+        break;
+      case 'truck':
+        navigate('/freight-board', { 
+          state: { editMode: true, editData: item, postType: 'truck' } 
+        });
+        break;
+      case 'company':
+        navigate('/yellow-pages', { 
+          state: { editMode: true, editData: item } 
+        });
+        break;
+      case 'job':
+        navigate('/jobs', { 
+          state: { editMode: true, editData: item, postType: 'job' } 
+        });
+        break;
+      case 'resume':
+        navigate('/jobs', { 
+          state: { editMode: true, editData: item, postType: 'resume' } 
+        });
+        break;
+      default:
+        alert('暂不支持编辑此类型的内容');
+    }
+  };
+
   // 处理充值
   const handleRecharge = async (amount, credits) => {
     if (!confirm(`确认虚拟充值 $${amount} 获得 ${credits} 积分？（这是测试功能）`)) {
@@ -233,9 +271,9 @@ const Profile = () => {
     const getSubtitle = () => {
       switch (type) {
         case 'load':
-          return `${item.service_type} | ${item.weight}`;
+          return `${item.service_type || item.serviceType} | ${item.weight}`;
         case 'truck':
-          return `${item.service_type} | ${item.truck_type}`;
+          return `${item.service_type || item.serviceType} | ${item.truck_type || item.truckType}`;
         case 'company':
           return item.category;
         case 'job':
@@ -248,11 +286,31 @@ const Profile = () => {
     };
 
     return (
-      <div key={`${type}-${item.id}`} className="post-item">
+      <div key={`${type}-${item.id}`} className={`post-item ${item.status} ${item.is_premium ? 'premium' : ''}`}>
+        {/* 高亮背景效果 */}
+        {item.is_premium && item.premium_type === 'highlight' && (
+          <div className="highlight-overlay"></div>
+        )}
+        
+        {/* 置顶标识 */}
+        {item.is_premium && item.premium_type === 'top' && (
+          <div className="top-badge">
+            <Star size={14} />
+            <span>置顶</span>
+          </div>
+        )}
+
         <div className="post-main">
           <div className="post-header">
             <h3 className="post-title">{getTitle()}</h3>
             <div className="post-actions">
+              <button
+                className="edit-btn"
+                onClick={() => editPost(type, item)}
+                title="编辑"
+              >
+                <Edit size={16} />
+              </button>
               <button
                 className={`status-btn ${item.status}`}
                 onClick={() => togglePostStatus(type, item.id, item.status)}
@@ -275,19 +333,36 @@ const Profile = () => {
             <span className="post-date">
               发布于 {new Date(item.created_at).toLocaleDateString()}
             </span>
-            {item.is_premium && (
-              <span className="premium-badge">
-                <Star size={12} />
-                置顶
+            {item.is_premium && item.premium_type === 'highlight' && (
+              <span className="highlight-badge">
+                <Zap size={12} />
+                高亮
               </span>
             )}
             <span className="views-count">
-              浏览 {item.views_count || 0} 次
+              浏览 {item.views || item.views_count || 0} 次
             </span>
           </div>
         </div>
       </div>
     );
+  };
+
+  // 获取总计数
+  const getTotalCounts = () => {
+    if (!posts) return { active: 0, inactive: 0 };
+    
+    const active = posts.active ? 
+      posts.active.loads.length + posts.active.trucks.length + 
+      posts.active.companies.length + posts.active.jobs.length + 
+      posts.active.resumes.length : 0;
+    
+    const inactive = posts.inactive ? 
+      posts.inactive.loads.length + posts.inactive.trucks.length + 
+      posts.inactive.companies.length + posts.inactive.jobs.length + 
+      posts.inactive.resumes.length : 0;
+    
+    return { active, inactive };
   };
 
   if (loading) {
@@ -300,6 +375,8 @@ const Profile = () => {
       </div>
     );
   }
+
+  const totalCounts = getTotalCounts();
 
   return (
     <div className="profile-page">
@@ -377,15 +454,9 @@ const Profile = () => {
                   </div>
                   <div className="card-info">
                     <h3>发布总数</h3>
-                    <div className="card-value">
-                      {posts ? 
-                        posts.loads.length + posts.trucks.length + posts.companies.length + 
-                        posts.jobs.length + posts.resumes.length : 0
-                      }
-                    </div>
+                    <div className="card-value">{totalCounts.active + totalCounts.inactive}</div>
                     <p className="card-subtitle">
-                      货源 {posts?.loads.length || 0} | 车源 {posts?.trucks.length || 0} | 
-                      企业 {posts?.companies.length || 0}
+                      上架中 {totalCounts.active} | 已下架 {totalCounts.inactive}
                     </p>
                   </div>
                 </div>
@@ -394,10 +465,11 @@ const Profile = () => {
               <div className="recent-activity">
                 <h2>最近发布</h2>
                 <div className="activity-list">
-                  {posts && (
+                  {posts && posts.active && (
                     <>
-                      {posts.loads.slice(0, 3).map(item => renderPostItem(item, 'load'))}
-                      {posts.trucks.slice(0, 3).map(item => renderPostItem(item, 'truck'))}
+                      {posts.active.loads.slice(0, 2).map(item => renderPostItem(item, 'load'))}
+                      {posts.active.trucks.slice(0, 2).map(item => renderPostItem(item, 'truck'))}
+                      {posts.active.companies.slice(0, 2).map(item => renderPostItem(item, 'company'))}
                     </>
                   )}
                 </div>
@@ -410,46 +482,64 @@ const Profile = () => {
             <div className="posts-section">
               <div className="section-header">
                 <h1>我的发布</h1>
-                <button className="refresh-btn" onClick={fetchUserData}>
-                  <RefreshCw size={16} />
-                  刷新
-                </button>
+                <div className="header-actions">
+                  <div className="filter-tabs">
+                    <button
+                      className={`filter-tab ${postsFilter === 'active' ? 'active' : ''}`}
+                      onClick={() => setPostsFilter('active')}
+                    >
+                      <CheckCircle size={16} />
+                      上架中 ({totalCounts.active})
+                    </button>
+                    <button
+                      className={`filter-tab ${postsFilter === 'inactive' ? 'active' : ''}`}
+                      onClick={() => setPostsFilter('inactive')}
+                    >
+                      <AlertCircle size={16} />
+                      已下架 ({totalCounts.inactive})
+                    </button>
+                  </div>
+                  <button className="refresh-btn" onClick={fetchUserData}>
+                    <RefreshCw size={16} />
+                    刷新
+                  </button>
+                </div>
               </div>
 
-              {posts && (
-                <div className="posts-tabs">
+              {posts && posts[postsFilter] && (
+                <div className="posts-content">
                   <div className="posts-category">
-                    <h2>货源信息 ({posts.loads.length})</h2>
+                    <h2>货源信息 ({posts[postsFilter].loads.length})</h2>
                     <div className="posts-list">
-                      {posts.loads.map(item => renderPostItem(item, 'load'))}
+                      {posts[postsFilter].loads.map(item => renderPostItem(item, 'load'))}
                     </div>
                   </div>
 
                   <div className="posts-category">
-                    <h2>车源信息 ({posts.trucks.length})</h2>
+                    <h2>车源信息 ({posts[postsFilter].trucks.length})</h2>
                     <div className="posts-list">
-                      {posts.trucks.map(item => renderPostItem(item, 'truck'))}
+                      {posts[postsFilter].trucks.map(item => renderPostItem(item, 'truck'))}
                     </div>
                   </div>
 
                   <div className="posts-category">
-                    <h2>企业信息 ({posts.companies.length})</h2>
+                    <h2>企业信息 ({posts[postsFilter].companies.length})</h2>
                     <div className="posts-list">
-                      {posts.companies.map(item => renderPostItem(item, 'company'))}
+                      {posts[postsFilter].companies.map(item => renderPostItem(item, 'company'))}
                     </div>
                   </div>
 
                   <div className="posts-category">
-                    <h2>职位信息 ({posts.jobs.length})</h2>
+                    <h2>职位信息 ({posts[postsFilter].jobs.length})</h2>
                     <div className="posts-list">
-                      {posts.jobs.map(item => renderPostItem(item, 'job'))}
+                      {posts[postsFilter].jobs.map(item => renderPostItem(item, 'job'))}
                     </div>
                   </div>
 
                   <div className="posts-category">
-                    <h2>简历信息 ({posts.resumes.length})</h2>
+                    <h2>简历信息 ({posts[postsFilter].resumes.length})</h2>
                     <div className="posts-list">
-                      {posts.resumes.map(item => renderPostItem(item, 'resume'))}
+                      {posts[postsFilter].resumes.map(item => renderPostItem(item, 'resume'))}
                     </div>
                   </div>
                 </div>

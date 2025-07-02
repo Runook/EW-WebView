@@ -189,7 +189,7 @@ class UserManagement {
    * @param {number} userId - 用户ID
    * @param {string} postType - 内容类型
    * @param {number} postId - 内容ID
-   * @param {string} premiumType - 置顶类型：top, highlight, urgent
+   * @param {string} premiumType - 置顶类型：top, highlight
    * @param {number} duration - 持续时间（小时）
    * @returns {Promise<Object>} 置顶结果
    */
@@ -223,9 +223,7 @@ class UserManagement {
         case 'highlight':
           costKey = 'premium_costs.highlight';
           break;
-        case 'urgent':
-          costKey = 'premium_costs.urgent';
-          break;
+
         default:
           throw new Error('无效的置顶类型');
       }
@@ -286,7 +284,7 @@ class UserManagement {
   }
 
   /**
-   * 获取用户的所有发布内容
+   * 获取用户的所有发布内容（分为上架中和已下架）
    * @param {number} userId - 用户ID
    * @returns {Promise<Object>} 用户发布的所有内容
    */
@@ -294,43 +292,50 @@ class UserManagement {
     try {
       console.log('🔍 正在查询用户发布的内容，用户ID:', userId);
       
-      const [loads, trucks, companies, jobs, resumes] = await Promise.all([
-        knex('land_loads')
-          .where('user_id', userId)
-          .where('is_active', true)
-          .orderBy('created_at', 'desc'),
-        knex('land_trucks')
-          .where('user_id', userId)
-          .where('is_active', true)
-          .orderBy('created_at', 'desc'),
-        knex('companies')
-          .where('user_id', userId)
-          .where('is_active', true)
-          .orderBy('created_at', 'desc'),
-        knex('jobs')
-          .where('user_id', userId)
-          .where('is_active', true)
-          .orderBy('created_at', 'desc'),
-        knex('resumes')
-          .where('user_id', userId)
-          .where('is_active', true)
-          .orderBy('created_at', 'desc')
+      const [activeLoads, inactiveLoads, activeTrucks, inactiveTrucks, 
+             activeCompanies, inactiveCompanies, activeJobs, inactiveJobs,
+             activeResumes, inactiveResumes] = await Promise.all([
+        // 上架中的内容
+        knex('land_loads').where('user_id', userId).where('is_active', true).orderBy('created_at', 'desc'),
+        knex('land_loads').where('user_id', userId).where('is_active', false).orderBy('updated_at', 'desc'),
+        knex('land_trucks').where('user_id', userId).where('is_active', true).orderBy('created_at', 'desc'),
+        knex('land_trucks').where('user_id', userId).where('is_active', false).orderBy('updated_at', 'desc'),
+        knex('companies').where('user_id', userId).where('is_active', true).orderBy('created_at', 'desc'),
+        knex('companies').where('user_id', userId).where('is_active', false).orderBy('updated_at', 'desc'),
+        knex('jobs').where('user_id', userId).where('is_active', true).orderBy('created_at', 'desc'),
+        knex('jobs').where('user_id', userId).where('is_active', false).orderBy('updated_at', 'desc'),
+        knex('resumes').where('user_id', userId).where('is_active', true).orderBy('created_at', 'desc'),
+        knex('resumes').where('user_id', userId).where('is_active', false).orderBy('updated_at', 'desc')
       ]);
       
       console.log('📊 查询结果:', {
-        loads: loads.length,
-        trucks: trucks.length,
-        companies: companies.length,
-        jobs: jobs.length,
-        resumes: resumes.length
+        activeLoads: activeLoads.length,
+        inactiveLoads: inactiveLoads.length,
+        activeTrucks: activeTrucks.length,
+        inactiveTrucks: inactiveTrucks.length,
+        activeCompanies: activeCompanies.length,
+        inactiveCompanies: inactiveCompanies.length,
+        activeJobs: activeJobs.length,
+        inactiveJobs: inactiveJobs.length,
+        activeResumes: activeResumes.length,
+        inactiveResumes: inactiveResumes.length
       });
       
       return {
-        loads: loads.map(item => ({ ...item, type: 'load', status: item.is_active ? 'active' : 'inactive' })),
-        trucks: trucks.map(item => ({ ...item, type: 'truck', status: item.is_active ? 'active' : 'inactive' })),
-        companies: companies.map(item => ({ ...item, type: 'company', status: item.is_active ? 'active' : 'inactive' })),
-        jobs: jobs.map(item => ({ ...item, type: 'job', status: item.is_active ? 'active' : 'inactive' })),
-        resumes: resumes.map(item => ({ ...item, type: 'resume', status: item.is_active ? 'active' : 'inactive' }))
+        active: {
+          loads: activeLoads.map(item => ({ ...item, type: 'load', status: 'active' })),
+          trucks: activeTrucks.map(item => ({ ...item, type: 'truck', status: 'active' })),
+          companies: activeCompanies.map(item => ({ ...item, type: 'company', status: 'active' })),
+          jobs: activeJobs.map(item => ({ ...item, type: 'job', status: 'active' })),
+          resumes: activeResumes.map(item => ({ ...item, type: 'resume', status: 'active' }))
+        },
+        inactive: {
+          loads: inactiveLoads.map(item => ({ ...item, type: 'load', status: 'inactive' })),
+          trucks: inactiveTrucks.map(item => ({ ...item, type: 'truck', status: 'inactive' })),
+          companies: inactiveCompanies.map(item => ({ ...item, type: 'company', status: 'inactive' })),
+          jobs: inactiveJobs.map(item => ({ ...item, type: 'job', status: 'inactive' })),
+          resumes: inactiveResumes.map(item => ({ ...item, type: 'resume', status: 'inactive' }))
+        }
       };
     } catch (error) {
       console.error('获取用户发布内容失败:', error);
@@ -461,8 +466,7 @@ class UserManagement {
   static getPremiumTypeName(premiumType) {
     const nameMap = {
       top: '置顶',
-      highlight: '高亮',
-      urgent: '紧急'
+      highlight: '高亮'
     };
     return nameMap[premiumType] || premiumType;
   }

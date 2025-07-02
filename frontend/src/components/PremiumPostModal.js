@@ -84,8 +84,7 @@ const PremiumPostModal = ({
         return systemConfig[`premium_costs.top_${premiumDuration}h`] || 0;
       case 'highlight':
         return systemConfig['premium_costs.highlight'] || 0;
-      case 'urgent':
-        return systemConfig['premium_costs.urgent'] || 0;
+      
       default:
         return 0;
     }
@@ -248,21 +247,7 @@ const PremiumPostModal = ({
                 </div>
               </div>
 
-              <div 
-                className={`premium-option ${selectedPremium === 'urgent' ? 'selected' : ''}`}
-                onClick={() => setSelectedPremium(selectedPremium === 'urgent' ? null : 'urgent')}
-              >
-                <div className="option-icon">
-                  <Clock size={20} />
-                </div>
-                <div className="option-content">
-                  <h4>紧急标记</h4>
-                  <p>添加紧急标签，表示急需处理</p>
-                </div>
-                <div className="option-price">
-                  {systemConfig['premium_costs.urgent'] || 0} 积分
-                </div>
-              </div>
+
             </div>
           </div>
 

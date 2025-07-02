@@ -181,7 +181,7 @@ router.post('/posts/:type/:id/premium', auth, async (req, res) => {
     const { premiumType, duration = 24 } = req.body;
     
     const validTypes = ['load', 'truck', 'company', 'job', 'resume'];
-    const validPremiumTypes = ['top', 'highlight', 'urgent'];
+    const validPremiumTypes = ['top', 'highlight'];
     
     if (!validTypes.includes(type)) {
       return res.status(400).json({

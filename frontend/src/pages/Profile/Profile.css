@@ -157,8 +157,49 @@
 .section-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 2rem;
+  gap: 1.5rem;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.filter-tabs {
+  display: flex;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 0.25rem;
+  gap: 0.25rem;
+}
+
+.filter-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: #666;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.filter-tab:hover {
+  background: rgba(52, 199, 89, 0.1);
+  color: #34C759;
+}
+
+.filter-tab.active {
+  background: #34C759;
+  color: white;
+  box-shadow: 0 2px 4px rgba(52, 199, 89, 0.3);
 }
 
 .refresh-btn {
@@ -173,10 +214,15 @@
   cursor: pointer;
   font-size: 1rem;
   transition: background 0.2s;
+  font-weight: 500;
 }
 
 .refresh-btn:hover {
   background: #2ecc71;
+}
+
+.posts-content {
+  margin-top: 1.5rem;
 }
 
 .posts-category {
@@ -197,18 +243,65 @@
   gap: 1rem;
 }
 
+/* ===== 发布项目样式 ===== */
 .post-item {
   background: #f8f9fa;
   border: 1px solid #e5e5e5;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1.5rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .post-item:hover {
   border-color: #34C759;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(52, 199, 89, 0.15);
+}
+
+/* 置顶发布样式 */
+.post-item.premium {
+  border-color: #ff9800;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.1);
+}
+
+.post-item.premium:hover {
+  box-shadow: 0 8px 25px rgba(255, 152, 0, 0.2);
+}
+
+/* 高亮背景效果 */
+.highlight-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 152, 0, 0.05));
+  pointer-events: none;
+}
+
+/* 置顶标识 */
+.top-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: linear-gradient(135deg, #ff9800, #ff5722);
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+  z-index: 2;
+}
+
+.post-main {
+  position: relative;
+  z-index: 1;
 }
 
 .post-header {
@@ -216,6 +309,7 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 0.75rem;
+  gap: 1rem;
 }
 
 .post-title {
@@ -223,55 +317,96 @@
   color: #333;
   font-size: 1.1rem;
   font-weight: 600;
+  flex: 1;
+  line-height: 1.4;
 }
 
 .post-actions {
   display: flex;
   gap: 0.5rem;
+  flex-shrink: 0;
 }
 
+/* 编辑按钮 */
+.edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #e3f2fd;
+  color: #1976d2;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0;
+}
+
+.edit-btn:hover {
+  background: #bbdefb;
+  transform: scale(1.05);
+}
+
+/* 状态按钮 */
 .status-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
+  font-weight: 500;
+  min-width: 80px;
+  justify-content: center;
 }
 
 .status-btn.active {
   background: #e8f5e8;
   color: #34C759;
+  border: 1px solid #34C759;
 }
 
 .status-btn.inactive {
   background: #f5f5f5;
   color: #666;
+  border: 1px solid #ddd;
 }
 
+.status-btn:hover {
+  opacity: 0.8;
+  transform: scale(1.02);
+}
+
+/* 删除按钮 */
 .delete-btn {
   display: flex;
   align-items: center;
-  padding: 0.5rem;
-  background: #fff5f5;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #ffebee;
   color: #dc3545;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 0;
 }
 
 .delete-btn:hover {
-  background: #ffebee;
+  background: #ffcdd2;
+  transform: scale(1.05);
 }
 
 .post-subtitle {
   margin: 0 0 1rem 0;
   color: #666;
   font-size: 0.95rem;
+  line-height: 1.4;
 }
 
 .post-meta {
@@ -280,18 +415,47 @@
   gap: 1rem;
   font-size: 0.85rem;
   color: #888;
+  flex-wrap: wrap;
 }
 
-.premium-badge {
+.post-date {
+  display: flex;
+  align-items: center;
+}
+
+/* 高亮标识 */
+.highlight-badge {
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  background: #fff3e0;
-  color: #ff9800;
-  border-radius: 4px;
-  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+  color: white;
+  border-radius: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
+  box-shadow: 0 2px 6px rgba(255, 193, 7, 0.3);
+}
+
+.views-count {
+  color: #999;
+}
+
+/* 下架状态特殊样式 */
+.post-item.inactive {
+  background: #f8f8f8;
+  border-color: #ddd;
+  opacity: 0.8;
+}
+
+.post-item.inactive .post-title {
+  color: #666;
+}
+
+.post-item.inactive:hover {
+  border-color: #bbb;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* ===== 积分管理样式 ===== */
@@ -554,6 +718,29 @@
 }
 
 /* ===== 响应式设计 ===== */
+@media (max-width: 1024px) {
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+
+  .filter-tabs {
+    order: 1;
+  }
+
+  .refresh-btn {
+    order: 2;
+    align-self: flex-end;
+  }
+}
+
 @media (max-width: 768px) {
   .profile-container {
     grid-template-columns: 1fr;
@@ -578,6 +765,11 @@
 
   .post-actions {
     align-self: flex-end;
+    order: 1;
+  }
+
+  .post-title {
+    order: 2;
   }
 
   .credits-overview {
@@ -586,9 +778,21 @@
     text-align: center;
   }
 
-  .section-header {
+  .filter-tabs {
     flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
+  }
+
+  .filter-tab {
+    justify-content: center;
+  }
+
+  .top-badge {
+    position: static;
+    align-self: flex-start;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-item.premium .top-badge {
+    order: 0;
   }
 }
