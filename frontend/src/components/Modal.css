@@ -677,6 +677,11 @@
   color: #34C759;
 }
 
+.service-badge.ftl-ltl {
+  background: #fff3e0;
+  color: #ff9800;
+}
+
 .requirements-content {
   display: flex;
   align-items: flex-start;

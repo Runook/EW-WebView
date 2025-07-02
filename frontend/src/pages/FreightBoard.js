@@ -321,9 +321,9 @@ const FreightBoard = () => {
     
     // 从车源数据提取州
     trucks.forEach(truck => {
-      const locationState = extractStateFromAddress(truck.location);
-      const destState = extractStateFromAddress(truck.destination);
-      if (locationState) statesSet.add(locationState);
+      const originState = extractStateFromAddress(truck.preferredOrigin || truck.location);
+      const destState = extractStateFromAddress(truck.preferredDestination || truck.destination);
+      if (originState) statesSet.add(originState);
       if (destState) statesSet.add(destState);
     });
     
@@ -347,6 +347,8 @@ const FreightBoard = () => {
           item.origin,
           item.destination,
           item.location,
+          item.preferredOrigin,
+          item.preferredDestination,
           item.equipment,
           item.commodity,
           item.company,
@@ -366,6 +368,7 @@ const FreightBoard = () => {
         const originAddresses = [
           item.origin,
           item.location,
+          item.preferredOrigin,
           item.originDisplay
         ].filter(Boolean);
         
@@ -381,6 +384,7 @@ const FreightBoard = () => {
       if (filters.destination) {
         const destAddresses = [
           item.destination,
+          item.preferredDestination,
           item.destinationDisplay
         ].filter(Boolean);
         
@@ -871,14 +875,6 @@ const FreightBoard = () => {
                         <Info size={14} />
                         详情
                       </button>
-
-                      {/* 询价按钮 */}
-                      <div className="quote-btn-col">
-                        <button className="quote-btn">
-                          <MessageCircle size={14} />
-                          询价
-                        </button>
-                      </div>
                     </div>
                   </div>
                 ))
@@ -897,56 +893,64 @@ const FreightBoard = () => {
                 </div>
               ) : (
                 filteredTrucks.map(truck => (
-                  <div key={truck.id} className={`simple-card truck-card ${truck.serviceType?.toLowerCase()}`}>
+                  <div key={truck.id} className={`simple-card truck-card ${truck.serviceType?.toLowerCase().replace('/', '-')}`}>
                     {/* 卡片主要信息 */}
                     <div className="card-main">
                       {/* 服务类型标识 */}
                       <div className="service-type">
-                        <span className="truck-badge">
-                          <Truck size={16} />
-                          车源 {truck.serviceType}
-                        </span>
+                        {truck.serviceType === 'FTL' ? (
+                          <span className="ftl-badge">
+                            <Truck size={16} />
+                            整车 FTL
+                          </span>
+                        ) : truck.serviceType === 'LTL' ? (
+                          <span className="ltl-badge">
+                            <Truck size={16} />
+                            零担 LTL
+                          </span>
+                        ) : (
+                          <span className="ftl-ltl-badge">
+                            <Truck size={16} />
+                            FTL/LTL
+                          </span>
+                        )}
                       </div>
                       
                       {/* 运输路线 */}
                       <div className="route">
-                        <span className="origin">{truck.location}</span>
+                        <span className="origin">{truck.preferredOrigin || truck.location}</span>
                         <ArrowRight size={16} />
-                        <span className="destination">{truck.destination}</span>
+                        <span className="destination">{truck.preferredDestination || truck.destination}</span>
                       </div>
-                      
-                      {/* 车辆设备 */}
+
+                      {/* 车型 */}
                       <div className="equipment">
-                        {truck.equipment}
+                        {truck.truckType}
                       </div>
                       
                       {/* 载重能力 */}
-                      <div className="capacity">
+                      <div className="weight">
                         <Scale size={14} />
                         {truck.capacity}
                       </div>
                       
                       {/* 可用日期 */}
                       <div className="date">
-  <Calendar size={14} />
-  <span className="date-text">
-    {truck.availableDate ? 
-      truck.availableDate.substring(5, 10).replace('-', '/') 
-      : '未知日期'}
-  </span>
-</div>
-                      
-                      {/* 价格范围 */}
-                      <div className="rate">
-                        <DollarSign size={16} />
-                        <span className="rate-text">{truck.rateRange || '预估价格'}</span>
+                        <Calendar size={14} />
+                        <span className="date-text">
+                          {truck.availableDate ? 
+                            new Date(truck.availableDate).toLocaleDateString('en-US', {month: '2-digit', day: '2-digit'}) 
+                            : '未知日期'} 可用
+                        </span>
                       </div>
                       
                       {/* 发布时间 */}
                       <div className="publication-date">
                         <Clock size={14} />
                         <span className="publication-text">
-                          {truck.publicationDate ? formatPublicationDate(truck.publicationDate) : (truck.postedTime || '未知时间')}
+                          {truck.publicationDate
+                            ? formatPublicationDate(truck.publicationDate)
+                            : (truck.postedTime || '未知时间')}
                         </span>
                       </div>
 
@@ -955,14 +959,6 @@ const FreightBoard = () => {
                         <Info size={14} />
                         详情
                       </button>
-
-                      {/* 询价按钮 */}
-                      <div className="quote-btn-col">
-                        <button className="quote-btn">
-                          <MessageCircle size={14} />
-                          询价
-                        </button>
-                      </div>
                     </div>
                   </div>
                 ))

@@ -318,12 +318,10 @@ class LandFreight {
         contact_name: truckData.contactName,
         contact_phone: truckData.contactPhone,
         available_date: truckData.availableDate,
-        equipment: truckData.truckType, // 兼容字段
         contact_email: truckData.contactEmail,
         company_name: truckData.companyName,
         notes: truckData.notes,
-        ewid: ewid,
-        rating: 0
+        ewid: ewid
       };
 
       const [newTruck] = await knex('land_trucks')
@@ -372,7 +370,6 @@ class LandFreight {
         contact_name: truckData.contactName,
         contact_phone: truckData.contactPhone,
         available_date: truckData.availableDate,
-        equipment: truckData.truckType, // 兼容字段
         contact_email: truckData.contactEmail,
         company_name: truckData.companyName,
         notes: truckData.notes,
@@ -541,24 +538,29 @@ class LandFreight {
       location: truck.current_location,
       destination: truck.preferred_destination || '全国各地',
       availableDate: truck.available_date,
-      equipment: truck.equipment,
+      truckType: truck.truck_type,
       capacity: truck.capacity,
+      length: truck.length,
+      volume: truck.volume,
+      preferredOrigin: truck.preferred_origin,
+      preferredDestination: truck.preferred_destination,
+      contactName: truck.contact_name,
       serviceType: truck.service_type,
-      rateRange: truck.rate_range,
-      rate: truck.rate,
       company: truck.company_name,
       phone: truck.contact_phone,
       contactEmail: truck.contact_email,
-      rating: truck.rating,
       EWID: truck.ewid,
       notes: truck.notes,
       publicationDate: truck.created_at,
       postedTime: this.formatTimeAgo(truck.created_at),
       // 保持向后兼容
       originalData: {
+        currentLocation: truck.current_location,
         truckType: truck.truck_type,
-        truckFeatures: truck.truck_features,
-        driverLicense: truck.driver_license,
+        length: truck.length,
+        volume: truck.volume,
+        preferredOrigin: truck.preferred_origin,
+        contactName: truck.contact_name,
         contactEmail: truck.contact_email,
         notes: truck.notes
       }

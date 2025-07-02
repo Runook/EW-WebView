@@ -355,6 +355,10 @@
   border-left: 4px solid var(--primary-green);
 }
 
+.simple-card.ftl-ltl {
+  border-left: 4px solid #ff9800;
+}
+
 .card-main {
   display: grid;
   grid-template-columns: var(--grid-cols-mobile);
@@ -385,6 +389,11 @@
 .ltl-badge {
   background: #e8f5e8;
   color: var(--primary-green);
+}
+
+.ftl-ltl-badge {
+  background: #fff3e0;
+  color: #ff9800;
 }
 
 .truck-badge {
@@ -632,27 +641,16 @@
     display: none;
   }
 
-  /* 车源卡片特殊布局 */
+  /* 车源卡片布局 - 和货源卡片相同 */
   .truck-card .card-main {
     grid-template-columns: var(--grid-cols-desktop);
   }
 
   .truck-card .card-main .equipment {
-    grid-column: 2;
-    grid-row: 2;
-    justify-self: start;
-    font-size: 0.85rem;
-    color: var(--text-gray);
-    margin-top: var(--gap-xs);
-  }
-
-  .truck-card .card-main .rate {
-    grid-column: 5;
+    grid-column: 3;
     grid-row: 1;
-    justify-self: center;
-    font-size: var(--font-md);
-    color: var(--orange-price);
-    font-weight: 600;
+    justify-self: start;
+    min-width: 0;
   }
 }
 

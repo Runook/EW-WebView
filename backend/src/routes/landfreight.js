@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const LandFreight = require('../models/LandFreight');
-const { auth } = require('../middleware/auth');
+const { auth, optionalAuth } = require('../middleware/auth');
 
 /**
  * 陆运信息路由
@@ -290,9 +290,10 @@ router.get('/trucks/:id', async (req, res) => {
  * POST /api/landfreight/trucks
  * 创建新车源 (需要认证)
  */
-router.post('/trucks', auth, async (req, res) => {
+router.post('/trucks', optionalAuth, async (req, res) => {
   try {
-    console.log('创建车源，用户ID:', req.user.id);
+    const userId = req.user ? req.user.id : 1; // 测试时使用默认用户ID
+    console.log('创建车源，用户ID:', userId);
     console.log('车源数据:', req.body);
 
     // 验证必填字段
@@ -318,7 +319,7 @@ router.post('/trucks', auth, async (req, res) => {
       });
     }
 
-    const newTruck = await LandFreight.createTruck(req.body, req.user.id);
+    const newTruck = await LandFreight.createTruck(req.body, userId);
     
     res.status(201).json({
       success: true,

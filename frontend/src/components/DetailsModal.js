@@ -226,11 +226,11 @@ const DetailsModal = ({ isOpen, onClose, item }) => {
             <div className="info-row">
               <InfoRow 
                 label="起点" 
-                value={getValue(item.origin, item.location)} 
+                value={isLoad ? getValue(item.origin, item.location) : getValue(item.preferredOrigin, item.location)} 
               />
               <InfoRow 
                 label="终点" 
-                value={getValue(item.destination)} 
+                value={isLoad ? getValue(item.destination) : getValue(item.preferredDestination, item.destination)} 
               />
             </div>
             
@@ -445,10 +445,10 @@ const DetailsModal = ({ isOpen, onClose, item }) => {
           {!isLoad && (
             <InfoCard title="车辆信息" icon={<Truck size={18} />} className="truck-info">
               <div className="info-row">
-                {getValue(item.equipment) && (
+                {getValue(item.truckType) && (
                   <InfoRow 
-                    label="车辆设备" 
-                    value={getValue(item.equipment)} 
+                    label="车型" 
+                    value={getValue(item.truckType)} 
                   />
                 )}
                 {getValue(item.capacity) && (
@@ -458,14 +458,34 @@ const DetailsModal = ({ isOpen, onClose, item }) => {
                   />
                 )}
               </div>
-              {getValue(item.serviceType) && (
-                <div className="info-row">
+              <div className="info-row">
+                {getValue(item.length) && (
+                  <InfoRow 
+                    label="车长" 
+                    value={getValue(item.length)} 
+                  />
+                )}
+                {getValue(item.volume) && (
+                  <InfoRow 
+                    label="货仓体积" 
+                    value={getValue(item.volume)} 
+                  />
+                )}
+              </div>
+              <div className="info-row">
+                {getValue(item.serviceType) && (
                   <InfoRow 
                     label="服务类型" 
                     value={getValue(item.serviceType)} 
                   />
-                </div>
-              )}
+                )}
+                {getValue(getOriginalValue('currentLocation'), item.location) && (
+                  <InfoRow 
+                    label="当前位置" 
+                    value={getValue(getOriginalValue('currentLocation'), item.location)} 
+                  />
+                )}
+              </div>
             </InfoCard>
           )}
 
@@ -514,10 +534,7 @@ const DetailsModal = ({ isOpen, onClose, item }) => {
               <Phone size={16} />
               立即联系
             </button>
-            <button className="btn btn-secondary">
-              <DollarSign size={16} />
-              询价报价
-            </button>
+
             {getValue(item.contactEmail, getOriginalValue('contactEmail')) && (
               <button 
                 className="btn btn-outline"

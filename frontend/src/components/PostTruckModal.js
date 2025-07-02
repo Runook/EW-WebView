@@ -33,29 +33,28 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
 
   // 车型选项
   const truckTypes = [
-    { value: '厢式货车', label: '厢式货车' },
-    { value: '冷藏车', label: '冷藏车' },
-    { value: '平板车', label: '平板车' },
-    { value: '高栏车', label: '高栏车' },
-    { value: '低板车', label: '低板车' },
-    { value: '油罐车', label: '油罐车' },
-    { value: '危险品车', label: '危险品车' },
-    { value: '其他', label: '其他' }
+    { value: '干货车 (Dry Van)', label: '干货车 (Dry Van)' },
+    { value: '平板车 (Flatbed)', label: '平板车 (Flatbed)' },
+    { value: '冷藏车 (Refrigerated)', label: '冷藏车 (Refrigerated)' },
+    { value: '危险品车 (Hazmat)', label: '危险品车 (Hazmat)' },
+    { value: '超长车 (Stretch)', label: '超长车 (Stretch)' },
+    { value: '超重车 (Heavy Haul)', label: '超重车 (Heavy Haul)' },
+    { value: '其他 (Other)', label: '其他 (Other)' }
   ];
 
   // 车长选项
   const truckLengths = [
-    '4.2米', '6.8米', '9.6米', '13米', '17.5米', '其他'
+    '14 ft', '22 ft', '32 ft', '43 ft', '57 ft', '其他'
   ];
 
   // 载重能力选项
   const capacityRanges = [
-    '1吨以下', '1-3吨', '3-5吨', '5-10吨', '10-20吨', '20-30吨', '30吨以上'
+    '2,000 lbs以下', '2,000-6,600 lbs', '6,600-11,000 lbs', '11,000-22,000 lbs', '22,000-44,000 lbs', '44,000-66,000 lbs', '66,000 lbs以上'
   ];
 
   // 货仓体积选项
   const volumeRanges = [
-    '10立方米以下', '10-20立方米', '20-50立方米', '50-100立方米', '100立方米以上'
+    '1,800 cu ft以下', '1,800-3,500 cu ft', '3,500-7,000 cu ft', '7,000-10,500 cu ft', '10,500 cu ft以上'
   ];
 
   const handleChange = (e) => {
@@ -241,7 +240,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
 
               <div className="form-group">
-                <label>车长 <span className="required">*</span></label>
+                <label>车长 (ft) <span className="required">*</span></label>
                 <select
                   name="length"
                   value={formData.length}
@@ -261,7 +260,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Scale size={16} />
-                  载重能力 <span className="required">*</span>
+                  载重能力 (lbs) <span className="required">*</span>
                 </label>
                 <select
                   name="capacity"
@@ -282,7 +281,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
               <div className="form-group">
                 <label>
                   <Box size={16} />
-                  货仓体积 <span className="required">*</span>
+                  货仓体积 (cu ft) <span className="required">*</span>
                 </label>
                 <select
                   name="volume"
