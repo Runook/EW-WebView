@@ -129,16 +129,12 @@ const Header = () => {
       label: '我的',
       type: 'dropdown',
       items: [
-        { path: '/my-points', label: '我的积分' },
-        { path: '/recharge', label: '我要充值' },
-        { path: '/my-posts', label: '我的发布' },
-        { path: '/favorites', label: '我的收藏' },
-        { path: '/my-recruitment', label: '我的招聘' },
-        { path: '/my-job-search', label: '我的求职' },
-        { path: '/certification', label: '我的认证' },
-        { path: '/contact', label: '联系我们' },
-        { path: '/business', label: '商务合作' },
-        { path: '/invite-rewards', label: '邀请奖励' }
+        { path: '/profile', label: '账户概览' },
+        { path: '/profile/posts', label: '我的发布' },
+        { path: '/profile/credits', label: '积分管理' },
+        { path: '/profile/recharge', label: '我要充值' },
+        { path: '/profile/settings', label: '账户设置' },
+        { path: '/contact', label: '联系我们' }
       ]
     }
   ];
