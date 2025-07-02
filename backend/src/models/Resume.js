@@ -9,7 +9,8 @@ class Resume {
           'resumes.*',
           // 添加premium信息
           'premium_posts.premium_type',
-          'premium_posts.end_time as premium_end_time'
+          'premium_posts.end_time as premium_end_time',
+          'premium_posts.created_at as premium_created_at'
         )
         .leftJoin('premium_posts', function() {
           this.on('premium_posts.post_type', '=', db.raw("'resume'"))
@@ -18,7 +19,9 @@ class Resume {
               .andOn('premium_posts.end_time', '>', db.raw('NOW()'));
         })
         .where('resumes.is_active', true)
-        .orderBy('resumes.is_premium', 'desc')
+        // 修改排序：置顶内容按置顶时间倒序，普通内容按发布时间倒序
+        .orderBy(db.raw('CASE WHEN premium_posts.premium_type = \'top\' THEN 1 ELSE 2 END'))
+        .orderBy('premium_posts.created_at', 'desc')
         .orderBy('resumes.created_at', 'desc');
 
       // 应用筛选条件

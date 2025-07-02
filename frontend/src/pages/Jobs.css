@@ -757,7 +757,7 @@
 .premium-top-badge {
   position: absolute;
   top: 8px;
-  right: 8px;
+  left: 8px;
   background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
   color: #8B4513;
   padding: 4px 8px;

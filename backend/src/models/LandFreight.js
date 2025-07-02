@@ -23,7 +23,8 @@ class LandFreight {
           'users.email as user_email',
           // 添加premium信息
           'premium_posts.premium_type',
-          'premium_posts.end_time as premium_end_time'
+          'premium_posts.end_time as premium_end_time',
+          'premium_posts.created_at as premium_created_at'
         )
         .leftJoin('users', 'land_loads.user_id', 'users.id')
         .leftJoin('premium_posts', function() {
@@ -33,7 +34,9 @@ class LandFreight {
               .andOn('premium_posts.end_time', '>', knex.raw('NOW()'));
         })
         .where('land_loads.is_active', true)
-        .orderBy('land_loads.is_premium', 'desc')
+        // 修改排序：置顶内容按置顶时间倒序，普通内容按发布时间倒序
+        .orderBy(knex.raw('CASE WHEN premium_posts.premium_type = \'top\' THEN 1 ELSE 2 END'))
+        .orderBy('premium_posts.created_at', 'desc')
         .orderBy('land_loads.created_at', 'desc');
 
       // 应用筛选条件
@@ -247,7 +250,8 @@ class LandFreight {
           'users.email as user_email',
           // 添加premium信息
           'premium_posts.premium_type',
-          'premium_posts.end_time as premium_end_time'
+          'premium_posts.end_time as premium_end_time',
+          'premium_posts.created_at as premium_created_at'
         )
         .leftJoin('users', 'land_trucks.user_id', 'users.id')
         .leftJoin('premium_posts', function() {
@@ -257,7 +261,9 @@ class LandFreight {
               .andOn('premium_posts.end_time', '>', knex.raw('NOW()'));
         })
         .where('land_trucks.is_active', true)
-        .orderBy('land_trucks.is_premium', 'desc')
+        // 修改排序：置顶内容按置顶时间倒序，普通内容按发布时间倒序
+        .orderBy(knex.raw('CASE WHEN premium_posts.premium_type = \'top\' THEN 1 ELSE 2 END'))
+        .orderBy('premium_posts.created_at', 'desc')
         .orderBy('land_trucks.created_at', 'desc');
 
       // 应用筛选条件

@@ -25,7 +25,6 @@ const Profile = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [postsFilter, setPostsFilter] = useState('active'); // 'active' 或 'inactive'
-  const [userInfo, setUserInfo] = useState(null);
   const [credits, setCredits] = useState(null);
   const [posts, setPosts] = useState(null);
   const [creditHistory, setCreditHistory] = useState([]);
@@ -147,7 +146,7 @@ const Profile = () => {
 
   // 删除发布
   const deletePost = async (type, id) => {
-    if (!confirm('确认删除此发布？删除后不可恢复。')) {
+    if (!window.confirm('确认删除此发布？删除后不可恢复。')) {
       return;
     }
 
@@ -214,7 +213,7 @@ const Profile = () => {
 
   // 处理充值
   const handleRecharge = async (amount, credits) => {
-    if (!confirm(`确认虚拟充值 $${amount} 获得 ${credits} 积分？（这是测试功能）`)) {
+    if (!window.confirm(`确认虚拟充值 $${amount} 获得 ${credits} 积分？（这是测试功能）`)) {
       return;
     }
 

@@ -427,35 +427,55 @@ const FreightBoard = () => {
       return true;
     });
 
-    // 数据排序
-    if (filters.sortBy) {
-      filteredData.sort((a, b) => {
-        switch (filters.sortBy) {
-          case 'date':
-            const aDate = new Date(a.pickupDate || a.availableDate || a.postedDate || 0);
-            const bDate = new Date(b.pickupDate || b.availableDate || b.postedDate || 0);
-            return bDate - aDate;
-            
-          case 'publication':
-            const aPubDate = new Date(a.publicationDate || a.postedTime || a.pickupDate || a.availableDate || 0);
-            const bPubDate = new Date(b.publicationDate || b.postedTime || b.pickupDate || b.availableDate || 0);
-            return bPubDate - aPubDate;
-            
-          case 'rate':
-            const aRate = parseFloat((a.rate || a.rateRange || '0').replace(/[^\d.]/g, '')) || 0;
-            const bRate = parseFloat((b.rate || b.rateRange || '0').replace(/[^\d.]/g, '')) || 0;
-            return bRate - aRate;
-            
-          case 'weight':
-            const aWeight = parseFloat((a.weight || a.capacity || '0').replace(/[^\d.]/g, '')) || 0;
-            const bWeight = parseFloat((b.weight || b.capacity || '0').replace(/[^\d.]/g, '')) || 0;
-            return bWeight - aWeight;
-            
-          default:
-            return 0;
-        }
-      });
-    }
+    // 数据排序 - 保持置顶优先级
+    filteredData.sort((a, b) => {
+      // 1. 首先按置顶优先级排序（置顶在前）
+      const aIsTop = a.premium_type === 'top';
+      const bIsTop = b.premium_type === 'top';
+      
+      if (aIsTop && !bIsTop) return -1;
+      if (!aIsTop && bIsTop) return 1;
+      
+      // 2. 如果都是置顶，按置顶时间倒序（最新置顶在前）
+      if (aIsTop && bIsTop) {
+        const aPremiumDate = new Date(a.premium_created_at || a.premium_end_time || 0);
+        const bPremiumDate = new Date(b.premium_created_at || b.premium_end_time || 0);
+        return bPremiumDate - aPremiumDate;
+      }
+      
+      // 3. 如果都不是置顶，或没有指定排序方式，按用户选择的排序方式排序
+      if (!filters.sortBy) {
+        // 默认按发布时间倒序
+        const aPubDate = new Date(a.publicationDate || a.postedTime || a.pickupDate || a.availableDate || 0);
+        const bPubDate = new Date(b.publicationDate || b.postedTime || b.pickupDate || b.availableDate || 0);
+        return bPubDate - aPubDate;
+      }
+      
+      switch (filters.sortBy) {
+        case 'date':
+          const aDate = new Date(a.pickupDate || a.availableDate || a.postedDate || 0);
+          const bDate = new Date(b.pickupDate || b.availableDate || b.postedDate || 0);
+          return bDate - aDate;
+          
+        case 'publication':
+          const aPubDate = new Date(a.publicationDate || a.postedTime || a.pickupDate || a.availableDate || 0);
+          const bPubDate = new Date(b.publicationDate || b.postedTime || b.pickupDate || b.availableDate || 0);
+          return bPubDate - aPubDate;
+          
+        case 'rate':
+          const aRate = parseFloat((a.rate || a.rateRange || '0').replace(/[^\d.]/g, '')) || 0;
+          const bRate = parseFloat((b.rate || b.rateRange || '0').replace(/[^\d.]/g, '')) || 0;
+          return bRate - aRate;
+          
+        case 'weight':
+          const aWeight = parseFloat((a.weight || a.capacity || '0').replace(/[^\d.]/g, '')) || 0;
+          const bWeight = parseFloat((b.weight || b.capacity || '0').replace(/[^\d.]/g, '')) || 0;
+          return bWeight - aWeight;
+          
+        default:
+          return 0;
+      }
+    });
 
     return filteredData;
   };

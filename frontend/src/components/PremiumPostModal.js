@@ -4,7 +4,6 @@ import {
   Coins, 
   Star, 
   Zap, 
-  Clock,
   AlertCircle,
   CheckCircle,
   CreditCard
