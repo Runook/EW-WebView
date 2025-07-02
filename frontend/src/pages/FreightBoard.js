@@ -33,6 +33,7 @@ import {
 import PostLoadModal from '../components/PostLoadModal';
 import PostTruckModal from '../components/PostTruckModal';
 import DetailsModal from '../components/DetailsModal';
+import PremiumPostModal from '../components/PremiumPostModal';
 import { useAuth } from '../contexts/AuthContext';
 import './PlatformPage.css';
 import './FreightBoard.css';
@@ -72,6 +73,9 @@ const FreightBoard = () => {
   const [isPostTruckModalOpen, setIsPostTruckModalOpen] = useState(false);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null); // 详情模态框中选中的项目
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [currentPostType, setCurrentPostType] = useState(null);
+  const [currentFormData, setCurrentFormData] = useState(null);
 
   // 数据状态
   const [loads, setLoads] = useState([]); // 货源列表
@@ -461,9 +465,27 @@ const FreightBoard = () => {
    * 处理发布货源/车源
    * @param {Object} postData - 发布的数据
    */
-  const handlePostSubmit = async (postData) => {
+  // 原始发布处理函数（修改为显示积分模态框）
+  const handlePostSubmit = (postData) => {
+    if (!isAuthenticated) {
+      alert('请先登录再发布');
+      return;
+    }
+
+    // 确定发布类型
+    const postType = postData.type === 'load' ? 'load' : 'truck';
+    
+    setCurrentFormData(postData);
+    setCurrentPostType(postType);
+    setIsPostLoadModalOpen(false);
+    setIsPostTruckModalOpen(false);
+    setShowPremiumModal(true);
+  };
+
+  // 确认发布函数
+  const handleConfirmPost = async ({ formData, premium }) => {
     try {
-      console.log('发布的数据:', postData);
+      console.log('发布的数据:', formData);
       
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
       const token = localStorage.getItem('authToken');
@@ -473,14 +495,23 @@ const FreightBoard = () => {
         return;
       }
 
-      const endpoint = postData.type === 'load' ? 'loads' : 'trucks';
+      // 为数据添加EWID、发布时间和高级功能
+      const enhancedData = {
+        ...formData,
+        ewid: generateEWID(),
+        postedTime: new Date().toISOString(),
+        publicationDate: new Date().toISOString(),
+        premium: premium
+      };
+
+      const endpoint = formData.type === 'load' ? 'loads' : 'trucks';
       const response = await fetch(`${API_URL}/landfreight/${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(postData)
+        body: JSON.stringify(enhancedData)
       });
 
       if (!response.ok) {
@@ -491,20 +522,30 @@ const FreightBoard = () => {
       const result = await response.json();
       console.log('发布成功:', result);
 
-      // 重新加载数据以显示最新发布的信息
-      try {
-        const [loadData, truckData] = await Promise.all([
-          fetchLoads(),
-          fetchTrucks()
-        ]);
-        console.log('重新加载数据成功:', { loads: loadData.length, trucks: truckData.length });
-        setLoads(loadData);
-        setTrucks(truckData);
+      if (result.success) {
+        const typeName = formData.type === 'load' ? '货源' : '车源';
+        alert(`${typeName}发布成功！已扣除 ${result.creditsSpent} 积分`);
         
-        alert('发布成功！');
-      } catch (reloadError) {
-        console.error('重新加载数据失败:', reloadError);
-        alert('发布成功，但刷新列表失败，请手动刷新页面查看最新数据');
+        // 关闭模态框
+        setShowPremiumModal(false);
+        setCurrentFormData(null);
+        setCurrentPostType(null);
+
+        // 重新加载数据以显示最新发布的信息
+        try {
+          const [loadData, truckData] = await Promise.all([
+            fetchLoads(),
+            fetchTrucks()
+          ]);
+          console.log('重新加载数据成功:', { loads: loadData.length, trucks: truckData.length });
+          setLoads(loadData);
+          setTrucks(truckData);
+              } catch (reloadError) {
+          console.error('重新加载数据失败:', reloadError);
+          alert('发布成功，但刷新列表失败，请手动刷新页面查看最新数据');
+        }
+      } else {
+        alert(result.message || '发布失败，请重试');
       }
     } catch (error) {
       console.error('发布失败:', error);
@@ -988,6 +1029,19 @@ const FreightBoard = () => {
         isOpen={detailsModalOpen}
         onClose={handleDetailsClose}
         item={selectedItem}
+      />
+
+      {/* 积分发布模态框 */}
+      <PremiumPostModal
+        isOpen={showPremiumModal}
+        onClose={() => {
+          setShowPremiumModal(false);
+          setCurrentFormData(null);
+          setCurrentPostType(null);
+        }}
+        onConfirm={handleConfirmPost}
+        postType={currentPostType}
+        formData={currentFormData}
       />
     </div>
   );

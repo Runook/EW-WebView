@@ -1,0 +1,343 @@
+/* PremiumPostModal 样式 */
+.premium-post-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.premium-post-modal {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 模态框头部 */
+.premium-post-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.premium-post-modal .modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.premium-post-modal .close-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.premium-post-modal .close-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* 模态框主体 */
+.premium-post-modal .modal-body {
+  padding: 24px;
+}
+
+/* 积分信息 */
+.credits-info {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.credits-balance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #e65100;
+  font-weight: 600;
+}
+
+/* 费用部分 */
+.cost-section {
+  margin-bottom: 24px;
+}
+
+.cost-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.cost-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.cost-item .cost {
+  font-weight: 600;
+  color: #ff9800;
+}
+
+/* 高级功能部分 */
+.premium-section {
+  margin-bottom: 24px;
+}
+
+.premium-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.premium-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.premium-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+
+.premium-option:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.premium-option.selected {
+  border-color: #ff9800;
+  background: #fff3e0;
+}
+
+.premium-option .option-icon {
+  color: #ff9800;
+  margin-top: 2px;
+}
+
+.premium-option .option-content {
+  flex: 1;
+}
+
+.premium-option .option-content h4 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.premium-option .option-content p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.premium-option .option-price {
+  color: #ff9800;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-top: 2px;
+}
+
+/* 时长选择器 */
+.duration-selector {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.duration-selector label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.duration-selector input[type="radio"] {
+  margin-right: 8px;
+}
+
+/* 费用总结 */
+.cost-summary {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0 8px 0;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.summary-total .sufficient {
+  color: #10b981;
+}
+
+.summary-total .insufficient {
+  color: #ef4444;
+}
+
+.insufficient-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.875rem;
+}
+
+/* 模态框底部 */
+.premium-post-modal .modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.premium-post-modal .cancel-btn,
+.premium-post-modal .recharge-btn,
+.premium-post-modal .confirm-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  border: none;
+}
+
+.premium-post-modal .cancel-btn {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.premium-post-modal .cancel-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.premium-post-modal .recharge-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.premium-post-modal .recharge-btn:hover {
+  background: #2563eb;
+}
+
+.premium-post-modal .confirm-btn {
+  background: #10b981;
+  color: white;
+}
+
+.premium-post-modal .confirm-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.premium-post-modal .confirm-btn:disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .premium-post-modal {
+    margin: 10px;
+    max-height: calc(100vh - 20px);
+  }
+  
+  .premium-post-modal .modal-header,
+  .premium-post-modal .modal-body,
+  .premium-post-modal .modal-footer {
+    padding: 16px;
+  }
+  
+  .premium-options {
+    gap: 8px;
+  }
+  
+  .premium-option {
+    padding: 12px;
+  }
+  
+  .premium-post-modal .modal-footer {
+    flex-direction: column;
+  }
+  
+  .premium-post-modal .cancel-btn,
+  .premium-post-modal .recharge-btn,
+  .premium-post-modal .confirm-btn {
+    width: 100%;
+    justify-content: center;
+  }
+} 

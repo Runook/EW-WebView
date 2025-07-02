@@ -18,17 +18,20 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import PremiumPostModal from '../components/PremiumPostModal';
 import './Jobs.css';
 
 const Jobs = () => {
   const [activeTab, setActiveTab] = useState('jobs'); // 'jobs' 或 'resumes'
   const [searchQuery, setSearchQuery] = useState('');
   const [showPostModal, setShowPostModal] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [currentFormData, setCurrentFormData] = useState(null);
   
   const { user, isAuthenticated } = useAuth();
   
@@ -411,12 +414,67 @@ const Jobs = () => {
     }
   };
 
-  // 统一发布处理函数
+  // 统一发布处理函数（先显示积分模态框）
   const handlePost = (formData) => {
-    if (activeTab === 'jobs') {
-      handlePostJob(formData);
-    } else {
-      handlePostResume(formData);
+    if (!isAuthenticated) {
+      alert('请先登录再发布');
+      return;
+    }
+
+    // 收集表单数据并显示积分模态框
+    const formDataObj = {};
+    for (let [key, value] of formData.entries()) {
+      formDataObj[key] = value;
+    }
+    
+    setCurrentFormData(formDataObj);
+    setShowPostModal(false);
+    setShowPremiumModal(true);
+  };
+
+  // 确认发布函数
+  const handleConfirmPost = async ({ formData, premium }) => {
+    try {
+      setLoading(true);
+
+      const authToken = localStorage.getItem('authToken');
+      const postData = {
+        ...formData,
+        premium: premium
+      };
+
+      const endpoint = activeTab === 'jobs' ? '/api/jobs' : '/api/resumes';
+      
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify(postData)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setShowPremiumModal(false);
+        setCurrentFormData(null);
+        if (activeTab === 'jobs') {
+          fetchJobs();
+        } else {
+          fetchResumes();
+        }
+        
+        const typeName = activeTab === 'jobs' ? '职位' : '简历';
+        alert(`${typeName}发布成功！已扣除 ${result.creditsSpent} 积分`);
+      } else {
+        throw new Error(result.message || '发布失败');
+      }
+    } catch (error) {
+      console.error('发布失败:', error);
+      alert('发布失败: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -958,6 +1016,18 @@ const Jobs = () => {
           </div>
         </div>
       )}
+
+      {/* 积分发布模态框 */}
+      <PremiumPostModal
+        isOpen={showPremiumModal}
+        onClose={() => {
+          setShowPremiumModal(false);
+          setCurrentFormData(null);
+        }}
+        onConfirm={handleConfirmPost}
+        postType={activeTab === 'jobs' ? 'job' : 'resume'}
+        formData={currentFormData}
+      />
     </div>
   );
 };

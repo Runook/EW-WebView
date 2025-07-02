@@ -70,7 +70,7 @@ exports.seed = async function(knex) {
     },
     {
       config_key: 'user_registration_bonus',
-      config_value: '100',
+      config_value: '500',
       description: '用户注册奖励积分',
       data_type: 'number'
     },

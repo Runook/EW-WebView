@@ -136,11 +136,31 @@ router.post('/', auth, async (req, res) => {
       });
     }
 
+    // 检查积分余额
+    const postCost = await UserManagement.getSystemConfig('post_costs.company');
+    const userCredits = await UserManagement.getUserCredits(req.user.id);
+    
+    if (userCredits.current < postCost) {
+      return res.status(400).json({
+        success: false,
+        message: '积分余额不足',
+        data: {
+          requiredCredits: postCost,
+          currentCredits: userCredits.current,
+          shortfall: postCost - userCredits.current
+        }
+      });
+    }
+
     const newCompany = await Company.createCompany(req.body, req.user.id);
+    
+    // 扣除积分
+    await UserManagement.chargeForPost(req.user.id, 'company', newCompany.id);
     
     res.status(201).json({
       success: true,
       data: newCompany,
+      creditsSpent: postCost,
       message: '企业发布成功'
     });
   } catch (error) {

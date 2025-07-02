@@ -145,16 +145,19 @@ const Profile = () => {
 
   // 处理充值
   const handleRecharge = async (amount, credits) => {
-    if (!confirm(`确认充值 $${amount} 获得 ${credits} 积分？`)) {
+    if (!confirm(`确认虚拟充值 $${amount} 获得 ${credits} 积分？（这是测试功能）`)) {
       return;
     }
 
     try {
-      const response = await fetch('/api/user-management/recharge', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      
+      const response = await fetch(`${API_URL}/user-management/recharge`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           amount: amount,
@@ -164,7 +167,7 @@ const Profile = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert(`充值成功！获得 ${data.data.credits} 积分`);
+        alert(`虚拟充值成功！获得 ${data.data.credits} 积分`);
         fetchUserData(); // 重新获取积分数据
         navigate('/profile/credits'); // 返回积分管理页面
       } else {
@@ -173,7 +176,7 @@ const Profile = () => {
       }
     } catch (error) {
       console.error('充值失败:', error);
-      alert('充值失败');
+      alert('充值失败: ' + error.message);
     }
   };
 

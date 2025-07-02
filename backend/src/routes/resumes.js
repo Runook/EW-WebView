@@ -1,6 +1,7 @@
 const express = require('express');
 const { body, validationResult, query } = require('express-validator');
 const Resume = require('../models/Resume');
+const UserManagement = require('../models/UserManagement');
 const { auth } = require('../middleware/auth');
 const router = express.Router();
 
@@ -210,6 +211,22 @@ router.post('/', auth, [
       skills = req.body.skills;
     }
 
+    // 检查积分余额
+    const postCost = await UserManagement.getSystemConfig('post_costs.resume');
+    const userCredits = await UserManagement.getUserCredits(req.user.userId);
+    
+    if (userCredits.current < postCost) {
+      return res.status(400).json({
+        success: false,
+        message: '积分余额不足',
+        data: {
+          requiredCredits: postCost,
+          currentCredits: userCredits.current,
+          shortfall: postCost - userCredits.current
+        }
+      });
+    }
+
     const resumeData = {
       userId: req.user.userId,
       name: req.body.name,
@@ -225,11 +242,15 @@ router.post('/', auth, [
     };
 
     const resume = await Resume.createResume(resumeData);
+    
+    // 扣除积分
+    await UserManagement.chargeForPost(req.user.userId, 'resume', resume.id);
 
     res.status(201).json({
       success: true,
       message: '简历发布成功',
-      data: resume
+      data: resume,
+      creditsSpent: postCost
     });
 
   } catch (error) {

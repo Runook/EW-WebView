@@ -14,6 +14,7 @@ import {
   Heart,
   ChevronRight
 } from 'lucide-react';
+import PremiumPostModal from '../components/PremiumPostModal';
 import './YellowPages.css';
 
 const YellowPages = () => {
@@ -23,6 +24,8 @@ const YellowPages = () => {
   const [companies, setCompanies] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showPublishModal, setShowPublishModal] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [currentFormData, setCurrentFormData] = useState(null);
 
   // 根据图片定义的分类结构
   const categories = {
@@ -114,42 +117,58 @@ const YellowPages = () => {
   // 过滤后的公司列表（API已处理搜索，这里主要用于显示）
   const filteredCompanies = companies;
 
-  // 发布公司信息
-  const handlePublishCompany = async (companyData) => {
+  // 处理表单提交，显示积分模态框
+  const handleFormSubmit = (companyData) => {
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      alert('请先登录');
+      return;
+    }
+
+    setCurrentFormData(companyData);
+    setShowPublishModal(false);
+    setShowPremiumModal(true);
+  };
+
+  // 确认发布公司信息
+  const handleConfirmPublish = async ({ formData, premium }) => {
     try {
       const token = localStorage.getItem('authToken');
-      if (!token) {
-        alert('请先登录');
-        return;
-      }
-
       const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      
+      const postData = {
+        ...formData,
+        premium: premium
+      };
+
       const response = await fetch(`${API_URL}/companies`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(companyData)
+        body: JSON.stringify(postData)
       });
 
       if (response.ok) {
         const result = await response.json();
-        alert('企业信息发布成功！');
-        setShowPublishModal(false);
+        alert(`企业信息发布成功！已扣除 ${result.creditsSpent} 积分`);
+        setShowPremiumModal(false);
+        setCurrentFormData(null);
+        
         // 如果当前在相同的子分类，刷新数据
-        if (selectedSubcategory === companyData.subcategory) {
+        if (selectedSubcategory === formData.subcategory) {
           fetchCompanies();
         }
         // 刷新分类统计
         fetchCategoryStats();
       } else {
         const error = await response.json();
-        alert(error.message || '发布失败');
+        throw new Error(error.message || '发布失败');
       }
     } catch (error) {
       console.error('发布公司信息失败:', error);
-      alert('发布失败，请稍后重试');
+      alert('发布失败: ' + error.message);
     }
   };
 
@@ -389,7 +408,7 @@ const YellowPages = () => {
       }
       companyData.category = category;
 
-      handlePublishCompany(companyData);
+      handleFormSubmit(companyData);
     };
 
     return (
@@ -509,6 +528,18 @@ const YellowPages = () => {
       {currentView === 'category' && renderCategoryView()}
       {currentView === 'subcategory' && renderSubcategoryView()}
       {showPublishModal && renderPublishModal()}
+
+      {/* 积分发布模态框 */}
+      <PremiumPostModal
+        isOpen={showPremiumModal}
+        onClose={() => {
+          setShowPremiumModal(false);
+          setCurrentFormData(null);
+        }}
+        onConfirm={handleConfirmPublish}
+        postType="company"
+        formData={currentFormData}
+      />
     </div>
   );
 };
