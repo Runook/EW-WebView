@@ -292,30 +292,45 @@ class UserManagement {
    */
   static async getUserPosts(userId) {
     try {
+      console.log('🔍 正在查询用户发布的内容，用户ID:', userId);
+      
       const [loads, trucks, companies, jobs, resumes] = await Promise.all([
         knex('land_loads')
           .where('user_id', userId)
+          .where('is_active', true)
           .orderBy('created_at', 'desc'),
         knex('land_trucks')
           .where('user_id', userId)
+          .where('is_active', true)
           .orderBy('created_at', 'desc'),
         knex('companies')
           .where('user_id', userId)
+          .where('is_active', true)
           .orderBy('created_at', 'desc'),
         knex('jobs')
           .where('user_id', userId)
+          .where('is_active', true)
           .orderBy('created_at', 'desc'),
         knex('resumes')
           .where('user_id', userId)
+          .where('is_active', true)
           .orderBy('created_at', 'desc')
       ]);
       
+      console.log('📊 查询结果:', {
+        loads: loads.length,
+        trucks: trucks.length,
+        companies: companies.length,
+        jobs: jobs.length,
+        resumes: resumes.length
+      });
+      
       return {
-        loads: loads.map(item => ({ ...item, type: 'load' })),
-        trucks: trucks.map(item => ({ ...item, type: 'truck' })),
-        companies: companies.map(item => ({ ...item, type: 'company' })),
-        jobs: jobs.map(item => ({ ...item, type: 'job' })),
-        resumes: resumes.map(item => ({ ...item, type: 'resume' }))
+        loads: loads.map(item => ({ ...item, type: 'load', status: item.is_active ? 'active' : 'inactive' })),
+        trucks: trucks.map(item => ({ ...item, type: 'truck', status: item.is_active ? 'active' : 'inactive' })),
+        companies: companies.map(item => ({ ...item, type: 'company', status: item.is_active ? 'active' : 'inactive' })),
+        jobs: jobs.map(item => ({ ...item, type: 'job', status: item.is_active ? 'active' : 'inactive' })),
+        resumes: resumes.map(item => ({ ...item, type: 'resume', status: item.is_active ? 'active' : 'inactive' }))
       };
     } catch (error) {
       console.error('获取用户发布内容失败:', error);
@@ -334,13 +349,18 @@ class UserManagement {
   static async updatePostStatus(userId, postType, postId, status) {
     try {
       const tableName = this.getTableName(postType);
+      const isActive = status === 'active';
+      
+      console.log('📝 更新发布状态:', { userId, postType, postId, status, isActive });
+      
       const result = await knex(tableName)
         .where({ id: postId, user_id: userId })
         .update({ 
-          status: status,
-          last_refreshed: status === 'active' ? new Date() : null
+          is_active: isActive,
+          updated_at: new Date()
         });
       
+      console.log('✅ 状态更新结果:', result > 0);
       return result > 0;
     } catch (error) {
       console.error('更新内容状态失败:', error);

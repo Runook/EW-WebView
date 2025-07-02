@@ -47,15 +47,20 @@ const Profile = () => {
   const fetchUserData = async () => {
     try {
       setLoading(true);
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      
+      console.log('📊 获取用户数据...', { API_URL, hasToken: !!token });
+      
       const [creditsRes, postsRes] = await Promise.all([
-        fetch('/api/user-management/credits', {
+        fetch(`${API_URL}/user-management/credits`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         }),
-        fetch('/api/user-management/posts', {
+        fetch(`${API_URL}/user-management/posts`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${token}`
           }
         })
       ]);
@@ -63,11 +68,17 @@ const Profile = () => {
       if (creditsRes.ok) {
         const creditsData = await creditsRes.json();
         setCredits(creditsData.data);
+        console.log('✅ 积分数据获取成功:', creditsData.data);
+      } else {
+        console.error('❌ 积分数据获取失败:', creditsRes.status);
       }
 
       if (postsRes.ok) {
         const postsData = await postsRes.json();
         setPosts(postsData.data);
+        console.log('✅ 发布数据获取成功:', postsData.data);
+      } else {
+        console.error('❌ 发布数据获取失败:', postsRes.status);
       }
     } catch (error) {
       console.error('获取用户数据失败:', error);
@@ -78,15 +89,21 @@ const Profile = () => {
 
   const fetchCreditHistory = async () => {
     try {
-      const response = await fetch('/api/user-management/credits/history', {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      
+      const response = await fetch(`${API_URL}/user-management/credits/history`, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
       if (response.ok) {
         const data = await response.json();
         setCreditHistory(data.data);
+        console.log('✅ 积分历史获取成功:', data.data);
+      } else {
+        console.error('❌ 积分历史获取失败:', response.status);
       }
     } catch (error) {
       console.error('获取积分历史失败:', error);
@@ -96,19 +113,26 @@ const Profile = () => {
   // 切换发布状态
   const togglePostStatus = async (type, id, currentStatus) => {
     try {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
       const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-      const response = await fetch(`/api/user-management/posts/${type}/${id}/status`, {
+      
+      console.log('🔄 切换发布状态:', { type, id, currentStatus, newStatus });
+      
+      const response = await fetch(`${API_URL}/user-management/posts/${type}/${id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ status: newStatus })
       });
 
       if (response.ok) {
         fetchUserData(); // 重新获取数据
+        console.log('✅ 状态更新成功');
       } else {
+        console.error('❌ 状态更新失败:', response.status);
         alert('状态更新失败');
       }
     } catch (error) {
@@ -124,17 +148,24 @@ const Profile = () => {
     }
 
     try {
-      const response = await fetch(`/api/user-management/posts/${type}/${id}`, {
+      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      
+      console.log('🗑️ 删除发布:', { type, id });
+      
+      const response = await fetch(`${API_URL}/user-management/posts/${type}/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${token}`
         }
       });
 
       if (response.ok) {
         fetchUserData(); // 重新获取数据
         alert('删除成功');
+        console.log('✅ 删除成功');
       } else {
+        console.error('❌ 删除失败:', response.status);
         alert('删除失败');
       }
     } catch (error) {
