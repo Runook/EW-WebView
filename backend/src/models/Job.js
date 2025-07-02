@@ -5,8 +5,20 @@ class Job {
   static async getAllJobs(filters = {}) {
     try {
       let query = db('jobs')
-        .select('jobs.*')
+        .select(
+          'jobs.*',
+          // 添加premium信息
+          'premium_posts.premium_type',
+          'premium_posts.end_time as premium_end_time'
+        )
+        .leftJoin('premium_posts', function() {
+          this.on('premium_posts.post_type', '=', db.raw("'job'"))
+              .andOn('premium_posts.post_id', '=', 'jobs.id')
+              .andOn('premium_posts.is_active', '=', db.raw('true'))
+              .andOn('premium_posts.end_time', '>', db.raw('NOW()'));
+        })
         .where('jobs.is_active', true)
+        .orderBy('jobs.is_premium', 'desc')
         .orderBy('jobs.created_at', 'desc');
 
       // 应用筛选条件
@@ -259,6 +271,10 @@ class Job {
       publishDate: job.created_at ? job.created_at.toISOString().split('T')[0] : null,
       createdAt: job.created_at,
       updatedAt: job.updated_at,
+      // Premium 字段
+      is_premium: job.is_premium || false,
+      premium_type: job.premium_type || null,
+      premium_end_time: job.premium_end_time || null,
       publisher: {
         userId: job.user_id
       }

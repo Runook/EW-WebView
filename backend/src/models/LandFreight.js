@@ -20,10 +20,20 @@ class LandFreight {
           'land_loads.*',
           'users.first_name',
           'users.last_name',
-          'users.email as user_email'
+          'users.email as user_email',
+          // 添加premium信息
+          'premium_posts.premium_type',
+          'premium_posts.end_time as premium_end_time'
         )
         .leftJoin('users', 'land_loads.user_id', 'users.id')
+        .leftJoin('premium_posts', function() {
+          this.on('premium_posts.post_type', '=', knex.raw("'load'"))
+              .andOn('premium_posts.post_id', '=', 'land_loads.id')
+              .andOn('premium_posts.is_active', '=', knex.raw('true'))
+              .andOn('premium_posts.end_time', '>', knex.raw('NOW()'));
+        })
         .where('land_loads.is_active', true)
+        .orderBy('land_loads.is_premium', 'desc')
         .orderBy('land_loads.created_at', 'desc');
 
       // 应用筛选条件
@@ -234,10 +244,20 @@ class LandFreight {
           'land_trucks.*',
           'users.first_name',
           'users.last_name',
-          'users.email as user_email'
+          'users.email as user_email',
+          // 添加premium信息
+          'premium_posts.premium_type',
+          'premium_posts.end_time as premium_end_time'
         )
         .leftJoin('users', 'land_trucks.user_id', 'users.id')
+        .leftJoin('premium_posts', function() {
+          this.on('premium_posts.post_type', '=', knex.raw("'truck'"))
+              .andOn('premium_posts.post_id', '=', 'land_trucks.id')
+              .andOn('premium_posts.is_active', '=', knex.raw('true'))
+              .andOn('premium_posts.end_time', '>', knex.raw('NOW()'));
+        })
         .where('land_trucks.is_active', true)
+        .orderBy('land_trucks.is_premium', 'desc')
         .orderBy('land_trucks.created_at', 'desc');
 
       // 应用筛选条件
@@ -514,6 +534,10 @@ class LandFreight {
       rating: load.rating,
       publicationDate: load.created_at,
       postedTime: this.formatTimeAgo(load.created_at),
+      // Premium 字段
+      is_premium: load.is_premium || false,
+      premium_type: load.premium_type || null,
+      premium_end_time: load.premium_end_time || null,
       // 保持向后兼容
       originalData: {
         deliveryDate: load.delivery_date,
@@ -553,6 +577,10 @@ class LandFreight {
       notes: truck.notes,
       publicationDate: truck.created_at,
       postedTime: this.formatTimeAgo(truck.created_at),
+      // Premium 字段
+      is_premium: truck.is_premium || false,
+      premium_type: truck.premium_type || null,
+      premium_end_time: truck.premium_end_time || null,
       // 保持向后兼容
       originalData: {
         currentLocation: truck.current_location,

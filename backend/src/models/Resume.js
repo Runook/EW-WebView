@@ -5,8 +5,20 @@ class Resume {
   static async getAllResumes(filters = {}) {
     try {
       let query = db('resumes')
-        .select('resumes.*')
+        .select(
+          'resumes.*',
+          // 添加premium信息
+          'premium_posts.premium_type',
+          'premium_posts.end_time as premium_end_time'
+        )
+        .leftJoin('premium_posts', function() {
+          this.on('premium_posts.post_type', '=', db.raw("'resume'"))
+              .andOn('premium_posts.post_id', '=', 'resumes.id')
+              .andOn('premium_posts.is_active', '=', db.raw('true'))
+              .andOn('premium_posts.end_time', '>', db.raw('NOW()'));
+        })
         .where('resumes.is_active', true)
+        .orderBy('resumes.is_premium', 'desc')
         .orderBy('resumes.created_at', 'desc');
 
       // 应用筛选条件
@@ -264,6 +276,9 @@ class Resume {
       publishDate: new Date(resume.created_at).toISOString().split('T')[0],
       createdAt: resume.created_at,
       updatedAt: resume.updated_at,
+      is_premium: resume.is_premium || false,
+      premium_type: resume.premium_type || null,
+      premium_end_time: resume.premium_end_time || null,
       publisher: {
         userId: resume.user_id
       }

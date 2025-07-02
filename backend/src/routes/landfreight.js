@@ -142,7 +142,10 @@ router.post('/loads', auth, async (req, res) => {
     // 创建货源
     const newLoad = await LandFreight.createLoad(loadData, req.user.id);
     
-    // 扣除积分
+    let totalCreditsSpent = postCost;
+    let premiumInfo = null;
+    
+    // 扣除基本发布积分
     try {
       await UserManagement.chargeForPost(req.user.id, 'load', newLoad.id);
     } catch (creditError) {
@@ -150,11 +153,42 @@ router.post('/loads', auth, async (req, res) => {
       // 这里可以考虑回滚货源创建，或者标记为待付费状态
     }
     
+    // 处理Premium选项
+    if (req.body.premium && req.body.premium.type) {
+      try {
+        console.log('🌟 处理Premium选项:', req.body.premium);
+        
+        const premiumType = req.body.premium.type;
+        const duration = req.body.premium.duration || 24; // 默认24小时
+        
+        const premiumResult = await UserManagement.makePremium(
+          req.user.id, 
+          'load', 
+          newLoad.id, 
+          premiumType, 
+          duration
+        );
+        
+        console.log('✅ Premium功能开通成功:', premiumResult);
+        totalCreditsSpent += premiumResult.cost;
+        premiumInfo = {
+          type: premiumType,
+          duration: duration,
+          cost: premiumResult.cost,
+          endTime: premiumResult.endTime
+        };
+      } catch (premiumError) {
+        console.error('❌ Premium功能开通失败:', premiumError);
+        // 不影响主要发布流程，但要在响应中告知用户
+      }
+    }
+    
     res.status(201).json({
       success: true,
       data: newLoad,
-      creditsSpent: postCost,
-      message: '货源发布成功'
+      creditsSpent: totalCreditsSpent,
+      premium: premiumInfo,
+      message: '货源发布成功' + (premiumInfo ? `，${premiumInfo.type === 'top' ? '置顶' : '高亮'}功能已开通` : '')
     });
   } catch (error) {
     console.error('创建货源失败:', error);
@@ -356,7 +390,10 @@ router.post('/trucks', auth, async (req, res) => {
     // 创建车源
     const newTruck = await LandFreight.createTruck(req.body, req.user.id);
     
-    // 扣除积分
+    let totalCreditsSpent = postCost;
+    let premiumInfo = null;
+    
+    // 扣除基本发布积分
     try {
       await UserManagement.chargeForPost(req.user.id, 'truck', newTruck.id);
     } catch (creditError) {
@@ -364,11 +401,42 @@ router.post('/trucks', auth, async (req, res) => {
       // 这里可以考虑回滚车源创建，或者标记为待付费状态
     }
     
+    // 处理Premium选项
+    if (req.body.premium && req.body.premium.type) {
+      try {
+        console.log('🌟 处理Premium选项:', req.body.premium);
+        
+        const premiumType = req.body.premium.type;
+        const duration = req.body.premium.duration || 24; // 默认24小时
+        
+        const premiumResult = await UserManagement.makePremium(
+          req.user.id, 
+          'truck', 
+          newTruck.id, 
+          premiumType, 
+          duration
+        );
+        
+        console.log('✅ Premium功能开通成功:', premiumResult);
+        totalCreditsSpent += premiumResult.cost;
+        premiumInfo = {
+          type: premiumType,
+          duration: duration,
+          cost: premiumResult.cost,
+          endTime: premiumResult.endTime
+        };
+      } catch (premiumError) {
+        console.error('❌ Premium功能开通失败:', premiumError);
+        // 不影响主要发布流程，但要在响应中告知用户
+      }
+    }
+    
     res.status(201).json({
       success: true,
       data: newTruck,
-      creditsSpent: postCost,
-      message: '车源发布成功'
+      creditsSpent: totalCreditsSpent,
+      premium: premiumInfo,
+      message: '车源发布成功' + (premiumInfo ? `，${premiumInfo.type === 'top' ? '置顶' : '高亮'}功能已开通` : '')
     });
   } catch (error) {
     console.error('创建车源失败:', error);

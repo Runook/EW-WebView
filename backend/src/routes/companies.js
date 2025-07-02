@@ -154,14 +154,48 @@ router.post('/', auth, async (req, res) => {
 
     const newCompany = await Company.createCompany(req.body, req.user.id);
     
-    // 扣除积分
+    let totalCreditsSpent = postCost;
+    let premiumInfo = null;
+    
+    // 扣除基本发布积分
     await UserManagement.chargeForPost(req.user.id, 'company', newCompany.id);
+    
+    // 处理Premium选项
+    if (req.body.premium && req.body.premium.type) {
+      try {
+        console.log('🌟 处理Premium选项:', req.body.premium);
+        
+        const premiumType = req.body.premium.type;
+        const duration = req.body.premium.duration || 24; // 默认24小时
+        
+        const premiumResult = await UserManagement.makePremium(
+          req.user.id, 
+          'company', 
+          newCompany.id, 
+          premiumType, 
+          duration
+        );
+        
+        console.log('✅ Premium功能开通成功:', premiumResult);
+        totalCreditsSpent += premiumResult.cost;
+        premiumInfo = {
+          type: premiumType,
+          duration: duration,
+          cost: premiumResult.cost,
+          endTime: premiumResult.endTime
+        };
+      } catch (premiumError) {
+        console.error('❌ Premium功能开通失败:', premiumError);
+        // 不影响主要发布流程，但要在响应中告知用户
+      }
+    }
     
     res.status(201).json({
       success: true,
       data: newCompany,
-      creditsSpent: postCost,
-      message: '企业发布成功'
+      creditsSpent: totalCreditsSpent,
+      premium: premiumInfo,
+      message: '企业发布成功' + (premiumInfo ? `，${premiumInfo.type === 'top' ? '置顶' : '高亮'}功能已开通` : '')
     });
   } catch (error) {
     console.error('创建企业失败:', error);

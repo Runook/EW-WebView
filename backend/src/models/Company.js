@@ -18,10 +18,20 @@ class Company {
           'companies.*',
           'users.first_name',
           'users.last_name',
-          'users.email as user_email'
+          'users.email as user_email',
+          // 添加premium信息
+          'premium_posts.premium_type',
+          'premium_posts.end_time as premium_end_time'
         )
         .leftJoin('users', 'companies.user_id', 'users.id')
+        .leftJoin('premium_posts', function() {
+          this.on('premium_posts.post_type', '=', knex.raw("'company'"))
+              .andOn('premium_posts.post_id', '=', 'companies.id')
+              .andOn('premium_posts.is_active', '=', knex.raw('true'))
+              .andOn('premium_posts.end_time', '>', knex.raw('NOW()'));
+        })
         .where('companies.is_active', true)
+        .orderBy('companies.is_premium', 'desc')
         .orderBy('companies.created_at', 'desc');
 
       // 应用筛选条件
@@ -314,6 +324,10 @@ class Company {
       isFeatured: company.is_featured,
       createdAt: company.created_at,
       updatedAt: company.updated_at,
+      // Premium 字段
+      is_premium: company.is_premium || false,
+      premium_type: company.premium_type || null,
+      premium_end_time: company.premium_end_time || null,
       // 发布者信息
       publisher: {
         firstName: company.first_name,

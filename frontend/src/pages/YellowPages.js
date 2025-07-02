@@ -313,7 +313,18 @@ const YellowPages = () => {
       <div className="companies-list">
         {filteredCompanies.length > 0 ? (
           filteredCompanies.map(company => (
-            <div key={company.id} className="company-card">
+            <div key={company.id} className={`company-card${company.is_premium ? ' premium-post' : ''}${company.premium_type === 'top' ? ' premium-top' : ''}${company.premium_type === 'highlight' ? ' premium-highlight' : ''}`}>
+              {/* Premium标识 */}
+              {company.premium_type === 'top' && (
+                <div className="premium-badge premium-top-badge">
+                  <Star size={14} fill="currentColor" />
+                  置顶
+                </div>
+              )}
+              {company.premium_type === 'highlight' && (
+                <div className="premium-overlay"></div>
+              )}
+              
               <div className="company-header">
                 <div className="company-basic">
                   <h3>{company.name}</h3>

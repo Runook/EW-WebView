@@ -15,7 +15,9 @@ import {
   Calendar,
   X,
   Send,
-  ChevronDown
+  ChevronDown,
+  Star,
+  Bookmark
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import PremiumPostModal from '../components/PremiumPostModal';
@@ -711,7 +713,18 @@ const Jobs = () => {
         {activeTab === 'jobs' ? (
           <div className="jobs-list">
             {filteredJobs.map(job => (
-              <div key={job.id} className="job-card">
+              <div key={job.id} className={`job-card${job.is_premium ? ' premium-post' : ''}${job.premium_type === 'top' ? ' premium-top' : ''}${job.premium_type === 'highlight' ? ' premium-highlight' : ''}`}>
+                {/* Premium标识 */}
+                {job.premium_type === 'top' && (
+                  <div className="premium-badge premium-top-badge">
+                    <Star size={14} fill="currentColor" />
+                    置顶
+                  </div>
+                )}
+                {job.premium_type === 'highlight' && (
+                  <div className="premium-overlay"></div>
+                )}
+                
                 <div className="job-header">
                   <div className="job-title">
                     <h3>{job.title}</h3>
@@ -743,21 +756,15 @@ const Jobs = () => {
                 </div>
 
                 <p className="job-description">{job.description}</p>
-
+                
                 <div className="job-actions">
-                  <button 
-                    className="apply-button"
-                    onClick={() => handlePhoneContact(job)}
-                  >
-                    <Phone size={16} />
-                    电话联系
+                  <button className="apply-btn">
+                    <Send size={16} />
+                    立即申请
                   </button>
-                  <button 
-                    className="contact-button"
-                    onClick={() => handleEmailContact(job)}
-                  >
-                    <Mail size={16} />
-                    邮件联系
+                  <button className="save-btn">
+                    <Bookmark size={16} />
+                    收藏职位
                   </button>
                 </div>
               </div>
@@ -774,7 +781,18 @@ const Jobs = () => {
         ) : (
           <div className="resumes-list">
             {filteredResumes.map(resume => (
-              <div key={resume.id} className="resume-card">
+              <div key={resume.id} className={`resume-card${resume.is_premium ? ' premium-post' : ''}${resume.premium_type === 'top' ? ' premium-top' : ''}${resume.premium_type === 'highlight' ? ' premium-highlight' : ''}`}>
+                {/* Premium标识 */}
+                {resume.premium_type === 'top' && (
+                  <div className="premium-badge premium-top-badge">
+                    <Star size={14} fill="currentColor" />
+                    置顶
+                  </div>
+                )}
+                {resume.premium_type === 'highlight' && (
+                  <div className="premium-overlay"></div>
+                )}
+                
                 <div className="resume-header">
                   <div className="resume-basic">
                     <h3>{resume.name}</h3>
@@ -807,21 +825,15 @@ const Jobs = () => {
                     <span key={index} className="skill-tag">{skill}</span>
                   ))}
                 </div>
-
+                
                 <div className="resume-actions">
-                  <button 
-                    className="contact-button"
-                    onClick={() => handlePhoneContactResume(resume)}
-                  >
+                  <button className="contact-btn">
                     <Phone size={16} />
-                    电话联系
+                    联系求职者
                   </button>
-                  <button 
-                    className="view-button"
-                    onClick={() => handleEmailContactResume(resume)}
-                  >
-                    <Mail size={16} />
-                    邮件联系
+                  <button className="save-btn">
+                    <Bookmark size={16} />
+                    收藏简历
                   </button>
                 </div>
               </div>

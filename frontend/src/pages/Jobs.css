@@ -681,70 +681,152 @@
 /* 响应式设计 */
 @media (max-width: 768px) {
   .jobs-page {
-    padding: 16px;
+    padding: 20px;
   }
 
-  .page-header {
-    padding: 30px 20px;
-  }
-
-  .header-content h1 {
+  .jobs-header h1 {
     font-size: 2rem;
   }
 
-  .tab-switcher {
-    max-width: 100%;
-  }
-
-  .controls-section {
+  .search-filter-section {
     flex-direction: column;
-    align-items: stretch;
+    gap: 16px;
   }
 
-  .control-buttons {
-    justify-content: stretch;
+  .search-section {
+    flex-direction: column;
+    gap: 12px;
   }
 
   .search-bar {
-    max-width: 100%;
+    width: 100%;
   }
 
-  .filters-grid {
+  .filter-section {
     grid-template-columns: 1fr;
-  }
-
-  .form-row {
-    flex-direction: column;
-  }
-
-  .job-header {
-    flex-direction: column;
     gap: 12px;
-    align-items: flex-start;
   }
 
+  .tabs {
+    padding: 0 16px;
+  }
+
+  .job-header,
   .resume-header {
     flex-direction: column;
-    gap: 12px;
     align-items: flex-start;
+    gap: 12px;
+  }
+
+  .job-details,
+  .resume-contact {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .job-actions,
   .resume-actions {
-    flex-wrap: wrap;
-  }
-
-  .form-actions {
     flex-direction: column;
+    gap: 8px;
   }
 
-  .filter-actions {
+  .job-actions button,
+  .resume-actions button {
+    width: 100%;
+  }
+
+  .post-buttons {
     flex-direction: column;
     gap: 12px;
-    align-items: stretch;
   }
 
-  .clear-filters {
-    align-self: center;
+  .post-buttons button {
+    width: 100%;
+  }
+}
+
+/* ===== Premium 样式 ===== */
+
+/* Premium 卡片基础样式 */
+.premium-post {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 置顶标识 */
+.premium-top-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  color: #8B4513;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+  border: 1px solid rgba(255, 165, 0, 0.3);
+}
+
+/* 置顶卡片边框效果 */
+.premium-top {
+  border: 2px solid #FFA500 !important;
+  box-shadow: 0 4px 20px rgba(255, 165, 0, 0.2);
+}
+
+.premium-top:hover {
+  box-shadow: 0 6px 25px rgba(255, 165, 0, 0.3);
+}
+
+/* 高亮背景覆盖层 */
+.premium-highlight .premium-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 165, 0, 0.05) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 高亮卡片内容需要提升层级 */
+.premium-highlight .job-header,
+.premium-highlight .job-details,
+.premium-highlight .job-description,
+.premium-highlight .job-actions,
+.premium-highlight .resume-header,
+.premium-highlight .resume-contact,
+.premium-highlight .resume-skills,
+.premium-highlight .resume-actions {
+  position: relative;
+  z-index: 2;
+}
+
+/* 高亮卡片特殊样式 */
+.premium-highlight {
+  background: linear-gradient(135deg, #FFFBF0 0%, #FFF8E1 100%) !important;
+  border: 1px solid rgba(255, 215, 0, 0.3) !important;
+}
+
+.premium-highlight:hover {
+  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.2) !important;
+}
+
+/* Premium 移动端适配 */
+@media (max-width: 768px) {
+  .premium-top-badge {
+    top: 6px;
+    right: 6px;
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .premium-top {
+    border-width: 1px !important;
   }
 } 

@@ -843,7 +843,18 @@ const FreightBoard = () => {
                 </div>
               ) : (
                 filteredLoads.map(load => (
-                  <div key={load.id} className={`simple-card load-card ${load.serviceType?.toLowerCase()}`}>
+                  <div key={load.id} className={`simple-card load-card ${load.serviceType?.toLowerCase()}${load.is_premium ? ' premium-post' : ''}${load.premium_type === 'top' ? ' premium-top' : ''}${load.premium_type === 'highlight' ? ' premium-highlight' : ''}`}>
+                    {/* Premium标识 */}
+                    {load.premium_type === 'top' && (
+                      <div className="premium-badge premium-top-badge">
+                        <Star size={14} fill="currentColor" />
+                        置顶
+                      </div>
+                    )}
+                    {load.premium_type === 'highlight' && (
+                      <div className="premium-overlay"></div>
+                    )}
+                    
                     {/* 卡片主要信息 */}
                     <div className="card-main">
                       {/* 服务类型标识 */}
@@ -934,7 +945,18 @@ const FreightBoard = () => {
                 </div>
               ) : (
                 filteredTrucks.map(truck => (
-                  <div key={truck.id} className={`simple-card truck-card ${truck.serviceType?.toLowerCase().replace('/', '-')}`}>
+                  <div key={truck.id} className={`simple-card truck-card ${truck.serviceType?.toLowerCase().replace('/', '-')}${truck.is_premium ? ' premium-post' : ''}${truck.premium_type === 'top' ? ' premium-top' : ''}${truck.premium_type === 'highlight' ? ' premium-highlight' : ''}`}>
+                    {/* Premium标识 */}
+                    {truck.premium_type === 'top' && (
+                      <div className="premium-badge premium-top-badge">
+                        <Star size={14} fill="currentColor" />
+                        置顶
+                      </div>
+                    )}
+                    {truck.premium_type === 'highlight' && (
+                      <div className="premium-overlay"></div>
+                    )}
+                    
                     {/* 卡片主要信息 */}
                     <div className="card-main">
                       {/* 服务类型标识 */}
