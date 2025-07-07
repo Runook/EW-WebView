@@ -8,9 +8,7 @@ import {
   CheckCircle,
   CreditCard
 } from 'lucide-react';
-import { useNotification } from './common/Notification';
-import { apiLogger } from '../utils/logger';
-import { useLoading } from '../hooks';
+import { apiClient } from '../utils/apiClient';
 import './PremiumPostModal.css';
 
 const PremiumPostModal = ({ 
@@ -20,16 +18,11 @@ const PremiumPostModal = ({
   postType,
   formData 
 }) => {
-  // 通知和日志系统
-  const { error: showError } = useNotification();
-  
-  // Hook系统
-  const { loading, withLoading } = useLoading(false);
-  
   const [systemConfig, setSystemConfig] = useState({});
   const [userCredits, setUserCredits] = useState(null);
   const [selectedPremium, setSelectedPremium] = useState(null);
   const [premiumDuration, setPremiumDuration] = useState(24);
+  const [loading, setLoading] = useState(false);
 
   // 获取系统配置和用户积分
   useEffect(() => {
@@ -41,38 +34,29 @@ const PremiumPostModal = ({
 
   const fetchSystemConfig = async () => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const response = await fetch(`${API_URL}/user-management/system-config`);
-      if (response.ok) {
-        const data = await response.json();
+      const data = await apiClient.get('/user-management/system-config');
+      if (data.success) {
         setSystemConfig(data.data);
-        apiLogger.debug('系统配置获取成功', data.data);
+        console.log('系统配置获取成功:', data.data);
       } else {
-        apiLogger.error('系统配置获取失败', { status: response.status });
+        console.error('系统配置获取失败:', data.message);
       }
     } catch (error) {
-      apiLogger.error('获取系统配置失败', error);
+      console.error('获取系统配置失败:', error);
     }
   };
 
   const fetchUserCredits = async () => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-      const response = await fetch(`${API_URL}/user-management/credits`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
+      const data = await apiClient.get('/user-management/credits');
+      if (data.success) {
         setUserCredits(data.data);
-        apiLogger.debug('用户积分获取成功', data.data);
+        console.log('用户积分获取成功:', data.data);
       } else {
-        apiLogger.error('用户积分获取失败', { status: response.status });
+        console.error('用户积分获取失败:', data.message);
       }
     } catch (error) {
-      apiLogger.error('获取用户积分失败', error);
+      console.error('获取用户积分失败:', error);
     }
   };
 
@@ -122,27 +106,28 @@ const PremiumPostModal = ({
   // 处理发布确认
   const handleConfirm = async () => {
     if (!hasEnoughCredits()) {
-      showError('积分余额不足，请先充值');
+      alert('积分余额不足，请先充值');
       return;
     }
 
-    await withLoading(async () => {
-      try {
-        // 调用发布确认回调
-        await onConfirm({
-          formData,
-          premium: selectedPremium ? {
-            type: selectedPremium,
-            duration: selectedPremium === 'top' ? premiumDuration : undefined
-          } : null
-        });
-        
-        onClose();
-      } catch (error) {
-        apiLogger.error('发布失败', error);
-        showError('发布失败，请重试');
-      }
-    });
+    setLoading(true);
+    try {
+      // 调用发布确认回调
+      await onConfirm({
+        formData,
+        premium: selectedPremium ? {
+          type: selectedPremium,
+          duration: selectedPremium === 'top' ? premiumDuration : undefined
+        } : null
+      });
+      
+      onClose();
+    } catch (error) {
+      console.error('发布失败:', error);
+      alert('发布失败，请重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 处理充值跳转

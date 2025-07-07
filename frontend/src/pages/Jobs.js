@@ -24,6 +24,7 @@ import PremiumPostModal from '../components/PremiumPostModal';
 import { useNotification } from '../components/common/Notification';
 import { apiLogger } from '../utils/logger';
 import { useModal, useLoading } from '../hooks';
+import { getAuthToken, apiClient } from '../utils/apiClient';
 import './Jobs.css';
 
 const Jobs = () => {
@@ -44,9 +45,6 @@ const Jobs = () => {
   const [currentFormData, setCurrentFormData] = useState(null);
   
   const { user, isAuthenticated } = useAuth();
-  
-  // API基础URL
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
   // 筛选条件状态
   const [filters, setFilters] = useState({
@@ -116,8 +114,7 @@ const Jobs = () => {
           }
         });
         
-        const response = await fetch(`${API_BASE_URL}/jobs?${queryParams.toString()}`);
-        const result = await response.json();
+        const result = await apiClient.get(`/jobs?${queryParams.toString()}`);
         
         if (result.success) {
           setJobs(result.data);
@@ -145,8 +142,7 @@ const Jobs = () => {
           }
         });
         
-        const response = await fetch(`${API_BASE_URL}/resumes?${queryParams.toString()}`);
-        const result = await response.json();
+        const result = await apiClient.get(`/resumes?${queryParams.toString()}`);
         
         if (result.success) {
           setResumes(result.data);
@@ -315,7 +311,7 @@ const Jobs = () => {
           return;
         }
         
-        const authToken = localStorage.getItem('authToken');
+        const authToken = getAuthToken();
         const jobData = {
           title: formData.get('title'),
           category: formData.get('category'),
@@ -330,16 +326,7 @@ const Jobs = () => {
           contactPerson: formData.get('contactPerson')
         };
 
-        const response = await fetch(`${API_BASE_URL}/jobs`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
-          },
-          body: JSON.stringify(jobData)
-        });
-
-        const result = await response.json();
+        const result = await apiClient.post('/jobs', jobData);
 
         if (result.success) {
           postModal.close();
@@ -370,7 +357,7 @@ const Jobs = () => {
           return;
         }
 
-        const token = localStorage.getItem('authToken');
+        const token = getAuthToken();
         if (!token) {
           showError('认证信息已过期，请重新登录');
           return;
@@ -389,16 +376,7 @@ const Jobs = () => {
           workTypePreference: formData.get('workTypePreference')
         };
 
-        const response = await fetch(`${API_BASE_URL}/resumes`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify(resumeData)
-        });
-
-        const result = await response.json();
+        const result = await apiClient.post('/resumes', resumeData);
 
         if (result.success) {
           success('简历发布成功！');
@@ -443,24 +421,15 @@ const Jobs = () => {
   const handleConfirmPost = async ({ formData, premium }) => {
     await withLoading(async () => {
       try {
-        const authToken = localStorage.getItem('authToken');
+        const authToken = getAuthToken();
         const postData = {
           ...formData,
           premium: premium
         };
 
-        const endpoint = activeTab === 'jobs' ? '/api/jobs' : '/api/resumes';
+        const endpoint = activeTab === 'jobs' ? '/jobs' : '/resumes';
         
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
-          },
-          body: JSON.stringify(postData)
-        });
-
-        const result = await response.json();
+        const result = await apiClient.post(endpoint, postData);
 
         if (result.success) {
           premiumModal.close();

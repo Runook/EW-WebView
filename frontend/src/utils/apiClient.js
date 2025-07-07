@@ -31,7 +31,6 @@ const apiRequest = async (endpoint, options = {}) => {
   
   const config = {
     method: 'GET',
-    headers: getAuthHeaders(),
     ...options,
     headers: {
       ...getAuthHeaders(),

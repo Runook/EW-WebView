@@ -21,7 +21,7 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { apiServices, handleApiError } from '../../utils/apiClient';
+import { apiServices, handleApiError, getAuthToken, apiClient } from '../../utils/apiClient';
 import './Profile.css';
 
 const Profile = () => {
@@ -177,29 +177,19 @@ const Profile = () => {
     }
 
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      const token = getAuthToken();
       
-      const response = await fetch(`${API_URL}/user-management/recharge`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          amount: amount,
-          paymentMethod: 'mock'
-        })
+      const data = await apiClient.post('/user-management/recharge', {
+        amount: amount,
+        paymentMethod: 'mock'
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (data.success) {
         success(`虚拟充值成功！获得 ${data.data.credits} 积分`);
         fetchUserData(); // 重新获取积分数据
         navigate('/profile/credits'); // 返回积分管理页面
       } else {
-        const error = await response.json();
-        showError(error.message || '充值失败');
+        showError(data.message || '充值失败');
       }
     } catch (error) {
       apiLogger.error('充值失败', error);

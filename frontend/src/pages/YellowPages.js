@@ -15,7 +15,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import PremiumPostModal from '../components/PremiumPostModal';
-import { apiServices, handleApiError } from '../utils/apiClient';
+import { apiServices, handleApiError, getAuthToken, apiClient } from '../utils/apiClient';
 import { useNotification } from '../components/common/Notification';
 import { apiLogger } from '../utils/logger';
 import { useModal } from '../hooks';
@@ -121,7 +121,7 @@ const YellowPages = () => {
 
   // 处理表单提交，显示积分模态框
   const handleFormSubmit = (companyData) => {
-    const token = localStorage.getItem('authToken');
+    const token = getAuthToken();
     if (!token) {
       showError('请先登录');
       return;
@@ -135,25 +135,16 @@ const YellowPages = () => {
   // 确认发布公司信息
   const handleConfirmPublish = async ({ formData, premium }) => {
     try {
-      const token = localStorage.getItem('authToken');
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const token = getAuthToken();
       
       const postData = {
         ...formData,
         premium: premium
       };
 
-      const response = await fetch(`${API_URL}/companies`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(postData)
-      });
+      const result = await apiClient.post('/companies', postData);
 
-      if (response.ok) {
-        const result = await response.json();
+      if (result.success) {
         success(`企业信息发布成功！已扣除 ${result.creditsSpent} 积分`);
         premiumModal.close();
         setCurrentFormData(null);
@@ -165,8 +156,7 @@ const YellowPages = () => {
         // 刷新分类统计
         fetchCategoryStats();
       } else {
-        const error = await response.json();
-        throw new Error(error.message || '发布失败');
+        throw new Error(result.message || '发布失败');
       }
     } catch (error) {
       apiLogger.error('发布公司信息失败', error);

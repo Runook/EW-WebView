@@ -1,7 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-// API基础URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+import { getAuthToken, apiClient } from '../utils/apiClient';
 
 const AuthContext = createContext();
 
@@ -22,19 +20,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = localStorage.getItem('authToken');
+        const token = getAuthToken();
         
         if (token) {
-          const response = await fetch(`${API_BASE_URL}/auth/verify`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          
-          if (response.ok) {
-            const userData = await response.json();
+          try {
+            const userData = await apiClient.get('/auth/verify');
             setUser(userData.user);
-          } else {
+          } catch (error) {
             localStorage.removeItem('authToken');
           }
         }
@@ -54,27 +46,14 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password })
-      });
+      const data = await apiClient.post('/auth/login', { email, password });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('authToken', data.token);
-        setUser(data.user);
-        return { success: true };
-      } else {
-        setError(data.message || '登录失败');
-        return { success: false, error: data.message || '登录失败' };
-      }
+      localStorage.setItem('authToken', data.token);
+      setUser(data.user);
+      return { success: true };
     } catch (error) {
       console.error('AuthContext: 登录网络错误:', error);
-      const errorMsg = '网络错误，请稍后重试';
+      const errorMsg = error.message || '网络错误，请稍后重试';
       setError(errorMsg);
       return { success: false, error: errorMsg };
     }
@@ -85,27 +64,14 @@ export const AuthProvider = ({ children }) => {
     try {
       setError(null);
       
-      const response = await fetch(`${API_BASE_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(userData)
-      });
+      const data = await apiClient.post('/auth/register', userData);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('authToken', data.token);
-        setUser(data.user);
-        return { success: true };
-      } else {
-        setError(data.message || '注册失败');
-        return { success: false, error: data.message || '注册失败' };
-      }
+      localStorage.setItem('authToken', data.token);
+      setUser(data.user);
+      return { success: true };
     } catch (error) {
       console.error('AuthContext: 注册网络错误:', error);
-      const errorMsg = '网络错误，请稍后重试';
+      const errorMsg = error.message || '网络错误，请稍后重试';
       setError(errorMsg);
       return { success: false, error: errorMsg };
     }
