@@ -21,17 +21,25 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import PremiumPostModal from '../components/PremiumPostModal';
+import { useNotification } from '../components/common/Notification';
+import { apiLogger } from '../utils/logger';
+import { useModal, useLoading } from '../hooks';
 import './Jobs.css';
 
 const Jobs = () => {
+  // 通知和日志系统
+  const { success, error: showError, apiError, confirm } = useNotification();
+  
+  // Hook系统
+  const postModal = useModal();
+  const premiumModal = useModal();
+  const filtersModal = useModal();
+  const { loading, withLoading } = useLoading(false);
+  
   const [activeTab, setActiveTab] = useState('jobs'); // 'jobs' 或 'resumes'
   const [searchQuery, setSearchQuery] = useState('');
-  const [showPostModal, setShowPostModal] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
   const [jobs, setJobs] = useState([]);
   const [resumes, setResumes] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentFormData, setCurrentFormData] = useState(null);
   
@@ -97,60 +105,60 @@ const Jobs = () => {
 
   // 获取招聘职位数据
   const fetchJobs = async (filters = {}) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const queryParams = new URLSearchParams();
-      Object.keys(filters).forEach(key => {
-        if (filters[key]) {
-          queryParams.append(key, filters[key]);
+    await withLoading(async () => {
+      try {
+        setError(null);
+        
+        const queryParams = new URLSearchParams();
+        Object.keys(filters).forEach(key => {
+          if (filters[key]) {
+            queryParams.append(key, filters[key]);
+          }
+        });
+        
+        const response = await fetch(`${API_BASE_URL}/jobs?${queryParams.toString()}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          setJobs(result.data);
+        } else {
+          throw new Error(result.message || '获取职位数据失败');
         }
-      });
-      
-      const response = await fetch(`${API_BASE_URL}/jobs?${queryParams.toString()}`);
-      const result = await response.json();
-      
-      if (result.success) {
-        setJobs(result.data);
-      } else {
-        throw new Error(result.message || '获取职位数据失败');
+      } catch (error) {
+        apiLogger.error('获取职位数据错误', error);
+        setError(error.message);
+        apiError('获取职位数据', error);
       }
-    } catch (error) {
-      console.error('获取职位数据错误:', error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   // 获取简历数据
   const fetchResumes = async (filters = {}) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const queryParams = new URLSearchParams();
-      Object.keys(filters).forEach(key => {
-        if (filters[key]) {
-          queryParams.append(key, filters[key]);
+    await withLoading(async () => {
+      try {
+        setError(null);
+        
+        const queryParams = new URLSearchParams();
+        Object.keys(filters).forEach(key => {
+          if (filters[key]) {
+            queryParams.append(key, filters[key]);
+          }
+        });
+        
+        const response = await fetch(`${API_BASE_URL}/resumes?${queryParams.toString()}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          setResumes(result.data);
+        } else {
+          throw new Error(result.message || '获取简历数据失败');
         }
-      });
-      
-      const response = await fetch(`${API_BASE_URL}/resumes?${queryParams.toString()}`);
-      const result = await response.json();
-      
-      if (result.success) {
-        setResumes(result.data);
-      } else {
-        throw new Error(result.message || '获取简历数据失败');
+      } catch (error) {
+        apiLogger.error('获取简历数据错误', error);
+        setError(error.message);
+        apiError('获取简历数据', error);
       }
-    } catch (error) {
-      console.error('获取简历数据错误:', error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   useEffect(() => {
@@ -300,126 +308,123 @@ const Jobs = () => {
 
   // 发布职位
   const handlePostJob = async (formData) => {
-    try {
-      if (!isAuthenticated) {
-        alert('请先登录再发布职位');
-        return;
-      }
-
-      setLoading(true);
-      
-      const authToken = localStorage.getItem('authToken');
-      const jobData = {
-        title: formData.get('title'),
-        category: formData.get('category'),
-        company: formData.get('company'),
-        location: formData.get('location'),
-        salary: formData.get('salary'),
-        workType: formData.get('type'),
-        experience: formData.get('experience'),
-        description: formData.get('description'),
-        contactPhone: formData.get('contactPhone'),
-        contactEmail: formData.get('contactEmail'),
-        contactPerson: formData.get('contactPerson')
-      };
-
-      const response = await fetch(`${API_BASE_URL}/jobs`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
-        body: JSON.stringify(jobData)
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setShowPostModal(false);
-        fetchJobs(); // 重新获取职位列表
-        alert('职位发布成功！');
-      } else {
-        // 处理验证错误，显示具体错误信息
-        if (result.errors && result.errors.length > 0) {
-          const errorMessages = result.errors.map(error => error.msg).join('\n');
-          throw new Error(`请检查以下信息：\n${errorMessages}`);
-        } else {
-          throw new Error(result.message || '发布失败');
+    await withLoading(async () => {
+      try {
+        if (!isAuthenticated) {
+          showError('请先登录再发布职位');
+          return;
         }
+        
+        const authToken = localStorage.getItem('authToken');
+        const jobData = {
+          title: formData.get('title'),
+          category: formData.get('category'),
+          company: formData.get('company'),
+          location: formData.get('location'),
+          salary: formData.get('salary'),
+          workType: formData.get('type'),
+          experience: formData.get('experience'),
+          description: formData.get('description'),
+          contactPhone: formData.get('contactPhone'),
+          contactEmail: formData.get('contactEmail'),
+          contactPerson: formData.get('contactPerson')
+        };
+
+        const response = await fetch(`${API_BASE_URL}/jobs`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify(jobData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          postModal.close();
+          fetchJobs(); // 重新获取职位列表
+          success('职位发布成功！');
+        } else {
+          // 处理验证错误，显示具体错误信息
+          if (result.errors && result.errors.length > 0) {
+            const errorMessages = result.errors.map(error => error.msg).join('\n');
+            throw new Error(`请检查以下信息：\n${errorMessages}`);
+          } else {
+            throw new Error(result.message || '发布失败');
+          }
+        }
+      } catch (error) {
+        apiLogger.error('发布职位错误', error);
+        showError('发布失败: ' + error.message);
       }
-    } catch (error) {
-      console.error('发布职位错误:', error);
-      alert('发布失败: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   // 发布简历
   const handlePostResume = async (formData) => {
-    try {
-      if (!isAuthenticated) {
-        alert('请先登录后再发布简历');
-        return;
-      }
-
-      setLoading(true);
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        alert('认证信息已过期，请重新登录');
-        return;
-      }
-
-      const resumeData = {
-        name: formData.get('name'),
-        position: formData.get('position'),
-        experience: formData.get('experience'),
-        location: formData.get('location'),
-        phone: formData.get('phone'),
-        email: formData.get('email'),
-        skills: formData.get('skills'),
-        summary: formData.get('summary'),
-        expectedSalary: formData.get('expectedSalary'),
-        workTypePreference: formData.get('workTypePreference')
-      };
-
-      const response = await fetch(`${API_BASE_URL}/resumes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(resumeData)
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert('简历发布成功！');
-        setShowPostModal(false);
-        // 重新获取简历列表
-        await fetchResumes();
-      } else {
-        // 处理验证错误，显示具体错误信息
-        if (result.errors && result.errors.length > 0) {
-          const errorMessages = result.errors.map(error => error.msg).join('\n');
-          throw new Error(`请检查以下信息：\n${errorMessages}`);
-        } else {
-          throw new Error(result.message || '发布简历失败');
+    await withLoading(async () => {
+      try {
+        if (!isAuthenticated) {
+          showError('请先登录后再发布简历');
+          return;
         }
+
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          showError('认证信息已过期，请重新登录');
+          return;
+        }
+
+        const resumeData = {
+          name: formData.get('name'),
+          position: formData.get('position'),
+          experience: formData.get('experience'),
+          location: formData.get('location'),
+          phone: formData.get('phone'),
+          email: formData.get('email'),
+          skills: formData.get('skills'),
+          summary: formData.get('summary'),
+          expectedSalary: formData.get('expectedSalary'),
+          workTypePreference: formData.get('workTypePreference')
+        };
+
+        const response = await fetch(`${API_BASE_URL}/resumes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(resumeData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          success('简历发布成功！');
+          postModal.close();
+          // 重新获取简历列表
+          await fetchResumes();
+        } else {
+          // 处理验证错误，显示具体错误信息
+          if (result.errors && result.errors.length > 0) {
+            const errorMessages = result.errors.map(error => error.msg).join('\n');
+            throw new Error(`请检查以下信息：\n${errorMessages}`);
+          } else {
+            throw new Error(result.message || '发布简历失败');
+          }
+        }
+      } catch (error) {
+        apiLogger.error('发布简历错误', error);
+        showError(`发布简历失败: ${error.message}`);
       }
-    } catch (error) {
-      console.error('发布简历错误:', error);
-      alert(`发布简历失败: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   // 统一发布处理函数（先显示积分模态框）
   const handlePost = (formData) => {
     if (!isAuthenticated) {
-      alert('请先登录再发布');
+      showError('请先登录再发布');
       return;
     }
 
@@ -430,121 +435,123 @@ const Jobs = () => {
     }
     
     setCurrentFormData(formDataObj);
-    setShowPostModal(false);
-    setShowPremiumModal(true);
+    postModal.close();
+    premiumModal.open();
   };
 
   // 确认发布函数
   const handleConfirmPost = async ({ formData, premium }) => {
-    try {
-      setLoading(true);
+    await withLoading(async () => {
+      try {
+        const authToken = localStorage.getItem('authToken');
+        const postData = {
+          ...formData,
+          premium: premium
+        };
 
-      const authToken = localStorage.getItem('authToken');
-      const postData = {
-        ...formData,
-        premium: premium
-      };
-
-      const endpoint = activeTab === 'jobs' ? '/api/jobs' : '/api/resumes';
-      
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
-        body: JSON.stringify(postData)
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setShowPremiumModal(false);
-        setCurrentFormData(null);
-        if (activeTab === 'jobs') {
-          fetchJobs();
-        } else {
-          fetchResumes();
-        }
+        const endpoint = activeTab === 'jobs' ? '/api/jobs' : '/api/resumes';
         
-        const typeName = activeTab === 'jobs' ? '职位' : '简历';
-        alert(`${typeName}发布成功！已扣除 ${result.creditsSpent} 积分`);
-      } else {
-        throw new Error(result.message || '发布失败');
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify(postData)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          premiumModal.close();
+          setCurrentFormData(null);
+          if (activeTab === 'jobs') {
+            fetchJobs();
+          } else {
+            fetchResumes();
+          }
+          
+          const typeName = activeTab === 'jobs' ? '职位' : '简历';
+          success(`${typeName}发布成功！已扣除 ${result.creditsSpent} 积分`);
+        } else {
+          throw new Error(result.message || '发布失败');
+        }
+      } catch (error) {
+        apiLogger.error('发布失败', error);
+        showError('发布失败: ' + error.message);
       }
-    } catch (error) {
-      console.error('发布失败:', error);
-      alert('发布失败: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   // 电话联系
-  const handlePhoneContact = (job) => {
+  const handlePhoneContact = async (job) => {
     if (job.contactPhone) {
-      const confirmed = window.confirm(
-        `确定要拨打电话联系招聘方吗？\n\n联系人: ${job.contactPerson || '招聘负责人'}\n电话: ${job.contactPhone}\n公司: ${job.company}\n职位: ${job.title}`
+      const confirmed = await confirm(
+        `确定要拨打电话联系招聘方吗？\n\n联系人: ${job.contactPerson || '招聘负责人'}\n电话: ${job.contactPhone}\n公司: ${job.company}\n职位: ${job.title}`,
+        { confirmText: '拨打电话', cancelText: '取消' }
       );
       if (confirmed) {
         window.open(`tel:${job.contactPhone}`);
       }
     } else {
-      alert('该职位未提供联系电话');
+      showError('该职位未提供联系电话');
     }
   };
 
   // 邮件联系
-  const handleEmailContact = (job) => {
+  const handleEmailContact = async (job) => {
     if (job.contactEmail) {
       const subject = encodeURIComponent(`应聘职位: ${job.title} - ${job.company}`);
       const body = encodeURIComponent(
         `您好，${job.contactPerson || '招聘负责人'}：\n\n我对贵公司发布的"${job.title}"职位很感兴趣，希望能够申请该职位。\n\n职位信息：\n- 公司：${job.company}\n- 地点：${job.location}\n- 薪资：${job.salary}\n\n请问是否方便安排面试？期待您的回复。\n\n谢谢！`
       );
       
-      const confirmed = window.confirm(
-        `确定要发送邮件联系招聘方吗？\n\n联系人: ${job.contactPerson || '招聘负责人'}\n邮箱: ${job.contactEmail}\n公司: ${job.company}\n职位: ${job.title}`
+      const confirmed = await confirm(
+        `确定要发送邮件联系招聘方吗？\n\n联系人: ${job.contactPerson || '招聘负责人'}\n邮箱: ${job.contactEmail}\n公司: ${job.company}\n职位: ${job.title}`,
+        { confirmText: '发送邮件', cancelText: '取消' }
       );
       
       if (confirmed) {
         window.open(`mailto:${job.contactEmail}?subject=${subject}&body=${body}`);
       }
     } else {
-      alert('该职位未提供联系邮箱');
+      showError('该职位未提供联系邮箱');
     }
   };
 
   // 电话联系求职者
-  const handlePhoneContactResume = (resume) => {
+  const handlePhoneContactResume = async (resume) => {
     if (resume.phone) {
-      const confirmed = window.confirm(
-        `确定要拨打电话联系求职者吗？\n\n姓名: ${resume.name}\n电话: ${resume.phone}\n求职职位: ${resume.position}\n工作经验: ${resume.experience}\n期望地点: ${resume.location}`
+      const confirmed = await confirm(
+        `确定要拨打电话联系求职者吗？\n\n姓名: ${resume.name}\n电话: ${resume.phone}\n求职职位: ${resume.position}\n工作经验: ${resume.experience}\n期望地点: ${resume.location}`,
+        { confirmText: '拨打电话', cancelText: '取消' }
       );
       if (confirmed) {
         window.open(`tel:${resume.phone}`);
       }
     } else {
-      alert('该求职者未提供联系电话');
+      showError('该求职者未提供联系电话');
     }
   };
 
   // 邮件联系求职者
-  const handleEmailContactResume = (resume) => {
+  const handleEmailContactResume = async (resume) => {
     if (resume.email) {
       const subject = encodeURIComponent(`关于您的求职申请: ${resume.position}`);
       const body = encodeURIComponent(
         `您好，${resume.name}：\n\n我是招聘负责人，看到您在平台上发布的求职简历，对您的背景很感兴趣。\n\n您的求职信息：\n- 求职职位：${resume.position}\n- 工作经验：${resume.experience}\n- 期望地点：${resume.location}\n- 技能专长：${resume.skills ? resume.skills.join(', ') : '未提供'}\n\n请问您是否有兴趣了解更多工作机会？期待您的回复。\n\n谢谢！`
       );
       
-      const confirmed = window.confirm(
-        `确定要发送邮件联系求职者吗？\n\n姓名: ${resume.name}\n邮箱: ${resume.email}\n求职职位: ${resume.position}\n工作经验: ${resume.experience}`
+      const confirmed = await confirm(
+        `确定要发送邮件联系求职者吗？\n\n姓名: ${resume.name}\n邮箱: ${resume.email}\n求职职位: ${resume.position}\n工作经验: ${resume.experience}`,
+        { confirmText: '发送邮件', cancelText: '取消' }
       );
       
       if (confirmed) {
         window.open(`mailto:${resume.email}?subject=${subject}&body=${body}`);
       }
     } else {
-      alert('该求职者未提供联系邮箱');
+      showError('该求职者未提供联系邮箱');
     }
   };
 
@@ -590,17 +597,17 @@ const Jobs = () => {
         
         <div className="control-buttons">
           <button 
-            className={`filter-button ${showFilters ? 'active' : ''}`}
-            onClick={() => setShowFilters(!showFilters)}
+            className={`filter-button ${filtersModal.isOpen ? 'active' : ''}`}
+            onClick={filtersModal.toggle}
           >
             <Filter size={20} />
             筛选
-            <ChevronDown size={16} className={showFilters ? 'rotated' : ''} />
+            <ChevronDown size={16} className={filtersModal.isOpen ? 'rotated' : ''} />
           </button>
           
           <button 
             className="post-button"
-            onClick={() => setShowPostModal(true)}
+            onClick={postModal.open}
           >
             <Plus size={20} />
             {activeTab === 'jobs' ? '发布职位' : '发布简历'}
@@ -609,7 +616,7 @@ const Jobs = () => {
       </div>
 
       {/* 筛选面板 */}
-      {showFilters && (
+      {filtersModal.isOpen && (
         <div className="filters-panel">
           <div className="filters-grid">
             {activeTab === 'jobs' && (
@@ -851,12 +858,12 @@ const Jobs = () => {
       </div>
 
       {/* 发布模态框 */}
-      {showPostModal && (
-        <div className="modal-overlay" onClick={() => setShowPostModal(false)}>
+      {postModal.isOpen && (
+        <div className="modal-overlay" onClick={postModal.close}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>{activeTab === 'jobs' ? '发布招聘职位' : '发布求职简历'}</h2>
-              <button onClick={() => setShowPostModal(false)}>
+              <button onClick={postModal.close}>
                 <X size={24} />
               </button>
             </div>
@@ -1016,7 +1023,7 @@ const Jobs = () => {
               </div>
               
               <div className="form-actions">
-                <button type="button" className="cancel-button" onClick={() => setShowPostModal(false)}>
+                <button type="button" className="cancel-button" onClick={postModal.close}>
                   取消
                 </button>
                 <button type="submit" className="submit-button">
@@ -1031,9 +1038,9 @@ const Jobs = () => {
 
       {/* 积分发布模态框 */}
       <PremiumPostModal
-        isOpen={showPremiumModal}
+        isOpen={premiumModal.isOpen}
         onClose={() => {
-          setShowPremiumModal(false);
+          premiumModal.close();
           setCurrentFormData(null);
         }}
         onConfirm={handleConfirmPost}

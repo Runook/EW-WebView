@@ -15,16 +15,25 @@ import {
   ChevronRight
 } from 'lucide-react';
 import PremiumPostModal from '../components/PremiumPostModal';
+import { apiServices, handleApiError } from '../utils/apiClient';
+import { useNotification } from '../components/common/Notification';
+import { apiLogger } from '../utils/logger';
+import { useModal } from '../hooks';
 import './YellowPages.css';
 
 const YellowPages = () => {
+  // 通知系统
+  const { success, error: showError, apiError } = useNotification();
+  
+  // 模态框状态
+  const publishModal = useModal();
+  const premiumModal = useModal();
+  
   const [currentView, setCurrentView] = useState('main'); // 'main', 'category', 'subcategory'
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
   const [companies, setCompanies] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showPublishModal, setShowPublishModal] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [currentFormData, setCurrentFormData] = useState(null);
 
   // 根据图片定义的分类结构
@@ -73,17 +82,12 @@ const YellowPages = () => {
     if (!selectedSubcategory) return;
     
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const response = await fetch(`${API_URL}/companies/subcategory/${encodeURIComponent(selectedSubcategory)}?search=${encodeURIComponent(searchQuery)}`);
-      if (response.ok) {
-        const result = await response.json();
-        setCompanies(result.data || []);
-      } else {
-        console.error('获取公司数据失败:', response.status);
-        setCompanies([]);
-      }
+      const result = await apiServices.companies.getBySubcategory(selectedSubcategory, { search: searchQuery });
+      setCompanies(result.data || []);
     } catch (error) {
-      console.error('获取公司数据失败:', error);
+      const errorMsg = handleApiError(error, '获取公司数据');
+      apiLogger.error('获取公司数据失败', error);
+      apiError('获取公司数据', error);
       setCompanies([]);
     }
   };
@@ -91,14 +95,12 @@ const YellowPages = () => {
   // 获取分类统计数据
   const fetchCategoryStats = async () => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const response = await fetch(`${API_URL}/companies/stats/categories`);
-      if (response.ok) {
-        const result = await response.json();
-        setCategoryStats(result.data || {});
-      }
+      const result = await apiServices.companies.getStats();
+      setCategoryStats(result.data || {});
     } catch (error) {
-      console.error('获取分类统计失败:', error);
+      const errorMsg = handleApiError(error, '获取分类统计');
+      apiLogger.error('获取分类统计失败', error);
+      apiError('获取分类统计', error);
     }
   };
 
@@ -121,13 +123,13 @@ const YellowPages = () => {
   const handleFormSubmit = (companyData) => {
     const token = localStorage.getItem('authToken');
     if (!token) {
-      alert('请先登录');
+      showError('请先登录');
       return;
     }
 
     setCurrentFormData(companyData);
-    setShowPublishModal(false);
-    setShowPremiumModal(true);
+    publishModal.close();
+    premiumModal.open();
   };
 
   // 确认发布公司信息
@@ -152,8 +154,8 @@ const YellowPages = () => {
 
       if (response.ok) {
         const result = await response.json();
-        alert(`企业信息发布成功！已扣除 ${result.creditsSpent} 积分`);
-        setShowPremiumModal(false);
+        success(`企业信息发布成功！已扣除 ${result.creditsSpent} 积分`);
+        premiumModal.close();
         setCurrentFormData(null);
         
         // 如果当前在相同的子分类，刷新数据
@@ -167,8 +169,8 @@ const YellowPages = () => {
         throw new Error(error.message || '发布失败');
       }
     } catch (error) {
-      console.error('发布公司信息失败:', error);
-      alert('发布失败: ' + error.message);
+      apiLogger.error('发布公司信息失败', error);
+      showError('发布失败: ' + error.message);
     }
   };
 
@@ -303,7 +305,7 @@ const YellowPages = () => {
         </div>
         <button 
           className="publish-button"
-          onClick={() => setShowPublishModal(true)}
+          onClick={publishModal.open}
         >
           <Plus size={20} />
           发布企业信息
@@ -382,7 +384,7 @@ const YellowPages = () => {
             <p>成为第一个在此分类发布信息的企业</p>
             <button 
               className="publish-button"
-              onClick={() => setShowPublishModal(true)}
+              onClick={publishModal.open}
             >
               <Plus size={20} />
               发布企业信息
@@ -423,11 +425,11 @@ const YellowPages = () => {
     };
 
     return (
-      <div className="modal-overlay" onClick={() => setShowPublishModal(false)}>
+      <div className="modal-overlay" onClick={publishModal.close}>
         <div className="modal-content" onClick={e => e.stopPropagation()}>
           <div className="modal-header">
             <h2>发布企业信息</h2>
-            <button onClick={() => setShowPublishModal(false)}>×</button>
+            <button onClick={publishModal.close}>×</button>
           </div>
           
           <div className="modal-body">
@@ -510,7 +512,7 @@ const YellowPages = () => {
                 <button 
                   type="button"
                   className="cancel-button" 
-                  onClick={() => setShowPublishModal(false)}
+                  onClick={publishModal.close}
                 >
                   取消
                 </button>
@@ -529,22 +531,20 @@ const YellowPages = () => {
   };
 
   // 调试信息
-  console.log('当前视图:', currentView);
-  console.log('选中分类:', selectedCategory);
-  console.log('选中子分类:', selectedSubcategory);
+  apiLogger.debug('当前视图', { currentView, selectedCategory, selectedSubcategory });
 
   return (
     <div className="yellow-pages">
       {currentView === 'main' && renderMainView()}
       {currentView === 'category' && renderCategoryView()}
       {currentView === 'subcategory' && renderSubcategoryView()}
-      {showPublishModal && renderPublishModal()}
+      {publishModal.isOpen && renderPublishModal()}
 
       {/* 积分发布模态框 */}
       <PremiumPostModal
-        isOpen={showPremiumModal}
+        isOpen={premiumModal.isOpen}
         onClose={() => {
-          setShowPremiumModal(false);
+          premiumModal.close();
           setCurrentFormData(null);
         }}
         onConfirm={handleConfirmPublish}

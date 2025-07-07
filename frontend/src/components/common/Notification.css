@@ -1,0 +1,245 @@
+/**
+ * 通知系统样式
+ */
+
+.notification-container {
+  position: fixed;
+  top: var(--space-6);
+  right: var(--space-6);
+  z-index: var(--z-notification, 9999);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 400px;
+  width: 100%;
+}
+
+.notification {
+  background: var(--background);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid var(--border);
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+  position: relative;
+}
+
+.notification-success {
+  border-left-color: var(--primary-green);
+}
+
+.notification-error {
+  border-left-color: #dc3545;
+}
+
+.notification-warning {
+  border-left-color: #ffc107;
+}
+
+.notification-info {
+  border-left-color: #17a2b8;
+}
+
+.notification-confirm {
+  border-left-color: #6f42c1;
+}
+
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notification-success .notification-icon {
+  color: var(--primary-green);
+}
+
+.notification-error .notification-icon {
+  color: #dc3545;
+}
+
+.notification-warning .notification-icon {
+  color: #ffc107;
+}
+
+.notification-info .notification-icon {
+  color: #17a2b8;
+}
+
+.notification-confirm .notification-icon {
+  color: #6f42c1;
+}
+
+.notification-message {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--text-primary);
+  word-break: break-word;
+}
+
+.notification-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  margin-top: -2px;
+}
+
+.notification-close:hover {
+  background: var(--background-secondary);
+  color: var(--text-primary);
+}
+
+.notification-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.notification-btn {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  background: var(--background);
+  color: var(--text-primary);
+}
+
+.notification-btn-primary {
+  background: var(--primary-green);
+  color: white;
+  border-color: var(--primary-green);
+}
+
+.notification-btn-primary:hover {
+  background: var(--primary-green-dark, #0f5132);
+  border-color: var(--primary-green-dark, #0f5132);
+}
+
+.notification-btn-secondary {
+  background: var(--background-secondary);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+.notification-btn-secondary:hover {
+  background: var(--background);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+.notification-btn-danger {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.notification-btn-danger:hover {
+  background: #c82333;
+  border-color: #c82333;
+}
+
+/* 动画效果 */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.notification.removing {
+  animation: slideOut 0.2s ease-in forwards;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .notification-container {
+    top: var(--space-4);
+    right: var(--space-4);
+    left: var(--space-4);
+    max-width: none;
+  }
+  
+  .notification-content {
+    padding: var(--space-3);
+  }
+  
+  .notification-actions {
+    padding: 0 var(--space-3) var(--space-3);
+    flex-direction: column;
+  }
+  
+  .notification-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* 多个通知时的堆叠效果 */
+.notification:nth-child(n+4) {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.notification:nth-child(n+6) {
+  display: none;
+}
+
+/* 主题支持 */
+[data-theme="dark"] .notification {
+  background: var(--background-dark, #1f2937);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .notification-message {
+  color: var(--text-primary-dark, #f9fafb);
+}
+
+[data-theme="dark"] .notification-close {
+  color: var(--text-secondary-dark, #9ca3af);
+}
+
+[data-theme="dark"] .notification-close:hover {
+  background: var(--background-secondary-dark, #374151);
+  color: var(--text-primary-dark, #f9fafb);
+}
+
+[data-theme="dark"] .notification-btn {
+  background: var(--background-dark, #1f2937);
+  color: var(--text-primary-dark, #f9fafb);
+  border-color: var(--border-dark, #374151);
+}
+
+[data-theme="dark"] .notification-btn-secondary {
+  background: var(--background-secondary-dark, #374151);
+  color: var(--text-secondary-dark, #9ca3af);
+} 

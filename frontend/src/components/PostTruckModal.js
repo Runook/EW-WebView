@@ -1,28 +1,66 @@
-import React, { useState } from 'react';
-import { X, MapPin, Calendar, Truck, Scale, Box, User, Phone } from 'lucide-react';
-import './Modal.css';
+import React from 'react';
+import { Truck, Scale, Box, User, Phone, MapPin, Calendar } from 'lucide-react';
 import { GoogleMapsAddressInput } from './GoogleMapsAddressInput';
+import { useForm, createValidationRules, commonValidations } from '../hooks';
+import { Button, Modal } from './common';
+import { useNotification } from './common/Notification';
+import { apiLogger } from '../utils/logger';
 
 const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
-  const [formData, setFormData] = useState({
-    serviceType: '',        // 服务类型 - 必填
-    currentLocation: '',    // 当前位置 - 必填
-    truckType: '',         // 车型 - 必填
-    length: '',            // 车长 - 必填
-    capacity: '',          // 载重能力 - 必填
-    volume: '',            // 货仓体积 - 必填
-    preferredOrigin: '',   // 常跑起点 - 必填
-    preferredDestination: '', // 常跑终点 - 必填
-    contactName: '',       // 联系人 - 必填
-    contactPhone: '',      // 手机号码 - 必填
-    // 可选字段
+  // 通知和日志系统
+  const { error: showError } = useNotification();
+  
+  // 初始表单数据
+  const initialData = {
+    serviceType: '',
+    currentLocation: '',
+    truckType: '',
+    length: '',
+    capacity: '',
+    volume: '',
+    preferredOrigin: '',
+    preferredDestination: '',
+    contactName: '',
+    contactPhone: '',
     availableDate: '',
     contactEmail: '',
     companyName: '',
     notes: ''
+  };
+
+  // 表单验证规则
+  const validationRules = createValidationRules({
+    serviceType: commonValidations.required('服务类型'),
+    currentLocation: commonValidations.required('当前位置'),
+    truckType: commonValidations.required('车型'),
+    length: commonValidations.required('车长'),
+    capacity: commonValidations.required('载重能力'),
+    volume: commonValidations.required('货仓体积'),
+    preferredOrigin: commonValidations.required('常跑起点'),
+    preferredDestination: commonValidations.required('常跑终点'),
+    contactName: commonValidations.required('联系人'),
+    contactPhone: {
+      required: true,
+      type: 'phone',
+      label: '手机号码',
+      message: '请输入正确的美国手机号码格式(10位数字)'
+    },
+    contactEmail: {
+      type: 'email',
+      label: '联系邮箱'
+    }
   });
 
-  const [errors, setErrors] = useState({});
+  const {
+    formData,
+    errors,
+    handleInputChange,
+    validateForm,
+    resetForm,
+    setFieldValue,
+    isSubmitting,
+    setIsSubmitting
+  } = useForm(initialData, validationRules);
 
   // 服务类型选项
   const serviceTypes = [
@@ -57,58 +95,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
     '1,800 cu ft以下', '1,800-3,500 cu ft', '3,500-7,000 cu ft', '7,000-10,500 cu ft', '10,500 cu ft以上'
   ];
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    
-    // 清除该字段的错误
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
-    }
-  };
 
-  // 验证表单
-  const validateForm = () => {
-    const newErrors = {};
-    const requiredFields = [
-      'serviceType', 'currentLocation', 'truckType', 'length', 
-      'capacity', 'volume', 'preferredOrigin', 'preferredDestination',
-      'contactName', 'contactPhone'
-    ];
-
-    const fieldLabels = {
-      serviceType: '服务类型',
-      currentLocation: '当前位置',
-      truckType: '车型',
-      length: '车长',
-      capacity: '载重能力',
-      volume: '货仓体积',
-      preferredOrigin: '常跑起点',
-      preferredDestination: '常跑终点',
-      contactName: '联系人',
-      contactPhone: '手机号码'
-    };
-
-    requiredFields.forEach(field => {
-      if (!formData[field] || formData[field].trim() === '') {
-        newErrors[field] = `${fieldLabels[field]}为必填项`;
-      }
-    });
-
-    // 手机号码格式验证 (美国格式 10位数)
-    if (formData.contactPhone && !/^\d{10}$/.test(formData.contactPhone.replace(/\D/g, ''))) {
-      newErrors.contactPhone = '请输入正确的美国手机号码格式(10位数字)';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -118,7 +105,8 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
     }
 
     try {
-      console.log('开始处理车源信息发布...');
+      setIsSubmitting(true);
+      apiLogger.debug('开始处理车源信息发布');
       
       // 转换为后端API期望的格式
       const submitData = {
@@ -140,47 +128,28 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
       };
 
       await onSubmit(submitData);
-      resetForm();
+      handleReset();
     } catch (error) {
-      console.error('发布车源失败:', error);
-      alert('发布失败，请重试');
+      apiLogger.error('发布车源失败', error);
+      showError('发布失败，请重试');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      serviceType: '',
-      currentLocation: '',
-      truckType: '',
-      length: '',
-      capacity: '',
-      volume: '',
-      preferredOrigin: '',
-      preferredDestination: '',
-      contactName: '',
-      contactPhone: '',
-      availableDate: '',
-      contactEmail: '',
-      companyName: '',
-      notes: ''
-    });
-    setErrors({});
+  const handleReset = () => {
+    resetForm();
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>发布车源信息</h2>
-          <button className="modal-close" onClick={onClose}>
-            <X size={24} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="modal-form">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="发布车源信息"
+      size="large"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
           {/* 基础信息 */}
           <div className="form-section">
             <h3>基础信息</h3>
@@ -193,8 +162,8 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                 <select
                   name="serviceType"
                   value={formData.serviceType}
-                  onChange={handleChange}
-                  className={errors.serviceType ? 'error' : ''}
+                  onChange={handleInputChange}
+                  className={`form-input ${errors.serviceType ? 'error' : ''}`}
                 >
                   <option value="">请选择服务类型</option>
                   {serviceTypes.map(type => (
@@ -203,20 +172,20 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                     </option>
                   ))}
                 </select>
-                {errors.serviceType && <div className="error-message">{errors.serviceType}</div>}
+                {errors.serviceType && <div className="form-error">{errors.serviceType}</div>}
               </div>
 
               <GoogleMapsAddressInput
                 label="当前位置"
                 placeholder="输入当前城市名、街道地址或ZIP代码"
                 value={formData.currentLocation}
-                onChange={(value) => setFormData(prev => ({ ...prev, currentLocation: value }))}
+                onChange={(value) => setFieldValue('currentLocation', value)}
                 onPlaceSelected={() => {}}
                 required={true}
                 icon={MapPin}
                 className={errors.currentLocation ? 'error' : ''}
               />
-              {errors.currentLocation && <div className="error-message">{errors.currentLocation}</div>}
+              {errors.currentLocation && <div className="form-error">{errors.currentLocation}</div>}
 
               <div className="form-group">
                 <label>
@@ -226,8 +195,8 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                 <select
                   name="truckType"
                   value={formData.truckType}
-                  onChange={handleChange}
-                  className={errors.truckType ? 'error' : ''}
+                  onChange={handleInputChange}
+                  className={`form-input ${errors.truckType ? 'error' : ''}`}
                 >
                   <option value="">请选择车型</option>
                   {truckTypes.map(type => (
@@ -236,7 +205,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                     </option>
                   ))}
                 </select>
-                {errors.truckType && <div className="error-message">{errors.truckType}</div>}
+                {errors.truckType && <div className="form-error">{errors.truckType}</div>}
               </div>
 
               <div className="form-group">
@@ -244,8 +213,8 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                 <select
                   name="length"
                   value={formData.length}
-                  onChange={handleChange}
-                  className={errors.length ? 'error' : ''}
+                  onChange={handleInputChange}
+                  className={`form-input ${errors.length ? 'error' : ''}`}
                 >
                   <option value="">请选择车长</option>
                   {truckLengths.map(length => (
@@ -254,7 +223,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                     </option>
                   ))}
                 </select>
-                {errors.length && <div className="error-message">{errors.length}</div>}
+                {errors.length && <div className="form-error">{errors.length}</div>}
               </div>
 
               <div className="form-group">
@@ -265,8 +234,8 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                 <select
                   name="capacity"
                   value={formData.capacity}
-                  onChange={handleChange}
-                  className={errors.capacity ? 'error' : ''}
+                  onChange={handleInputChange}
+                  className={`form-input ${errors.capacity ? 'error' : ''}`}
                 >
                   <option value="">请选择载重能力</option>
                   {capacityRanges.map(range => (
@@ -275,7 +244,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                     </option>
                   ))}
                 </select>
-                {errors.capacity && <div className="error-message">{errors.capacity}</div>}
+                {errors.capacity && <div className="form-error">{errors.capacity}</div>}
               </div>
 
               <div className="form-group">
@@ -286,8 +255,8 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                 <select
                   name="volume"
                   value={formData.volume}
-                  onChange={handleChange}
-                  className={errors.volume ? 'error' : ''}
+                  onChange={handleInputChange}
+                  className={`form-input ${errors.volume ? 'error' : ''}`}
                 >
                   <option value="">请选择货仓体积</option>
                   {volumeRanges.map(range => (
@@ -296,7 +265,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                     </option>
                   ))}
                 </select>
-                {errors.volume && <div className="error-message">{errors.volume}</div>}
+                {errors.volume && <div className="form-error">{errors.volume}</div>}
               </div>
             </div>
           </div>
@@ -309,25 +278,25 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                 label="常跑起点"
                 placeholder="输入常跑起点城市名、街道地址或ZIP代码"
                 value={formData.preferredOrigin}
-                onChange={(value) => setFormData(prev => ({ ...prev, preferredOrigin: value }))}
+                onChange={(value) => setFieldValue('preferredOrigin', value)}
                 onPlaceSelected={() => {}}
                 required={true}
                 icon={MapPin}
                 className={errors.preferredOrigin ? 'error' : ''}
               />
-              {errors.preferredOrigin && <div className="error-message">{errors.preferredOrigin}</div>}
+              {errors.preferredOrigin && <div className="form-error">{errors.preferredOrigin}</div>}
 
               <GoogleMapsAddressInput
                 label="常跑终点"
                 placeholder="输入常跑终点城市名、街道地址或ZIP代码"
                 value={formData.preferredDestination}
-                onChange={(value) => setFormData(prev => ({ ...prev, preferredDestination: value }))}
+                onChange={(value) => setFieldValue('preferredDestination', value)}
                 onPlaceSelected={() => {}}
                 required={true}
                 icon={MapPin}
                 className={errors.preferredDestination ? 'error' : ''}
               />
-              {errors.preferredDestination && <div className="error-message">{errors.preferredDestination}</div>}
+              {errors.preferredDestination && <div className="form-error">{errors.preferredDestination}</div>}
             </div>
           </div>
 
@@ -344,11 +313,11 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                   type="text"
                   name="contactName"
                   value={formData.contactName}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   placeholder="请输入联系人姓名"
-                  className={errors.contactName ? 'error' : ''}
+                  className={`form-input ${errors.contactName ? 'error' : ''}`}
                 />
-                {errors.contactName && <div className="error-message">{errors.contactName}</div>}
+                {errors.contactName && <div className="form-error">{errors.contactName}</div>}
               </div>
 
               <div className="form-group">
@@ -360,11 +329,11 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                   type="tel"
                   name="contactPhone"
                   value={formData.contactPhone}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   placeholder="请输入10位美国手机号码"
-                  className={errors.contactPhone ? 'error' : ''}
+                  className={`form-input ${errors.contactPhone ? 'error' : ''}`}
                 />
-                {errors.contactPhone && <div className="error-message">{errors.contactPhone}</div>}
+                {errors.contactPhone && <div className="form-error">{errors.contactPhone}</div>}
               </div>
 
               <div className="form-group">
@@ -373,8 +342,9 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                   type="email"
                   name="contactEmail"
                   value={formData.contactEmail}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   placeholder="请输入邮箱地址（可选）"
+                  className="form-input"
                 />
               </div>
 
@@ -384,8 +354,9 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                   type="text"
                   name="companyName"
                   value={formData.companyName}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   placeholder="请输入公司名称（可选）"
+                  className="form-input"
                 />
               </div>
             </div>
@@ -404,8 +375,9 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                   type="date"
                   name="availableDate"
                   value={formData.availableDate}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   min={new Date().toISOString().split('T')[0]}
+                  className="form-input"
                 />
               </div>
 
@@ -414,25 +386,34 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
                 <textarea
                   name="notes"
                   value={formData.notes}
-                  onChange={handleChange}
+                  onChange={handleInputChange}
                   placeholder="请输入其他备注信息（可选）"
                   rows="3"
+                  className="form-input"
                 />
               </div>
             </div>
           </div>
 
-          <div className="modal-actions">
-            <button type="button" onClick={onClose} className="btn btn-secondary">
-              取消
-            </button>
-            <button type="submit" className="btn btn-primary">
-              发布车源
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex justify-end gap-4 mt-8">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            取消
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={isSubmitting}
+            disabled={isSubmitting}
+          >
+            发布车源
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 

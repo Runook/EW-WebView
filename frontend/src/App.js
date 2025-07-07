@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { NotificationProvider } from './components/common/Notification';
 import { Package, BookOpen, Briefcase, ShoppingBag } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -38,8 +39,9 @@ function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <div className="App">
+    <NotificationProvider>
+      <AuthProvider>
+        <div className="App">
           <Header />
           <main>
             <Routes>
@@ -235,6 +237,7 @@ function App() {
           <Footer />
         </div>
       </AuthProvider>
+    </NotificationProvider>
   );
 }
 

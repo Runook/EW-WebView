@@ -35,6 +35,10 @@ import PostTruckModal from '../components/PostTruckModal';
 import DetailsModal from '../components/DetailsModal';
 import PremiumPostModal from '../components/PremiumPostModal';
 import { useAuth } from '../contexts/AuthContext';
+import { apiServices, handleApiError } from '../utils/apiClient';
+import { useNotification } from '../components/common/Notification';
+import { apiLogger } from '../utils/logger';
+import { useModal, useLoading } from '../hooks';
 import './PlatformPage.css';
 import './FreightBoard.css';
 
@@ -63,19 +67,24 @@ import './FreightBoard.css';
  */
 const FreightBoard = () => {
   // === 状态管理 ===
+  // 通知和日志系统
+  const { success, error: showError, apiError } = useNotification();
+  
   // 基础UI状态
   const [activeTab, setActiveTab] = useState('loads'); // 当前激活的标签页 ('loads' | 'trucks')
-  const [loading, setLoading] = useState(true); // 数据加载状态
   const [error, setError] = useState(null); // 错误信息
 
-  // 模态框状态
-  const [isPostLoadModalOpen, setIsPostLoadModalOpen] = useState(false);
-  const [isPostTruckModalOpen, setIsPostTruckModalOpen] = useState(false);
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  // 模态框状态 - 使用新的Hook系统
+  const postLoadModal = useModal();
+  const postTruckModal = useModal();
+  const detailsModal = useModal();
+  const premiumModal = useModal();
   const [selectedItem, setSelectedItem] = useState(null); // 详情模态框中选中的项目
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [currentPostType, setCurrentPostType] = useState(null);
   const [currentFormData, setCurrentFormData] = useState(null);
+
+  // 加载状态 - 使用新的Hook系统
+  const { loading, withLoading } = useLoading(true);
 
   // 数据状态
   const [loads, setLoads] = useState([]); // 货源列表
@@ -137,15 +146,12 @@ const FreightBoard = () => {
    */
   const fetchLoads = async () => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const response = await fetch(`${API_URL}/landfreight/loads`);
-      if (!response.ok) {
-        throw new Error('获取货源信息失败');
-      }
-      const data = await response.json();
-      return data.data || [];
+      const result = await apiServices.landFreight.getLoads();
+      return result.data || [];
     } catch (error) {
-      console.error('获取货源信息失败:', error);
+      const errorMsg = handleApiError(error, '获取货源信息');
+      apiLogger.error('获取货源信息失败', error);
+      apiError('获取货源信息', error);
       return [];
     }
   };
@@ -156,15 +162,12 @@ const FreightBoard = () => {
    */
   const fetchTrucks = async () => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const response = await fetch(`${API_URL}/landfreight/trucks`);
-      if (!response.ok) {
-        throw new Error('获取车源信息失败');
-      }
-      const data = await response.json();
-      return data.data || [];
+      const result = await apiServices.landFreight.getTrucks();
+      return result.data || [];
     } catch (error) {
-      console.error('获取车源信息失败:', error);
+      const errorMsg = handleApiError(error, '获取车源信息');
+      apiLogger.error('获取车源信息失败', error);
+      apiError('获取车源信息', error);
       return [];
     }
   };
@@ -175,22 +178,22 @@ const FreightBoard = () => {
    */
   useEffect(() => {
     const loadData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        // 并行加载货源和车源数据
-        const [loadData, truckData] = await Promise.all([
-          fetchLoads(),
-          fetchTrucks()
-        ]);
-        setLoads(loadData);
-        setTrucks(truckData);
-      } catch (err) {
-        setError('加载数据失败，请稍后重试');
-        console.error('数据加载失败:', err);
-      } finally {
-        setLoading(false);
-      }
+      await withLoading(async () => {
+        try {
+          setError(null);
+          // 并行加载货源和车源数据
+          const [loadData, truckData] = await Promise.all([
+            fetchLoads(),
+            fetchTrucks()
+          ]);
+          setLoads(loadData);
+          setTrucks(truckData);
+        } catch (err) {
+          setError('加载数据失败，请稍后重试');
+          apiLogger.error('数据加载失败', err);
+          showError('数据加载失败，请稍后重试');
+        }
+      });
     };
 
     loadData();
@@ -488,7 +491,7 @@ const FreightBoard = () => {
   // 原始发布处理函数（修改为显示积分模态框）
   const handlePostSubmit = (postData) => {
     if (!isAuthenticated) {
-      alert('请先登录再发布');
+      showError('请先登录再发布');
       return;
     }
 
@@ -497,23 +500,15 @@ const FreightBoard = () => {
     
     setCurrentFormData(postData);
     setCurrentPostType(postType);
-    setIsPostLoadModalOpen(false);
-    setIsPostTruckModalOpen(false);
-    setShowPremiumModal(true);
+    postLoadModal.close();
+    postTruckModal.close();
+    premiumModal.open();
   };
 
   // 确认发布函数
   const handleConfirmPost = async ({ formData, premium }) => {
     try {
       console.log('发布的数据:', formData);
-      
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const token = localStorage.getItem('authToken');
-      
-      if (!token) {
-        alert('请先登录');
-        return;
-      }
 
       // 为数据添加EWID、发布时间和高级功能
       const enhancedData = {
@@ -524,30 +519,18 @@ const FreightBoard = () => {
         premium: premium
       };
 
-      const endpoint = formData.type === 'load' ? 'loads' : 'trucks';
-      const response = await fetch(`${API_URL}/landfreight/${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(enhancedData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '发布失败');
-      }
-
-      const result = await response.json();
+      // 使用统一的API服务
+      const result = formData.type === 'load' 
+        ? await apiServices.landFreight.createLoad(enhancedData)
+        : await apiServices.landFreight.createTruck(enhancedData);
       console.log('发布成功:', result);
 
-      if (result.success) {
+              if (result.success) {
         const typeName = formData.type === 'load' ? '货源' : '车源';
-        alert(`${typeName}发布成功！已扣除 ${result.creditsSpent} 积分`);
+        success(`${typeName}发布成功！已扣除 ${result.creditsSpent} 积分`);
         
         // 关闭模态框
-        setShowPremiumModal(false);
+        premiumModal.close();
         setCurrentFormData(null);
         setCurrentPostType(null);
 
@@ -561,15 +544,16 @@ const FreightBoard = () => {
           setLoads(loadData);
           setTrucks(truckData);
               } catch (reloadError) {
-          console.error('重新加载数据失败:', reloadError);
-          alert('发布成功，但刷新列表失败，请手动刷新页面查看最新数据');
+          apiLogger.error('重新加载数据失败', reloadError);
+          showError('发布成功，但刷新列表失败，请手动刷新页面查看最新数据');
         }
       } else {
-        alert(result.message || '发布失败，请重试');
+        showError(result.message || '发布失败，请重试');
       }
     } catch (error) {
-      console.error('发布失败:', error);
-      alert(error.message || '发布失败，请稍后重试');
+      const errorMsg = handleApiError(error, '发布信息');
+      apiLogger.error('发布失败', error);
+      showError(errorMsg);
     }
   };
 
@@ -598,10 +582,10 @@ const FreightBoard = () => {
    */
   const handlePostLoadClick = () => {
     if (!isAuthenticated) {
-      alert('请先登录再发布货源信息');
+      showError('请先登录再发布货源信息');
       return;
     }
-    setIsPostLoadModalOpen(true);
+    postLoadModal.open();
   };
 
   /**
@@ -609,10 +593,10 @@ const FreightBoard = () => {
    */
   const handlePostTruckClick = () => {
     if (!isAuthenticated) {
-      alert('请先登录再发布车源信息');
+      showError('请先登录再发布车源信息');
       return;
     }
-    setIsPostTruckModalOpen(true);
+    postTruckModal.open();
   };
 
   /**
@@ -621,14 +605,14 @@ const FreightBoard = () => {
    */
   const handleDetailsClick = (item) => {
     setSelectedItem(item);
-    setDetailsModalOpen(true);
+    detailsModal.open();
   };
 
   /**
    * 处理详情模态框关闭
    */
   const handleDetailsClose = () => {
-    setDetailsModalOpen(false);
+    detailsModal.close();
     setSelectedItem(null);
   };
 
@@ -1054,30 +1038,30 @@ const FreightBoard = () => {
       {/* === 模态框组件 === */}
       {/* 发布货源模态框 */}
       <PostLoadModal 
-        isOpen={isPostLoadModalOpen}
-        onClose={() => setIsPostLoadModalOpen(false)}
+        isOpen={postLoadModal.isOpen}
+        onClose={postLoadModal.close}
         onSubmit={handlePostSubmit}
       />
       
       {/* 发布车源模态框 */}
       <PostTruckModal 
-        isOpen={isPostTruckModalOpen}
-        onClose={() => setIsPostTruckModalOpen(false)}
+        isOpen={postTruckModal.isOpen}
+        onClose={postTruckModal.close}
         onSubmit={handlePostSubmit}
       />
 
       {/* 详情查看模态框 */}
       <DetailsModal 
-        isOpen={detailsModalOpen}
+        isOpen={detailsModal.isOpen}
         onClose={handleDetailsClose}
         item={selectedItem}
       />
 
       {/* 积分发布模态框 */}
       <PremiumPostModal
-        isOpen={showPremiumModal}
+        isOpen={premiumModal.isOpen}
         onClose={() => {
-          setShowPremiumModal(false);
+          premiumModal.close();
           setCurrentFormData(null);
           setCurrentPostType(null);
         }}

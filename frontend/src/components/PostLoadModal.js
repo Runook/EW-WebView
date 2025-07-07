@@ -17,9 +17,8 @@
  * =============================================================================
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { 
-  X, 
   MapPin, 
   Calendar, 
   Package, 
@@ -40,14 +39,16 @@ import {
   Minus,
   Navigation
 } from 'lucide-react';
-import './Modal.css';
-import './PostLoadModal.css'; // ✅ 新增独立样式文件
+import './PostLoadModal.css';
 import { GoogleMapsAddressInput, GoogleMapsRoute, calculateDistance, geocodeAddress } from './GoogleMapsAddressInput';
+import { useForm, useToggle, useConfirmDialog, useAsyncState } from '../hooks';
+import { Modal, Button } from './common';
 
 const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
-  const [formData, setFormData] = useState({
+  // 表单初始数据
+  const initialFormData = {
     type: 'load',
-    serviceType: 'FTL', // FTL 或 LTL
+    serviceType: 'FTL',
     origin: '',
     destination: '',
     pickupDate: '',
@@ -55,85 +56,95 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     cargoType: '',
     truckType: '',
     weight: '',
-    cargoValue: '', // FTL 货物估价
-    shippingNumber: '', // 初始单号
-    // FTL单位转换辅助字段
+    cargoValue: '',
+    shippingNumber: '',
     weightKg: '',
-    // LTL专用字段 - 按照NMFC标准
-    originLocationTypes: [], // 改为数组
-    destinationLocationTypes: [], // 改为数组
+    originLocationTypes: [],
+    destinationLocationTypes: [],
     pallets: '',
-    // LTL多货物支持
     cargoItems: [
       {
         id: 1,
         description: '',
-        weight: '', // 磅
-        length: '', // 英寸
-        width: '',  // 英寸
-        height: '', // 英寸
-        volume: '', // 自动计算的立方英尺
-        density: '', // 自动计算的磅/立方英尺
-        freightClass: '', // 自动计算的NMFC分类
-        pallets: '', // 这个货物的托盘数
-        estimatedRate: '', // 每个货物项目的预估价格
+        weight: '',
+        length: '',
+        width: '',
+        height: '',
+        volume: '',
+        density: '',
+        freightClass: '',
+        pallets: '',
+        estimatedRate: '',
         stackable: true,
         fragile: false,
         hazmat: false,
-        shippingNumber: '', // LTL货物初始单号
-        // 单位转换辅助字段
+        shippingNumber: '',
         weightKg: '',
         lengthCm: '',
         widthCm: '',
         heightCm: ''
       }
     ],
-    // FTL单货物字段（保留向后兼容）
-    length: '', // 英寸
-    width: '',  // 英寸
-    height: '', // 英寸
-    // 自动计算字段
-    volume: '', // 自动计算的立方英尺
-    density: '', // 自动计算的磅/立方英尺
-    freightClass: '', // 自动计算的NMFC分类
-    // LTL特性
+    length: '',
+    width: '',
+    height: '',
+    volume: '',
+    density: '',
+    freightClass: '',
     stackable: true,
     allowMixedLoad: true,
     hazmat: false,
     fragile: false,
-    // 联系信息
     contactPhone: '',
     contactEmail: '',
     notes: '',
     companyName: '',
     maxRate: ''
+  };
+
+  // 使用新的Hook系统
+  const { 
+    formData, 
+    setFormData, 
+    handleInputChange, 
+    resetForm,
+    setFieldValue 
+  } = useForm(initialFormData);
+
+  const [showRouteModal, toggleRouteModal] = useToggle(false);
+  const [calculatingDistance, setCalculatingDistance] = React.useState(false);
+
+  // 异步提交状态
+  const { loading: submitting, execute: executeSubmit } = useAsyncState(async (submissionData) => {
+    await processFormSubmission(
+      submissionData.originData, 
+      submissionData.destinationData, 
+      submissionData.calculatedDistance
+    );
   });
 
-  const [densityInfo, setDensityInfo] = useState({
+  // 确认对话框
+  const { 
+    showConfirm: showErrorConfirm, 
+    handleConfirm, 
+    handleCancel, 
+    showConfirm 
+  } = useConfirmDialog();
+
+  // 复杂状态保持原样（需要更深入的重构）
+  const [densityInfo, setDensityInfo] = React.useState({
     calculated: false,
     density: 0,
     suggestedClass: '',
     classDescription: ''
   });
 
-  // Google Maps 相关状态
-  const [selectedPlaces, setSelectedPlaces] = useState({
+  const [selectedPlaces, setSelectedPlaces] = React.useState({
     origin: null,
     destination: null
   });
 
-  const [showRouteModal, setShowRouteModal] = useState(false);
-  
-  // 距离信息状态
-  const [distanceInfo, setDistanceInfo] = useState(null);
-  const [calculatingDistance, setCalculatingDistance] = useState(false);
-  
-  // 提交处理状态
-  const [submitting, setSubmitting] = useState(false);
-  
-  // 错误确认状态
-  const [showErrorConfirm, setShowErrorConfirm] = useState(false);
-  const [errorData, setErrorData] = useState(null);
+  const [distanceInfo, setDistanceInfo] = React.useState(null);
 
   // 货物类型选项 - 按照NMFC标准分类
   const cargoTypes = [
@@ -377,22 +388,13 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
   // ====== 表单事件处理函数 (约100行) ======
   
-  // 通用输入处理 - 🚨 包含了重复的单位转换逻辑
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    let updatedData = {
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    };
-    
-    // 处理FTL重量单位转换
-    if (name === 'weightKg') {
-      updatedData.weight = unitConverter.kgToLbs(value);
-    } else if (name === 'weight' && formData.serviceType === 'FTL') {
-      updatedData.weightKg = unitConverter.lbsToKg(value);
+  // 重量单位转换处理器
+  const handleWeightConversion = (field, value) => {
+    if (field === 'weightKg') {
+      setFieldValue('weight', unitConverter.kgToLbs(value));
+    } else if (field === 'weight' && formData.serviceType === 'FTL') {
+      setFieldValue('weightKg', unitConverter.lbsToKg(value));
     }
-    
-    setFormData(updatedData);
   };
 
   // 处理地址类型勾选变化 - 🤔 这个功能是否过于细致？用户真的需要这么多地址类型？
@@ -475,14 +477,47 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     }
   };
 
-  // 显示路线功能 - 🤔 是否必要？可能只是炫技
+  // 简化的表单验证函数
+  const validateFormData = () => {
+    const baseRequiredFields = ['origin', 'destination', 'pickupDate', 'companyName', 'contactPhone'];
+    
+    if (formData.serviceType === 'LTL') {
+      // LTL验证
+      const invalidItems = formData.cargoItems.filter(item => 
+        !item.weight || !item.length || !item.width || !item.height || !item.pallets 
+      );
+      if (invalidItems.length > 0) {
+        return '请填写所有货物项目的必要信息：重量、尺寸、托盘数量';
+      }
+      
+      const unclassifiedItems = formData.cargoItems.filter(item => !item.freightClass);
+      if (unclassifiedItems.length > 0) {
+        return '请确保所有货物项目都已计算出NMFC分类代码';
+      }
+      
+      const missingFields = baseRequiredFields.filter(field => !formData[field]);
+      if (missingFields.length > 0) {
+        return `请填写所有必填字段: ${missingFields.join(', ')}`;
+      }
+    } else {
+      // FTL验证
+      const requiredFields = [...baseRequiredFields, 'weight', 'truckType'];
+      const missingFields = requiredFields.filter(field => !formData[field]);
+      if (missingFields.length > 0) {
+        return `请填写所有必填字段: ${missingFields.join(', ')}`;
+      }
+    }
+    
+    return null; // 没有错误
+  };
+
+  // 显示路线功能
   const showRoute = () => {
-    // 检查是否有Google Maps选择的地址数据，或者至少有输入的地址文本
     const hasOrigin = selectedPlaces.origin || formData.origin;
     const hasDestination = selectedPlaces.destination || formData.destination;
     
     if (hasOrigin && hasDestination) {
-      setShowRouteModal(true);
+      toggleRouteModal();
     } else {
       alert('请先输入起点和终点地址');
     }
@@ -494,52 +529,14 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
    * =====================================================================
    */
    
-  // 主提交处理函数 - 🚨 过于庞大，包含验证、地址处理、距离计算
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 防止重复提交
-    if (submitting) return;
-    
-    setSubmitting(true);
-    
     try {
-              // 表单验证函数 - 🚨 逻辑复杂，包含多种验证情况
-        const validateForm = () => {
-        const baseRequiredFields = ['origin', 'destination', 'pickupDate', 'companyName', 'contactPhone'];
-        
-        if (formData.serviceType === 'LTL') {
-          // LTL验证
-          const invalidItems = formData.cargoItems.filter(item => 
-            !item.weight || !item.length || !item.width || !item.height || !item.pallets 
-          );
-          if (invalidItems.length > 0) {
-            throw new Error('请填写所有货物项目的必要信息：重量、尺寸、托盘数量');
-          }
-          
-          const unclassifiedItems = formData.cargoItems.filter(item => !item.freightClass);
-          if (unclassifiedItems.length > 0) {
-            throw new Error('请确保所有货物项目都已计算出NMFC分类代码');
-          }
-          
-          const missingFields = baseRequiredFields.filter(field => !formData[field]);
-          if (missingFields.length > 0) {
-            throw new Error(`请填写所有必填字段: ${missingFields.join(', ')}`);
-          }
-        } else {
-          // FTL验证
-          const requiredFields = [...baseRequiredFields, 'weight', 'truckType'];
-          const missingFields = requiredFields.filter(field => !formData[field]);
-          if (missingFields.length > 0) {
-            throw new Error(`请填写所有必填字段: ${missingFields.join(', ')}`);
-          }
-        }
-      };
-
-      try {
-        validateForm();
-      } catch (error) {
-        alert(error.message);
+      // 验证表单
+      const validationError = validateFormData();
+      if (validationError) {
+        alert(validationError);
         return;
       }
 
@@ -572,29 +569,27 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
       console.log('地址和距离处理完成:', { originData, destinationData, calculatedDistance });
 
-      // 现在处理提交数据
-      await processFormSubmission(originData, destinationData, calculatedDistance);
+      // 处理提交数据
+      await executeSubmit({ formData, originData, destinationData, calculatedDistance });
+      resetForm();
+      onClose();
       
     } catch (error) {
       console.error('处理地址或距离时出错:', error);
-      // 即使地址处理失败，也允许继续提交，但提醒用户
-      setErrorData({
+      
+      // 使用确认对话框而不是复杂的状态管理
+      const shouldContinue = await showConfirm({
+        title: '地址处理失败',
         message: '地址解析或距离计算失败，是否继续发布？（将使用原始地址信息）',
-        onConfirm: async () => {
-          setShowErrorConfirm(false);
-          await processFormSubmission(selectedPlaces.origin, selectedPlaces.destination, distanceInfo);
-          setSubmitting(false);
-        },
-        onCancel: () => {
-          setShowErrorConfirm(false);
-          setSubmitting(false);
-        }
+        confirmText: '继续发布',
+        cancelText: '取消',
+        variant: 'warning'
       });
-      setShowErrorConfirm(true);
-      return; // 不要在 finally 中设置 submitting，因为确认对话框还在显示
-    } finally {
-      if (!showErrorConfirm) {
-        setSubmitting(false);
+      
+      if (shouldContinue) {
+        await processFormSubmission(selectedPlaces.origin, selectedPlaces.destination, distanceInfo);
+        resetForm();
+        onClose();
       }
     }
   };
@@ -774,21 +769,14 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
    * =====================================================================
    */
    
-  if (!isOpen) return null; // ✅ 简单的条件渲染
-
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content large-modal" onClick={(e) => e.stopPropagation()}>
-        {/* ====== 模态框头部 - ✅ 简单 ====== */}
-        <div className="modal-header">
-          <h2>发布货源信息 (Post Load)</h2>
-          <button className="close-btn" onClick={onClose}>
-            <X size={24} />
-          </button>
-        </div>
-
-        {/* ====== 表单主体 - 🚨 超级复杂，应该拆分为多个组件 ====== */}
-        <form onSubmit={handleSubmit} className="modal-form">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="发布货源信息 (Post Load)"
+      size="xlarge"
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
           {/* 运输类型选择 - 突出显示 */}
           <div className="form-section">
             <h3>运输类型 (Service Type)</h3>
@@ -1428,70 +1416,35 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
             </div>
           </div>
 
-          <div className="modal-actions">
-            <button type="button" onClick={onClose} className="btn secondary" disabled={submitting}>
-              取消 (Cancel)
-            </button>
-            <button type="submit" className="btn primary" disabled={submitting}>
-              {submitting ? (
-                <>
-                  <div className="loading-spinner-small"></div>
-                  正在处理地址信息...
-                </>
-              ) : (
-                '发布货源 (Post Load)'
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
+        <div className="flex justify-end gap-4 mt-8">
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            取消 (Cancel)
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            loading={submitting}
+            disabled={submitting}
+          >
+            发布货源 (Post Load)
+          </Button>
+        </div>
+      </form>
 
-              {/* 
-         * ===============================================================
-         * Google Maps 路线模态框 - 🤔 这个功能真的必要吗？
-         * ===============================================================
-         */}
-        {showRouteModal && (
-          <GoogleMapsRoute
-            origin={selectedPlaces.origin || { address: formData.origin }}
-            destination={selectedPlaces.destination || { address: formData.destination }}
-            onClose={() => setShowRouteModal(false)}
-          />
-        )}
-
-        {/* 
-         * ===============================================================
-         * 错误确认对话框 - ✅ 替换原生 confirm，改善用户体验
-         * ===============================================================
-         */}
-        {showErrorConfirm && errorData && (
-          <div className="modal-overlay" style={{ zIndex: 1100 }}>
-            <div className="modal-content error-confirm-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h3>确认操作</h3>
-                <button className="close-btn" onClick={errorData.onCancel}>
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="modal-body">
-                <div className="error-confirm-content">
-                  <AlertCircle size={48} color="#ff6b35" />
-                  <p>{errorData.message}</p>
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button type="button" onClick={errorData.onCancel} className="btn secondary">
-                  取消
-                </button>
-                <button type="button" onClick={errorData.onConfirm} className="btn primary">
-                  继续发布
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
+      {/* Google Maps 路线模态框 */}
+      {showRouteModal && (
+        <GoogleMapsRoute
+          origin={selectedPlaces.origin || { address: formData.origin }}
+          destination={selectedPlaces.destination || { address: formData.destination }}
+          onClose={toggleRouteModal}
+        />
+      )}
+    </Modal>
+  );
   };
 
 export default PostLoadModal; 

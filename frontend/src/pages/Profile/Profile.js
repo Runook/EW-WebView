@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useNotification } from '../../components/common/Notification';
+import { apiLogger } from '../../utils/logger';
+import { useLoading } from '../../hooks';
 import { 
   User, 
   Settings, 
@@ -18,17 +21,20 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import { apiServices, handleApiError } from '../../utils/apiClient';
 import './Profile.css';
 
 const Profile = () => {
   const { section } = useParams();
   const navigate = useNavigate();
+  const { success, error: showError, apiError, confirm } = useNotification();
+  const { loading, withLoading } = useLoading(true);
+  
   const [activeTab, setActiveTab] = useState('overview');
   const [postsFilter, setPostsFilter] = useState('active'); // 'active' 或 'inactive'
   const [credits, setCredits] = useState(null);
   const [posts, setPosts] = useState(null);
   const [creditHistory, setCreditHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // 根据URL参数设置activeTab
   useEffect(() => {
@@ -48,132 +54,77 @@ const Profile = () => {
   }, []);
 
   const fetchUserData = async () => {
-    try {
-      setLoading(true);
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-      
-      console.log('📊 获取用户数据...', { API_URL, hasToken: !!token });
-      
-      const [creditsRes, postsRes] = await Promise.all([
-        fetch(`${API_URL}/user-management/credits`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }),
-        fetch(`${API_URL}/user-management/posts`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-      ]);
+    await withLoading(async () => {
+      try {
+        apiLogger.info('获取用户数据...');
+        
+        const [creditsData, postsData] = await Promise.all([
+          apiServices.userManagement.getCredits(),
+          apiServices.userManagement.getPosts()
+        ]);
 
-      if (creditsRes.ok) {
-        const creditsData = await creditsRes.json();
         setCredits(creditsData.data);
-        console.log('✅ 积分数据获取成功:', creditsData.data);
-      } else {
-        console.error('❌ 积分数据获取失败:', creditsRes.status);
-      }
-
-      if (postsRes.ok) {
-        const postsData = await postsRes.json();
         setPosts(postsData.data);
-        console.log('✅ 发布数据获取成功:', postsData.data);
-      } else {
-        console.error('❌ 发布数据获取失败:', postsRes.status);
+        apiLogger.info('用户数据获取成功', { credits: creditsData.data, posts: postsData.data });
+      } catch (error) {
+        const errorMsg = handleApiError(error, '获取用户数据');
+        apiLogger.error('获取用户数据失败', error);
+        showError(errorMsg);
       }
-    } catch (error) {
-      console.error('获取用户数据失败:', error);
-    } finally {
-      setLoading(false);
-    }
+    });
   };
 
   const fetchCreditHistory = async () => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-      
-      const response = await fetch(`${API_URL}/user-management/credits/history`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setCreditHistory(data.data);
-        console.log('✅ 积分历史获取成功:', data.data);
-      } else {
-        console.error('❌ 积分历史获取失败:', response.status);
-      }
+      const data = await apiServices.userManagement.getCreditHistory();
+      setCreditHistory(data.data);
+      apiLogger.info('积分历史获取成功', data.data);
     } catch (error) {
-      console.error('获取积分历史失败:', error);
+      const errorMsg = handleApiError(error, '获取积分历史');
+      apiLogger.error('获取积分历史失败', error);
+      showError(errorMsg);
     }
   };
 
   // 切换发布状态
   const togglePostStatus = async (type, id, currentStatus) => {
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
       const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      apiLogger.info('切换发布状态', { type, id, currentStatus, newStatus });
       
-      console.log('🔄 切换发布状态:', { type, id, currentStatus, newStatus });
-      
-      const response = await fetch(`${API_URL}/user-management/posts/${type}/${id}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      if (response.ok) {
-        fetchUserData(); // 重新获取数据
-        console.log('✅ 状态更新成功');
-      } else {
-        console.error('❌ 状态更新失败:', response.status);
-        alert('状态更新失败');
-      }
+      await apiServices.userManagement.updatePostStatus(type, id, newStatus);
+      fetchUserData(); // 重新获取数据
+      success('状态更新成功');
+      apiLogger.info('状态更新成功');
     } catch (error) {
-      console.error('状态更新失败:', error);
-      alert('状态更新失败');
+      const errorMsg = handleApiError(error, '状态更新');
+      apiLogger.error('状态更新失败', error);
+      showError(errorMsg);
     }
   };
 
   // 删除发布
   const deletePost = async (type, id) => {
-    if (!window.confirm('确认删除此发布？删除后不可恢复。')) {
+    const confirmed = await confirm('确认删除此发布？删除后不可恢复。', {
+      confirmText: '删除',
+      confirmVariant: 'danger'
+    });
+    
+    if (!confirmed) {
       return;
     }
 
     try {
-      const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+      apiLogger.info('删除发布', { type, id });
       
-      console.log('🗑️ 删除发布:', { type, id });
-      
-      const response = await fetch(`${API_URL}/user-management/posts/${type}/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (response.ok) {
-        fetchUserData(); // 重新获取数据
-        alert('删除成功');
-        console.log('✅ 删除成功');
-      } else {
-        console.error('❌ 删除失败:', response.status);
-        alert('删除失败');
-      }
+      await apiServices.userManagement.deletePost(type, id);
+      fetchUserData(); // 重新获取数据
+      success('删除成功');
+      apiLogger.info('删除成功');
     } catch (error) {
-      console.error('删除失败:', error);
-      alert('删除失败');
+      const errorMsg = handleApiError(error, '删除发布');
+      apiLogger.error('删除失败', error);
+      showError(errorMsg);
     }
   };
 
@@ -207,13 +158,21 @@ const Profile = () => {
         });
         break;
       default:
-        alert('暂不支持编辑此类型的内容');
+        showError('暂不支持编辑此类型的内容');
     }
   };
 
   // 处理充值
   const handleRecharge = async (amount, credits) => {
-    if (!window.confirm(`确认虚拟充值 $${amount} 获得 ${credits} 积分？（这是测试功能）`)) {
+    const confirmed = await confirm(
+      `确认虚拟充值 $${amount} 获得 ${credits} 积分？（这是测试功能）`,
+      {
+        confirmText: '确认充值',
+        confirmVariant: 'primary'
+      }
+    );
+    
+    if (!confirmed) {
       return;
     }
 
@@ -235,16 +194,16 @@ const Profile = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert(`虚拟充值成功！获得 ${data.data.credits} 积分`);
+        success(`虚拟充值成功！获得 ${data.data.credits} 积分`);
         fetchUserData(); // 重新获取积分数据
         navigate('/profile/credits'); // 返回积分管理页面
       } else {
         const error = await response.json();
-        alert(error.message || '充值失败');
+        showError(error.message || '充值失败');
       }
     } catch (error) {
-      console.error('充值失败:', error);
-      alert('充值失败: ' + error.message);
+      apiLogger.error('充值失败', error);
+      showError('充值失败: ' + error.message);
     }
   };
 

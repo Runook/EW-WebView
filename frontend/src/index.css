@@ -1,3 +1,6 @@
+/* Import Global Design System */
+@import './styles/global.css';
+
 * {
   margin: 0;
   padding: 0;
@@ -87,92 +90,6 @@ input, textarea, select {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--space-4);
-}
-
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-lg);
-  font-weight: 600;
-  font-size: var(--font-size-base);
-  transition: all 0.2s ease;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-}
-
-.btn-primary {
-  background-color: var(--primary-green);
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: var(--primary-green-dark);
-  transform: translateY(-1px);
-}
-
-.btn-secondary {
-  background-color: transparent;
-  color: var(--primary-green);
-  border: 2px solid var(--primary-green);
-}
-
-.btn-secondary:hover {
-  background-color: var(--primary-green);
-  color: white;
-}
-
-.btn-ghost {
-  background-color: var(--primary-green-alpha);
-  color: var(--primary-green);
-}
-
-.btn-ghost:hover {
-  background-color: var(--primary-green);
-  color: white;
-}
-
-.text-primary {
-  color: var(--text-primary);
-}
-
-.text-secondary {
-  color: var(--text-secondary);
-}
-
-.text-green {
-  color: var(--primary-green);
-}
-
-.bg-green {
-  background-color: var(--primary-green);
-}
-
-.bg-green-light {
-  background-color: var(--primary-green-alpha);
-}
-
-.rounded {
-  border-radius: var(--radius-md);
-}
-
-.rounded-lg {
-  border-radius: var(--radius-lg);
-}
-
-.rounded-xl {
-  border-radius: var(--radius-xl);
-}
-
-.shadow {
-  box-shadow: 0 4px 6px -1px var(--shadow);
-}
-
-.shadow-lg {
-  box-shadow: 0 10px 15px -3px var(--shadow);
 }
 
 /* Responsive */
