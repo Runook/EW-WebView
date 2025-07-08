@@ -29,20 +29,6 @@ export const useForm = (initialData = {}, validationRules = {}) => {
     }
   }, [errors]);
 
-  // 处理字段焦点事件
-  const handleBlur = useCallback((e) => {
-    const { name } = e.target;
-    setTouched(prev => ({
-      ...prev,
-      [name]: true
-    }));
-
-    // 失去焦点时验证单个字段
-    if (validationRules[name]) {
-      validateField(name, formData[name]);
-    }
-  }, [formData, validationRules]);
-
   // 验证单个字段
   const validateField = useCallback((fieldName, value) => {
     const rule = validationRules[fieldName];
@@ -98,9 +84,22 @@ export const useForm = (initialData = {}, validationRules = {}) => {
     return !error;
   }, [formData, validationRules]);
 
+  // 处理字段焦点事件
+  const handleBlur = useCallback((e) => {
+    const { name } = e.target;
+    setTouched(prev => ({
+      ...prev,
+      [name]: true
+    }));
+
+    // 失去焦点时验证单个字段
+    if (validationRules[name]) {
+      validateField(name, formData[name]);
+    }
+  }, [formData, validationRules, validateField]);
+
   // 验证整个表单
   const validateForm = useCallback(() => {
-    const newErrors = {};
     let isValid = true;
 
     Object.keys(validationRules).forEach(fieldName => {
@@ -158,6 +157,7 @@ export const useForm = (initialData = {}, validationRules = {}) => {
   return {
     // 表单数据
     formData,
+    setFormData,
     errors,
     touched,
     isSubmitting,

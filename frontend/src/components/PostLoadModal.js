@@ -17,7 +17,7 @@
  * =============================================================================
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { 
   MapPin, 
   Calendar, 
@@ -356,12 +356,18 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               : value
           };
           
-          // 处理单位转换
+          // 处理单位转换 - 支持双向转换
           const conversionMap = {
+            // kg/cm to lbs/inches
             weightKg: () => updatedItem.weight = unitConverter.kgToLbs(value),
             lengthCm: () => updatedItem.length = unitConverter.cmToInches(value),
             widthCm: () => updatedItem.width = unitConverter.cmToInches(value),
-            heightCm: () => updatedItem.height = unitConverter.cmToInches(value)
+            heightCm: () => updatedItem.height = unitConverter.cmToInches(value),
+            // lbs/inches to kg/cm
+            weight: () => updatedItem.weightKg = unitConverter.lbsToKg(value),
+            length: () => updatedItem.lengthCm = unitConverter.inchesToCm(value),
+            width: () => updatedItem.widthCm = unitConverter.inchesToCm(value),
+            height: () => updatedItem.heightCm = unitConverter.inchesToCm(value)
           };
           if (conversionMap[field]) conversionMap[field]();
           
@@ -384,18 +390,28 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     if (formData.serviceType === 'FTL') {
       calculateFreightClass(formData, false);
     }
-  }, [formData.weight, formData.length, formData.width, formData.height, formData.hazmat, formData.fragile, formData.serviceType]);
+  }, [formData.weight, formData.length, formData.width, formData.height, formData.hazmat, formData.fragile, formData.serviceType, calculateFreightClass, formData]);
 
   // ====== 表单事件处理函数 (约100行) ======
   
-  // 重量单位转换处理器
-  const handleWeightConversion = (field, value) => {
-    if (field === 'weightKg') {
-      setFieldValue('weight', unitConverter.kgToLbs(value));
-    } else if (field === 'weight' && formData.serviceType === 'FTL') {
-      setFieldValue('weightKg', unitConverter.lbsToKg(value));
+  // 创建自定义的输入处理函数，用于处理单位转换
+  const handleInputChangeWithConversion = useCallback((e) => {
+    const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+
+    // 处理单位转换
+    if (name === 'weightKg' && formData.serviceType === 'FTL') {
+      setFieldValue('weightKg', newValue);
+      setFieldValue('weight', unitConverter.kgToLbs(newValue));
+    } else if (name === 'weight' && formData.serviceType === 'FTL') {
+      setFieldValue('weight', newValue);
+      setFieldValue('weightKg', unitConverter.lbsToKg(newValue));
+    } else {
+      // 使用原始的handleInputChange
+      const event = { target: { name, value: newValue, type, checked } };
+      handleInputChange(event);
     }
-  };
+  }, [formData.serviceType, handleInputChange, setFieldValue, unitConverter]);
 
   // 处理地址类型勾选变化 - 🤔 这个功能是否过于细致？用户真的需要这么多地址类型？
   const handleLocationTypeChange = (locationType, fieldName) => {
@@ -1038,7 +1054,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                       type="number"
                       name="weight"
                       value={formData.weight}
-                      onChange={handleInputChange}
+                      onChange={handleInputChangeWithConversion}
                       placeholder="输入重量 (lbs)"
                       min="1"
                       required
@@ -1048,7 +1064,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                         type="number"
                         name="weightKg"
                         value={formData.weightKg}
-                        onChange={handleInputChange}
+                        onChange={handleInputChangeWithConversion}
                         placeholder="kg"
                         step="0.1"
                         className="unit-converter"

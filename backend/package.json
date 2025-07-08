@@ -5,14 +5,18 @@
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
+    "start:prod": "./start-prod.sh",
     "dev": "nodemon src/app.js",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
     "db:migrate": "knex migrate:latest",
     "db:rollback": "knex migrate:rollback",
     "db:seed": "knex seed:run",
-    "db:reset": "knex migrate:rollback --all && knex migrate:latest && knex seed:run"
+    "db:reset": "knex migrate:rollback --all && knex migrate:latest && knex seed:run",
+    "health": "curl -f http://localhost:5001/health || exit 1"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
