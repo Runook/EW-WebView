@@ -111,18 +111,12 @@ app.use((req, res, next) => {
 // 健康检查端点
 app.get('/health', async (req, res) => {
   try {
-    const { testConnection } = require('./config/database');
-    const dbStatus = await testConnection();
-    
+    // 快速健康检查，不等待数据库连接
     res.status(200).json({
       status: 'OK',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || 'development',
-      database: {
-        type: 'PostgreSQL',
-        status: dbStatus ? 'connected' : 'disconnected'
-      },
       memory: {
         used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
         total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
@@ -133,6 +127,25 @@ app.get('/health', async (req, res) => {
         platform: process.platform,
         arch: process.arch
       }
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'ERROR',
+      timestamp: new Date().toISOString(),
+      error: error.message
+    });
+  }
+});
+
+// API健康检查端点 (用于负载均衡器)
+app.get('/api/health', async (req, res) => {
+  try {
+    // 快速健康检查，不等待数据库连接
+    res.status(200).json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development'
     });
   } catch (error) {
     res.status(503).json({
