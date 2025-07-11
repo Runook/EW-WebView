@@ -7,9 +7,9 @@ exports.up = function(knex) {
   return knex.schema
     // 1. 为用户表添加积分字段
     .table('users', function(table) {
-      table.integer('credits').defaultTo(100).comment('用户积分余额');
-      table.integer('total_credits_earned').defaultTo(100).comment('累计获得积分');
-      table.integer('total_credits_spent').defaultTo(0).comment('累计消费积分');
+      table.integer('credits').notNullable().defaultTo(100).comment('用户积分余额');
+      table.integer('total_credits_earned').notNullable().defaultTo(100).comment('累计获得积分');
+      table.integer('total_credits_spent').notNullable().defaultTo(0).comment('累计消费积分');
     })
     
     // 2. 创建积分变动记录表
@@ -41,7 +41,7 @@ exports.up = function(knex) {
       table.integer('credits_cost').notNullable().comment('消费积分');
       table.datetime('start_time').notNullable().comment('开始时间');
       table.datetime('end_time').notNullable().comment('结束时间');
-      table.boolean('is_active').defaultTo(true).comment('是否有效');
+      table.boolean('is_active').notNullable().defaultTo(true).comment('是否有效');
       table.timestamps(true, true);
       
       // 外键和索引
@@ -54,9 +54,9 @@ exports.up = function(knex) {
     
     // 4. 为货源表添加管理字段
     .table('land_loads', function(table) {
-      table.enum('status', ['active', 'inactive', 'completed', 'cancelled']).defaultTo('active').comment('状态');
-      table.boolean('is_premium').defaultTo(false).comment('是否为高级帖子');
-      table.integer('views_count').defaultTo(0).comment('浏览次数');
+      table.enum('status', ['active', 'inactive', 'completed', 'cancelled']).notNullable().defaultTo('active').comment('状态');
+      table.boolean('is_premium').notNullable().defaultTo(false).comment('是否为高级帖子');
+      table.integer('views_count').notNullable().defaultTo(0).comment('浏览次数');
       table.datetime('last_refreshed').comment('最后刷新时间');
       table.index(['status', 'is_active']);
       table.index(['is_premium', 'created_at']);
@@ -64,9 +64,9 @@ exports.up = function(knex) {
     
     // 5. 为车源表添加管理字段  
     .table('land_trucks', function(table) {
-      table.enum('status', ['active', 'inactive', 'completed', 'cancelled']).defaultTo('active').comment('状态');
-      table.boolean('is_premium').defaultTo(false).comment('是否为高级帖子');
-      table.integer('views_count').defaultTo(0).comment('浏览次数');
+      table.enum('status', ['active', 'inactive', 'completed', 'cancelled']).notNullable().defaultTo('active').comment('状态');
+      table.boolean('is_premium').notNullable().defaultTo(false).comment('是否为高级帖子');
+      table.integer('views_count').notNullable().defaultTo(0).comment('浏览次数');
       table.datetime('last_refreshed').comment('最后刷新时间');
       table.index(['status', 'is_active']);
       table.index(['is_premium', 'created_at']);
@@ -74,9 +74,9 @@ exports.up = function(knex) {
     
     // 6. 为企业表添加管理字段
     .table('companies', function(table) {
-      table.enum('status', ['active', 'inactive', 'pending']).defaultTo('active').comment('状态');
-      table.boolean('is_premium').defaultTo(false).comment('是否为高级帖子');
-      table.integer('views_count').defaultTo(0).comment('浏览次数');
+      table.enum('status', ['active', 'inactive', 'pending']).notNullable().defaultTo('active').comment('状态');
+      table.boolean('is_premium').notNullable().defaultTo(false).comment('是否为高级帖子');
+      table.integer('views_count').notNullable().defaultTo(0).comment('浏览次数');
       table.datetime('last_refreshed').comment('最后刷新时间');
       table.index(['status', 'is_active']);
       table.index(['is_premium', 'created_at']);
@@ -84,9 +84,9 @@ exports.up = function(knex) {
     
     // 7. 为职位表添加管理字段
     .table('jobs', function(table) {
-      table.enum('status', ['active', 'inactive', 'filled', 'cancelled']).defaultTo('active').comment('状态');
-      table.boolean('is_premium').defaultTo(false).comment('是否为高级帖子');
-      table.integer('views_count').defaultTo(0).comment('浏览次数');
+      table.enum('status', ['active', 'inactive', 'filled', 'cancelled']).notNullable().defaultTo('active').comment('状态');
+      table.boolean('is_premium').notNullable().defaultTo(false).comment('是否为高级帖子');
+      table.integer('views_count').notNullable().defaultTo(0).comment('浏览次数');
       table.datetime('last_refreshed').comment('最后刷新时间');
       table.index(['status', 'is_active']);
       table.index(['is_premium', 'created_at']);
@@ -94,9 +94,9 @@ exports.up = function(knex) {
     
     // 8. 为简历表添加管理字段
     .table('resumes', function(table) {
-      table.enum('status', ['active', 'inactive', 'hired']).defaultTo('active').comment('状态');
-      table.boolean('is_premium').defaultTo(false).comment('是否为高级帖子');
-      table.integer('views_count').defaultTo(0).comment('浏览次数');
+      table.enum('status', ['active', 'inactive', 'hired']).notNullable().defaultTo('active').comment('状态');
+      table.boolean('is_premium').notNullable().defaultTo(false).comment('是否为高级帖子');
+      table.integer('views_count').notNullable().defaultTo(0).comment('浏览次数');
       table.datetime('last_refreshed').comment('最后刷新时间');
       table.index(['status', 'is_active']);
       table.index(['is_premium', 'created_at']);

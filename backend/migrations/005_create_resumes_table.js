@@ -31,9 +31,9 @@ exports.up = function(knex) {
     table.string('work_type_preference', 50).nullable(); // 全职/兼职/合同工
     
     // 状态管理
-    table.integer('views').defaultTo(0);
-    table.boolean('is_active').defaultTo(true);
-    table.boolean('is_featured').defaultTo(false);
+    table.integer('views').notNullable().defaultTo(0);
+    table.boolean('is_active').notNullable().defaultTo(true);
+    table.boolean('is_featured').notNullable().defaultTo(false);
     
     // 时间戳
     table.timestamps(true, true);
@@ -53,4 +53,4 @@ exports.up = function(knex) {
  */
 exports.down = function(knex) {
   return knex.schema.dropTableIfExists('resumes');
-}; 
+};

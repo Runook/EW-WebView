@@ -17,9 +17,9 @@ exports.up = function(knex) {
     table.string('contact_phone', 50).nullable();
     table.string('contact_email', 255).nullable();
     table.string('contact_person', 100).nullable();
-    table.integer('views').defaultTo(0);
-    table.boolean('is_active').defaultTo(true);
-    table.boolean('is_featured').defaultTo(false);
+    table.integer('views').notNullable().defaultTo(0);
+    table.boolean('is_active').notNullable().defaultTo(true);
+    table.boolean('is_featured').notNullable().defaultTo(false);
     table.timestamps(true, true);
     
     // 索引
@@ -40,4 +40,4 @@ exports.up = function(knex) {
  */
 exports.down = function(knex) {
   return knex.schema.dropTableIfExists('jobs');
-}; 
+};

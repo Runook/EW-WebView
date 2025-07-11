@@ -19,23 +19,19 @@ exports.up = function(knex) {
     table.string('address', 500).notNullable(); // 企业地址
     table.string('website', 255); // 企业网站
     
-    // 评价和验证
-    table.decimal('rating', 3, 2).defaultTo(0); // 评分 (0-5)
-    table.integer('reviews_count').defaultTo(0); // 评价数量
-    table.boolean('verified').defaultTo(false); // 是否已验证
+    // 验证和状态
+    table.boolean('verified').notNullable().defaultTo(false); // 是否已验证
+    table.boolean('is_active').notNullable().defaultTo(true); // 是否激活
+    table.boolean('is_featured').notNullable().defaultTo(false); // 是否推荐
     
     // 统计信息
-    table.integer('views').defaultTo(0); // 查看次数
-    table.integer('favorites').defaultTo(0); // 收藏次数
+    table.integer('views').notNullable().defaultTo(0); // 查看次数
     
     // 其他信息
     table.text('notes'); // 备注
     table.json('services'); // 提供的服务列表 (JSON)
     table.json('business_hours'); // 营业时间 (JSON)
     
-    // 状态管理
-    table.boolean('is_active').defaultTo(true); // 是否激活
-    table.boolean('is_featured').defaultTo(false); // 是否推荐
     table.timestamps(true, true);
     
     // 索引
@@ -44,7 +40,7 @@ exports.up = function(knex) {
     table.index(['subcategory']);
     table.index(['is_active']);
     table.index(['verified']);
-    table.index(['rating']);
+    table.index(['is_featured']);
     table.index(['name']);
     table.index(['created_at']);
   });
@@ -56,4 +52,4 @@ exports.up = function(knex) {
  */
 exports.down = function(knex) {
   return knex.schema.dropTableIfExists('companies');
-}; 
+};
