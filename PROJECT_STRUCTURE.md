@@ -1,24 +1,21 @@
 # EW Logistics Project Structure
 
 ## Overview
-This document describes the cleaned and organized structure of the EW Logistics AWS-deployed web application.
+This document describes the cleaned and organized structure of the EW Logistics web application.
 
 ## Project Status
-- **Deployment Status**: ✅ Successfully deployed to AWS
-- **Frontend URL**: http://ew-logistics-alb-1527520693.us-east-1.elb.amazonaws.com
+- **Deployment Status**: ✅ Successfully running locally
+- **Frontend URL**: http://localhost:3000
 - **Backend API**: Healthy and operational
-- **Infrastructure**: ECS services, ALB, and RDS all running
+- **Infrastructure**: Docker Compose services running
 
 ## Directory Structure
 
 ```
 EW-WebView/
 ├── README.md                           # Main project documentation
-├── AWS_DEPLOYMENT_GUIDE.md            # Complete AWS deployment guide
 ├── PROJECT_STRUCTURE.md               # This file - project organization
 ├── docker-compose.yml                 # Development environment setup
-├── ecs-backend-task-final.json        # ECS task definition for backend
-├── ecs-frontend-task-final.json       # ECS task definition for frontend
 ├── GOOGLE_MAPS_ISSUE_RESOLUTION.md    # Google Maps integration fixes
 ├── GoogleMaps_Integration_Guide.md    # Google Maps setup guide
 │
@@ -62,8 +59,6 @@ EW-WebView/
 
 ### Root Level
 - `docker-compose.yml`: Development environment orchestration
-- `AWS_DEPLOYMENT_GUIDE.md`: Complete guide for AWS deployment
-- `ecs-*-task-final.json`: Production ECS task definitions
 
 ### Scripts Directory
 - `dev-start.sh`: Starts local development environment with Docker Compose
@@ -84,17 +79,16 @@ EW-WebView/
 
 ## Deployment Architecture
 
-### AWS Infrastructure
-- **ECS Cluster**: Container orchestration
-- **Application Load Balancer**: Traffic distribution and SSL termination
-- **RDS PostgreSQL**: Managed database service
-- **ECR**: Container image registry
-- **CloudWatch**: Logging and monitoring
+### Docker Infrastructure
+- **Docker Compose**: Container orchestration
+- **Nginx**: Web server for frontend
+- **PostgreSQL**: Database service
+- **Redis**: Caching service (optional)
 
 ### Container Configuration
-- **Frontend**: React app served by Nginx (port 80)
+- **Frontend**: React app served by Nginx (port 3000)
 - **Backend**: Node.js Express API (port 3001)
-- **Database**: PostgreSQL RDS instance
+- **Database**: PostgreSQL Docker container
 
 ## Development Workflow
 
@@ -108,9 +102,9 @@ EW-WebView/
 ```
 
 ### Production Deployment
-- Images built and pushed to ECR
-- ECS services updated with new task definitions
-- Load balancer routes traffic to healthy containers
+- Images built using Docker
+- Services managed via Docker Compose
+- Load balancing handled by Nginx
 
 ## Removed Files (Cleanup History)
 The following redundant/obsolete files were removed during cleanup:
@@ -120,12 +114,15 @@ The following redundant/obsolete files were removed during cleanup:
 - `deploy-ecs-final.sh` - Redundant deployment script
 - `trust-policy.json` - No longer needed
 - `frontend/Dockerfile.aws` - Redundant Dockerfile
+- `AWS_DEPLOYMENT_GUIDE.md` - AWS deployment guide
+- `ecs-backend-task-final.json` - ECS backend task definition
+- `ecs-frontend-task-final.json` - ECS frontend task definition
 - `frontend/Dockerfile.simple` - Redundant Dockerfile
 - `frontend/nginx.prod.conf` - Merged into main nginx.conf
 - Test report files (can be regenerated if needed)
 
 ## Configuration Updates
-- Updated `nginx.conf` with correct ALB URL: `ew-logistics-alb-1527520693.us-east-1.elb.amazonaws.com`
+- Updated `nginx.conf` to proxy to backend service in Docker Compose
 - Enhanced nginx configuration with CORS headers and better caching
 - Organized scripts into dedicated `/scripts` directory
 

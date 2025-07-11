@@ -17,7 +17,7 @@
  * =============================================================================
  */
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { 
   MapPin, 
   Calendar, 
@@ -30,7 +30,6 @@ import {
   Building,
   Shield,
   Calculator,
-  AlertCircle,
   Info,
   Phone,
   DollarSign,
@@ -125,9 +124,6 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
 
   // 确认对话框
   const { 
-    showConfirm: showErrorConfirm, 
-    handleConfirm, 
-    handleCancel, 
     showConfirm 
   } = useConfirmDialog();
 
@@ -187,7 +183,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
   ];
 
   // NMFC分类代码映射表 - 基于密度
-  const freightClassMap = [
+  const freightClassMap = useMemo(() => [
     { minDensity: 50, class: '50', description: 'Class 50 - 高密度货物 (Over 50 lbs/cu ft)' },
     { minDensity: 35, class: '55', description: 'Class 55 - 金属制品 (35-50 lbs/cu ft)' },
     { minDensity: 30, class: '60', description: 'Class 60 - 汽车配件 (30-35 lbs/cu ft)' },
@@ -206,7 +202,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     { minDensity: 2, class: '300', description: 'Class 300 - 木制品 (2-3 lbs/cu ft)' },
     { minDensity: 1, class: '400', description: 'Class 400 - 塑料制品 (1-2 lbs/cu ft)' },
     { minDensity: 0, class: '500', description: 'Class 500 - 低密度货物 (Under 1 lb/cu ft)' }
-  ];
+  ], []);
 
   // 货物估价选项
   const cargoValueOptions = [
@@ -231,12 +227,12 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
   ];
 
   // 单位转换工具
-  const unitConverter = {
+  const unitConverter = React.useMemo(() => ({
     kgToLbs: (kg) => kg ? (parseFloat(kg) * 2.20462).toFixed(1) : '',
     lbsToKg: (lbs) => lbs ? (parseFloat(lbs) / 2.20462).toFixed(1) : '',
     cmToInches: (cm) => cm ? (parseFloat(cm) / 2.54).toFixed(1) : '',
     inchesToCm: (inches) => inches ? (parseFloat(inches) * 2.54).toFixed(1) : ''
-  };
+  }), []);
 
   /*
    * =====================================================================
@@ -245,7 +241,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
    */
 
   // ====== 密度和分类代码计算 (约50行 - 🤔 算法复杂，是否可以简化？) ======
-  const calculateFreightClass = (data, isItem = false) => {
+  const calculateFreightClass = React.useCallback((data, isItem = false) => {
     const { weight, length, width, height, hazmat, fragile } = data;
     
     if (!weight || !length || !width || !height) return isItem ? data : null;
@@ -294,7 +290,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         classDescription: selectedClass.description + (hazmat || fragile ? ' (特殊货物调整)' : '')
       });
     }
-  };
+  }, [freightClassMap, setFormData]);
 
   // ====== LTL货物管理函数 (约50行 - 🤔 是否需要这么复杂的货物管理？) ======
   

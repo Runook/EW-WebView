@@ -1,50 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Search, 
-  MapPin, 
-  Clock, 
-  DollarSign, 
-  Users, 
   Plus, 
+  Briefcase, 
+  User, 
+  Search, 
   Filter,
-  BookOpen,
-  Briefcase,
-  User,
-  Phone,
-  Mail,
-  Calendar,
-  X,
-  Send,
   ChevronDown,
   Star,
-  Bookmark
+  MapPin,
+  Clock,
+  BookOpen,
+  Calendar,
+  Send,
+  Bookmark,
+  Phone,
+  Mail,
+  X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import PremiumPostModal from '../components/PremiumPostModal';
 import { useNotification } from '../components/common/Notification';
 import { apiLogger } from '../utils/logger';
 import { useModal, useLoading } from '../hooks';
-import { getAuthToken, apiClient } from '../utils/apiClient';
+import { apiClient } from '../utils/apiClient';
 import './Jobs.css';
 
 const Jobs = () => {
   // 通知和日志系统
-  const { success, error: showError, apiError, confirm } = useNotification();
+  const { success, error: showError, apiError } = useNotification();
   
   // Hook系统
   const postModal = useModal();
   const premiumModal = useModal();
   const filtersModal = useModal();
-  const { loading, withLoading } = useLoading(false);
+  const { withLoading } = useLoading(false);
   
   const [activeTab, setActiveTab] = useState('jobs'); // 'jobs' 或 'resumes'
   const [searchQuery, setSearchQuery] = useState('');
   const [jobs, setJobs] = useState([]);
   const [resumes, setResumes] = useState([]);
-  const [error, setError] = useState(null);
   const [currentFormData, setCurrentFormData] = useState(null);
   
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
 
   // 筛选条件状态
   const [filters, setFilters] = useState({
@@ -102,11 +99,9 @@ const Jobs = () => {
   ];
 
   // 获取招聘职位数据
-  const fetchJobs = async (filters = {}) => {
+  const fetchJobs = useCallback(async (filters = {}) => {
     await withLoading(async () => {
       try {
-        setError(null);
-        
         const queryParams = new URLSearchParams();
         Object.keys(filters).forEach(key => {
           if (filters[key]) {
@@ -123,18 +118,15 @@ const Jobs = () => {
         }
       } catch (error) {
         apiLogger.error('获取职位数据错误', error);
-        setError(error.message);
         apiError('获取职位数据', error);
       }
     });
-  };
+  }, [withLoading, apiError]);
 
   // 获取简历数据
-  const fetchResumes = async (filters = {}) => {
+  const fetchResumes = useCallback(async (filters = {}) => {
     await withLoading(async () => {
       try {
-        setError(null);
-        
         const queryParams = new URLSearchParams();
         Object.keys(filters).forEach(key => {
           if (filters[key]) {
@@ -151,11 +143,10 @@ const Jobs = () => {
         }
       } catch (error) {
         apiLogger.error('获取简历数据错误', error);
-        setError(error.message);
         apiError('获取简历数据', error);
       }
     });
-  };
+  }, [withLoading, apiError]);
 
   useEffect(() => {
     if (activeTab === 'jobs') {
@@ -163,7 +154,7 @@ const Jobs = () => {
     } else {
       fetchResumes(); // 获取真实简历数据
     }
-  }, [activeTab]);
+  }, [activeTab, fetchJobs, fetchResumes]);
 
   // 筛选函数
   const applyFilters = (items) => {
@@ -212,6 +203,8 @@ const Jobs = () => {
           case '1个月内':
             if (diffDays > 30) return false;
             break;
+          default:
+            break;
         }
       }
 
@@ -244,6 +237,8 @@ const Jobs = () => {
             break;
           case '$10000以上':
             if (salaryNum < 10000) return false;
+            break;
+          default:
             break;
         }
       }
@@ -282,122 +277,10 @@ const Jobs = () => {
       
       fetchJobs(appliedFilters);
     }
-  }, [searchQuery, filters, activeTab]);
+  }, [searchQuery, filters, activeTab, fetchJobs]);
 
-  // 清除所有筛选条件
-  const clearAllFilters = () => {
-    setFilters({
-      category: '',
-      location: '',
-      workType: '',
-      experience: '',
-      publishTime: '',
-      salaryRange: ''
-    });
-    setSearchQuery('');
-  };
+ 
 
-  // 检查是否有活跃的筛选条件
-  const hasActiveFilters = () => {
-    return searchQuery || Object.values(filters).some(value => value !== '');
-  };
-
-  // 发布职位
-  const handlePostJob = async (formData) => {
-    await withLoading(async () => {
-      try {
-        if (!isAuthenticated) {
-          showError('请先登录再发布职位');
-          return;
-        }
-        
-        const authToken = getAuthToken();
-        const jobData = {
-          title: formData.get('title'),
-          category: formData.get('category'),
-          company: formData.get('company'),
-          location: formData.get('location'),
-          salary: formData.get('salary'),
-          workType: formData.get('type'),
-          experience: formData.get('experience'),
-          description: formData.get('description'),
-          contactPhone: formData.get('contactPhone'),
-          contactEmail: formData.get('contactEmail'),
-          contactPerson: formData.get('contactPerson')
-        };
-
-        const result = await apiClient.post('/jobs', jobData);
-
-        if (result.success) {
-          postModal.close();
-          fetchJobs(); // 重新获取职位列表
-          success('职位发布成功！');
-        } else {
-          // 处理验证错误，显示具体错误信息
-          if (result.errors && result.errors.length > 0) {
-            const errorMessages = result.errors.map(error => error.msg).join('\n');
-            throw new Error(`请检查以下信息：\n${errorMessages}`);
-          } else {
-            throw new Error(result.message || '发布失败');
-          }
-        }
-      } catch (error) {
-        apiLogger.error('发布职位错误', error);
-        showError('发布失败: ' + error.message);
-      }
-    });
-  };
-
-  // 发布简历
-  const handlePostResume = async (formData) => {
-    await withLoading(async () => {
-      try {
-        if (!isAuthenticated) {
-          showError('请先登录后再发布简历');
-          return;
-        }
-
-        const token = getAuthToken();
-        if (!token) {
-          showError('认证信息已过期，请重新登录');
-          return;
-        }
-
-        const resumeData = {
-          name: formData.get('name'),
-          position: formData.get('position'),
-          experience: formData.get('experience'),
-          location: formData.get('location'),
-          phone: formData.get('phone'),
-          email: formData.get('email'),
-          skills: formData.get('skills'),
-          summary: formData.get('summary'),
-          expectedSalary: formData.get('expectedSalary'),
-          workTypePreference: formData.get('workTypePreference')
-        };
-
-        const result = await apiClient.post('/resumes', resumeData);
-
-        if (result.success) {
-          success('简历发布成功！');
-          postModal.close();
-          // 重新获取简历列表
-          await fetchResumes();
-        } else {
-          // 处理验证错误，显示具体错误信息
-          if (result.errors && result.errors.length > 0) {
-            const errorMessages = result.errors.map(error => error.msg).join('\n');
-            throw new Error(`请检查以下信息：\n${errorMessages}`);
-          } else {
-            throw new Error(result.message || '发布简历失败');
-          }
-        }
-      } catch (error) {
-        apiLogger.error('发布简历错误', error);
-        showError(`发布简历失败: ${error.message}`);
-      }
-    });
-  };
 
   // 统一发布处理函数（先显示积分模态框）
   const handlePost = (formData) => {
@@ -421,7 +304,6 @@ const Jobs = () => {
   const handleConfirmPost = async ({ formData, premium }) => {
     await withLoading(async () => {
       try {
-        const authToken = getAuthToken();
         const postData = {
           ...formData,
           premium: premium
@@ -452,77 +334,6 @@ const Jobs = () => {
     });
   };
 
-  // 电话联系
-  const handlePhoneContact = async (job) => {
-    if (job.contactPhone) {
-      const confirmed = await confirm(
-        `确定要拨打电话联系招聘方吗？\n\n联系人: ${job.contactPerson || '招聘负责人'}\n电话: ${job.contactPhone}\n公司: ${job.company}\n职位: ${job.title}`,
-        { confirmText: '拨打电话', cancelText: '取消' }
-      );
-      if (confirmed) {
-        window.open(`tel:${job.contactPhone}`);
-      }
-    } else {
-      showError('该职位未提供联系电话');
-    }
-  };
-
-  // 邮件联系
-  const handleEmailContact = async (job) => {
-    if (job.contactEmail) {
-      const subject = encodeURIComponent(`应聘职位: ${job.title} - ${job.company}`);
-      const body = encodeURIComponent(
-        `您好，${job.contactPerson || '招聘负责人'}：\n\n我对贵公司发布的"${job.title}"职位很感兴趣，希望能够申请该职位。\n\n职位信息：\n- 公司：${job.company}\n- 地点：${job.location}\n- 薪资：${job.salary}\n\n请问是否方便安排面试？期待您的回复。\n\n谢谢！`
-      );
-      
-      const confirmed = await confirm(
-        `确定要发送邮件联系招聘方吗？\n\n联系人: ${job.contactPerson || '招聘负责人'}\n邮箱: ${job.contactEmail}\n公司: ${job.company}\n职位: ${job.title}`,
-        { confirmText: '发送邮件', cancelText: '取消' }
-      );
-      
-      if (confirmed) {
-        window.open(`mailto:${job.contactEmail}?subject=${subject}&body=${body}`);
-      }
-    } else {
-      showError('该职位未提供联系邮箱');
-    }
-  };
-
-  // 电话联系求职者
-  const handlePhoneContactResume = async (resume) => {
-    if (resume.phone) {
-      const confirmed = await confirm(
-        `确定要拨打电话联系求职者吗？\n\n姓名: ${resume.name}\n电话: ${resume.phone}\n求职职位: ${resume.position}\n工作经验: ${resume.experience}\n期望地点: ${resume.location}`,
-        { confirmText: '拨打电话', cancelText: '取消' }
-      );
-      if (confirmed) {
-        window.open(`tel:${resume.phone}`);
-      }
-    } else {
-      showError('该求职者未提供联系电话');
-    }
-  };
-
-  // 邮件联系求职者
-  const handleEmailContactResume = async (resume) => {
-    if (resume.email) {
-      const subject = encodeURIComponent(`关于您的求职申请: ${resume.position}`);
-      const body = encodeURIComponent(
-        `您好，${resume.name}：\n\n我是招聘负责人，看到您在平台上发布的求职简历，对您的背景很感兴趣。\n\n您的求职信息：\n- 求职职位：${resume.position}\n- 工作经验：${resume.experience}\n- 期望地点：${resume.location}\n- 技能专长：${resume.skills ? resume.skills.join(', ') : '未提供'}\n\n请问您是否有兴趣了解更多工作机会？期待您的回复。\n\n谢谢！`
-      );
-      
-      const confirmed = await confirm(
-        `确定要发送邮件联系求职者吗？\n\n姓名: ${resume.name}\n邮箱: ${resume.email}\n求职职位: ${resume.position}\n工作经验: ${resume.experience}`,
-        { confirmText: '发送邮件', cancelText: '取消' }
-      );
-      
-      if (confirmed) {
-        window.open(`mailto:${resume.email}?subject=${subject}&body=${body}`);
-      }
-    } else {
-      showError('该求职者未提供联系邮箱');
-    }
-  };
 
   return (
     <div className="jobs-page">
@@ -670,17 +481,6 @@ const Jobs = () => {
               </div>
             )}
           </div>
-
-          {hasActiveFilters() && (
-            <div className="filter-actions">
-              <span className="filter-count">
-                找到 {activeTab === 'jobs' ? filteredJobs.length : filteredResumes.length} 条结果
-              </span>
-              <button className="clear-filters" onClick={clearAllFilters}>
-                清除筛选
-              </button>
-            </div>
-          )}
         </div>
       )}
 
@@ -1020,4 +820,4 @@ const Jobs = () => {
   );
 };
 
-export default Jobs; 
+export default Jobs;

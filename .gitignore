@@ -71,9 +71,6 @@ ehthumbs.db
 *.sqlite
 *.db
 
-# AWS
-.aws/
-
 # Terraform
 *.tfstate
 *.tfstate.*

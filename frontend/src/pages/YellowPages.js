@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   ArrowLeft, 
   Plus, 
@@ -9,13 +9,12 @@ import {
   Globe, 
   Star,
   Building,
-  Users,
   Eye,
   Heart,
   ChevronRight
 } from 'lucide-react';
 import PremiumPostModal from '../components/PremiumPostModal';
-import { apiServices, handleApiError, getAuthToken, apiClient } from '../utils/apiClient';
+import { apiServices, getAuthToken, apiClient } from '../utils/apiClient';
 import { useNotification } from '../components/common/Notification';
 import { apiLogger } from '../utils/logger';
 import { useModal } from '../hooks';
@@ -78,43 +77,41 @@ const YellowPages = () => {
   const [categoryStats, setCategoryStats] = useState({});
 
   // 从API获取公司数据
-  const fetchCompanies = async () => {
+  const fetchCompanies = useCallback(async () => {
     if (!selectedSubcategory) return;
     
     try {
       const result = await apiServices.companies.getBySubcategory(selectedSubcategory, { search: searchQuery });
       setCompanies(result.data || []);
     } catch (error) {
-      const errorMsg = handleApiError(error, '获取公司数据');
       apiLogger.error('获取公司数据失败', error);
       apiError('获取公司数据', error);
       setCompanies([]);
     }
-  };
+  }, [selectedSubcategory, searchQuery, apiError]);
 
   // 获取分类统计数据
-  const fetchCategoryStats = async () => {
+  const fetchCategoryStats = useCallback(async () => {
     try {
       const result = await apiServices.companies.getStats();
       setCategoryStats(result.data || {});
     } catch (error) {
-      const errorMsg = handleApiError(error, '获取分类统计');
       apiLogger.error('获取分类统计失败', error);
       apiError('获取分类统计', error);
     }
-  };
+  }, [apiError]);
 
   // 组件初始化时获取分类统计
   useEffect(() => {
     fetchCategoryStats();
-  }, []);
+  }, [fetchCategoryStats]);
 
   // 当选择的子分类或搜索查询改变时获取数据
   useEffect(() => {
     if (selectedSubcategory) {
       fetchCompanies();
     }
-  }, [selectedSubcategory, searchQuery]);
+  }, [selectedSubcategory, searchQuery, fetchCompanies]);
 
   // 过滤后的公司列表（API已处理搜索，这里主要用于显示）
   const filteredCompanies = companies;
@@ -135,8 +132,6 @@ const YellowPages = () => {
   // 确认发布公司信息
   const handleConfirmPublish = async ({ formData, premium }) => {
     try {
-      const token = getAuthToken();
-      
       const postData = {
         ...formData,
         premium: premium

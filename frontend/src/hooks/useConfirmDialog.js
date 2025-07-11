@@ -88,7 +88,7 @@ export const useConfirmAction = (action, options = {}) => {
         setIsLoading(false);
       }
     }
-  }, [action, options, confirmDialog.showConfirm]);
+  }, [action, options, confirmDialog]);
 
   return {
     ...confirmDialog,

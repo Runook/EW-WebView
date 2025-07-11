@@ -46,7 +46,8 @@ app.use(helmet({
 // CORS 配置
 app.use(cors(config.cors));
 
-// 请求限制
+// 请求限制 - 临时禁用用于测试
+/*
 const limiter = rateLimit({
   windowMs: config.security.rateLimitWindow * 60 * 1000,
   max: config.security.rateLimitMax,
@@ -80,6 +81,7 @@ const authLimiter = rateLimit({
 
 app.use('/api/', limiter);
 app.use('/api/auth/', authLimiter);
+*/
 
 // 中间件
 app.use(compression());

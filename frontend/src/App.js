@@ -6,7 +6,6 @@ import { Package, BookOpen, Briefcase, ShoppingBag } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import Auth from './pages/Auth';
 import FreightBoard from './pages/FreightBoard';
 import Contact from './pages/Contact';
 import Login from './pages/Login';

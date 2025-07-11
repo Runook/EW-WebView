@@ -35,19 +35,13 @@ const config = {
   security: {
     bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS) || 12,
     rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW) || 15,
-    rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX) || 100
+    rateLimitMax: parseInt(process.env.RATE_LIMIT_MAX) || 1000 // 临时增加限制
   },
 
-  // AWS配置
-  aws: {
-    region: process.env.AWS_REGION || 'us-east-1',
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    cognito: {
-      userPoolId: process.env.COGNITO_USER_POOL_ID,
-      clientId: process.env.COGNITO_CLIENT_ID,
-      region: process.env.COGNITO_REGION || 'us-east-1'
-    }
+  // 缓存配置
+  cache: {
+    ttl: parseInt(process.env.CACHE_TTL) || 3600,
+    max: parseInt(process.env.CACHE_MAX) || 100
   },
 
   // 日志配置

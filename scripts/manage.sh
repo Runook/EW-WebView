@@ -36,8 +36,8 @@ print_usage() {
     echo "  help          Show this help message"
     echo ""
     echo -e "${YELLOW}Project Status:${NC}"
-    echo "  Frontend URL: http://ew-logistics-alb-1527520693.us-east-1.elb.amazonaws.com"
-    echo "  Deployment: AWS ECS (Production Ready)"
+    echo "  Frontend URL: http://localhost:3000"
+    echo "  Deployment: Docker Compose (Development)"
     echo ""
 }
 

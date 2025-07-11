@@ -6,7 +6,6 @@ import {
   Users,
   Mail,
   Phone,
-  MessageCircle,
   Clock,
   Calendar
 } from 'lucide-react';
@@ -213,8 +212,9 @@ const AirFreightPlatform = () => {
                 电话咨询
               </a>
               
-              <a 
-                href="#" 
+              <button 
+                type="button"
+                onClick={() => {/* 处理联系逻辑 */}}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -227,19 +227,13 @@ const AirFreightPlatform = () => {
                   fontSize: '0.9rem',
                   fontWeight: '500',
                   border: '2px solid #0ea5e9',
+                  cursor: 'pointer',
                   transition: 'all 0.3s ease'
                 }}
-                onMouseOver={(e) => {
-                  e.target.closest('a').style.background = '#0ea5e9';
-                  e.target.closest('a').style.color = 'white';
-                }}
-                onMouseOut={(e) => {
-                  e.target.closest('a').style.background = 'white';
-                  e.target.closest('a').style.color = '#0ea5e9';
-                }}
               >
-              
-              </a>
+                <Mail size={16} />
+                在线咨询
+              </button>
             </div>
           </div>
         </div>

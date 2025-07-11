@@ -12,18 +12,18 @@ if [ -z "$JWT_SECRET" ]; then
     exit 1
 fi
 
-if [ -z "$RDS_ENDPOINT" ]; then
-    echo "❌ Error: RDS_ENDPOINT environment variable is not set"
+if [ -z "$DB_HOST" ]; then
+    echo "❌ Error: DB_HOST environment variable is not set"
     exit 1
 fi
 
-if [ -z "$RDS_USERNAME" ]; then
-    echo "❌ Error: RDS_USERNAME environment variable is not set"
+if [ -z "$DB_USER" ]; then
+    echo "❌ Error: DB_USER environment variable is not set"
     exit 1
 fi
 
-if [ -z "$RDS_PASSWORD" ]; then
-    echo "❌ Error: RDS_PASSWORD environment variable is not set"
+if [ -z "$DB_PASSWORD" ]; then
+    echo "❌ Error: DB_PASSWORD environment variable is not set"
     exit 1
 fi
 

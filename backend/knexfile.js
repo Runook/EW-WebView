@@ -26,11 +26,11 @@ module.exports = {
   staging: {
     client: 'pg',
     connection: {
-      host: process.env.RDS_ENDPOINT || process.env.DB_HOST,
-      port: process.env.RDS_PORT || process.env.DB_PORT || 5432,
-      database: process.env.RDS_DB_NAME || process.env.DB_NAME,
-      user: process.env.RDS_USERNAME || process.env.DB_USER,
-      password: process.env.RDS_PASSWORD || process.env.DB_PASSWORD,
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT || 5432,
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
       ssl: { rejectUnauthorized: false }
     },
     migrations: {
@@ -49,11 +49,11 @@ module.exports = {
   production: {
     client: 'pg',
     connection: {
-      host: process.env.RDS_ENDPOINT,
-      port: process.env.RDS_PORT || 5432,
-      database: process.env.RDS_DB_NAME,
-      user: process.env.RDS_USERNAME,
-      password: process.env.RDS_PASSWORD,
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT || 5432,
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
       ssl: { rejectUnauthorized: false }
     },
     migrations: {

@@ -6,7 +6,6 @@ import {
   Users,
   Mail,
   Phone,
-  MessageCircle,
   Clock,
   Calendar
 } from 'lucide-react';
@@ -213,8 +212,8 @@ const SeaFreightPlatform = () => {
                 电话咨询
               </a>
               
-              <a 
-                href="#" 
+              <button 
+                type="button"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -227,19 +226,23 @@ const SeaFreightPlatform = () => {
                   fontSize: '0.9rem',
                   fontWeight: '500',
                   border: '2px solid #0ea5e9',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer'
                 }}
                 onMouseOver={(e) => {
-                  e.target.closest('a').style.background = '#0ea5e9';
-                  e.target.closest('a').style.color = 'white';
+                  e.target.style.background = '#0ea5e9';
+                  e.target.style.color = 'white';
                 }}
                 onMouseOut={(e) => {
-                  e.target.closest('a').style.background = 'white';
-                  e.target.closest('a').style.color = '#0ea5e9';
+                  e.target.style.background = 'white';
+                  e.target.style.color = '#0ea5e9';
                 }}
+                aria-label="敬请期待"
+                disabled
               >
-              
-              </a>
+                {/* 可放置icon或文字 */}
+                敬请期待
+              </button>
             </div>
           </div>
         </div>
@@ -248,4 +251,4 @@ const SeaFreightPlatform = () => {
   );
 };
 
-export default SeaFreightPlatform; 
+export default SeaFreightPlatform;

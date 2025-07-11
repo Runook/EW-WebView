@@ -50,6 +50,7 @@ export const useDebouncedCallback = (callback, delay = 300, deps = []) => {
     timeoutRef.current = setTimeout(() => {
       callbackRef.current(...args);
     }, delay);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [delay, ...deps]);
 
   // 清理timeout

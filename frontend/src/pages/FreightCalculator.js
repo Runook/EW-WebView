@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Calculator, 
   Scale, 
@@ -33,7 +33,7 @@ const FreightCalculator = () => {
   });
 
   // NMFC分类代码映射表 - 基于密度
-  const freightClassMap = [
+  const freightClassMap = useMemo(() => [
     { minDensity: 50, class: '50', description: 'Class 50 - 高密度货物 (Over 50 lbs/cu ft)' },
     { minDensity: 35, class: '55', description: 'Class 55 - 金属制品 (35-50 lbs/cu ft)' },
     { minDensity: 30, class: '60', description: 'Class 60 - 汽车配件 (30-35 lbs/cu ft)' },
@@ -52,7 +52,7 @@ const FreightCalculator = () => {
     { minDensity: 2, class: '300', description: 'Class 300 - 木制品 (2-3 lbs/cu ft)' },
     { minDensity: 1, class: '400', description: 'Class 400 - 塑料制品 (1-2 lbs/cu ft)' },
     { minDensity: 0, class: '500', description: 'Class 500 - 低密度货物 (Under 1 lb/cu ft)' }
-  ];
+  ], []);
 
   // 单位转换工具
   const unitConverter = {
@@ -63,7 +63,7 @@ const FreightCalculator = () => {
   };
 
   // 计算货运等级
-  const calculateFreightClass = () => {
+  const calculateFreightClass = useCallback(() => {
     const { weight, length, width, height, hazmat, fragile } = formData;
     
     if (!weight || !length || !width || !height) {
@@ -116,7 +116,7 @@ const FreightCalculator = () => {
       freightClass: finalClass.toString(),
       classDescription: selectedClass.description + (hazmat || fragile ? ' (特殊货物调整)' : '')
     });
-  };
+  }, [formData, freightClassMap]);
 
   // 处理输入变化
   const handleInputChange = (field, value) => {
@@ -183,7 +183,7 @@ const FreightCalculator = () => {
   // 监听输入变化，自动计算
   useEffect(() => {
     calculateFreightClass();
-  }, [formData.weight, formData.length, formData.width, formData.height, formData.hazmat, formData.fragile]);
+  }, [calculateFreightClass]);
 
   // 当有计算结果时，在移动端自动滚动到结果区域
   useEffect(() => {

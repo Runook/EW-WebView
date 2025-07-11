@@ -11,6 +11,10 @@ const NotificationContext = createContext();
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
 
+  const removeNotification = useCallback((id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+
   const showNotification = useCallback((message, type = 'info', duration = 4000, actions = null) => {
     const id = Date.now() + Math.random();
     const notification = { 
@@ -29,11 +33,7 @@ export const NotificationProvider = ({ children }) => {
     }
     
     return id;
-  }, []);
-
-  const removeNotification = useCallback((id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  }, []);
+  }, [removeNotification]);
 
   const clearAll = useCallback(() => {
     setNotifications([]);
@@ -85,27 +85,27 @@ export const NotificationProvider = ({ children }) => {
   }, [success]);
 
   // 操作失败通知 (常用模式)  
-  const operationError = useCallback((operation, error) => {
-    const message = `${operation}失败: ${error.message || error}`;
+  const operationError = useCallback((operation, errorValue) => {
+    const message = `${operation}失败: ${errorValue.message || errorValue}`;
     error(message);
   }, [error]);
 
   // API错误通知
-  const apiError = useCallback((operation, error) => {
+  const apiError = useCallback((operation, errorValue) => {
     let message = `${operation}失败`;
     
-    if (error.message?.includes('Failed to fetch')) {
+    if (errorValue.message?.includes('Failed to fetch')) {
       message += ': 网络连接失败，请检查网络连接';
-    } else if (error.message?.includes('401')) {
+    } else if (errorValue.message?.includes('401')) {
       message += ': 请先登录系统';
-    } else if (error.message?.includes('403')) {
+    } else if (errorValue.message?.includes('403')) {
       message += ': 权限不足';
-    } else if (error.message?.includes('404')) {
+    } else if (errorValue.message?.includes('404')) {
       message += ': 请求的资源不存在';
-    } else if (error.message?.includes('500')) {
+    } else if (errorValue.message?.includes('500')) {
       message += ': 服务器内部错误，请稍后重试';
     } else {
-      message += `: ${error.message || '未知错误'}`;
+      message += `: ${errorValue.message || '未知错误'}`;
     }
     
     error(message, 8000);

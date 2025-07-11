@@ -2,28 +2,16 @@ import React from 'react';
 import { 
   X, 
   MapPin, 
-  Calendar, 
   Package, 
   Truck, 
-  Scale,
-  DollarSign,
   Phone,
-  Building,
-  AlertCircle,
-  Star,
-  Info,
-  Box,
-  Layers,
   Hash,
   Mail,
   User,
-  Shield,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
   Eye,
   Lock,
-  Clock
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import './Modal.css';

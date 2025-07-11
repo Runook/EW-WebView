@@ -16,9 +16,6 @@ const Header = () => {
   // 点击外部区域关闭菜单
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // 动态检查当前是否为移动端
-      const isMobile = window.innerWidth <= 1024;
-      
       if (!event.target.closest('.nav-dropdown') && 
           !event.target.closest('.user-menu') &&
           !event.target.closest('.mobile-nav-dropdown')) {

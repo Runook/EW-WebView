@@ -7,9 +7,7 @@ import {
   Globe,
   Clock,
   Shield,
-  ChevronDown,
-  Play,
-  Pause
+  ChevronDown
 } from 'lucide-react';
 
 import './Home.css';
@@ -28,16 +26,6 @@ const Home = () => {
 
   const scrollToContent = () => {
     contentRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const toggleVideo = () => {
-    if (videoRef.current) {
-      if (videoRef.current.paused) {
-        videoRef.current.play();
-      } else {
-        videoRef.current.pause();
-      }
-    }
   };
 
   useEffect(() => {

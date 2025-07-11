@@ -1,31 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Search, 
-  Filter, 
-  MapPin, 
-  Clock, 
-  DollarSign, 
-  Truck,
-  Package,
-  Settings,
-  Star,
-  Plus,
-  Eye,
-  Heart,
-  Phone,
-  Calendar,
-  ChevronRight,
-  Wrench,
-  X,
-  Send,
-  ChevronDown,
-  Briefcase,
-  Building,
-  Upload,
-  Image as ImageIcon,
-  Camera,
-  ChevronLeft
-} from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Phone, Heart, X, Building, Package, Search, Filter, ChevronDown, Upload, Send, ImageIcon, Camera, MapPin, Settings, Truck, Calendar, Eye, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
 import './LogisticsRental.css';
 
@@ -90,6 +64,7 @@ const LogisticsRental = () => {
   ];
 
   // 卡车类型（用于卡车分类的细分）
+  // eslint-disable-next-line no-unused-vars
   const truckTypes = [
     '轻型卡车',
     '中型卡车', 
@@ -105,78 +80,8 @@ const LogisticsRental = () => {
     '场地卡车'
   ];
 
-  // 仓库服务类型
-  const warehouseTypes = [
-    '常温储存',
-    '拆箱',
-    'FDA认证',
-    '食品级',
-    '高价值',
-    '长期储存',
-    '户外储存',
-    '超大件搬运',
-    '码垛',
-    '拣选包装',
-    '产品返工',
-    '短期储存',
-    '温控',
-    '转运',
-    'USDA认证'
-  ];
-
-  // 拖车类型
-  const trailerTypes = [
-    '干货车',
-    '平板拖车',
-    '冷藏拖车',
-    '油罐车',
-    '汽车运输车',
-    '其他'
-  ];
-
-  // 专业设备类型
-  const specializedEquipment = [
-    '起重机卡车',
-    '工程车',
-    '轻中型卡车',
-    '重型卡车',
-    '其他'
-  ];
-
-  // 地点选项
-  const locations = [
-    '洛杉矶', '纽约', '旧金山', '芝加哥', '休斯顿', '凤凰城', 
-    '费城', '圣安东尼奥', '圣地亚哥', '达拉斯', '圣何塞', '奥斯汀',
-    '杰克逊维尔', '印第安纳波利斯', '旧金山湾区', '西雅图', '丹佛',
-    '华盛顿', '波士顿', '纳什维尔', '巴尔的摩', '俄克拉荷马城',
-    '路易斯维尔', '波特兰', '拉斯维加斯', '密尔沃基', '阿尔伯克基',
-    '图森', '弗雷斯诺', '萨克拉门托', '堪萨斯城', '梅萨', '亚特兰大',
-    '奥马哈', '科罗拉多斯普林斯', '罗利', '迈阿密', '克利夫兰',
-    '弗吉尼亚海滩', '明尼阿波利斯', '新奥尔良'
-  ];
-
-  // 价格范围选项
-  const priceRanges = [
-    '不限', '$500以下/月', '$500-1000/月', '$1000-2000/月', '$2000-5000/月', 
-    '$5000-10000/月', '$10000以上/月', '$5000以下', '$5000-10000', 
-    '$10000-50000', '$50000-100000', '$100000以上'
-  ];
-
-  // 设备状态
-  const conditions = [
-    '不限', '全新', '9成新', '8成新', '7成新', '6成新以下'
-  ];
-
-  // 租期选项
-  const rentalPeriods = [
-    '不限', '按天', '按周', '按月', '按季度', '按年', '长期租赁'
-  ];
-
-  // 发布时间选项
-  const publishTimeOptions = ['全部时间', '今天', '3天内', '1周内', '1个月内'];
-
   // 模拟出租数据（添加多张图片）
-  const mockRentalItems = [
+  const mockRentalItems = useMemo(() => ([
     {
       id: 1,
       title: '重型冷藏车出租',
@@ -275,10 +180,10 @@ const LogisticsRental = () => {
         phone: '(345) 678-9012'
       }
     }
-  ];
+  ]), []);
 
   // 模拟出售数据（添加多张图片）
-  const mockSaleItems = [
+  const mockSaleItems = useMemo(() => ([
     {
       id: 1,
       title: '2019年肯沃斯T680卡车出售',
@@ -376,12 +281,12 @@ const LogisticsRental = () => {
         phone: '(678) 901-2345'
       }
     }
-  ];
+  ]), []);
 
   useEffect(() => {
     setRentalItems(mockRentalItems);
     setSaleItems(mockSaleItems);
-  }, []);
+  }, [mockRentalItems, mockSaleItems]);
 
   // 处理照片上传
   const handleImageUpload = (event) => {
@@ -472,6 +377,8 @@ const LogisticsRental = () => {
           case '1个月内':
             if (diffDays > 30) return false;
             break;
+          default:
+            break;
         }
       }
 
@@ -500,6 +407,8 @@ const LogisticsRental = () => {
             case '$10000以上/月':
               if (priceNum < 10000) return false;
               break;
+            default:
+              break;
           }
         } else {
           switch (filters.priceRange) {
@@ -517,6 +426,8 @@ const LogisticsRental = () => {
               break;
             case '$100000以上':
               if (priceNum < 100000) return false;
+              break;
+            default:
               break;
           }
         }
@@ -538,37 +449,9 @@ const LogisticsRental = () => {
     }));
   };
 
-  // 清除所有筛选条件
-  const clearAllFilters = () => {
-    setFilters({
-      category: '',
-      location: '',
-      priceRange: '',
-      condition: '',
-      brand: '',
-      rentalPeriod: '',
-      publishTime: ''
-    });
-    setSearchQuery('');
-  };
-
-  // 检查是否有活跃的筛选条件
-  const hasActiveFilters = () => {
-    return searchQuery || Object.values(filters).some(value => value !== '');
-  };
-
   // 获取当前分类选项
   const getCurrentCategories = () => {
     return activeTab === 'rental' ? rentalCategories : saleCategories;
-  };
-
-  // 获取当前价格范围选项
-  const getCurrentPriceRanges = () => {
-    if (activeTab === 'rental') {
-      return ['不限', '$500以下/月', '$500-1000/月', '$1000-2000/月', '$2000-5000/月', '$5000-10000/月', '$10000以上/月'];
-    } else {
-      return ['不限', '$5000以下', '$5000-10000', '$10000-50000', '$50000-100000', '$100000以上'];
-    }
   };
 
   // 获取当前数据
@@ -641,6 +524,12 @@ const LogisticsRental = () => {
       );
     }
   };
+
+  // 定义地点、状态、租期和发布时间选项
+  const locations = ['洛杉矶', '纽约', '旧金山', '芝加哥', '休斯顿', '凤凰城'];
+  const conditions = ['全新', '9成新', '8成新', '7成新', '6成新', '5成新', '4成新', '3成新', '2成新', '1成新'];
+  const rentalPeriods = ['不限', '1天', '3天', '1周', '1个月'];
+  const publishTimeOptions = ['全部时间', '今天', '3天内', '1周内', '1个月内'];
 
   return (
     <div className="logistics-rental-page">
@@ -739,8 +628,8 @@ const LogisticsRental = () => {
                 onChange={(e) => handleFilterChange('priceRange', e.target.value)}
               >
                 <option value="">全部价格</option>
-                {getCurrentPriceRanges().map(range => (
-                  <option key={range} value={range}>{range}</option>
+                {getCurrentCategories().map(category => (
+                  <option key={category} value={category}>{category}</option>
                 ))}
               </select>
             </div>
@@ -786,19 +675,8 @@ const LogisticsRental = () => {
               </select>
             </div>
           </div>
-
-          {hasActiveFilters() && (
-            <div className="filter-actions">
-              <span className="filter-count">
-                找到 {getCurrentItems().length} 条结果
-              </span>
-              <button className="clear-filters" onClick={clearAllFilters}>
-                清除筛选
-              </button>
-            </div>
-          )}
         </div>
-      )}
+        )}
 
       {/* 内容区域 */}
       <div className="content-area">
@@ -1187,4 +1065,4 @@ const LogisticsRental = () => {
   );
 };
 
-export default LogisticsRental; 
+export default LogisticsRental;

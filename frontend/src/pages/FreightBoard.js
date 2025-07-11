@@ -1,32 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Search, 
-  Filter, 
-  MapPin, 
   Calendar, 
   Truck, 
   Package, 
-  DollarSign,
   Star,
-  Phone,
-  MessageCircle,
   ArrowRight,
   Plus,
   Loader2,
   AlertCircle,
   Clock,
-  Users,
   Scale,
-  CheckCircle,
-  X,
-  Hash,
-  Layers,
-  Shield,
-  Home,
-  Building,
-  Trash2,
   RotateCcw,
-  Box,
   Info
 } from 'lucide-react';
 // import { useLanguage } from '../contexts/LanguageContext';
@@ -41,6 +26,60 @@ import { apiLogger } from '../utils/logger';
 import { useModal, useLoading } from '../hooks';
 import './PlatformPage.css';
 import './FreightBoard.css';
+
+// === 美国州列表常量 ===
+const US_STATES = [
+  { code: 'AL', name: 'Alabama' },
+  { code: 'AK', name: 'Alaska' },
+  { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' },
+  { code: 'CA', name: 'California' },
+  { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' },
+  { code: 'DE', name: 'Delaware' },
+  { code: 'FL', name: 'Florida' },
+  { code: 'GA', name: 'Georgia' },
+  { code: 'HI', name: 'Hawaii' },
+  { code: 'ID', name: 'Idaho' },
+  { code: 'IL', name: 'Illinois' },
+  { code: 'IN', name: 'Indiana' },
+  { code: 'IA', name: 'Iowa' },
+  { code: 'KS', name: 'Kansas' },
+  { code: 'KY', name: 'Kentucky' },
+  { code: 'LA', name: 'Louisiana' },
+  { code: 'ME', name: 'Maine' },
+  { code: 'MD', name: 'Maryland' },
+  { code: 'MA', name: 'Massachusetts' },
+  { code: 'MI', name: 'Michigan' },
+  { code: 'MN', name: 'Minnesota' },
+  { code: 'MS', name: 'Mississippi' },
+  { code: 'MO', name: 'Missouri' },
+  { code: 'MT', name: 'Montana' },
+  { code: 'NE', name: 'Nebraska' },
+  { code: 'NV', name: 'Nevada' },
+  { code: 'NH', name: 'New Hampshire' },
+  { code: 'NJ', name: 'New Jersey' },
+  { code: 'NM', name: 'New Mexico' },
+  { code: 'NY', name: 'New York' },
+  { code: 'NC', name: 'North Carolina' },
+  { code: 'ND', name: 'North Dakota' },
+  { code: 'OH', name: 'Ohio' },
+  { code: 'OK', name: 'Oklahoma' },
+  { code: 'OR', name: 'Oregon' },
+  { code: 'PA', name: 'Pennsylvania' },
+  { code: 'RI', name: 'Rhode Island' },
+  { code: 'SC', name: 'South Carolina' },
+  { code: 'SD', name: 'South Dakota' },
+  { code: 'TN', name: 'Tennessee' },
+  { code: 'TX', name: 'Texas' },
+  { code: 'UT', name: 'Utah' },
+  { code: 'VT', name: 'Vermont' },
+  { code: 'VA', name: 'Virginia' },
+  { code: 'WA', name: 'Washington' },
+  { code: 'WV', name: 'West Virginia' },
+  { code: 'WI', name: 'Wisconsin' },
+  { code: 'WY', name: 'Wyoming' }
+];
 
 /**
  * 陆运信息平台主组件
@@ -84,7 +123,7 @@ const FreightBoard = () => {
   const [currentFormData, setCurrentFormData] = useState(null);
 
   // 加载状态 - 使用新的Hook系统
-  const { loading, withLoading } = useLoading(true);
+  const { loading, withLoading } = useLoading(false);
 
   // 数据状态
   const [loads, setLoads] = useState([]); // 货源列表
@@ -144,33 +183,31 @@ const FreightBoard = () => {
    * 获取货源数据
    * @returns {Promise<Array>} 货源列表
    */
-  const fetchLoads = async () => {
+  const fetchLoads = useCallback(async () => {
     try {
       const result = await apiServices.landFreight.getLoads();
       return result.data || [];
     } catch (error) {
-      const errorMsg = handleApiError(error, '获取货源信息');
       apiLogger.error('获取货源信息失败', error);
       apiError('获取货源信息', error);
       return [];
     }
-  };
+  }, [apiError]);
 
   /**
    * 获取车源数据
    * @returns {Promise<Array>} 车源列表
    */
-  const fetchTrucks = async () => {
+  const fetchTrucks = useCallback(async () => {
     try {
       const result = await apiServices.landFreight.getTrucks();
       return result.data || [];
     } catch (error) {
-      const errorMsg = handleApiError(error, '获取车源信息');
       apiLogger.error('获取车源信息失败', error);
       apiError('获取车源信息', error);
       return [];
     }
-  };
+  }, [apiError]);
 
   // === 组件初始化 ===
   /**
@@ -197,7 +234,7 @@ const FreightBoard = () => {
     };
 
     loadData();
-  }, []);
+  }, [fetchLoads, fetchTrucks, showError, withLoading]);
 
   // === 筛选和搜索功能 ===
   /**
@@ -223,63 +260,6 @@ const FreightBoard = () => {
       sortBy: 'date'
     });
   };
-
-  /**
-   * 美国50个州及特区的简称列表
-   */
-  const US_STATES = [
-    { code: 'AL', name: 'Alabama' },
-    { code: 'AK', name: 'Alaska' },
-    { code: 'AZ', name: 'Arizona' },
-    { code: 'AR', name: 'Arkansas' },
-    { code: 'CA', name: 'California' },
-    { code: 'CO', name: 'Colorado' },
-    { code: 'CT', name: 'Connecticut' },
-    { code: 'DE', name: 'Delaware' },
-    { code: 'DC', name: 'District of Columbia' },
-    { code: 'FL', name: 'Florida' },
-    { code: 'GA', name: 'Georgia' },
-    { code: 'HI', name: 'Hawaii' },
-    { code: 'ID', name: 'Idaho' },
-    { code: 'IL', name: 'Illinois' },
-    { code: 'IN', name: 'Indiana' },
-    { code: 'IA', name: 'Iowa' },
-    { code: 'KS', name: 'Kansas' },
-    { code: 'KY', name: 'Kentucky' },
-    { code: 'LA', name: 'Louisiana' },
-    { code: 'ME', name: 'Maine' },
-    { code: 'MD', name: 'Maryland' },
-    { code: 'MA', name: 'Massachusetts' },
-    { code: 'MI', name: 'Michigan' },
-    { code: 'MN', name: 'Minnesota' },
-    { code: 'MS', name: 'Mississippi' },
-    { code: 'MO', name: 'Missouri' },
-    { code: 'MT', name: 'Montana' },
-    { code: 'NE', name: 'Nebraska' },
-    { code: 'NV', name: 'Nevada' },
-    { code: 'NH', name: 'New Hampshire' },
-    { code: 'NJ', name: 'New Jersey' },
-    { code: 'NM', name: 'New Mexico' },
-    { code: 'NY', name: 'New York' },
-    { code: 'NC', name: 'North Carolina' },
-    { code: 'ND', name: 'North Dakota' },
-    { code: 'OH', name: 'Ohio' },
-    { code: 'OK', name: 'Oklahoma' },
-    { code: 'OR', name: 'Oregon' },
-    { code: 'PA', name: 'Pennsylvania' },
-    { code: 'RI', name: 'Rhode Island' },
-    { code: 'SC', name: 'South Carolina' },
-    { code: 'SD', name: 'South Dakota' },
-    { code: 'TN', name: 'Tennessee' },
-    { code: 'TX', name: 'Texas' },
-    { code: 'UT', name: 'Utah' },
-    { code: 'VT', name: 'Vermont' },
-    { code: 'VA', name: 'Virginia' },
-    { code: 'WA', name: 'Washington' },
-    { code: 'WV', name: 'West Virginia' },
-    { code: 'WI', name: 'Wisconsin' },
-    { code: 'WY', name: 'Wyoming' }
-  ];
 
   /**
    * 从地址字符串中提取州简称
@@ -313,39 +293,11 @@ const FreightBoard = () => {
   };
 
   /**
-   * 从数据中提取在用的州简称
-   */
-  const getStatesInUse = () => {
-    const statesSet = new Set();
-    
-    // 从货源数据提取州
-    loads.forEach(load => {
-      const originState = extractStateFromAddress(load.origin || load.originDisplay);
-      const destState = extractStateFromAddress(load.destination || load.destinationDisplay);
-      if (originState) statesSet.add(originState);
-      if (destState) statesSet.add(destState);
-    });
-    
-    // 从车源数据提取州
-    trucks.forEach(truck => {
-      const originState = extractStateFromAddress(truck.preferredOrigin || truck.location);
-      const destState = extractStateFromAddress(truck.preferredDestination || truck.destination);
-      if (originState) statesSet.add(originState);
-      if (destState) statesSet.add(destState);
-    });
-    
-    // 返回排序后的在用州列表
-    return Array.from(statesSet).sort();
-  };
-
-
-
-  /**
    * 改进的数据筛选和排序函数
    * @param {Array} data - 原始数据数组
    * @returns {Array} 过滤和排序后的数据
    */
-  const filterAndSortData = (data) => {
+  const filterAndSortData = useCallback((data) => {
     let filteredData = data.filter(item => {
       // 搜索关键词匹配 - 支持多个字段
       if (filters.searchQuery) {
@@ -481,7 +433,7 @@ const FreightBoard = () => {
     });
 
     return filteredData;
-  };
+  }, [filters]);
 
   // === 事件处理函数 ===
   /**
@@ -508,8 +460,6 @@ const FreightBoard = () => {
   // 确认发布函数
   const handleConfirmPost = async ({ formData, premium }) => {
     try {
-      console.log('发布的数据:', formData);
-
       // 为数据添加EWID、发布时间和高级功能
       const enhancedData = {
         ...formData,
@@ -523,7 +473,6 @@ const FreightBoard = () => {
       const result = formData.type === 'load' 
         ? await apiServices.landFreight.createLoad(enhancedData)
         : await apiServices.landFreight.createTruck(enhancedData);
-      console.log('发布成功:', result);
 
               if (result.success) {
         const typeName = formData.type === 'load' ? '货源' : '车源';
@@ -540,7 +489,6 @@ const FreightBoard = () => {
             fetchLoads(),
             fetchTrucks()
           ]);
-          console.log('重新加载数据成功:', { loads: loadData.length, trucks: truckData.length });
           setLoads(loadData);
           setTrucks(truckData);
               } catch (reloadError) {
@@ -558,24 +506,14 @@ const FreightBoard = () => {
   };
 
   // === 计算衍生状态 ===
-  const filteredLoads = filterAndSortData(loads);
-  const filteredTrucks = filterAndSortData(trucks);
-  const hasAppliedFilters = filters.searchQuery || filters.origin || filters.destination || 
-                            filters.serviceType || filters.dateFrom || filters.dateTo || 
-                            filters.sortBy !== 'date';
-  const statesInUse = getStatesInUse();
+  const filteredLoads = useMemo(() => filterAndSortData(loads), [loads, filterAndSortData]);
+  const filteredTrucks = useMemo(() => filterAndSortData(trucks), [trucks, filterAndSortData]);
+  const hasAppliedFilters = useMemo(() => 
+    filters.searchQuery || filters.origin || filters.destination || 
+    filters.serviceType || filters.dateFrom || filters.dateTo || 
+    filters.sortBy !== 'date'
+  , [filters]);
   
-  // 调试信息
-  console.log('FreightBoard 筛选状态:', {
-    原始数据: { loads: loads.length, trucks: trucks.length },
-    筛选后: { loads: filteredLoads.length, trucks: filteredTrucks.length },
-    筛选条件: filters,
-    是否有筛选: hasAppliedFilters,
-    在用州数量: statesInUse.length,
-    在用州列表: statesInUse,
-    当前标签: activeTab
-  });
-
   // === 模态框事件处理 ===
   /**
    * 处理发布货源按钮点击

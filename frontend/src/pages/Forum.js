@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Search, 
-  Filter, 
   MessageCircle, 
   ThumbsUp, 
   Eye, 
@@ -13,7 +12,6 @@ import {
   Bookmark,
   Share2,
   TrendingUp,
-  Calendar,
   Hash,
   Award
 } from 'lucide-react';
@@ -24,7 +22,6 @@ const Forum = () => {
 
   const [activeTab, setActiveTab] = useState('hot'); // hot, latest, following
   const [posts, setPosts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -44,7 +41,7 @@ const Forum = () => {
   ];
 
   // 模拟论坛数据
-  const mockPosts = [
+  const mockPosts = useMemo(() => [
     {
       id: 1,
       title: '2024年物流行业发展趋势分析',
@@ -141,15 +138,10 @@ const Forum = () => {
       images: [],
       summary: '求助解读最新跨境电商物流政策，了解对行业的影响。'
     }
-  ];
-
-  // 页面加载时获取数据
-  useEffect(() => {
-    fetchPosts();
-  }, [activeTab]);
+  ], []);
 
   // 获取帖子列表 - API接口
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
       // TODO: 替换为真实API调用
@@ -177,7 +169,12 @@ const Forum = () => {
       console.error('获取帖子列表失败:', error);
       setLoading(false);
     }
-  };
+  }, [activeTab, mockPosts]);
+
+  // 页面加载时获取数据
+  useEffect(() => {
+    fetchPosts();
+  }, [fetchPosts]);
 
   // 搜索帖子 - API接口
   const searchPosts = async () => {

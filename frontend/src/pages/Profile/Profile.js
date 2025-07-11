@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useNotification } from '../../components/common/Notification';
 import { apiLogger } from '../../utils/logger';
@@ -21,13 +21,13 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { apiServices, handleApiError, getAuthToken, apiClient } from '../../utils/apiClient';
+import { apiServices, handleApiError, apiClient } from '../../utils/apiClient';
 import './Profile.css';
 
 const Profile = () => {
   const { section } = useParams();
   const navigate = useNavigate();
-  const { success, error: showError, apiError, confirm } = useNotification();
+  const { success, error: showError, confirm } = useNotification();
   const { loading, withLoading } = useLoading(true);
   
   const [activeTab, setActiveTab] = useState('overview');
@@ -49,11 +49,7 @@ const Profile = () => {
   }, [section]);
 
   // 获取用户信息
-  useEffect(() => {
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     await withLoading(async () => {
       try {
         apiLogger.info('获取用户数据...');
@@ -72,7 +68,11 @@ const Profile = () => {
         showError(errorMsg);
       }
     });
-  };
+  }, [withLoading, showError]);
+
+  useEffect(() => {
+    fetchUserData();
+  }, [fetchUserData]);
 
   const fetchCreditHistory = async () => {
     try {
@@ -177,7 +177,6 @@ const Profile = () => {
     }
 
     try {
-      const token = getAuthToken();
       
       const data = await apiClient.post('/user-management/recharge', {
         amount: amount,

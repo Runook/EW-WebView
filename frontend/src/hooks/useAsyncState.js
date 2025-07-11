@@ -83,7 +83,7 @@ export const useAsyncState = (asyncFunction, immediate = false) => {
  * 简化的异步操作Hook
  * 用于简单的异步操作
  */
-export const useAsync = (asyncFunction, deps = []) => {
+export const useAsync = (asyncFunction) => {
   const [state, setState] = useState({
     data: null,
     loading: false,
@@ -101,7 +101,7 @@ export const useAsync = (asyncFunction, deps = []) => {
       setState({ data: null, loading: false, error });
       throw error;
     }
-  }, deps);
+  }, [asyncFunction]);
 
   return {
     ...state,

@@ -65,8 +65,6 @@ const GoogleMapsAddressInput = ({
   const autocompleteService = useRef(null);
   const placesService = useRef(null);
 
-  const GOOGLE_MAPS_API_KEY = getGoogleMapsApiKey();
-
   // Initialize Google Maps services
   const initializeGoogleMapsServices = () => {
     try {
