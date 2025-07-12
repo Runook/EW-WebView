@@ -86,19 +86,17 @@ const GoogleMapsAddressInput = ({
     }
   };
 
-  useEffect(() => {
-    console.log('🚀 GoogleMapsAddressInput: 开始初始化...');
-    
-    // 运行诊断
-    diagnoseGoogleMapsIssues();
-    
+ useEffect(() => {
+  console.log('🚀 GoogleMapsAddressInput: 开始初始化...');
+  diagnoseGoogleMapsIssues();
+
+  const init = () => {
     if (window.google && window.google.maps) {
       console.log('✅ Google Maps API 已存在');
       initializeGoogleMapsServices();
     } else {
       console.log('📥 正在加载 Google Maps API...');
       setError('正在加载 Google Maps...');
-      
       loadGoogleMapsScript()
         .then(() => {
           console.log('✅ Google Maps API 加载完成');
@@ -109,7 +107,21 @@ const GoogleMapsAddressInput = ({
           setError(`Google Maps 加载失败: ${err.message}`);
         });
     }
-  }, []);
+  };
+
+  // 延迟执行初始化，确保 DOM（input）已渲染完成
+  const delayInit = setTimeout(() => {
+    if (inputRef.current instanceof Element) {
+      init();
+    } else {
+      console.warn('❗ inputRef.current 尚未就绪，跳过初始化');
+    }
+  }, 100);
+
+  return () => clearTimeout(delayInit);
+}, []);
+
+  
 
   // 清理防抖timeout，防止内存泄漏
   useEffect(() => {
