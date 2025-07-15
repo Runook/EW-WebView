@@ -27,60 +27,6 @@ import { useModal, useLoading } from '../hooks';
 import './PlatformPage.css';
 import './FreightBoard.css';
 
-// === 美国州列表常量 ===
-const US_STATES = [
-  { code: 'AL', name: 'Alabama' },
-  { code: 'AK', name: 'Alaska' },
-  { code: 'AZ', name: 'Arizona' },
-  { code: 'AR', name: 'Arkansas' },
-  { code: 'CA', name: 'California' },
-  { code: 'CO', name: 'Colorado' },
-  { code: 'CT', name: 'Connecticut' },
-  { code: 'DE', name: 'Delaware' },
-  { code: 'FL', name: 'Florida' },
-  { code: 'GA', name: 'Georgia' },
-  { code: 'HI', name: 'Hawaii' },
-  { code: 'ID', name: 'Idaho' },
-  { code: 'IL', name: 'Illinois' },
-  { code: 'IN', name: 'Indiana' },
-  { code: 'IA', name: 'Iowa' },
-  { code: 'KS', name: 'Kansas' },
-  { code: 'KY', name: 'Kentucky' },
-  { code: 'LA', name: 'Louisiana' },
-  { code: 'ME', name: 'Maine' },
-  { code: 'MD', name: 'Maryland' },
-  { code: 'MA', name: 'Massachusetts' },
-  { code: 'MI', name: 'Michigan' },
-  { code: 'MN', name: 'Minnesota' },
-  { code: 'MS', name: 'Mississippi' },
-  { code: 'MO', name: 'Missouri' },
-  { code: 'MT', name: 'Montana' },
-  { code: 'NE', name: 'Nebraska' },
-  { code: 'NV', name: 'Nevada' },
-  { code: 'NH', name: 'New Hampshire' },
-  { code: 'NJ', name: 'New Jersey' },
-  { code: 'NM', name: 'New Mexico' },
-  { code: 'NY', name: 'New York' },
-  { code: 'NC', name: 'North Carolina' },
-  { code: 'ND', name: 'North Dakota' },
-  { code: 'OH', name: 'Ohio' },
-  { code: 'OK', name: 'Oklahoma' },
-  { code: 'OR', name: 'Oregon' },
-  { code: 'PA', name: 'Pennsylvania' },
-  { code: 'RI', name: 'Rhode Island' },
-  { code: 'SC', name: 'South Carolina' },
-  { code: 'SD', name: 'South Dakota' },
-  { code: 'TN', name: 'Tennessee' },
-  { code: 'TX', name: 'Texas' },
-  { code: 'UT', name: 'Utah' },
-  { code: 'VT', name: 'Vermont' },
-  { code: 'VA', name: 'Virginia' },
-  { code: 'WA', name: 'Washington' },
-  { code: 'WV', name: 'West Virginia' },
-  { code: 'WI', name: 'Wisconsin' },
-  { code: 'WY', name: 'Wyoming' }
-];
-
 /**
  * 陆运信息平台主组件
  * 
@@ -131,7 +77,6 @@ const FreightBoard = () => {
 
   // 统一的筛选状态管理
   const [filters, setFilters] = useState({
-    searchQuery: '', // 搜索关键词
     origin: '', // 起始地筛选
     destination: '', // 目的地筛选
     serviceType: '', // 服务类型筛选 (FTL/LTL)
@@ -251,7 +196,6 @@ const FreightBoard = () => {
    */
   const resetFilters = () => {
     setFilters({
-      searchQuery: '',
       origin: '',
       destination: '',
       serviceType: '',
@@ -262,68 +206,15 @@ const FreightBoard = () => {
   };
 
   /**
-   * 从地址字符串中提取州简称
-   * @param {string} address - 完整地址
-   * @returns {string} 州简称或空字符串
-   */
-  const extractStateFromAddress = (address) => {
-    if (!address) return '';
-    
-    // 尝试匹配常见的地址格式
-    // 例如: "City, State zipcode" 或 "City, State" 或 "City State"
-    const statePatterns = [
-      /,\s*([A-Z]{2})\s*\d{5}/, // "City, CA 90210"
-      /,\s*([A-Z]{2})\s*$/, // "City, CA"
-      /\s([A-Z]{2})\s*\d{5}/, // "City CA 90210"
-      /\s([A-Z]{2})\s*$/ // "City CA"
-    ];
-    
-    for (const pattern of statePatterns) {
-      const match = address.match(pattern);
-      if (match && match[1]) {
-        const stateCode = match[1].toUpperCase();
-        // 验证是否是有效的州简称
-        if (US_STATES.some(state => state.code === stateCode)) {
-          return stateCode;
-        }
-      }
-    }
-    
-    return '';
-  };
-
-  /**
    * 改进的数据筛选和排序函数
    * @param {Array} data - 原始数据数组
    * @returns {Array} 过滤和排序后的数据
    */
   const filterAndSortData = useCallback((data) => {
     let filteredData = data.filter(item => {
-      // 搜索关键词匹配 - 支持多个字段
-      if (filters.searchQuery) {
-        const searchLower = filters.searchQuery.toLowerCase();
-        const searchFields = [
-          item.origin,
-          item.destination,
-          item.location,
-          item.preferredOrigin,
-          item.preferredDestination,
-          item.equipment,
-          item.commodity,
-          item.company,
-          item.originDisplay,
-          item.destinationDisplay
-        ].filter(Boolean);
-        
-        const matchesSearch = searchFields.some(field => 
-          field.toLowerCase().includes(searchLower)
-        );
-        
-        if (!matchesSearch) return false;
-      }
-
-      // 起始地州筛选 - 基于州简称匹配
+      // 起始地筛选 (城市或邮编)
       if (filters.origin) {
+        const originLower = filters.origin.toLowerCase();
         const originAddresses = [
           item.origin,
           item.location,
@@ -331,26 +222,25 @@ const FreightBoard = () => {
           item.originDisplay
         ].filter(Boolean);
         
-        const originMatches = originAddresses.some(address => {
-          const stateCode = extractStateFromAddress(address);
-          return stateCode === filters.origin;
-        });
+        const originMatches = originAddresses.some(address => 
+          address.toLowerCase().includes(originLower)
+        );
         
         if (!originMatches) return false;
       }
       
-      // 目的地州筛选 - 基于州简称匹配
+      // 目的地筛选 (城市或邮编)
       if (filters.destination) {
+        const destLower = filters.destination.toLowerCase();
         const destAddresses = [
           item.destination,
           item.preferredDestination,
           item.destinationDisplay
         ].filter(Boolean);
         
-        const destMatches = destAddresses.some(address => {
-          const stateCode = extractStateFromAddress(address);
-          return stateCode === filters.destination;
-        });
+        const destMatches = destAddresses.some(address => 
+          address.toLowerCase().includes(destLower)
+        );
         
         if (!destMatches) return false;
       }
@@ -509,7 +399,7 @@ const FreightBoard = () => {
   const filteredLoads = useMemo(() => filterAndSortData(loads), [loads, filterAndSortData]);
   const filteredTrucks = useMemo(() => filterAndSortData(trucks), [trucks, filterAndSortData]);
   const hasAppliedFilters = useMemo(() => 
-    filters.searchQuery || filters.origin || filters.destination || 
+    filters.origin || filters.destination || 
     filters.serviceType || filters.dateFrom || filters.dateTo || 
     filters.sortBy !== 'date'
   , [filters]);
@@ -592,7 +482,7 @@ const FreightBoard = () => {
           <div className="platform-icon">
             <Truck size={48} />
           </div>
-          <h1 className="platform-title">陆运信息平台</h1>
+          <h1 className="platform-title">陆运平台</h1>
           <p className="platform-description">
             货主发布货源信息，承运商发布车源信息，通过智能匹配系统实现高效对接。
           </p>
@@ -642,41 +532,23 @@ const FreightBoard = () => {
 
         {/* 搜索筛选区域 - 重新设计 */}
         <div className="search-filter-section">
-          <div className="search-bar">
-            <Search size={20} />
+          <div className="filters-row">
             <input
               type="text"
-              placeholder="搜索起始地、目的地、州、公司名称..."
-              value={filters.searchQuery}
-              onChange={(e) => updateFilter('searchQuery', e.target.value)}
-            />
-          </div>
-
-          <div className="filters-row">
-            <select 
-              value={filters.origin} 
+              placeholder="输入起始地城市或邮编"
+              value={filters.origin}
               onChange={(e) => updateFilter('origin', e.target.value)}
-            >
-              <option value="">选择起始州</option>
-              {US_STATES.map(state => (
-                <option key={state.code} value={state.code}>
-                  {state.code} - {state.name}
-                </option>
-              ))}
-            </select>
+              className="filter-input"
+            />
 
-            <select 
-              value={filters.destination} 
+            <input
+              type="text"
+              placeholder="输入目的地城市或邮编"
+              value={filters.destination}
               onChange={(e) => updateFilter('destination', e.target.value)}
-            >
-              <option value="">选择目的州</option>
-              {US_STATES.map(state => (
-                <option key={state.code} value={state.code}>
-                  {state.code} - {state.name}
-                </option>
-              ))}
-            </select>
-
+              className="filter-input"
+            />
+            
             <select 
               value={filters.serviceType} 
               onChange={(e) => updateFilter('serviceType', e.target.value)}
@@ -705,7 +577,7 @@ const FreightBoard = () => {
             </div>
 
             <select value={filters.sortBy} onChange={(e) => updateFilter('sortBy', e.target.value)}>
-              <option value="date">按日期排序</option>
+              <option value="date">按取货日期排序</option>
               <option value="publication">按发布时间排序</option>
               <option value="rate">按价格排序</option>
               <option value="weight">按重量排序</option>
@@ -724,21 +596,15 @@ const FreightBoard = () => {
                 找到 {activeTab === 'loads' ? filteredLoads.length : filteredTrucks.length} 条结果
               </span>
               <div className="filter-tags">
-                {filters.searchQuery && (
-                  <span className="filter-tag">
-                    搜索: {filters.searchQuery}
-                    <button onClick={() => updateFilter('searchQuery', '')}>×</button>
-                  </span>
-                )}
                 {filters.origin && (
                   <span className="filter-tag">
-                    起始州: {US_STATES.find(state => state.code === filters.origin)?.name || filters.origin}
+                    起始地: {filters.origin}
                     <button onClick={() => updateFilter('origin', '')}>×</button>
                   </span>
                 )}
                 {filters.destination && (
                   <span className="filter-tag">
-                    目的州: {US_STATES.find(state => state.code === filters.destination)?.name || filters.destination}
+                    目的地: {filters.destination}
                     <button onClick={() => updateFilter('destination', '')}>×</button>
                   </span>
                 )}

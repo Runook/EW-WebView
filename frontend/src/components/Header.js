@@ -71,7 +71,7 @@ const Header = () => {
       label: '陆运服务',
       type: 'dropdown',
       items: [
-        { path: '/freight-board', label: '陆运信息平台' },
+        { path: '/freight-board', label: '陆运平台' },
         { path: '/land-warehouse', label: '仓库查询' }
       ]
     },

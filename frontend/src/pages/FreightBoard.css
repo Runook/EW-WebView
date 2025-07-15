@@ -205,33 +205,6 @@
   margin-bottom: var(--gap-2xl);
 }
 
-.search-bar {
-  display: flex;
-  align-items: center;
-  background: var(--bg-white);
-  border-radius: var(--radius-md);
-  padding: var(--gap-md) var(--gap-lg);
-  margin-bottom: var(--gap-lg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s ease;
-}
-
-.search-bar:focus-within {
-  border-color: var(--primary-green);
-}
-
-.search-bar svg {
-  color: var(--primary-green);
-  margin-right: var(--gap-sm);
-}
-
-.search-bar input {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: var(--font-base);
-}
-
 .filters-row {
   display: flex;
   gap: var(--gap-lg);
@@ -240,7 +213,8 @@
 }
 
 .filters-row select,
-.date-range input {
+.date-range input,
+.filter-input {
   padding: var(--gap-sm) var(--gap-md);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
@@ -672,7 +646,8 @@
   }
 
   .filters-row select, 
-  .date-range input, 
+  .date-range input,
+  .filter-input,
   .reset-btn {
     width: 100%;
     padding: var(--gap-md);
@@ -771,7 +746,8 @@
   .search-filter-section { padding: var(--gap-md); }
   
   .filters-row select, 
-  .date-range input, 
+  .date-range input,
+  .filter-input,
   .reset-btn {
     padding: 0.6rem;
     font-size: var(--font-md);
