@@ -72,7 +72,9 @@ const Header = () => {
       type: 'dropdown',
       items: [
         { path: '/freight-board', label: '陆运平台' },
-        { path: '/land-warehouse', label: '仓库查询' }
+        { id: 'post-load', label: '发布货源信息', type: 'button', className: 'submenu-action' },
+        { id: 'post-truck', label: '发布车源信息', type: 'button', className: 'submenu-action' },
+        { path: '/land-warehouse', label: '仓库查询' },
       ]
     },
     {
@@ -263,16 +265,36 @@ const Header = () => {
                       onMouseEnter={handleDropdownMenuEnter}
                       onMouseLeave={handleDropdownMenuLeave}
                     >
-                      {item.items.map((subItem) => (
-                        <Link
-                          key={subItem.path}
-                          to={subItem.path}
-                          className={`dropdown-item ${isActive(subItem.path) ? 'active' : ''}`}
-                          onClick={() => setActiveDropdown(null)}
-                        >
-                          {subItem.label}
-                        </Link>
-                      ))}
+                      {item.items.map((subItem) => {
+                        if (subItem.type === 'button') {
+                          return (
+                            <button
+                              key={subItem.id}
+                              className={`dropdown-item ${subItem.className || ''}`}
+                              onClick={() => {
+                                if (subItem.id === 'post-load') {
+                                  window.dispatchEvent(new CustomEvent('openPostLoadModal'));
+                                } else if (subItem.id === 'post-truck') {
+                                  window.dispatchEvent(new CustomEvent('openPostTruckModal'));
+                                }
+                                setActiveDropdown(null);
+                              }}
+                            >
+                              {subItem.label}
+                            </button>
+                          );
+                        }
+                        return (
+                          <Link
+                            key={subItem.path}
+                            to={subItem.path}
+                            className={`dropdown-item ${isActive(subItem.path) ? 'active' : ''} ${subItem.className || ''}`}
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            {subItem.label}
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -377,19 +399,40 @@ const Header = () => {
                     
                     {activeDropdown === item.id && (
                       <div className="mobile-dropdown-menu">
-                        {item.items.map((subItem) => (
-                          <Link
-                            key={subItem.path}
-                            to={subItem.path}
-                            className={`mobile-dropdown-item ${isActive(subItem.path) ? 'active' : ''}`}
-                            onClick={() => {
-                              setActiveDropdown(null);
-                              setIsMenuOpen(false);
-                            }}
-                          >
-                            {subItem.label}
-                          </Link>
-                        ))}
+                        {item.items.map((subItem) => {
+                          if (subItem.type === 'button') {
+                            return (
+                              <button
+                                key={subItem.id}
+                                className={`mobile-dropdown-item ${subItem.className || ''}`}
+                                onClick={() => {
+                                  if (subItem.id === 'post-load') {
+                                    window.dispatchEvent(new CustomEvent('openPostLoadModal'));
+                                  } else if (subItem.id === 'post-truck') {
+                                    window.dispatchEvent(new CustomEvent('openPostTruckModal'));
+                                  }
+                                  setActiveDropdown(null);
+                                  setIsMenuOpen(false);
+                                }}
+                              >
+                                {subItem.label}
+                              </button>
+                            );
+                          }
+                          return (
+                            <Link
+                              key={subItem.path}
+                              to={subItem.path}
+                              className={`mobile-dropdown-item ${isActive(subItem.path) ? 'active' : ''} ${subItem.className || ''}`}
+                              onClick={() => {
+                                setActiveDropdown(null);
+                                setIsMenuOpen(false);
+                              }}
+                            >
+                              {subItem.label}
+                            </Link>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

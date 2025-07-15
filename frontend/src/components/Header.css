@@ -198,6 +198,23 @@
   color: var(--primary-green);
 }
 
+.submenu-action {
+  font-size: 0.9em !important;
+  padding-left: 3rem !important;
+  position: relative;
+  color: #555;
+}
+
+.submenu-action::before {
+  content: '↳';
+  position: absolute;
+  left: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary-green);
+  font-weight: bold;
+}
+
 /* Mobile Navigation Dropdown */
 .mobile-nav-dropdown {
   width: 100%;
@@ -249,6 +266,10 @@
 
 .mobile-dropdown-item:last-child {
   border-bottom: none;
+}
+
+.mobile-dropdown-item.submenu-action {
+  padding-left: 3.5rem !important;
 }
 
 /* Header Actions */

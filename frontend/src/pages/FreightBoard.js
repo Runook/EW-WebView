@@ -408,24 +408,34 @@ const FreightBoard = () => {
   /**
    * 处理发布货源按钮点击
    */
-  const handlePostLoadClick = () => {
+  const handlePostLoadClick = useCallback(() => {
     if (!isAuthenticated) {
       showError('请先登录再发布货源信息');
       return;
     }
     postLoadModal.open();
-  };
+  }, [isAuthenticated, postLoadModal, showError]);
 
   /**
    * 处理发布车源按钮点击
    */
-  const handlePostTruckClick = () => {
+  const handlePostTruckClick = useCallback(() => {
     if (!isAuthenticated) {
       showError('请先登录再发布车源信息');
       return;
     }
     postTruckModal.open();
-  };
+  }, [isAuthenticated, postTruckModal, showError]);
+
+  useEffect(() => {
+    window.addEventListener('openPostLoadModal', handlePostLoadClick);
+    window.addEventListener('openPostTruckModal', handlePostTruckClick);
+
+    return () => {
+      window.removeEventListener('openPostLoadModal', handlePostLoadClick);
+      window.removeEventListener('openPostTruckModal', handlePostTruckClick);
+    };
+  }, [handlePostLoadClick, handlePostTruckClick]);
 
   /**
    * 处理详情模态框打开
@@ -513,22 +523,7 @@ const FreightBoard = () => {
         </div>
 
         {/* Post Buttons */}
-        <div className="post-actions">
-          <button 
-            className={`btn post-btn ${activeTab === 'loads' ? 'btn-primary active-post' : 'btn-secondary'}`}
-            onClick={handlePostLoadClick}
-          >
-            <Plus size={18} />
-            发布货源信息
-          </button>
-          <button 
-            className={`btn post-btn ${activeTab === 'trucks' ? 'btn-primary active-post' : 'btn-secondary'}`}
-            onClick={handlePostTruckClick}
-          >
-            <Plus size={18} />
-            发布车源信息
-          </button>
-        </div>
+        
 
         {/* 搜索筛选区域 - 重新设计 */}
         <div className="search-filter-section">
