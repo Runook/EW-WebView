@@ -1170,18 +1170,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                       />
                     </div>
 
-                    <div className="form-group">
-                      <label>
-                        <Hash size={16} />
-                        初始单号 (Shipper)
-                      </label>
-                      <input
-                        type="text"
-                        value={item.shippingNumber}
-                        onChange={(e) => updateCargoItem(item.id, 'shippingNumber', e.target.value)}
-                        placeholder="如：SH123456789"
-                      />
-                    </div>
+  
                   </div>
 
                   <div className="form-grid dimensions-grid">
@@ -1287,6 +1276,18 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
                           <span className="unit-label">cm</span>
                         </div>
                       </div>
+                    </div>
+                  <div className="form-group">
+                      <label>
+                        <Hash size={16} />
+                        初始单号 (Shipper)
+                      </label>
+                      <input
+                        type="text"
+                        value={item.shippingNumber}
+                        onChange={(e) => updateCargoItem(item.id, 'shippingNumber', e.target.value)}
+                        placeholder="如：SH123456789"
+                      />
                     </div>
 
 

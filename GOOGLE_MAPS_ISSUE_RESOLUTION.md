@@ -116,7 +116,7 @@ echo "REACT_APP_GOOGLE_MAPS_API_KEY=你的API_KEY" > frontend/.env
 
 ## 验证修复效果
 
-### 在陆运平台测试
+### 在搜索货源车源测试
 1. 访问陆运信息平台页面
 2. 点击"发布货源"按钮
 3. 在起点和终点输入框中输入地址

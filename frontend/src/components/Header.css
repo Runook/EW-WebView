@@ -190,6 +190,11 @@
   font-size: var(--font-size-sm);
   font-weight: 500;
   white-space: nowrap;
+  /* Reset button styles */
+  background-color: transparent;
+  border: none;
+  text-align: left;
+  cursor: pointer;
 }
 
 .dropdown-item:hover,
@@ -202,7 +207,6 @@
   font-size: 0.9em !important;
   padding-left: 3rem !important;
   position: relative;
-  color: #555;
 }
 
 .submenu-action::before {

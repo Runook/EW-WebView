@@ -492,7 +492,7 @@ const FreightBoard = () => {
           <div className="platform-icon">
             <Truck size={48} />
           </div>
-          <h1 className="platform-title">陆运平台</h1>
+          <h1 className="platform-title">搜索货源车源</h1>
           <p className="platform-description">
             货主发布货源信息，承运商发布车源信息，通过智能匹配系统实现高效对接。
           </p>

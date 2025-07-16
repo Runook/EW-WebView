@@ -120,7 +120,7 @@ const Home = () => {
                 </p>
                 <div className="hero-actions">
                   <Link to="/freight-board" className="btn btn-primary">
-                    陆运平台
+                    搜索货源车源
                     <ArrowRight size={20} />
                   </Link>
                   <Link to="/services" className="btn btn-secondary">
