@@ -212,6 +212,137 @@
   flex-wrap: wrap;
 }
 
+.filter-dropdown-group {
+  position: relative;
+}
+
+.filter-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.dropdown-input {
+  cursor: pointer;
+  padding-right: 30px; /* Space for arrow */
+}
+
+.dropdown-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.dropdown-arrow.open {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.origin-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: var(--gap-sm);
+  z-index: 100;
+  width: 250px;
+  margin-top: var(--gap-xs);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: var(--gap-md);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: var(--bg-light);
+}
+
+.manual-input-item {
+  display: flex;
+  align-items: center;
+  padding: var(--gap-sm);
+  border-top: 1px solid var(--border-color);
+  margin-top: var(--gap-sm);
+}
+
+.manual-input-item input {
+  width: 100%;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: var(--gap-sm);
+  outline: none;
+}
+.manual-input-item input:focus {
+  border-color: var(--primary-green);
+}
+
+.manual-search-btn {
+    background: transparent;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+.manual-search-btn:hover {
+    color: var(--primary-green);
+}
+
+.filter-input-group .filter-input {
+  padding-right: 40px; /* Make space for the button */
+}
+
+.locate-me-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.locate-me-btn:hover {
+  background-color: var(--bg-light);
+  color: var(--primary-green);
+}
+
+.locate-me-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .filters-row select,
 .date-range input,
 .filter-input {

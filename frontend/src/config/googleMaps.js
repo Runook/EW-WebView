@@ -61,6 +61,65 @@ export const validateApiKey = () => {
   return true;
 };
 
+// 新增：反向地理编码函数
+export const reverseGeocode = (lat, lng) => {
+  return new Promise((resolve, reject) => {
+    if (!window.google || !window.google.maps?.Geocoder) {
+      return reject(new Error('Google Maps Geocoder not available.'));
+    }
+    const geocoder = new window.google.maps.Geocoder();
+    const latlng = { lat, lng };
+    geocoder.geocode({ location: latlng }, (results, status) => {
+      if (status === 'OK') {
+        if (results[0]) {
+          const address = results[0].formatted_address;
+          const postalCodeComponent = results[0].address_components.find(c => c.types.includes('postal_code'));
+          const cityComponent = results[0].address_components.find(c => c.types.includes('locality'));
+          const locationName = cityComponent?.long_name || postalCodeComponent?.long_name || address.split(',')[0];
+          resolve({ address, locationName });
+        } else {
+          reject(new Error('No results found for reverse geocoding.'));
+        }
+      } else {
+        reject(new Error(`Geocoder failed due to: ${status}`));
+      }
+    });
+  });
+};
+
+// 新增：地址转码函数 (正向)
+export const geocodeAddress = (address) => {
+  return new Promise((resolve, reject) => {
+    if (!window.google || !window.google.maps?.Geocoder) {
+      return reject(new Error('Google Maps Geocoder not available.'));
+    }
+    const geocoder = new window.google.maps.Geocoder();
+    // 添加区域偏向，提高美国地址的准确性
+    geocoder.geocode({ address: address, componentRestrictions: { country: 'us' } }, (results, status) => {
+      if (status === 'OK' && results[0]) {
+        const location = results[0].geometry.location;
+        resolve({ lat: location.lat(), lng: location.lng(), formattedAddress: results[0].formatted_address });
+      } else {
+        reject(new Error(`Geocode was not successful for the following reason: ${status}`));
+      }
+    });
+  });
+};
+
+
+// 新增：计算两点之间距离的函数
+export const calculateDistanceBetweenPoints = (point1, point2) => {
+  if (!window.google || !window.google.maps?.geometry?.spherical) {
+    console.warn('Google Maps Geometry library not loaded, cannot calculate distance.');
+    return null;
+  }
+  const from = new window.google.maps.LatLng(point1.lat, point1.lng);
+  const to = new window.google.maps.LatLng(point2.lat, point2.lng);
+  const distanceInMeters = window.google.maps.geometry.spherical.computeDistanceBetween(from, to);
+  const distanceInMiles = distanceInMeters * 0.000621371;
+  return distanceInMiles;
+};
+
 // Google Maps API 加载函数
 export const loadGoogleMapsScript = () => {
   return new Promise((resolve, reject) => {

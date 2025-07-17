@@ -42,6 +42,7 @@ import './PostLoadModal.css';
 import { GoogleMapsAddressInput, GoogleMapsRoute, calculateDistance, geocodeAddress } from './GoogleMapsAddressInput';
 import { useForm, useToggle, useConfirmDialog, useAsyncState } from '../hooks';
 import { Modal, Button } from './common';
+import { geocodeAddress as geocodeUtil } from '../config/googleMaps'; // Corrected path
 
 const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
   // 表单初始数据
@@ -107,7 +108,9 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     setFormData, 
     handleInputChange, 
     resetForm,
-    setFieldValue 
+    setFieldValue, 
+    isSubmitting,
+    setIsSubmitting
   } = useForm(initialFormData);
 
   const [showRouteModal, toggleRouteModal] = useToggle(false);
@@ -544,65 +547,40 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!validateFormData()) {
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      // 验证表单
-      const validationError = validateFormData();
-      if (validationError) {
-        alert(validationError);
-        return;
-      }
+      // Geocode origin and destination addresses
+      const [originCoords, destinationCoords] = await Promise.all([
+        geocodeUtil(formData.origin).catch(err => {
+          console.error("Geocoding origin failed:", err);
+          return null; // Don't block submission if one fails
+        }),
+        geocodeUtil(formData.destination).catch(err => {
+          console.error("Geocoding destination failed:", err);
+          return null;
+        })
+      ]);
 
-      // 自动处理地址和距离计算 - 🚨 这部分逻辑很复杂，是否真的需要？
-      console.log('开始处理地址和距离计算...');
-      
-      let originData = selectedPlaces.origin;
-      let destinationData = selectedPlaces.destination;
-      let calculatedDistance = distanceInfo;
+      const submissionData = {
+        ...formData,
+        origin_lat: originCoords ? originCoords.lat : null,
+        origin_lng: originCoords ? originCoords.lng : null,
+        origin_formatted_address: originCoords ? originCoords.formattedAddress : formData.origin,
+        destination_lat: destinationCoords ? destinationCoords.lat : null,
+        destination_lng: destinationCoords ? destinationCoords.lng : null,
+        destination_formatted_address: destinationCoords ? destinationCoords.formattedAddress : formData.destination,
+      };
 
-      // 如果没有从建议中选择地址，则进行地理编码
-      if (!originData && formData.origin) {
-        console.log('地理编码起点地址:', formData.origin);
-        originData = await geocodeAddress(formData.origin);
-      }
-
-      if (!destinationData && formData.destination) {
-        console.log('地理编码终点地址:', formData.destination);
-        destinationData = await geocodeAddress(formData.destination);
-      }
-
-      // 如果还没有距离信息，则计算距离
-      if (!calculatedDistance && originData && destinationData) {
-        console.log('计算两地距离...');
-        calculatedDistance = await calculateDistance(
-          originData.fullAddress || originData.displayAddress || formData.origin,
-          destinationData.fullAddress || destinationData.displayAddress || formData.destination
-        );
-      }
-
-      console.log('地址和距离处理完成:', { originData, destinationData, calculatedDistance });
-
-      // 处理提交数据
-      await executeSubmit({ formData, originData, destinationData, calculatedDistance });
-      resetForm();
-      onClose();
-      
+      await onSubmit(submissionData);
     } catch (error) {
-      console.error('处理地址或距离时出错:', error);
-      
-      // 使用确认对话框而不是复杂的状态管理
-      const shouldContinue = await showConfirm({
-        title: '地址处理失败',
-        message: '地址解析或距离计算失败，是否继续发布？（将使用原始地址信息）',
-        confirmText: '继续发布',
-        cancelText: '取消',
-        variant: 'warning'
-      });
-      
-      if (shouldContinue) {
-        await processFormSubmission(selectedPlaces.origin, selectedPlaces.destination, distanceInfo);
-        resetForm();
-        onClose();
-      }
+      console.error('Submission failed after geocoding:', error);
+      // The onSubmit function should handle error notifications
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

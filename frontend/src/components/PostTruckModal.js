@@ -5,6 +5,7 @@ import { useForm, createValidationRules, commonValidations } from '../hooks';
 import { Button, Modal } from './common';
 import { useNotification } from './common/Notification';
 import { apiLogger } from '../utils/logger';
+import { geocodeAddress as geocodeUtil } from '../config/googleMaps';
 
 const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
   // 通知和日志系统
@@ -104,9 +105,16 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
       apiLogger.debug('开始处理车源信息发布');
+
+      // Geocode addresses before submitting
+      const [originCoords, destinationCoords, currentLocationCoords] = await Promise.all([
+        geocodeUtil(formData.preferredOrigin).catch(err => { console.error("Geocoding preferredOrigin failed:", err); return null; }),
+        geocodeUtil(formData.preferredDestination).catch(err => { console.error("Geocoding preferredDestination failed:", err); return null; }),
+        geocodeUtil(formData.currentLocation).catch(err => { console.error("Geocoding currentLocation failed:", err); return null; })
+      ]);
       
       // 转换为后端API期望的格式
       const submitData = {
@@ -124,7 +132,17 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
         availableDate: formData.availableDate || new Date().toISOString().split('T')[0],
         contactEmail: formData.contactEmail || '',
         companyName: formData.companyName || '',
-        notes: formData.notes || ''
+        notes: formData.notes || '',
+        // Add coordinates
+        origin_lat: originCoords ? originCoords.lat : null,
+        origin_lng: originCoords ? originCoords.lng : null,
+        origin_formatted_address: originCoords ? originCoords.formattedAddress : formData.preferredOrigin,
+        destination_lat: destinationCoords ? destinationCoords.lat : null,
+        destination_lng: destinationCoords ? destinationCoords.lng : null,
+        destination_formatted_address: destinationCoords ? destinationCoords.formattedAddress : formData.preferredDestination,
+        current_location_lat: currentLocationCoords ? currentLocationCoords.lat : null,
+        current_location_lng: currentLocationCoords ? currentLocationCoords.lng : null,
+        current_location_formatted_address: currentLocationCoords ? currentLocationCoords.formattedAddress : formData.currentLocation,
       };
 
       await onSubmit(submitData);

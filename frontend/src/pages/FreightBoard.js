@@ -12,7 +12,11 @@ import {
   Clock,
   Scale,
   RotateCcw,
-  Info
+  Info,
+  MapPin, // Import MapPin icon
+  Navigation, // Import Navigation icon
+  ChevronDown, // Import ChevronDown icon
+  Globe // Import Globe icon
 } from 'lucide-react';
 // import { useLanguage } from '../contexts/LanguageContext';
 import PostLoadModal from '../components/PostLoadModal';
@@ -26,6 +30,8 @@ import { apiLogger } from '../utils/logger';
 import { useModal, useLoading } from '../hooks';
 import './PlatformPage.css';
 import './FreightBoard.css';
+import { loadGoogleMapsScript, reverseGeocode, calculateDistanceBetweenPoints, geocodeAddress } from '../config/googleMaps';
+import { getCoordsFromZip, extractZipCode } from '../utils/zipCodeService'; // Import zip code helpers
 
 /**
  * 陆运信息平台主组件
@@ -74,6 +80,10 @@ const FreightBoard = () => {
   // 数据状态
   const [loads, setLoads] = useState([]); // 货源列表
   const [trucks, setTrucks] = useState([]); // 车源列表
+  const [filterOriginCoords, setFilterOriginCoords] = useState(null); // The coordinates of the filter's starting point.
+  const [isLocating, setIsLocating] = useState(false);
+  const [originDropdownOpen, setOriginDropdownOpen] = useState(false);
+  const [manualOrigin, setManualOrigin] = useState('');
 
   // 统一的筛选状态管理
   const [filters, setFilters] = useState({
@@ -82,7 +92,8 @@ const FreightBoard = () => {
     serviceType: '', // 服务类型筛选 (FTL/LTL)
     dateFrom: '', // 开始日期筛选
     dateTo: '', // 结束日期筛选
-    sortBy: 'date' // 排序方式
+    sortBy: 'date', // 排序方式
+    distance: '' // New distance filter
   });
 
   const { isAuthenticated } = useAuth();
@@ -92,6 +103,8 @@ const FreightBoard = () => {
     const saved = localStorage.getItem('ewidCounter');
     return saved ? parseInt(saved) : 1;
   });
+
+  // REMOVED the complex enrichDataWithCoordinates function
 
   // 生成EWID单号 - 从EW000000001开始的顺序编号
   const generateEWID = () => {
@@ -154,6 +167,41 @@ const FreightBoard = () => {
     }
   }, [apiError]);
 
+  useEffect(() => {
+    loadGoogleMapsScript().catch(error => {
+      showError("无法加载Google地图服务，部分功能可能受限。");
+      console.error("Google Maps Script Error:", error);
+    });
+  }, [showError]);
+  
+  const handleLocateMe = useCallback(async () => {
+    if (!navigator.geolocation) {
+      showError("您的浏览器不支持地理位置功能。");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const { latitude, longitude } = position.coords;
+      const location = { lat: latitude, lng: longitude };
+      setFilterOriginCoords(location); // Set the coordinates for filtering
+      try {
+        const { locationName } = await reverseGeocode(latitude, longitude);
+        updateFilter('origin', locationName);
+        setManualOrigin(locationName);
+        success(`已定位到: ${locationName}`);
+      } catch (error) {
+        showError("无法获取地址信息，请手动输入。");
+        console.error("Reverse geocoding error:", error);
+      } finally {
+        setIsLocating(false);
+      }
+    }, (error) => {
+      showError("无法获取您的位置，请检查权限设置。");
+      console.error("Geolocation error:", error);
+      setIsLocating(false);
+    });
+  }, [showError, success]);
+
   // === 组件初始化 ===
   /**
    * 组件初始化 - 加载货源和车源数据
@@ -163,7 +211,7 @@ const FreightBoard = () => {
       await withLoading(async () => {
         try {
           setError(null);
-          // 并行加载货源和车源数据
+          // 并行加载货源和车源数据 - No longer enriching here
           const [loadData, truckData] = await Promise.all([
             fetchLoads(),
             fetchTrucks()
@@ -210,8 +258,29 @@ const FreightBoard = () => {
    * @param {Array} data - 原始数据数组
    * @returns {Array} 过滤和排序后的数据
    */
-  const filterAndSortData = useCallback((data) => {
+  const filterAndSortData = useCallback((data, dataType) => {
     let filteredData = data.filter(item => {
+      // Distance filter - Simplified and more robust logic
+      if (filterOriginCoords && filters.distance) {
+        // Step 1: Get the address string from the item
+        const address = dataType === 'loads' ? item.origin : (item.currentLocation || item.preferredOrigin);
+        if (!address) return false;
+
+        // Step 2: Extract zip code from the address
+        const zip = extractZipCode(address);
+        if (!zip) return false;
+
+        // Step 3: Get coordinates from our fast local service
+        const itemCoords = getCoordsFromZip(zip);
+        if (!itemCoords) return false;
+
+        // Step 4: Calculate distance and filter
+        const distance = calculateDistanceBetweenPoints(filterOriginCoords, itemCoords);
+        if (distance === null || distance > parseFloat(filters.distance)) {
+          return false;
+        }
+      }
+      
       // 起始地筛选 (城市或邮编)
       if (filters.origin) {
         const originLower = filters.origin.toLowerCase();
@@ -323,7 +392,7 @@ const FreightBoard = () => {
     });
 
     return filteredData;
-  }, [filters]);
+  }, [filters, filterOriginCoords]);
 
   // === 事件处理函数 ===
   /**
@@ -396,15 +465,68 @@ const FreightBoard = () => {
   };
 
   // === 计算衍生状态 ===
-  const filteredLoads = useMemo(() => filterAndSortData(loads), [loads, filterAndSortData]);
-  const filteredTrucks = useMemo(() => filterAndSortData(trucks), [trucks, filterAndSortData]);
+  const filteredLoads = useMemo(() => filterAndSortData(loads, 'loads'), [loads, filterAndSortData]);
+  const filteredTrucks = useMemo(() => filterAndSortData(trucks, 'trucks'), [trucks, filterAndSortData]);
   const hasAppliedFilters = useMemo(() => 
     filters.origin || filters.destination || 
     filters.serviceType || filters.dateFrom || filters.dateTo || 
-    filters.sortBy !== 'date'
+    filters.sortBy !== 'date' || filters.distance
   , [filters]);
-  
-  // === 模态框事件处理 ===
+
+  const handleOriginSelect = async (type) => {
+    setOriginDropdownOpen(false);
+    if (type === 'current') {
+      if (!navigator.geolocation) {
+        showError("您的浏览器不支持地理位置功能。");
+        return;
+      }
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        const location = { lat: latitude, lng: longitude };
+        setFilterOriginCoords(location); // Set the coordinates for filtering
+        try {
+          const { locationName } = await reverseGeocode(latitude, longitude);
+          updateFilter('origin', locationName);
+          setManualOrigin(locationName);
+          success(`已定位到: ${locationName}`);
+        } catch (error) {
+          showError("无法获取地址信息，请手动输入。");
+        } finally {
+          setIsLocating(false);
+        }
+      }, (error) => {
+        showError("无法获取您的位置，请检查并开启浏览器定位权限。");
+        setIsLocating(false);
+      });
+    } else if (type === 'all') {
+      updateFilter('origin', '');
+      setManualOrigin('');
+      setFilterOriginCoords(null); // Clear the filter coordinates
+      updateFilter('distance', '');
+    }
+  };
+
+  const handleManualOriginSearch = async () => {
+    setOriginDropdownOpen(false);
+    if (!manualOrigin) {
+      updateFilter('origin', '');
+      setFilterOriginCoords(null);
+      return;
+    }
+
+    updateFilter('origin', manualOrigin);
+    try {
+      // Geocode the manually entered address to get its coordinates for filtering
+      const coords = await geocodeAddress(manualOrigin);
+      setFilterOriginCoords(coords);
+      success(`已将起点设置为: ${coords.formattedAddress || manualOrigin}`);
+    } catch (error) {
+      showError(`无法找到地址 "${manualOrigin}" 的坐标。`);
+      setFilterOriginCoords(null); // Clear coords if geocoding fails
+    }
+  };
+
   /**
    * 处理发布货源按钮点击
    */
@@ -528,13 +650,56 @@ const FreightBoard = () => {
         {/* 搜索筛选区域 - 重新设计 */}
         <div className="search-filter-section">
           <div className="filters-row">
-            <input
-              type="text"
-              placeholder="输入起始地城市或邮编"
-              value={filters.origin}
-              onChange={(e) => updateFilter('origin', e.target.value)}
+            <div className="filter-dropdown-group">
+              <div className="filter-input-group" onClick={() => setOriginDropdownOpen(prev => !prev)}>
+                <input
+                  type="text"
+                  placeholder="选择或输入起始地"
+                  value={filters.origin || '全部地址'}
+                  readOnly
+                  className="filter-input dropdown-input"
+                />
+                <ChevronDown size={16} className={`dropdown-arrow ${originDropdownOpen ? 'open' : ''}`} />
+              </div>
+              {originDropdownOpen && (
+                <div className="origin-dropdown">
+                  <div className="dropdown-item" onClick={() => handleOriginSelect('current')}>
+                    <MapPin size={16} />
+                    当前地址
+                  </div>
+                  <div className="dropdown-item" onClick={() => handleOriginSelect('all')}>
+                    <Globe size={16} />
+                    全部地址
+                  </div>
+                  <div className="manual-input-item">
+                    <input
+                      type="text"
+                      placeholder="输入城市或邮编后按回车"
+                      value={manualOrigin}
+                      onChange={(e) => setManualOrigin(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleManualOriginSearch()}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                     <button onClick={handleManualOriginSearch} className="manual-search-btn">
+                      <Search size={16} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <select
+              value={filters.distance}
+              onChange={(e) => updateFilter('distance', e.target.value)}
+              disabled={!filterOriginCoords}
               className="filter-input"
-            />
+            >
+              <option value="">距离我</option>
+              <option value="50">50 mi</option>
+              <option value="100">100 mi</option>
+              <option value="250">250 mi</option>
+              <option value="500">500 mi</option>
+            </select>
 
             <input
               type="text"
@@ -626,6 +791,12 @@ const FreightBoard = () => {
                       filters.sortBy === 'weight' ? '重量' : '日期'
                     }
                     <button onClick={() => updateFilter('sortBy', 'date')}>×</button>
+                  </span>
+                )}
+                {filters.distance && (
+                  <span className="filter-tag">
+                    距离: {filters.distance} mi
+                    <button onClick={() => updateFilter('distance', '')}>×</button>
                   </span>
                 )}
               </div>
