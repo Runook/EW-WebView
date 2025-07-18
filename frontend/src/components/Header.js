@@ -120,7 +120,9 @@ const Header = () => {
       label: '物流工具',
       type: 'dropdown',
       items: [
-        { path: '/freight-calculator', label: '货运计算器' }
+        { path: '/freight-calculator', label: '货运计算器' },
+        { path: '/ewstyle', label: 'EW格式转换' }
+        
       ]
     },
     {

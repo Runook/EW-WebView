@@ -1,0 +1,44 @@
+/* ...existing code... */
+.ewstyle-container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #eee;
+}
+.ewstyle-input {
+  width: 100%;
+  font-size: 1.1em;
+  margin-bottom: 12px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+.ewstyle-btn {
+  border-radius: 6px;
+  padding: 8px 24px;
+  font-size: 1em;
+  cursor: pointer;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  color: #222;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.ewstyle-btn:hover,
+.ewstyle-btn:focus {
+  background: #f5f5f5;
+  color: #222;
+  border-color: #bdbdbd;
+}
+.ewstyle-result {
+  display: flex;
+  gap: 32px;
+  margin-top: 16px;
+}
+.ewstyle-result pre {
+  background: #f8f8f8;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 1em;
+}

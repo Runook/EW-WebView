@@ -20,6 +20,7 @@ import LogisticsRental from './pages/LogisticsRental';
 import Forum from './pages/Forum';
 import FreightCalculator from './pages/FreightCalculator';
 import Profile from './pages/Profile/Profile';
+import Ewstyle from './pages/Ewstyle';
 import './App.css';
 
 // 导入 Google Maps 诊断功能
@@ -102,7 +103,8 @@ function App() {
               
               {/* 物流工具 */}
               <Route path="/freight-calculator" element={<FreightCalculator />} />
-              
+              <Route path="/ewstyle" element={<Ewstyle />} />
+
               {/* 用户管理 */}
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/:section" element={<Profile />} />
