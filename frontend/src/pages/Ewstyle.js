@@ -53,7 +53,7 @@ export default function Ewstyle() {
       const lin = Math.ceil(l / 2.54);
       const win = Math.ceil(w / 2.54);
       const hin = Math.ceil(h / 2.54);
-      col2Arr.push(`${p}p ${lin}*${win}*${hin}`);
+      col2Arr.push(`${lin}*${win}*${hin} ${p}p`);
     });
 
     setResult({
