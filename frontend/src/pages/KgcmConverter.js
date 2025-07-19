@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './Ewstyle.css';
+import './KgcmConverter.css';
 
 function groupRows(rows) {
   // 判断是否有完全相同的行
@@ -14,7 +14,7 @@ function groupRows(rows) {
   }));
 }
 
-export default function Ewstyle() {
+export default function KgcmConverter() {
   const [input, setInput] = useState('');
   const [result, setResult] = useState({ col1: '', col2: '' });
 
@@ -63,26 +63,33 @@ export default function Ewstyle() {
   };
 
   return (
-    <div className="ewstyle-container">
-      <h2>EW格式转换工具</h2>
+    <div className="kgcm-converter-container">
+      <h2>重量体积换算</h2>
       <textarea
         rows={8}
-        placeholder="每行输入：kg cm cm cm"
+      placeholder={`[可复制粘贴]
+每行输入重量kg 长cm 宽cm 高cm：
+例如：
+50 30 20 10
+100 40 30 20
+40 20 15 10
+...
+`}
         value={input}
         onChange={e => setInput(e.target.value)}
-        className="ewstyle-input"
+        className="kgcm-converter-input"
       />
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-        <button onClick={handleConvert} className="btn ewstyle-btn">转换</button>
-        <button onClick={() => { setInput(''); setResult({ col1: '', col2: '' }); }} className="btn ewstyle-btn">重置</button>
+        <button onClick={handleConvert} className="btn kgcm-converter-btn">转换</button>
+        <button onClick={() => { setInput(''); setResult({ col1: '', col2: '' }); }} className="btn kgcm-converter-btn">重置</button>
       </div>
-      <div className="ewstyle-result">
+      <div className="kgcm-converter-result">
         <div>
-          <h4>独立列1：</h4>
+          <h4>lbs</h4>
           <pre>{result.col1}</pre>
         </div>
         <div>
-          <h4>独立列2：</h4>
+          <h4>inches</h4>
           <pre>{result.col2}</pre>
         </div>
       </div>

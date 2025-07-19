@@ -50,11 +50,11 @@ const Footer = () => {
             <div className="footer-contact">
               <div className="contact-item">
                 <Phone size={16} />
-                <span>+1 (718) 386-7888</span>
+                <span>+1 (718) 659-9888</span>
               </div>
               <div className="contact-item">
                 <Mail size={16} />
-                <span>info@ewlogistics.com</span>
+                <span>ltl.48ew@gmail.com</span>
               </div>
               <div className="contact-item">
                 <MapPin size={16} />
@@ -103,14 +103,14 @@ const Footer = () => {
                 </li>
               ))}
             </ul>
-            <div className="footer-certifications">
+            {/* <div className="footer-certifications">
               <p className="certification-title">运营许可证</p>
               <div className="certifications">
                 <span>MC #: 1094635</span>
                 <span>Broker MC #: 1281963</span>
                 <span>UIIA SCAC: EWLV</span>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
