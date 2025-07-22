@@ -84,42 +84,45 @@ const LogisticsRental = () => {
   const mockRentalItems = useMemo(() => ([
     {
       id: 1,
-      title: '重型冷藏车出租',
+      title: '重型冷藏车出售',
       category: '卡车',
       subCategory: '冷藏车',
-      location: '洛杉矶',
-      price: '$2500/月',
-      condition: '9成新',
-      brand: '沃尔沃',
-      description: '2020年沃尔沃重型冷藏车，温度控制-18℃至+25℃，适合生鲜配送',
+      location: '纽约',
+      price: '$39000',
+      condition: '3800小时',
+      brand: 'Utility',
+      description: '2020年 Utility Reefer 53\' x 102\' x 13\'6\' 重型冷藏车，温度控制-18℃至+25℃，运行小时3800小时， Vin:1uyvs2534l6815402',
       specifications: {
         year: '2020年',
-        make: '沃尔沃',
-        model: 'VNL 760',
-        mileage: '15万英里',
-        engine: '沃尔沃D13发动机',
-        transmission: '自动变速箱',
+        make: 'Utility',
+        model: 'Reefer',
+        mileage: '3800',
+        engine: '无发动机',
+        transmission: '无变速箱',
         temperatureRange: '-18℃至+25℃'
       },
       images: [
-        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&h=600&fit=crop'
+        '/rental1.jpg',
+        '/rental2.jpg',
+        '/rental3.jpg',
+        '/rental4.jpg',
+        '/rental5.jpg',
+        '/rental6.jpg',
+        '/rental7.jpg'
       ],
       coverImageIndex: 0,
       publishDate: '2024-01-10',
       posted: '2天前',
       views: 125,
       contact: {
-        name: '张经理',
-        company: '冷链物流公司',
-        phone: '(123) 456-7890'
+        name: '陈先生',
+        company: 'EW Logistics',
+        phone: '(646)-529-8575'
       }
     },
     {
       id: 2,
-      title: '大型仓库出租',
+      title: '长岛office出租',
       category: '仓库/物流园区',
       subCategory: '常温储存',
       location: '纽约',
@@ -135,49 +138,56 @@ const LogisticsRental = () => {
         services: ['常温储存', '拣选包装', '短期储存']
       },
       images: [
-        'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&h=600&fit=crop'
+        '/office1.jpg',
+        '/office2.jpg',
+        '/office3.jpg',
+        '/office4.jpg',
+        '/office5.jpg',
+        '/office6.jpg',
+        '/office7.jpg',
+        '/office8.jpg',
+        '/office9.jpg'
       ],
       coverImageIndex: 0,
       publishDate: '2024-01-11',
       posted: '1天前',
       views: 89,
       contact: {
-        name: '李总',
-        company: '仓储管理公司',
-        phone: '(234) 567-8901'
+        name: '翁总',
+        company: 'EW Logistics',
+        phone: '(646)-529-8575'
       }
     },
     {
       id: 3,
-      title: '叉车短期租赁',
+      title: '叉车出售',
       category: '叉车',
       subCategory: '电动叉车',
-      location: '旧金山',
-      price: '$150/天',
+      location: '纽约',
+      price: '$电议',
       condition: '8成新',
-      brand: '丰田',
-      description: '丰田电动叉车，载重2吨，适合仓库作业',
+      brand: 'Yale',
+      description: 'Yale叉车，载重2吨，适合仓库作业',
       specifications: {
         capacity: '2吨',
         liftHeight: '3米',
         power: '电动',
         battery: '锂电池',
-        runtime: '8小时'
+        runtime: '10000小时'
       },
       images: [
-        'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1605902711834-8b11c3e3ef75?w=800&h=600&fit=crop'
+        'chache1.jpg',
+        '/chache2.jpg',
+        '/chache3.jpg'
       ],
       coverImageIndex: 0,
       publishDate: '2024-01-09',
       posted: '3天前',
       views: 67,
       contact: {
-        name: '王师傅',
-        company: '设备租赁公司',
-        phone: '(345) 678-9012'
+        name: '翁总',
+        company: 'EW Logistics',
+        phone: '(646)-529-8575'
       }
     }
   ]), []);

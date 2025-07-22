@@ -683,7 +683,7 @@ const Jobs = () => {
                     <div className="form-row">
                       <div className="form-group">
                         <label>工作类型 *</label>
-                        <select name="type" required>
+                        <select name="workType" required>
                           <option value="">请选择</option>
                           {workTypes.map(type => (
                             <option key={type} value={type}>{type}</option>
