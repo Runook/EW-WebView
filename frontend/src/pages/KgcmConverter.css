@@ -42,3 +42,23 @@
   border-radius: 6px;
   font-size: 1em;
 }
+
+.kgcm-converter-errors {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.kgcm-converter-errors h4 {
+  margin: 0 0 8px 0;
+  color: #856404;
+  font-size: 0.9em;
+}
+
+.kgcm-converter-errors .error-item {
+  color: #856404;
+  font-size: 0.85em;
+  margin-bottom: 4px;
+}

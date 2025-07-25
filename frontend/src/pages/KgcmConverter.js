@@ -17,14 +17,71 @@ function groupRows(rows) {
 export default function KgcmConverter() {
   const [input, setInput] = useState('');
   const [result, setResult] = useState({ col1: '', col2: '' });
+  const [errors, setErrors] = useState([]);
+
+  // 解析输入行，支持多种格式
+  const parseInputLine = (line) => {
+    // 移除所有字母单位，保留数字、空格、*号和小数点
+    const cleaned = line.replace(/[a-zA-Z]/g, '').trim();
+    
+    if (!cleaned) return null;
+    
+    if (cleaned.includes('*')) {
+      // 包含*号的格式，如：55*65*76 100 或 200 44*33*33
+      const parts = cleaned.split(/\s+/).filter(Boolean);
+      let weights = [];
+      let dimensions = [];
+      
+      // 分离重量和尺寸
+      for (const part of parts) {
+        if (part.includes('*')) {
+          // 包含*的是尺寸
+          const dims = part.split('*').map(Number).filter(n => !isNaN(n) && n > 0);
+          dimensions = dimensions.concat(dims);
+        } else {
+          // 单独的数字可能是重量
+          const num = Number(part);
+          if (!isNaN(num) && num > 0) {
+            weights.push(num);
+          }
+        }
+      }
+      
+      // 确保只有一个重量和至少3个尺寸
+      if (weights.length === 1 && dimensions.length >= 3) {
+        return [weights[0], dimensions[0], dimensions[1], dimensions[2]];
+      }
+    } else {
+      // 不包含*号，按空格分割，应该是原格式：重量 长 宽 高
+      const numbers = cleaned.split(/\s+/).map(Number).filter(n => !isNaN(n) && n > 0);
+      if (numbers.length >= 4) {
+        return [numbers[0], numbers[1], numbers[2], numbers[3]];
+      }
+    }
+    
+    return null;
+  };
 
   const handleConvert = () => {
-    const lines = input
+    const inputLines = input
       .split('\n')
       .map(l => l.trim())
-      .filter(Boolean)
-      .map(l => l.split(/\s+/).map(Number))
-      .filter(arr => arr.length === 4);
+      .filter(Boolean);
+    
+    const validLines = [];
+    const errorLines = [];
+    
+    inputLines.forEach((line, index) => {
+      const parsed = parseInputLine(line);
+      if (parsed) {
+        validLines.push(parsed);
+      } else {
+        errorLines.push(`第${index + 1}行格式错误: "${line}"`);
+      }
+    });
+    
+    setErrors(errorLines);
+    const lines = validLines;
 
     // 分组
     const grouped = groupRows(lines);
@@ -66,14 +123,20 @@ export default function KgcmConverter() {
     <div className="kgcm-converter-container">
       <h2>重量体积换算</h2>
       <textarea
-        rows={8}
-      placeholder={`[可复制粘贴]
-每行输入重量kg 长cm 宽cm 高cm：
-例如：
-50 30 20 10
-100 40 30 20
-40 20 15 10
-...
+        rows={10}
+      placeholder={`[可复制粘贴] 支持多种输入格式：
+
+标准格式：
+50 30 20 10    (重量kg 长cm 宽cm 高cm)
+
+带符号格式（符号会被自动忽略）：
+55*65*76 100kg
+88*22*33 300kg  
+200kg 44*33*33
+500 44*33*44
+400 33cm*33cm*33cm
+
+单独数字自动识别为重量(kg)
 `}
         value={input}
         onChange={e => setInput(e.target.value)}
@@ -81,8 +144,17 @@ export default function KgcmConverter() {
       />
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
         <button onClick={handleConvert} className="btn kgcm-converter-btn">转换</button>
-        <button onClick={() => { setInput(''); setResult({ col1: '', col2: '' }); }} className="btn kgcm-converter-btn">重置</button>
+        <button onClick={() => { setInput(''); setResult({ col1: '', col2: '' }); setErrors([]); }} className="btn kgcm-converter-btn">重置</button>
       </div>
+      
+      {errors.length > 0 && (
+        <div className="kgcm-converter-errors">
+          <h4>⚠️ 输入格式错误</h4>
+          {errors.map((error, index) => (
+            <div key={index} className="error-item">{error}</div>
+          ))}
+        </div>
+      )}
       <div className="kgcm-converter-result">
         <div>
           <h4>lbs</h4>
