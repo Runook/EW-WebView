@@ -51,16 +51,15 @@ function App() {
               <Route path="/register" element={<Register />} />
               
               {/* 陆运服务 */}
-              <Route path="/freight-board" element={<FreightBoard />} />
+              <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<FreightBoard />} />
              
               
               {/* 海运服务 */}
               
-              <Route path="/sea-freight" element={<SeaFreightPlatform />} />
+              <Route path="/sea-freight-logistics-container-shipping-platform-国际海运集装箱物流平台-船期运费查询与货代服务" element={<SeaFreightPlatform />} />
               
               {/* 空运服务 */}
-              <Route path="/air-platform" element={<AirFreightPlatform />} />
-              <Route path="/air-freight" element={<AirFreightPlatform />} />
+              <Route path="/air-platform-logistics-airfreight-shipping-rates-国际空运物流平台-货运报价与航班信息查询系统" element={<AirFreightPlatform />} />
               
               {/* 多式联运 */}
               <Route path="/ddp-service" element={
@@ -96,14 +95,14 @@ function App() {
               <Route path="/multimodal" element={<MultimodalPlatform />} />
               
               {/* 信息服务 - 使用新的完整功能页面 */}
-              <Route path="/yellow-pages" element={<YellowPages />} />
-              <Route path="/jobs" element={<Jobs />} />
-              <Route path="/logistics-rental" element={<LogisticsRental />} />
-              <Route path="/forum" element={<Forum />} />
+              <Route path="/yellow-pages-logistics-supplier-directory-物流企业服务商黄页-货运卡车租赁公司查询平台" element={<YellowPages />} />
+              <Route path="/jobs-driver-freight-logistics-recruitment-platform-物流司机招聘求职平台-货运卡车运输人才匹配系统" element={<Jobs />} />
+              <Route path="/logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台" element={<LogisticsRental />} />
+              <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<Forum />} />
               
               {/* 物流工具 */}
-              <Route path="/freight-calculator" element={<FreightCalculator />} />
-              <Route path="/kgcm-converter" element={<KgcmConverter />} />
+              <Route path="/freight-calculator-logistics-shipping-estimator-tool-物流计算工具-美国物流等级class计算与换算平台" element={<FreightCalculator />} />
+              <Route path="/kgcm-converter-logistics-unit-conversion-tool-公斤厘米换算工具-国际货运尺寸重量单位转换平台" element={<KgcmConverter />} />
 
               {/* 用户管理 */}
               <Route path="/profile" element={<Profile />} />

@@ -71,7 +71,7 @@ const Header = () => {
       label: '陆运服务',
       type: 'dropdown',
       items: [
-        { path: '/freight-board', label: '搜索货源车源' },
+        { path: '/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区', label: '搜索货源车源' },
         { id: 'post-load', label: '发布货源信息', type: 'button', className: 'submenu-action' },
         { id: 'post-truck', label: '发布车源信息', type: 'button', className: 'submenu-action' },
         { path: '/land-warehouse', label: '仓库查询' },
@@ -82,7 +82,7 @@ const Header = () => {
       label: '海运服务',
       type: 'dropdown',
       items: [
-        { path: '/sea-freight', label: '海运信息平台' },
+        { path: '/sea-freight-logistics-container-shipping-platform-国际海运集装箱物流平台-船期运费查询与货代服务', label: '海运信息平台' },
         { path: '/seaport-query', label: '港口查询' }
       ]
     },
@@ -91,7 +91,7 @@ const Header = () => {
       label: '空运服务',
       type: 'dropdown',
       items: [
-        { path: '/air-platform', label: '空运信息平台' },
+        { path: '/air-platform-logistics-airfreight-shipping-rates-国际空运物流平台-货运报价与航班信息查询系统', label: '空运信息平台' },
       ]
     },
     {
@@ -109,10 +109,10 @@ const Header = () => {
       label: '信息服务',
       type: 'dropdown',
       items: [
-        { path: '/yellow-pages', label: '黄页查询' },
-        { path: '/jobs', label: '物流招聘' },
-        { path: '/logistics-rental', label: '物流租售' },
-        { path: '/forum', label: '物流论坛' }
+        { path: '/yellow-pages-logistics-supplier-directory-物流企业服务商黄页-货运卡车租赁公司查询平台', label: '黄页查询' },
+        { path: '/jobs-driver-freight-logistics-recruitment-platform-物流司机招聘求职平台-货运卡车运输人才匹配系统', label: '物流招聘' },
+        { path: '/logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台', label: '物流租售' },
+        { path: '/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区', label: '物流论坛' }
       ]
     },
     {
@@ -120,8 +120,8 @@ const Header = () => {
       label: '物流工具',
       type: 'dropdown',
       items: [
-        { path: '/freight-calculator', label: '货运计算器' },
-        { path: '/kgcm-converter', label: '重量体积转换' }
+        { path: '/freight-calculator-logistics-shipping-estimator-tool-物流计算工具-美国物流等级class计算与换算平台', label: '货运计算器' },
+        { path: '/kgcm-converter-logistics-unit-conversion-tool-公斤厘米换算工具-国际货运尺寸重量单位转换平台', label: '重量体积转换' }
         
       ]
     },

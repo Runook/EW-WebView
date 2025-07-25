@@ -542,7 +542,7 @@ const LogisticsRental = () => {
   const publishTimeOptions = ['全部时间', '今天', '3天内', '1周内', '1个月内'];
 
   return (
-    <div className="logistics-rental-page">
+    <div className="logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台-page">
       {/* 页面头部 */}
       <div className="page-header-rental">
         <div className="header-content">
