@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { 
   ArrowRight, 
   CheckCircle,
@@ -11,6 +11,7 @@ import RewardModal from '../components/RewardModal';
 
 const Home = () => {
   const [showRewardModal, setShowRewardModal] = useState(false);
+  const navigate = useNavigate();
   
   const videoRef = useRef(null);
   const contentRef = useRef(null);
@@ -19,6 +20,15 @@ const Home = () => {
 
   const scrollToContent = () => {
     contentRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // 导航到搜索货源车源页面并滚动到顶部
+  const handleNavigateToFreightBoard = () => {
+    navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区');
+    // 确保滚动到页面顶部
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   useEffect(() => {
@@ -84,10 +94,10 @@ const Home = () => {
                 让每一次运输都更高效、更安全、更可靠
               </p>
               <div className="video-actions">
-                <Link to="/freight-board" className="btn btn-primary btn-large">
+                <button onClick={handleNavigateToFreightBoard} className="btn btn-primary btn-large">
                   立即开始
                   <ArrowRight size={20} />
-                </Link>
+                </button>
 
               </div>
             </div>
@@ -119,13 +129,10 @@ const Home = () => {
                   发布需求、寻找服务、在线交易，让物流更简单。
                 </p>
                 <div className="hero-actions">
-                  <Link to="/freight-board" className="btn btn-primary">
+                  <button onClick={handleNavigateToFreightBoard} className="btn btn-primary">
                     搜索货源车源
                     <ArrowRight size={20} />
-                  </Link>
-                  <Link to="/services" className="btn btn-secondary">
-                    所有平台
-                  </Link>
+                  </button>
                 </div>
                 <div className="hero-features">
                   <div className="feature-item">
@@ -158,12 +165,9 @@ const Home = () => {
                 无论您是货主、承运商还是物流服务商，我们都为您提供最合适的平台服务
               </p>
               <div className="cta-actions">
-                <Link to="/freight-board" className="btn btn-primary">
+                <button onClick={handleNavigateToFreightBoard} className="btn btn-primary">
                   开始使用平台
                   <ArrowRight size={20} />
-                </Link>
-                <button className="btn btn-ghost">
-                  联系客服
                 </button>
               </div>
             </div>
