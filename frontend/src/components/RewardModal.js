@@ -21,7 +21,7 @@ import './RewardModal.css';
 
 const RewardModal = ({ isOpen, onClose }) => {
   const handleEmailClick = () => {
-    const subject = encodeURIComponent('公司命名悬赏 - Company Naming Reward - $500 USD');
+    const subject = encodeURIComponent('公司命名悬赏 - Company Naming Reward - Up to $500 USD');
     const body = encodeURIComponent(`
 亲爱的团队，
 Dear Team,
@@ -53,8 +53,14 @@ My suggestions are as follows:
 邮箱/Email: [您的邮箱地址]
 微信/WeChat: [可选]
 
-期待您的回复！这500美金我势在必得！🎯
-Looking forward to your reply! I'm determined to win this $500 reward! 🎯
+奖励说明 / Reward Information:
+🎯 中英文名字 + 域名全部被采用 = $500 现金奖励
+🎯 仅采用名字或仅采用域名 = $250 现金奖励
+🎯 All names + domain adopted = $500 USD cash
+🎯 Only name(s) or domain adopted = $250 USD cash
+
+期待您的回复！我势在必得！💰
+Looking forward to your reply! I'm determined to win this reward! 💰
 
 此致敬礼
 Best regards
@@ -90,8 +96,12 @@ Best regards
         {/* 现金展示区域 - 5张100美元 */}
         <div className="cash-showcase">
           <div className="cash-title">
-            <span className="cash-title-cn">现金奖励</span>
-            <span className="cash-title-en">Cash Reward</span>
+            <span className="cash-title-cn">
+              <span className="cash-amount">$500 USD</span> 现金奖励
+            </span>
+            <span className="cash-title-en">
+              Cash Reward
+            </span>
           </div>
           <div className="cash-bills">
             <div className="bill-container">
@@ -122,8 +132,6 @@ Best regards
           </div>
           <div className="total-amount">
             <DollarSign size={32} className="dollar-icon" />
-            <span className="amount">500</span>
-            <span className="currency">USD</span>
           </div>
         </div>
 
@@ -330,8 +338,8 @@ Best regards
           <button className="contact-btn" onClick={handleEmailClick}>
             <Mail size={24} />
             <span className="btn-text">
-              <span className="btn-cn">立即参与赢取 $500 现金</span>
-              <span className="btn-en">Participate Now for $500 Cash</span>
+              <span className="btn-cn">立即参与赢取最高 $500 现金</span>
+              <span className="btn-en">Participate Now for Up to $500 Cash</span>
             </span>
           </button>
           <p className="email-info">
@@ -344,8 +352,18 @@ Best regards
         {/* 底部说明 */}
         <div className="reward-footer">
           <p className="footer-text">
-            <span className="footer-cn">我们将从所有投稿中选出最佳方案，获奖者将获得500美金现金奖励！名字一旦被采用，立即发放奖金！</span>
-            <span className="footer-en">We will select the best proposal from all submissions. Winner gets $500 USD cash immediately upon name adoption!</span>
+            <span className="footer-cn">
+              🎯 <strong>奖励规则说明：</strong><br/>
+              • 中英文名字 + 域名全部被采用：<strong style={{color: '#dc2626'}}>$500 现金奖励</strong><br/>
+              • 仅采用名字或仅采用域名：<strong style={{color: '#f59e0b'}}>$250 现金奖励</strong><br/>
+              • 一旦确定采用，立即发放现金奖金！
+            </span>
+            <span className="footer-en">
+              🎯 <strong>Reward Rules:</strong><br/>
+              • Chinese & English names + Domain all adopted: <strong style={{color: '#dc2626'}}>$500 USD Cash</strong><br/>
+              • Only name(s) or only domain adopted: <strong style={{color: '#f59e0b'}}>$250 USD Cash</strong><br/>
+              • Cash reward paid immediately upon adoption!
+            </span>
           </p>
         </div>
       </div>

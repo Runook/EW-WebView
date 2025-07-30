@@ -127,6 +127,11 @@ const Home = () => {
                 <p className="hero-description">
                   连接货主、承运商、物流服务商，打造高效透明的物流信息交易平台。
                   发布需求、寻找服务、在线交易，让物流更简单。
+                  <br />
+                  <span className="development-timeline">
+                    自2025年7月1日启动开发以来，我们致力于用前沿技术重塑物流行业生态，
+                    为用户提供更智能、更便捷的数字化物流解决方案，欢迎各大物流企业的加盟，期待与您的商业合作。
+                  </span>
                 </p>
                 <div className="hero-actions">
                   <button onClick={handleNavigateToFreightBoard} className="btn btn-primary">

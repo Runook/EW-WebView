@@ -144,6 +144,14 @@
   opacity: 0.9;
 }
 
+.cash-amount {
+  font-size: 1.2em;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);
+  margin-right: 10px;
+}
+
 .cash-bills {
   display: flex;
   justify-content: center;
@@ -170,8 +178,8 @@
 }
 
 .bill-placeholder {
-  width: 120px;
-  height: 60px;
+  width: 150px;
+  height: 75px;
   border: 2px solid #ffffff;
   border-radius: 8px;
   display: flex;
@@ -200,30 +208,17 @@
   align-items: center;
   justify-content: center;
   margin-top: 20px;
-  gap: 10px;
 }
 
 .dollar-icon {
   color: #fbbf24;
   animation: rotate 3s linear infinite;
+  font-size: 2.5rem;
 }
 
 @keyframes rotate {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-}
-
-.amount {
-  font-size: 4rem;
-  font-weight: 900;
-  color: #ffffff;
-  text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-}
-
-.currency {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #fbbf24;
 }
 
 /* 公司介绍 */
@@ -587,7 +582,7 @@
 .footer-text {
   margin: 0;
   font-size: 1.1rem;
-  line-height: 1.6;
+  line-height: 1.8;
   color: #000000;
   text-align: center;
   font-weight: 500;
@@ -595,14 +590,16 @@
 
 .footer-cn {
   display: block;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
   color: #000000;
+  line-height: 1.8;
 }
 
 .footer-en {
   display: block;
   color: #374151;
   font-size: 1rem;
+  line-height: 1.8;
 }
 
 /* 滚动条样式 */
@@ -655,13 +652,11 @@
   }
   
   .bill-placeholder {
-    width: 100px;
-    height: 50px;
+    width: 125px;
+    height: 62px;
   }
   
-  .amount {
-    font-size: 3rem;
-  }
+
   
   .requirements-grid {
     grid-template-columns: 1fr;
@@ -675,6 +670,15 @@
   .contact-btn {
     padding: 15px 30px;
     font-size: 1.1rem;
+  }
+  
+  .footer-text {
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+  
+  .footer-cn {
+    margin-bottom: 15px;
   }
 }
 
@@ -702,9 +706,12 @@
     padding: 25px;
   }
   
-  .amount {
-    font-size: 2.5rem;
+  .cash-amount {
+    font-size: 1.1em;
+    margin-right: 8px;
   }
+  
+
   
   .feature-card {
     padding: 20px;
@@ -716,8 +723,17 @@
   }
   
   .bill-placeholder {
-    width: 80px;
-    height: 40px;
+    width: 100px;
+    height: 50px;
+  }
+  
+  .footer-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  
+  .footer-cn {
+    margin-bottom: 12px;
   }
 }
 
