@@ -71,7 +71,6 @@ const Header = () => {
       label: '陆运服务',
       type: 'dropdown',
       items: [
-        { path: '/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区', label: '搜索货源车源' },
         { id: 'post-load', label: '发布货源信息', type: 'button', className: 'submenu-action' },
         { id: 'post-truck', label: '发布车源信息', type: 'button', className: 'submenu-action' },
         { path: '/land-warehouse', label: '仓库查询' },
@@ -273,14 +272,16 @@ const Header = () => {
                             <button
                               key={subItem.id}
                               className={`dropdown-item ${subItem.className || ''}`}
-                              onClick={() => {
-                                if (subItem.id === 'post-load') {
-                                  window.dispatchEvent(new CustomEvent('openPostLoadModal'));
-                                } else if (subItem.id === 'post-truck') {
-                                  window.dispatchEvent(new CustomEvent('openPostTruckModal'));
-                                }
-                                setActiveDropdown(null);
-                              }}
+                                                              onClick={() => {
+                                  if (subItem.id === 'post-load') {
+                                    // 跳转到搜索货源车源页面并带上参数，自动打开货源发布模态框
+                                    navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区?modal=post-load');
+                                  } else if (subItem.id === 'post-truck') {
+                                    // 跳转到搜索货源车源页面并带上参数，自动打开车源发布模态框
+                                    navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区?modal=post-truck');
+                                  }
+                                  setActiveDropdown(null);
+                                }}
                             >
                               {subItem.label}
                             </button>
@@ -409,9 +410,11 @@ const Header = () => {
                                 className={`mobile-dropdown-item ${subItem.className || ''}`}
                                 onClick={() => {
                                   if (subItem.id === 'post-load') {
-                                    window.dispatchEvent(new CustomEvent('openPostLoadModal'));
+                                    // 跳转到搜索货源车源页面并带上参数，自动打开货源发布模态框
+                                    navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区?modal=post-load');
                                   } else if (subItem.id === 'post-truck') {
-                                    window.dispatchEvent(new CustomEvent('openPostTruckModal'));
+                                    // 跳转到搜索货源车源页面并带上参数，自动打开车源发布模态框
+                                    navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区?modal=post-truck');
                                   }
                                   setActiveDropdown(null);
                                   setIsMenuOpen(false);

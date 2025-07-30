@@ -57,7 +57,8 @@ const Modal = ({
     small: 'modal-small',
     medium: 'modal-medium', 
     large: 'modal-large',
-    xlarge: 'modal-xlarge'
+    xlarge: 'modal-xlarge',
+    'extra-large': 'modal-extra-large'
   };
 
   return (

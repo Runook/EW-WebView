@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { 
   Search, 
   Calendar, 
@@ -58,6 +59,10 @@ import { getCoordsFromZip, extractZipCode } from '../utils/zipCodeService'; // I
  */
 const FreightBoard = () => {
   // === 状态管理 ===
+  // 路由相关
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
   // 通知和日志系统
   const { success, error: showError, apiError } = useNotification();
   
@@ -558,6 +563,26 @@ const FreightBoard = () => {
       window.removeEventListener('openPostTruckModal', handlePostTruckClick);
     };
   }, [handlePostLoadClick, handlePostTruckClick]);
+
+  // 检查URL参数，自动打开对应的模态框
+  useEffect(() => {
+    const modalParam = searchParams.get('modal');
+    if (modalParam === 'post-load') {
+      // 自动打开货源发布模态框
+      handlePostLoadClick();
+      // 清理URL参数
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('modal');
+      setSearchParams(newSearchParams, { replace: true });
+    } else if (modalParam === 'post-truck') {
+      // 自动打开车源发布模态框
+      handlePostTruckClick();
+      // 清理URL参数
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('modal');
+      setSearchParams(newSearchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams, handlePostLoadClick, handlePostTruckClick]);
 
   /**
    * 处理详情模态框打开

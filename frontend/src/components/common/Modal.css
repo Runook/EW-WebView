@@ -60,6 +60,11 @@
   max-width: 1200px;
 }
 
+.modal-extra-large {
+  width: 98%;
+  max-width: 1400px;
+}
+
 /* 模态框头部 */
 .modal-header {
   display: flex;
@@ -128,7 +133,8 @@
   .modal-small,
   .modal-medium,
   .modal-large,
-  .modal-xlarge {
+  .modal-xlarge,
+  .modal-extra-large {
     width: 100%;
     max-width: none;
   }

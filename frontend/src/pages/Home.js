@@ -3,10 +3,6 @@ import { Link } from 'react-router-dom';
 import { 
   ArrowRight, 
   CheckCircle,
-  Users,
-  Globe,
-  Clock,
-  Shield,
   ChevronDown
 } from 'lucide-react';
 
@@ -19,12 +15,7 @@ const Home = () => {
   const videoRef = useRef(null);
   const contentRef = useRef(null);
 
-  const stats = [
-    { icon: <Users size={24} />, number: '10,000+', label: '合作客户' },
-    { icon: <Globe size={24} />, number: '50+', label: '服务国家' },
-    { icon: <Clock size={24} />, number: '24/7', label: '客户支持' },
-    { icon: <Shield size={24} />, number: '99.9%', label: '准时送达' }
-  ];
+
 
   const scrollToContent = () => {
     contentRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -156,24 +147,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Stats Section */}
-        <section className="stats">
-          <div className="container">
-            <div className="stats-grid">
-              {stats.map((stat, index) => (
-                <div key={index} className="stat-item">
-                  <div className="stat-icon">
-                    {stat.icon}
-                  </div>
-                  <div className="stat-content">
-                    <div className="stat-number">{stat.number}</div>
-                    <div className="stat-label">{stat.label}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+
 
         {/* CTA Section */}
         <section className="cta">
