@@ -73,7 +73,15 @@ const Header = () => {
       items: [
         { id: 'post-load', label: '发布货源信息', type: 'button', className: 'submenu-action' },
         { id: 'post-truck', label: '发布车源信息', type: 'button', className: 'submenu-action' },
-        { path: '/land-warehouse', label: '仓库查询' },
+        { 
+          id: 'warehouse',
+          label: '仓库查询',
+          type: 'submenu',
+          items: [
+            { path: '/fba-locations', label: 'FBA 查询' },
+            { path: '/land-warehouse', label: '陆运仓库' }
+          ]
+        },
       ]
     },
     {
@@ -287,6 +295,28 @@ const Header = () => {
                             </button>
                           );
                         }
+                        
+                        // Handle submenu items
+                        if (subItem.type === 'submenu') {
+                          return (
+                            <div key={subItem.id} className="submenu-wrapper">
+                              <div className="submenu-label">{subItem.label}</div>
+                              <div className="submenu-items">
+                                {subItem.items.map((subsubItem) => (
+                                  <Link
+                                    key={subsubItem.path}
+                                    to={subsubItem.path}
+                                    className={`submenu-item ${isActive(subsubItem.path) ? 'active' : ''}`}
+                                    onClick={() => setActiveDropdown(null)}
+                                  >
+                                    {subsubItem.label}
+                                  </Link>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        }
+                        
                         return (
                           <Link
                             key={subItem.path}

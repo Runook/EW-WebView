@@ -1,0 +1,457 @@
+/* ======================================
+   三色和谐设计系统 - 法拉利红 + 英国皇家蓝 + 绿色
+   Triple Color Harmony: Ferrari Red + Royal Blue + Green
+   ====================================== */
+
+:root {
+  /* === 原有绿色系统 (成功/确认/生机) === */
+  --primary-green: #34C759;
+  --primary-green-dark: #2FB854;
+  --primary-green-light: #4ED964;
+  --primary-green-alpha: rgba(52, 199, 89, 0.1);
+  
+  /* === 法拉利红色系统 (激情/重要/高级) === */
+  --ferrari-red: #DC143C;
+  --ferrari-red-dark: #B91C1C;
+  --ferrari-red-light: #F87171;
+  --ferrari-red-alpha: rgba(220, 20, 60, 0.1);
+  --ferrari-red-vibrant: #FF2800;
+  
+  /* === 英国皇家蓝色系统 (专业/信任/稳重) === */
+  --royal-blue: #1E3A8A;
+  --royal-blue-dark: #1E40AF;
+  --royal-blue-light: #3B82F6;
+  --royal-blue-alpha: rgba(30, 58, 138, 0.1);
+  --royal-blue-vibrant: #0038A8;
+  
+  /* === 三色融合梯度系统 === */
+  --gradient-ferrari: linear-gradient(135deg, var(--ferrari-red), var(--ferrari-red-dark));
+  --gradient-royal: linear-gradient(135deg, var(--royal-blue), var(--royal-blue-dark));
+  --gradient-green: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+  
+  /* === 创新三色组合梯度 === */
+  --gradient-triple-harmony: linear-gradient(135deg, 
+    var(--primary-green) 0%, 
+    var(--royal-blue) 50%, 
+    var(--ferrari-red) 100%);
+  --gradient-royal-green: linear-gradient(135deg, var(--royal-blue), var(--primary-green));
+  --gradient-ferrari-blue: linear-gradient(135deg, var(--ferrari-red), var(--royal-blue));
+  --gradient-professional: linear-gradient(135deg, var(--royal-blue), var(--royal-blue-light));
+  
+  /* === 双色对比组合 === */
+  --gradient-success-info: linear-gradient(135deg, var(--primary-green), var(--royal-blue));
+  --gradient-premium-trust: linear-gradient(135deg, var(--ferrari-red), var(--royal-blue));
+  --gradient-dynamic: linear-gradient(45deg, 
+    var(--primary-green) 0%, 
+    var(--royal-blue) 33%, 
+    var(--ferrari-red) 66%, 
+    var(--primary-green) 100%);
+  
+  /* === 语义化颜色定义 === */
+  --success-color: var(--primary-green);
+  --premium-color: var(--ferrari-red);
+  --professional-color: var(--royal-blue);
+  --urgent-color: var(--ferrari-red-vibrant);
+  --trust-color: var(--royal-blue);
+  --info-color: var(--royal-blue-light);
+  
+  /* === 背景色增强 === */
+  --bg-ferrari-subtle: rgba(220, 20, 60, 0.03);
+  --bg-royal-subtle: rgba(30, 58, 138, 0.03);
+  --bg-green-subtle: rgba(52, 199, 89, 0.03);
+  --bg-triple-subtle: linear-gradient(135deg, 
+    rgba(52, 199, 89, 0.05), 
+    rgba(30, 58, 138, 0.03),
+    rgba(220, 20, 60, 0.02));
+  
+  /* 保持原有设计系统 */
+  --background: #FFFFFF;
+  --background-secondary: #F2F2F7;
+  --text-primary: #000000;
+  --text-secondary: #8E8E93;
+  --border: #E5E5EA;
+  --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* ======================================
+   三色按钮系统 - 和谐统一设计
+   ====================================== */
+
+/* === 主要按钮 - 绿色 (成功/确认) === */
+.btn-success {
+  background: var(--gradient-green);
+  color: white;
+  border: none;
+  font-weight: 700;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-green-dark), #228B22);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(52, 199, 89, 0.4);
+}
+
+/* === 专业按钮 - 皇家蓝 (信息/导航) === */
+.btn-royal {
+  background: var(--gradient-royal);
+  color: white;
+  border: none;
+  font-weight: 700;
+}
+
+.btn-royal:hover:not(:disabled) {
+  background: var(--gradient-professional);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(30, 58, 138, 0.4);
+}
+
+/* === 高级按钮 - 法拉利红 (重要/高级) === */
+.btn-ferrari {
+  background: var(--gradient-ferrari);
+  color: white;
+  border: none;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-ferrari:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--ferrari-red-dark), #8B0000);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(220, 20, 60, 0.4);
+}
+
+/* === 三色融合按钮 - 特殊用途 === */
+.btn-triple-harmony {
+  background: var(--gradient-triple-harmony);
+  color: white;
+  border: none;
+  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-triple-harmony::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.6s;
+}
+
+.btn-triple-harmony:hover::before {
+  left: 100%;
+}
+
+.btn-triple-harmony:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 4px 15px rgba(52, 199, 89, 0.2),
+    0 6px 20px rgba(30, 58, 138, 0.2),
+    0 8px 25px rgba(220, 20, 60, 0.2);
+}
+
+/* === 轮廓按钮系列 === */
+.btn-outline-royal {
+  background: transparent;
+  color: var(--royal-blue);
+  border: 2px solid var(--royal-blue);
+}
+
+.btn-outline-royal:hover:not(:disabled) {
+  background: var(--royal-blue);
+  color: white;
+  box-shadow: 0 4px 15px var(--royal-blue-alpha);
+}
+
+.btn-outline-ferrari {
+  background: transparent;
+  color: var(--ferrari-red);
+  border: 2px solid var(--ferrari-red);
+}
+
+.btn-outline-ferrari:hover:not(:disabled) {
+  background: var(--ferrari-red);
+  color: white;
+  box-shadow: 0 4px 15px var(--ferrari-red-alpha);
+}
+
+.btn-outline-success {
+  background: transparent;
+  color: var(--primary-green);
+  border: 2px solid var(--primary-green);
+}
+
+.btn-outline-success:hover:not(:disabled) {
+  background: var(--primary-green);
+  color: white;
+  box-shadow: 0 4px 15px var(--primary-green-alpha);
+}
+
+/* ======================================
+   卡片和容器增强系统
+   ====================================== */
+
+.card-premium {
+  border-left: 4px solid var(--ferrari-red);
+  background: linear-gradient(135deg, white, var(--bg-ferrari-subtle));
+  box-shadow: 0 4px 20px rgba(220, 20, 60, 0.1);
+}
+
+.card-professional {
+  border-left: 4px solid var(--royal-blue);
+  background: linear-gradient(135deg, white, var(--bg-royal-subtle));
+  box-shadow: 0 4px 20px rgba(30, 58, 138, 0.1);
+}
+
+.card-success {
+  border-left: 4px solid var(--primary-green);
+  background: linear-gradient(135deg, white, var(--bg-green-subtle));
+  box-shadow: 0 4px 20px rgba(52, 199, 89, 0.1);
+}
+
+.card-triple-fusion {
+  border-left: 4px solid;
+  border-image: var(--gradient-triple-harmony) 1;
+  background: var(--bg-triple-subtle);
+  box-shadow: 
+    0 2px 10px rgba(52, 199, 89, 0.1),
+    0 4px 15px rgba(30, 58, 138, 0.1),
+    0 6px 20px rgba(220, 20, 60, 0.1);
+}
+
+/* ======================================
+   导航和品牌增强
+   ====================================== */
+
+.navbar-triple-harmony {
+  background: linear-gradient(90deg, 
+    var(--primary-green) 0%, 
+    var(--royal-blue) 50%, 
+    var(--ferrari-red) 100%);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-professional {
+  background: var(--gradient-professional);
+  box-shadow: 0 2px 20px rgba(30, 58, 138, 0.15);
+}
+
+.logo-triple-enhanced {
+  background: var(--gradient-triple-harmony);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 900;
+}
+
+/* ======================================
+   状态和标签系统
+   ====================================== */
+
+.badge-premium {
+  background: var(--gradient-ferrari);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-professional {
+  background: var(--gradient-royal);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-success {
+  background: var(--gradient-green);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-triple {
+  background: var(--gradient-triple-harmony);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* ======================================
+   表单增强系统
+   ====================================== */
+
+.form-input-royal:focus {
+  border-color: var(--royal-blue);
+  box-shadow: 0 0 0 3px var(--royal-blue-alpha);
+}
+
+.form-input-ferrari:focus {
+  border-color: var(--ferrari-red);
+  box-shadow: 0 0 0 3px var(--ferrari-red-alpha);
+}
+
+.form-input-success:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 3px var(--primary-green-alpha);
+}
+
+/* ======================================
+   价格和数据显示增强
+   ====================================== */
+
+.price-premium {
+  color: var(--ferrari-red);
+  font-weight: 700;
+  font-size: 1.2em;
+}
+
+.price-professional {
+  color: var(--royal-blue);
+  font-weight: 700;
+  font-size: 1.2em;
+}
+
+.price-success {
+  color: var(--primary-green);
+  font-weight: 700;
+  font-size: 1.2em;
+}
+
+/* ======================================
+   动画和特效系统
+   ====================================== */
+
+@keyframes triple-pulse {
+  0% { box-shadow: 0 0 0 0 var(--primary-green-alpha); }
+  33% { box-shadow: 0 0 0 10px var(--royal-blue-alpha); }
+  66% { box-shadow: 0 0 0 10px var(--ferrari-red-alpha); }
+  100% { box-shadow: 0 0 0 0 var(--primary-green-alpha); }
+}
+
+.pulse-triple {
+  animation: triple-pulse 3s infinite;
+}
+
+@keyframes royal-glow {
+  0%, 100% { 
+    box-shadow: 0 0 5px var(--royal-blue), 0 0 10px var(--royal-blue); 
+  }
+  50% { 
+    box-shadow: 0 0 15px var(--royal-blue), 0 0 20px var(--royal-blue); 
+  }
+}
+
+.glow-royal {
+  animation: royal-glow 2s infinite;
+}
+
+/* ======================================
+   实用工具类扩展
+   ====================================== */
+
+/* 文字颜色 */
+.text-ferrari { color: var(--ferrari-red); }
+.text-royal { color: var(--royal-blue); }
+.text-success { color: var(--primary-green); }
+
+/* 背景颜色 */
+.bg-ferrari { background-color: var(--ferrari-red); }
+.bg-royal { background-color: var(--royal-blue); }
+.bg-success { background-color: var(--primary-green); }
+
+/* 边框颜色 */
+.border-ferrari { border-color: var(--ferrari-red); }
+.border-royal { border-color: var(--royal-blue); }
+.border-success { border-color: var(--primary-green); }
+
+/* ======================================
+   分隔线和装饰元素
+   ====================================== */
+
+.divider-triple {
+  height: 3px;
+  background: var(--gradient-triple-harmony);
+  border: none;
+  margin: 2rem 0;
+  border-radius: 2px;
+}
+
+.divider-royal {
+  height: 2px;
+  background: var(--gradient-royal);
+  border: none;
+  margin: 1.5rem 0;
+}
+
+.divider-ferrari {
+  height: 2px;
+  background: var(--gradient-ferrari);
+  border: none;
+  margin: 1.5rem 0;
+}
+
+/* ======================================
+   响应式适配
+   ====================================== */
+
+@media (max-width: 768px) {
+  .btn-triple-harmony {
+    font-size: 0.9rem;
+    padding: 0.75rem 1.25rem;
+  }
+  
+  .card-premium,
+  .card-professional,
+  .card-success {
+    border-left-width: 3px;
+  }
+  
+  .navbar-triple-harmony {
+    background: linear-gradient(45deg, 
+      var(--primary-green) 0%, 
+      var(--royal-blue) 70%, 
+      var(--ferrari-red) 100%);
+  }
+}
+
+/* ======================================
+   高级交互效果
+   ====================================== */
+
+.interactive-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.interactive-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 10px 30px rgba(52, 199, 89, 0.1),
+    0 15px 35px rgba(30, 58, 138, 0.1),
+    0 20px 40px rgba(220, 20, 60, 0.1);
+}
+
+/* 三色渐变悬停效果 */
+.btn-gradient-hover {
+  background: var(--primary-green);
+  transition: all 0.3s ease;
+}
+
+.btn-gradient-hover:hover {
+  background: var(--gradient-triple-harmony);
+  transform: scale(1.05);
+} 

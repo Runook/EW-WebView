@@ -5,6 +5,7 @@
   /* 颜色变量 */
   --primary-green: #34C759;
   --secondary-green: #2ecc71;
+  --ferrari-red-alpha: rgba(220, 20, 60, 0.25);
   --text-primary: #1d1d1f;
   --text-secondary: #6e6e73;
   --text-muted: #666;
@@ -131,7 +132,7 @@
   display: flex;
   gap: var(--gap-sm);
   margin-bottom: var(--gap-2xl);
-  background: #f5f5f7;
+  background: transparent;
   padding: var(--gap-xs);
   border-radius: var(--radius-lg);
 }
@@ -144,17 +145,24 @@
   gap: var(--gap-sm);
   padding: var(--gap-md) var(--gap-lg);
   border-radius: var(--radius-md);
-  background: none;
+  background: var(--ferrari-red);
   border: none;
-  color: var(--text-secondary);
+  color: var(--bg-white);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 40, 0, 0.2);
 }
 
 .tab.active {
   background: var(--primary-green);
   color: var(--bg-white);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.tab:hover:not(.active) {
+  background: var(--ferrari-red-dark);
+  opacity: 0.8;
 }
 
 .tab-count {

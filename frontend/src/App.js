@@ -21,6 +21,8 @@ import Forum from './pages/Forum';
 import FreightCalculator from './pages/FreightCalculator';
 import Profile from './pages/Profile/Profile';
 import KgcmConverter from './pages/KgcmConverter';
+import FBALocations from './pages/FBALocations';
+import FBALocationDetail from './pages/FBALocationDetail';
 import './App.css';
 
 // 导入 Google Maps 诊断功能
@@ -52,6 +54,10 @@ function App() {
               
               {/* 陆运服务 */}
               <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<FreightBoard />} />
+              
+              {/* FBA 仓库查询 */}
+              <Route path="/fba-locations" element={<FBALocations />} />
+              <Route path="/fba-location/:id" element={<FBALocationDetail />} />
              
               
               {/* 海运服务 */}
@@ -103,7 +109,7 @@ function App() {
               {/* 物流工具 */}
               <Route path="/freight-calculator-logistics-shipping-estimator-tool-物流计算工具-美国物流等级class计算与换算平台" element={<FreightCalculator />} />
               <Route path="/kgcm-converter-logistics-unit-conversion-tool-公斤厘米换算工具-国际货运尺寸重量单位转换平台" element={<KgcmConverter />} />
-
+              
               {/* 用户管理 */}
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/:section" element={<Profile />} />

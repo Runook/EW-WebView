@@ -74,7 +74,7 @@
 }
 
 .text-highlight {
-  background: linear-gradient(135deg, var(--primary-green), var(--primary-green-light));
+  background: var(--gradient-triple-harmony);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -230,13 +230,17 @@
   display: inline-block;
   margin-top: var(--space-4);
   padding: var(--space-3) var(--space-4);
-  background: linear-gradient(135deg, rgba(52, 199, 89, 0.1), rgba(52, 199, 89, 0.05));
-  border-left: 3px solid var(--primary-green);
+  background: var(--bg-triple-subtle);
+  border-left: 4px solid;
+  border-image: var(--gradient-triple-harmony) 1;
   border-radius: 0 6px 6px 0;
   font-size: var(--font-size-base);
   color: var(--text-primary);
   font-weight: 500;
-  box-shadow: 0 2px 8px rgba(52, 199, 89, 0.1);
+  box-shadow: 
+    0 2px 8px rgba(52, 199, 89, 0.1),
+    0 4px 12px rgba(30, 58, 138, 0.1),
+    0 6px 16px rgba(220, 20, 60, 0.1);
   transition: all 0.3s ease;
 }
 
@@ -337,11 +341,32 @@
 
 
 
-/* CTA Section */
+/* CTA Section - 三色增强 */
 .cta {
-  background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+  background: var(--gradient-triple-harmony);
   padding: var(--space-20) 0;
   color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.cta::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 200%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255,255,255,0.1), 
+    transparent);
+  animation: shine 4s infinite;
+}
+
+@keyframes shine {
+  0% { left: -50%; }
+  100% { left: 50%; }
 }
 
 .cta-content {
@@ -378,12 +403,15 @@
 
 .cta-actions .btn-primary {
   background: white;
-  color: var(--primary-green);
+  color: var(--royal-blue);
+  border: 2px solid white;
 }
 
 .cta-actions .btn-primary:hover {
-  background: var(--background-secondary);
+  background: var(--royal-blue);
+  color: white;
   transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3);
 }
 
 .cta-actions .btn-ghost {

@@ -98,7 +98,6 @@ const Home = () => {
                   立即开始
                   <ArrowRight size={20} />
                 </button>
-
               </div>
             </div>
           </div>

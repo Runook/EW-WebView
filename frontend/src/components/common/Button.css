@@ -25,7 +25,15 @@
 }
 
 .btn:focus {
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 0 0 3px var(--primary-green-alpha);
+}
+
+.btn-info:focus {
+  box-shadow: 0 0 0 3px var(--royal-blue-alpha);
+}
+
+.btn-warning:focus {
+  box-shadow: 0 0 0 3px var(--ferrari-red-alpha);
 }
 
 .btn:active {
@@ -70,18 +78,43 @@
   width: 100%;
 }
 
-/* 按钮变体 */
+/* 按钮变体 - 三色系统 */
 .btn-primary {
-  background: #22c55e;
+  background: var(--gradient-green);
   color: white;
-  border: 1px solid #22c55e;
+  border: none;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #16a34a;
-  border-color: #16a34a;
+  background: linear-gradient(135deg, var(--primary-green-dark), #228B22);
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 15px rgba(52, 199, 89, 0.4);
+}
+
+/* 皇家蓝按钮 */
+.btn-info {
+  background: var(--gradient-royal);
+  color: white;
+  border: none;
+}
+
+.btn-info:hover:not(:disabled) {
+  background: var(--gradient-professional);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(30, 58, 138, 0.4);
+}
+
+/* 法拉利红按钮 */
+.btn-warning {
+  background: var(--gradient-ferrari);
+  color: white;
+  border: none;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--ferrari-red-dark), #8B0000);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(220, 20, 60, 0.4);
 }
 
 .btn-secondary {
@@ -99,15 +132,43 @@
 
 .btn-outline {
   background: transparent;
-  color: #22c55e;
-  border: 1px solid #22c55e;
+  color: var(--primary-green);
+  border: 2px solid var(--primary-green);
 }
 
 .btn-outline:hover:not(:disabled) {
-  background: #22c55e;
+  background: var(--primary-green);
   color: white;
   transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 15px var(--primary-green-alpha);
+}
+
+/* 皇家蓝轮廓按钮 */
+.btn-outline-info {
+  background: transparent;
+  color: var(--royal-blue);
+  border: 2px solid var(--royal-blue);
+}
+
+.btn-outline-info:hover:not(:disabled) {
+  background: var(--royal-blue);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px var(--royal-blue-alpha);
+}
+
+/* 法拉利红轮廓按钮 */
+.btn-outline-warning {
+  background: transparent;
+  color: var(--ferrari-red);
+  border: 2px solid var(--ferrari-red);
+}
+
+.btn-outline-warning:hover:not(:disabled) {
+  background: var(--ferrari-red);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px var(--ferrari-red-alpha);
 }
 
 .btn-ghost {

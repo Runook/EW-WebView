@@ -1,5 +1,18 @@
 {
+  "name": "ew-logistics-seo-tools",
+  "version": "1.0.0",
+  "description": "SEO optimization tools for EW Logistics Platform",
+  "scripts": {
+    "generate-sitemap": "node scripts/generate-sitemap.js",
+    "prerender": "node scripts/prerender.js",
+    "seo-audit": "lighthouse --chrome-flags=\"--headless\" --output html --output-path ./seo-audit.html https://www.ewltl.com"
+  },
+  "devDependencies": {
+    "lighthouse": "^11.0.0",
+    "puppeteer": "^21.0.0",
+    "sitemap": "^7.1.1"
+  },
   "dependencies": {
-    "node-fetch": "^2.7.0"
+    "xlsx": "^0.18.5"
   }
 }

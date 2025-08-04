@@ -50,11 +50,11 @@ const Footer = () => {
             <div className="footer-contact">
               <div className="contact-item">
                 <Phone size={16} />
-                <span>+1 (718) 659-9888</span>
+                <span>+1 (516) 427-7016</span>
               </div>
               <div className="contact-item">
                 <Mail size={16} />
-                <span>ltl.48ew@gmail.com</span>
+                <span>ftl.us48@gmail.com</span>
               </div>
               <div className="contact-item">
                 <MapPin size={16} />
