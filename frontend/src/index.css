@@ -14,6 +14,18 @@
   --primary-green-light: #4ED964;
   --primary-green-alpha: rgba(52, 199, 89, 0.1);
   
+  /* Royal Blue Theme */
+  --royal-blue: #4169E1;
+  --royal-blue-dark: #3A5FCD;
+  --royal-blue-light: #6495ED;
+  --royal-blue-alpha: rgba(65, 105, 225, 0.1);
+  
+  /* Ferrari Red Theme */
+  --ferrari-red: #FF2800;
+  --ferrari-red-dark: #DC143C;
+  --ferrari-red-light: #FF6347;
+  --ferrari-red-alpha: rgba(255, 40, 0, 0.1);
+  
   /* Supporting Colors */
   --background: #FFFFFF;
   --background-secondary: #F2F2F7;

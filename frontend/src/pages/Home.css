@@ -74,7 +74,10 @@
 }
 
 .text-highlight {
-  background: linear-gradient(135deg, var(--primary-green), var(--primary-green-light));
+  background: linear-gradient(135deg, 
+    var(--primary-green) 0%, 
+    var(--royal-blue) 50%, 
+    var(--ferrari-red) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -339,7 +342,10 @@
 
 /* CTA Section */
 .cta {
-  background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+  background: linear-gradient(135deg, 
+    var(--primary-green) 0%, 
+    var(--royal-blue) 50%, 
+    var(--ferrari-red) 100%);
   padding: var(--space-20) 0;
   color: white;
 }

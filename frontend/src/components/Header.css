@@ -199,7 +199,7 @@
 
 .dropdown-item:hover,
 .dropdown-item.active {
-  background: var(--primary-green-alpha);
+  background: var(--ferrari-red-alpha);
   color: var(--primary-green);
 }
 
@@ -209,13 +209,58 @@
   position: relative;
 }
 
+/* Submenu Styles */
+.submenu-wrapper {
+  position: relative;
+}
+
+.submenu-label {
+  padding: 12px 20px;
+  font-weight: 600;
+  color: #4a5568;
+  background: #f7fafc;
+  border-left: 4px solid var(--ferrari-red);
+  cursor: default;
+  font-size: 0.95rem;
+}
+
+.submenu-items {
+  background: #f8fafc;
+  padding: 8px 0;
+}
+
+.submenu-item {
+  display: block;
+  padding: 10px 30px;
+  color: #4a5568;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+}
+
+.submenu-item:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+  color: #2d3748;
+  transform: translateX(8px);
+  border-left-color: var(--ferrari-red);
+  text-decoration: none;
+}
+
+.submenu-item.active {
+  background: var(--ferrari-red-alpha);
+  color: var(--primary-green);
+  border-left-color: var(--primary-green);
+  font-weight: 600;
+}
+
 .submenu-action::before {
   content: '↳';
   position: absolute;
   left: 1.5rem;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--primary-green);
+  color: var(--ferrari-red);
   font-weight: bold;
 }
 
@@ -241,8 +286,8 @@
 }
 
 .mobile-dropdown-menu {
-  background: var(--primary-green-alpha);
-  border-left: 3px solid var(--primary-green);
+  background: var(--ferrari-red-alpha);
+  border-left: 3px solid var(--ferrari-red);
   display: none;
 }
 
@@ -259,12 +304,12 @@
   font-size: var(--font-size-sm);
   font-weight: 500;
   transition: all 0.2s ease;
-  border-bottom: 1px solid rgba(52, 199, 89, 0.1);
+  border-bottom: 1px solid var(--ferrari-red-alpha);
 }
 
 .mobile-dropdown-item:hover,
 .mobile-dropdown-item.active {
-  background: rgba(52, 199, 89, 0.1);
+  background: var(--ferrari-red-alpha);
   color: var(--primary-green);
 }
 
@@ -316,7 +361,7 @@
 }
 
 .user-menu-trigger:hover {
-  background: var(--primary-green-alpha);
+  background: var(--ferrari-red-alpha);
   color: var(--primary-green);
 }
 
@@ -341,7 +386,7 @@
 
 .user-info {
   padding: var(--space-5);
-  background: var(--primary-green-alpha);
+  background: var(--ferrari-red-alpha);
 }
 
 .user-details {
@@ -394,7 +439,7 @@
 }
 
 .user-menu-item:hover {
-  background: var(--primary-green-alpha);
+  background: var(--ferrari-red-alpha);
   color: var(--primary-green);
 }
 
@@ -420,7 +465,7 @@
 }
 
 .mobile-menu-toggle:hover {
-  background: var(--primary-green-alpha);
+  background: var(--ferrari-red-alpha);
   color: var(--primary-green);
 }
 
@@ -471,7 +516,7 @@
 .mobile-user-info {
   margin-bottom: var(--space-4);
   padding: var(--space-4);
-  background: var(--primary-green-alpha);
+  background: var(--ferrari-red-alpha);
   border-radius: var(--radius-lg);
 }
 

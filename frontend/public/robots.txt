@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://www.ewltl.com/sitemap.xml
+
+# Crawl delay (optional, prevents overwhelming your server)
+Crawl-delay: 1
+
+# Disallow login/register pages for privacy
+Disallow: /login
+Disallow: /register
+Disallow: /profile
+
+# Allow all other pages to be crawled 

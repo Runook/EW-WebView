@@ -21,6 +21,8 @@ import Forum from './pages/Forum';
 import FreightCalculator from './pages/FreightCalculator';
 import Profile from './pages/Profile/Profile';
 import KgcmConverter from './pages/KgcmConverter';
+import FBALocations from './pages/FBALocations';
+import FBALocationDetail from './pages/FBALocationDetail';
 import './App.css';
 
 // 导入 Google Maps 诊断功能
@@ -52,7 +54,10 @@ function App() {
               
               {/* 陆运服务 */}
               <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<FreightBoard />} />
-             
+                           
+              {/* FBA 仓库查询 */}
+              <Route path="/fba-locations" element={<FBALocations />} />
+              <Route path="/fba-location/:id" element={<FBALocationDetail />} />
               
               {/* 海运服务 */}
               

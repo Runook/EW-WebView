@@ -21,8 +21,11 @@ export default function KgcmConverter() {
 
   // 解析输入行，支持多种格式
   const parseInputLine = (line) => {
-    // 移除所有字母单位，保留数字、空格、*号和小数点
-    const cleaned = line.replace(/[a-zA-Z]/g, '').trim();
+    // 先将X、x转换为*号，然后移除其他字母单位，保留数字、空格、*号和小数点
+    const cleaned = line
+      .replace(/[Xx]/g, '*')  // 将X、x转换为*
+      .replace(/[a-zA-Z]/g, '')  // 移除其他字母
+      .trim();
     
     if (!cleaned) return null;
     
@@ -131,12 +134,14 @@ export default function KgcmConverter() {
 
 带符号格式（符号会被自动忽略）：
 55*65*76 100kg
-88*22*33 300kg  
-200kg 44*33*33
+88X22X33 300kg  
+200kg 44x33x33
 500 44*33*44
 400 33cm*33cm*33cm
+300kg 50X60X70
 
 单独数字自动识别为重量(kg)
+支持的分隔符：* X x
 `}
         value={input}
         onChange={e => setInput(e.target.value)}
