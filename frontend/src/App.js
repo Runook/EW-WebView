@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './components/common/Notification';
 import { Package, BookOpen, Briefcase, ShoppingBag } from 'lucide-react';
@@ -29,6 +29,7 @@ import './App.css';
 import { diagnoseGoogleMapsIssues } from './config/googleMaps';
 
 function App() {
+  const location = useLocation();
   useEffect(() => {
     // 在应用启动时运行 Google Maps 诊断
     console.log('🚀 EW 物流平台启动');
@@ -39,6 +40,19 @@ function App() {
       diagnoseGoogleMapsIssues();
     }, 2000);
   }, []);
+
+  // GA4 SPA 路由切换上报
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+        window.gtag('config', 'G-MTZCJ79H05', {
+          page_path: location.pathname + location.search,
+        });
+      }
+    } catch (err) {
+      // 忽略分析上报异常
+    }
+  }, [location]);
 
   return (
     <NotificationProvider>

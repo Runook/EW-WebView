@@ -1,0 +1,1 @@
+arn:aws:ecs:us-east-1:470489279883:task-definition/ew-logistics-frontend:8

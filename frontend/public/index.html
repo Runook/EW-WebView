@@ -1,28 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
+    <meta http-equiv="content-language" content="zh-CN" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#34C759" />
-    <meta name="description" content="EW Logistics - Modern freight and logistics platform" />
-    <title>EW Logistics Platform</title>
-    
+
     <!-- Google Search Console Verification -->
     <meta name="google-site-verification" content="GYzmJQa__yuaJYS0Tk8j4bPAmb_DQ0AqvGEDH4709oc" />
-    
+
     <!-- Primary SEO Tags -->
-    <title>EW物流平台 - 专业的美国物流运输服务平台 | 陆运海运空运一站式解决方案</title>
-    <meta name="description" content="EW物流平台(ewltl.com)是专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等全方位物流服务。" />
-    <meta name="keywords" content="美国物流,货运平台,陆运服务,海运集装箱,空运物流,物流计算器,货运招聘,物流设备租赁,物流黄页,美国货运,国际物流,DDP服务,DDU服务,物流论坛,ewltl,EW Logistics" />
+    <title>EW物流平台（EW Logistics）- 美国陆运/海运/空运一站式物流服务 | ewltl.com</title>
+    <meta name="description" content="EW物流平台（ewltl.com）- 专业的美国物流运输服务平台，提供陆运、海运、空运及多式联运的一站式数字化物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等服务。" />
+    <meta name="keywords" content="EW物流, 东西方物流, EW Logistics, ewltl, ewltl.com, 美国物流, 陆运, 海运, 空运, 物流平台, 货运计算器, 物流黄页, 物流招聘, 设备租赁" />
     <meta name="author" content="EW Logistics" />
     <meta name="robots" content="index, follow" />
-    <meta name="language" content="Chinese" />
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://www.ewltl.com/" />
-    
+
+    <!-- Page-level canonical/hreflang will be injected per-route via react-helmet-async -->
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://www.ewltl.com/" />
@@ -31,27 +27,28 @@
     <meta property="og:image" content="https://www.ewltl.com/logo.png" />
     <meta property="og:site_name" content="EW物流平台" />
     <meta property="og:locale" content="zh_CN" />
-    
+    <meta property="og:locale:alternate" content="en_US" />
+
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://www.ewltl.com/" />
     <meta property="twitter:title" content="EW物流平台 - 专业的美国物流运输服务平台" />
     <meta property="twitter:description" content="专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。" />
     <meta property="twitter:image" content="https://www.ewltl.com/logo.png" />
-    
+
     <!-- Additional SEO -->
     <meta name="geo.region" content="US" />
     <meta name="geo.placename" content="United States" />
     <meta name="distribution" content="global" />
     <meta name="rating" content="general" />
-    
-    <!-- Schema.org structured data -->
+
+    <!-- Schema.org structured data: Organization -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "EW Logistics Services Inc",
-      "alternateName": "EW物流平台",
+      "alternateName": ["EW物流平台", "东西方物流", "EW Logistics"],
       "url": "https://www.ewltl.com",
       "logo": "https://www.ewltl.com/logo.png",
       "description": "专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案",
@@ -62,6 +59,22 @@
       "sameAs": [
         "https://www.ewltl.com"
       ],
+      "contactPoint": [{
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "areaServed": "US",
+        "availableLanguage": ["Chinese", "English"]
+      }]
+    }
+    </script>
+
+    <!-- Schema.org structured data: WebSite with SearchAction -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "EW物流平台",
+      "url": "https://www.ewltl.com/",
       "potentialAction": {
         "@type": "SearchAction",
         "target": "https://www.ewltl.com/search?q={search_term_string}",
@@ -69,16 +82,16 @@
       }
     }
     </script>
-    
-    <!-- Google Analytics (replace with your GA4 tracking ID) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+
+    <!-- Google Analytics (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-MTZCJ79H05"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
+      function gtag(){dataLayer.push(arguments);} 
       gtag('js', new Date());
-      gtag('config', 'GA_MEASUREMENT_ID');
+      gtag('config', 'G-MTZCJ79H05');
     </script>
-    
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,4 +101,4 @@
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
   </body>
-</html> 
+</html>

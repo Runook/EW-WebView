@@ -547,7 +547,9 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateFormData()) {
+    const validationError = validateFormData();
+    if (validationError) {
+      alert(validationError);
       return;
     }
 
