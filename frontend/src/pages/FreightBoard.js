@@ -410,7 +410,6 @@ const FreightBoard = () => {
       showError('请先登录再发布');
       return;
     }
-
     // 确定发布类型
     const postType = postData.type === 'load' ? 'load' : 'truck';
     
@@ -432,7 +431,6 @@ const FreightBoard = () => {
         publicationDate: new Date().toISOString(),
         premium: premium
       };
-
       // 使用统一的API服务
       const result = formData.type === 'load' 
         ? await apiServices.landFreight.createLoad(enhancedData)

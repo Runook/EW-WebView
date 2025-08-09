@@ -61,7 +61,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     weightKg: '',
     originLocationTypes: [],
     destinationLocationTypes: [],
-    pallets: '',
+    pallets: 0,
     cargoItems: [
       {
         id: 1,
@@ -516,7 +516,9 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       }
     } else {
       // FTL验证
-      const requiredFields = [...baseRequiredFields, 'weight', 'truckType'];
+      console.log(formData,3333);
+      
+      const requiredFields = [...baseRequiredFields, 'weight', 'truckType'];      
       const missingFields = requiredFields.filter(field => !formData[field]);
       if (missingFields.length > 0) {
         return `请填写所有必填字段: ${missingFields.join(', ')}`;
@@ -546,8 +548,8 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
    
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    const validationError = validateFormData();
+
+    const validationError =  validateFormData();
     if (validationError) {
       alert(validationError);
       return;
@@ -577,6 +579,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         destination_formatted_address: destinationCoords ? destinationCoords.formattedAddress : formData.destination,
       };
 
+      console.log(submissionData,33333);
       await onSubmit(submissionData);
     } catch (error) {
       console.error('Submission failed after geocoding:', error);
@@ -698,7 +701,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       weightKg: '',
       originLocationTypes: [],
       destinationLocationTypes: [],
-      pallets: '',
+      pallets: 0,
       cargoItems: [
         {
           id: 1,
