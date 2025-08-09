@@ -116,6 +116,14 @@ router.post('/loads', auth, async (req, res) => {
       loadData.deliveryDate = null;
     }
 
+    // 可选字段：pallets（整数）允许为空字符串/未提供 → 归一为 null；数字字符串 → 转整数
+    if (loadData.pallets === '' || loadData.pallets === undefined || loadData.pallets === null) {
+      loadData.pallets = null;
+    } else if (typeof loadData.pallets === 'string') {
+      const parsed = parseInt(loadData.pallets, 10);
+      loadData.pallets = Number.isNaN(parsed) ? null : parsed;
+    }
+
     // 验证必填字段
     const requiredFields = ['origin', 'destination', 'weight', 'serviceType', 'companyName', 'contactPhone'];
     const missingFields = requiredFields.filter(field => !loadData[field]);

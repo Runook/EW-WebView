@@ -121,7 +121,9 @@ class LandFreight {
         weight: loadData.weight,
         commodity: loadData.cargoType || loadData.commodity,
         cargo_value: loadData.cargoValue,
-        pallets: loadData.pallets,
+        pallets: (loadData.pallets === '' || loadData.pallets === undefined || loadData.pallets === null)
+          ? null
+          : (typeof loadData.pallets === 'string' ? (Number.isNaN(parseInt(loadData.pallets, 10)) ? null : parseInt(loadData.pallets, 10)) : loadData.pallets),
         freight_class: loadData.freightClass,
         service_type: loadData.serviceType,
         truck_type: loadData.truckType,
@@ -188,7 +190,9 @@ class LandFreight {
         weight: loadData.weight,
         commodity: loadData.cargoType || loadData.commodity,
         cargo_value: loadData.cargoValue,
-        pallets: loadData.pallets,
+        pallets: (loadData.pallets === '' || loadData.pallets === undefined || loadData.pallets === null)
+          ? null
+          : (typeof loadData.pallets === 'string' ? (Number.isNaN(parseInt(loadData.pallets, 10)) ? null : parseInt(loadData.pallets, 10)) : loadData.pallets),
         freight_class: loadData.freightClass,
         service_type: loadData.serviceType,
         truck_type: loadData.truckType,
