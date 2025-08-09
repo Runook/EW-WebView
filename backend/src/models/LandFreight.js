@@ -114,7 +114,10 @@ class LandFreight {
           (typeof loadData.distanceInfo === 'string' ? loadData.distanceInfo : 
            (typeof loadData.distanceInfo === 'object' ? JSON.stringify(loadData.distanceInfo) : null)) : null,
         pickup_date: loadData.requiredDate || loadData.pickupDate,
-        delivery_date: loadData.deliveryDate,
+        delivery_date:
+          loadData.deliveryDate && String(loadData.deliveryDate).trim() !== ''
+            ? loadData.deliveryDate
+            : null,
         weight: loadData.weight,
         commodity: loadData.cargoType || loadData.commodity,
         cargo_value: loadData.cargoValue,
@@ -178,7 +181,10 @@ class LandFreight {
           (typeof loadData.distanceInfo === 'string' ? loadData.distanceInfo : 
            (typeof loadData.distanceInfo === 'object' ? JSON.stringify(loadData.distanceInfo) : null)) : null,
         pickup_date: loadData.requiredDate || loadData.pickupDate,
-        delivery_date: loadData.deliveryDate,
+        delivery_date:
+          loadData.deliveryDate && String(loadData.deliveryDate).trim() !== ''
+            ? loadData.deliveryDate
+            : null,
         weight: loadData.weight,
         commodity: loadData.cargoType || loadData.commodity,
         cargo_value: loadData.cargoValue,

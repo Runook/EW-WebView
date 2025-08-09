@@ -111,6 +111,11 @@ router.post('/loads', auth, async (req, res) => {
       loadData.pickupDate = loadData.requiredDate;
     }
 
+    // 可选字段：deliveryDate 允许为空字符串 → 归一为 null，避免写入 DATE 列报错
+    if (typeof loadData.deliveryDate === 'string' && loadData.deliveryDate.trim() === '') {
+      loadData.deliveryDate = null;
+    }
+
     // 验证必填字段
     const requiredFields = ['origin', 'destination', 'weight', 'serviceType', 'companyName', 'contactPhone'];
     const missingFields = requiredFields.filter(field => !loadData[field]);
