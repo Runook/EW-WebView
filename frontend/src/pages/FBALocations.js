@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './FBALocations.css';
 import fbaLocationsData from '../data/fba-locations.json';
 import { processLocationData } from '../utils/fbaDataProcessor';
+import { useAuth } from '../contexts/AuthContext';
 
 const FBALocations = () => {
   const [locations, setLocations] = useState([]);
@@ -10,6 +11,8 @@ const FBALocations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState('');
   const [selectedType, setSelectedType] = useState('');
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     // 处理和清理数据
@@ -50,6 +53,38 @@ const FBALocations = () => {
   
   // 获取唯一的类型
   const uniqueTypes = [...new Set(locations.map(loc => loc.type))].filter(Boolean).sort();
+
+  // 处理发布货源
+  const handlePublishCargo = (location) => {
+    if (!user) {
+      alert('请先登录');
+      navigate('/login');
+      return;
+    }
+    
+    // 准备FBA位置数据传递给发布货源页面
+    const fbaData = {
+      code: location.code,
+      address: location.address,
+      city: location.city,
+      state: location.state,
+      isFBA: true
+    };
+    
+    // 导航到发布货源页面，并传递FBA数据
+    navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区', { 
+      state: { 
+        openPostModal: true, 
+        fbaDestination: fbaData 
+      } 
+    });
+  };
+
+  // 处理评论功能 - 简单的评论显示
+  const handleComment = (location) => {
+    // 这里可以实现一个简单的评论功能
+    alert(`${location.code} 的评论功能开发中...`);
+  };
 
   return (
     <div className="fba-locations-page">
@@ -98,30 +133,11 @@ const FBALocations = () => {
         </div>
       </section>
 
-      {/* Statistics */}
-      <section className="fba-stats">
-        <div className="container">
-          <div className="stats-grid">
-            <div className="stat-item">
-              <div className="stat-number">{filteredLocations.length}</div>
-              <div className="stat-label">找到的位置</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{uniqueStates.length}</div>
-              <div className="stat-label">覆盖州数</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{uniqueTypes.length}</div>
-              <div className="stat-label">设施类型</div>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* Locations Table */}
       <section className="fba-locations-list">
         <div className="container">
-          <h2>FBA 仓库位置列表</h2>
           
           {filteredLocations.length === 0 ? (
             <div className="no-results">
@@ -155,12 +171,20 @@ const FBALocations = () => {
                         {location.address}
                       </td>
                       <td>
-                        <Link 
-                          to={`/fba-location/${location.id}`}
-                          className="view-details-btn"
-                        >
-                          查看详情
-                        </Link>
+                        <div className="action-buttons">
+                          <button 
+                            onClick={() => handlePublishCargo(location)}
+                            className="action-btn publish-btn"
+                          >
+                            发布货源
+                          </button>
+                          <button 
+                            onClick={() => handleComment(location)}
+                            className="action-btn comment-btn"
+                          >
+                            评论
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

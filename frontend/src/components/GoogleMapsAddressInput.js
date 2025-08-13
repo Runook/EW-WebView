@@ -54,7 +54,8 @@ const GoogleMapsAddressInput = ({
   onChange, 
   required = false,
   onPlaceSelected,
-  icon = MapPin 
+  icon = MapPin,
+  className = ''
 }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -322,7 +323,7 @@ const GoogleMapsAddressInput = ({
   const IconComponent = icon;
 
   return (
-    <div className="form-group address-input-group">
+    <div className={`form-group address-input-group ${className}`.trim()}>
       <label>
         <IconComponent size={16} />
         {label} {required && <span className="required">*</span>}
