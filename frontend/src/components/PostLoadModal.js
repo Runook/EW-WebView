@@ -516,8 +516,6 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       }
     } else {
       // FTL验证
-      console.log(formData,3333);
-      
       const requiredFields = [...baseRequiredFields, 'weight', 'truckType'];      
       const missingFields = requiredFields.filter(field => !formData[field]);
       if (missingFields.length > 0) {
@@ -578,8 +576,6 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         destination_lng: destinationCoords ? destinationCoords.lng : null,
         destination_formatted_address: destinationCoords ? destinationCoords.formattedAddress : formData.destination,
       };
-
-      console.log(submissionData,33333);
       await onSubmit(submissionData);
     } catch (error) {
       console.error('Submission failed after geocoding:', error);

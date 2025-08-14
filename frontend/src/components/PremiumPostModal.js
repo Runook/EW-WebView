@@ -98,7 +98,9 @@ const PremiumPostModal = ({
       truck: '车源信息',
       company: '企业信息',
       job: '职位信息',
-      resume: '简历信息'
+      resume: '简历信息',
+      rental: '物流出租信息',
+      sale:'物流出售'
     };
     return nameMap[postType] || postType;
   };

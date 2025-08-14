@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Phone, Heart, X, Building, Package, Search, Filter, ChevronDown, Upload, Send, ImageIcon, Camera, MapPin, Settings, Truck, Calendar, Eye, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-
+import PremiumPostModal from '../components/PremiumPostModal';
 import './LogisticsRental.css';
-
+import { useModal } from '../hooks';
+import { useAuth } from '../contexts/AuthContext';
+import { useNotification } from '../components/common/Notification';
 const LogisticsRental = () => {
 
   const [activeTab, setActiveTab] = useState('rental'); // 'rental' 或 'sale'
@@ -14,7 +16,12 @@ const LogisticsRental = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
+  const [currentFormData, setCurrentFormData] = useState(null);
+  const { isAuthenticated } = useAuth();
+  const premiumModal = useModal();
+    // 通知和日志系统
+    const { success, error: showError, apiError } = useNotification();
+  
   // 发布表单状态
   const [postForm, setPostForm] = useState({
     images: [],
@@ -67,7 +74,7 @@ const LogisticsRental = () => {
   // eslint-disable-next-line no-unused-vars
   const truckTypes = [
     '轻型卡车',
-    '中型卡车', 
+    '中型卡车',
     '重型卡车',
     '货车',
     '轻型厢式卡车',
@@ -301,7 +308,7 @@ const LogisticsRental = () => {
   // 处理照片上传
   const handleImageUpload = (event) => {
     const files = Array.from(event.target.files);
-    
+
     files.forEach(file => {
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
@@ -346,12 +353,12 @@ const LogisticsRental = () => {
       // 搜索关键词匹配
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase();
-        const matchesSearch = 
+        const matchesSearch =
           item.title?.toLowerCase().includes(searchLower) ||
           item.category?.toLowerCase().includes(searchLower) ||
           item.brand?.toLowerCase().includes(searchLower) ||
           item.description?.toLowerCase().includes(searchLower);
-        
+
         if (!matchesSearch) return false;
       }
 
@@ -396,7 +403,7 @@ const LogisticsRental = () => {
       if (filters.priceRange && filters.priceRange !== '不限') {
         const itemPrice = item.price || '';
         const priceNum = parseInt(itemPrice.replace(/[^\d]/g, ''));
-        
+
         if (activeTab === 'rental') {
           switch (filters.priceRange) {
             case '$500以下/月':
@@ -479,6 +486,10 @@ const LogisticsRental = () => {
 
   // 发布信息
   const handlePost = (formData) => {
+    if (!isAuthenticated) {
+      showError('请先登录再发布');
+      return;
+    }
     const newItem = {
       id: (activeTab === 'rental' ? rentalItems.length : saleItems.length) + 1,
       title: formData.get('title'),
@@ -508,9 +519,45 @@ const LogisticsRental = () => {
       setSaleItems([newItem, ...saleItems]);
     }
     setShowPostModal(false);
+    premiumModal.open();
     resetPostForm();
   };
 
+
+ // 确认发布函数
+  const handleConfirmPost = async ({ formData, premium }) => {
+   
+  // await withLoading(async () => {
+  //   try {
+  //     const postData = {
+  //       ...formData,
+  //       premium: premium
+  //     };
+
+  //     const endpoint = activeTab === 'jobs' ? '/jobs' : '/resumes';
+      
+  //     const result = await apiClient.post(endpoint, postData);
+
+  //     if (result.success) {
+  //       premiumModal.close();
+  //       setCurrentFormData(null);
+  //       if (activeTab === 'jobs') {
+  //         fetchJobs();
+  //       } else {
+  //         fetchResumes();
+  //       }
+        
+  //       const typeName = activeTab === 'jobs' ? '职位' : '简历';
+  //       success(`${typeName}发布成功！已扣除 ${result.creditsSpent} 积分`);
+  //     } else {
+  //       throw new Error(result.message || '发布失败');
+  //     }
+  //   } catch (error) {
+  //     apiLogger.error('发布失败', error);
+  //     showError('发布失败: ' + error.message);
+  //   }
+  // });
+};
   // 查看详情
   const handleViewDetails = (item) => {
     setSelectedItem(item);
@@ -521,7 +568,7 @@ const LogisticsRental = () => {
   // 图片导航
   const nextImage = () => {
     if (selectedItem && selectedItem.images.length > 1) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev === selectedItem.images.length - 1 ? 0 : prev + 1
       );
     }
@@ -529,7 +576,7 @@ const LogisticsRental = () => {
 
   const prevImage = () => {
     if (selectedItem && selectedItem.images.length > 1) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev === 0 ? selectedItem.images.length - 1 : prev - 1
       );
     }
@@ -553,14 +600,14 @@ const LogisticsRental = () => {
 
       {/* 切换标签 */}
       <div className="tab-switcher">
-        <button 
+        <button
           className={`tab-button ${activeTab === 'rental' ? 'active' : ''}`}
           onClick={() => setActiveTab('rental')}
         >
           <Building size={20} />
-          物流出租
+          
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'sale' ? 'active' : ''}`}
           onClick={() => setActiveTab('sale')}
         >
@@ -580,9 +627,9 @@ const LogisticsRental = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        
+
         <div className="control-buttons">
-          <button 
+          <button
             className={`filter-button ${showFilters ? 'active' : ''}`}
             onClick={() => setShowFilters(!showFilters)}
           >
@@ -590,8 +637,8 @@ const LogisticsRental = () => {
             筛选
             <ChevronDown size={16} className={showFilters ? 'rotated' : ''} />
           </button>
-          
-          <button 
+
+          <button
             className="post-button"
             onClick={() => setShowPostModal(true)}
           >
@@ -607,8 +654,8 @@ const LogisticsRental = () => {
           <div className="filters-grid">
             <div className="filter-group">
               <label>分类</label>
-              <select 
-                value={filters.category} 
+              <select
+                value={filters.category}
                 onChange={(e) => handleFilterChange('category', e.target.value)}
               >
                 <option value="">全部分类</option>
@@ -620,8 +667,8 @@ const LogisticsRental = () => {
 
             <div className="filter-group">
               <label>地点</label>
-              <select 
-                value={filters.location} 
+              <select
+                value={filters.location}
                 onChange={(e) => handleFilterChange('location', e.target.value)}
               >
                 <option value="">全部地点</option>
@@ -633,8 +680,8 @@ const LogisticsRental = () => {
 
             <div className="filter-group">
               <label>价格范围</label>
-              <select 
-                value={filters.priceRange} 
+              <select
+                value={filters.priceRange}
                 onChange={(e) => handleFilterChange('priceRange', e.target.value)}
               >
                 <option value="">全部价格</option>
@@ -646,8 +693,8 @@ const LogisticsRental = () => {
 
             <div className="filter-group">
               <label>设备状态</label>
-              <select 
-                value={filters.condition} 
+              <select
+                value={filters.condition}
                 onChange={(e) => handleFilterChange('condition', e.target.value)}
               >
                 <option value="">全部状态</option>
@@ -660,8 +707,8 @@ const LogisticsRental = () => {
             {activeTab === 'rental' && (
               <div className="filter-group">
                 <label>租期</label>
-                <select 
-                  value={filters.rentalPeriod} 
+                <select
+                  value={filters.rentalPeriod}
                   onChange={(e) => handleFilterChange('rentalPeriod', e.target.value)}
                 >
                   <option value="">全部租期</option>
@@ -674,8 +721,8 @@ const LogisticsRental = () => {
 
             <div className="filter-group">
               <label>发布时间</label>
-              <select 
-                value={filters.publishTime} 
+              <select
+                value={filters.publishTime}
                 onChange={(e) => handleFilterChange('publishTime', e.target.value)}
               >
                 <option value="">全部时间</option>
@@ -686,7 +733,7 @@ const LogisticsRental = () => {
             </div>
           </div>
         </div>
-        )}
+      )}
 
       {/* 内容区域 */}
       <div className="content-area">
@@ -696,8 +743,8 @@ const LogisticsRental = () => {
               {/* 添加图片显示区域 */}
               <div className="item-image">
                 {item.images && item.images.length > 0 ? (
-                  <img 
-                    src={item.images[item.coverImageIndex || 0]} 
+                  <img
+                    src={item.images[item.coverImageIndex || 0]}
                     alt={item.title}
                     onError={(e) => {
                       e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop';
@@ -728,7 +775,7 @@ const LogisticsRental = () => {
                   </div>
                   <div className="item-price">{item.price}</div>
                 </div>
-                
+
                 <div className="item-details">
                   <div className="detail-item">
                     <MapPin size={16} />
@@ -757,13 +804,13 @@ const LogisticsRental = () => {
                     <span><Eye size={14} /> {item.views}浏览</span>
                     <span>{item.contact.name} · {item.contact.company}</span>
                   </div>
-                  
+
                   <div className="item-actions">
                     <button className="contact-button">
                       <Phone size={16} />
                       联系卖家
                     </button>
-                    <button 
+                    <button
                       className="details-button"
                       onClick={() => handleViewDetails(item)}
                     >
@@ -798,7 +845,7 @@ const LogisticsRental = () => {
                 <X size={24} />
               </button>
             </div>
-            
+
             <form onSubmit={(e) => {
               e.preventDefault();
               handlePost(new FormData(e.target));
@@ -859,7 +906,7 @@ const LogisticsRental = () => {
                   <label>标题 *</label>
                   <input type="text" name="title" required placeholder="如：重型冷藏车出租" />
                 </div>
-                
+
                 <div className="form-group">
                   <label>分类 *</label>
                   <select name="category" required>
@@ -869,7 +916,7 @@ const LogisticsRental = () => {
                     ))}
                   </select>
                 </div>
-                
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>地点 *</label>
@@ -885,7 +932,7 @@ const LogisticsRental = () => {
                     <input type="text" name="price" required placeholder={activeTab === 'rental' ? '如：$2500/月' : '如：$85000'} />
                   </div>
                 </div>
-                
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>设备状态 *</label>
@@ -901,12 +948,12 @@ const LogisticsRental = () => {
                     <input type="text" name="brand" placeholder="如：沃尔沃" />
                   </div>
                 </div>
-                
+
                 <div className="form-group">
                   <label>详细描述 *</label>
                   <textarea name="description" required placeholder="详细描述设备信息、技术参数、使用条件等..."></textarea>
                 </div>
-                
+
                 <div className="form-row">
                   <div className="form-group">
                     <label>联系人 *</label>
@@ -917,13 +964,13 @@ const LogisticsRental = () => {
                     <input type="text" name="company" placeholder="如：冷链物流公司" />
                   </div>
                 </div>
-                
+
                 <div className="form-group">
                   <label>联系电话 *</label>
                   <input type="tel" name="phone" required placeholder="如：(123) 456-7890" />
                 </div>
               </div>
-              
+
               <div className="form-actions">
                 <button type="button" className="cancel-button" onClick={() => {
                   setShowPostModal(false);
@@ -941,6 +988,17 @@ const LogisticsRental = () => {
         </div>
       )}
 
+      {/* 积分发布模态框 */}
+      <PremiumPostModal
+        isOpen={premiumModal.isOpen}
+        onClose={() => {
+          premiumModal.close();
+          setCurrentFormData(null);
+        }}
+        onConfirm={handleConfirmPost}
+        postType={activeTab === 'rental' ? 'rental' : 'sale'}
+        formData={currentFormData}
+      />
       {/* 详情模态框 */}
       {showDetailModal && selectedItem && (
         <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
@@ -951,14 +1009,14 @@ const LogisticsRental = () => {
                 <X size={24} />
               </button>
             </div>
-            
+
             <div className="modal-body">
               {/* 图片展示区域 */}
               {selectedItem.images && selectedItem.images.length > 0 && (
                 <div className="detail-images">
                   <div className="main-image">
-                    <img 
-                      src={selectedItem.images[currentImageIndex]} 
+                    <img
+                      src={selectedItem.images[currentImageIndex]}
                       alt={`${selectedItem.title} - 图片 ${currentImageIndex + 1}`}
                       onError={(e) => {
                         e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop';
@@ -978,7 +1036,7 @@ const LogisticsRental = () => {
                       </>
                     )}
                   </div>
-                  
+
                   {selectedItem.images.length > 1 && (
                     <div className="image-thumbnails">
                       {selectedItem.images.map((image, index) => (
@@ -999,7 +1057,7 @@ const LogisticsRental = () => {
               )}
 
               <div className="detail-price">{selectedItem.price}</div>
-              
+
               <div className="detail-info">
                 <div className="info-row">
                   <span className="label">分类：</span>
@@ -1057,7 +1115,7 @@ const LogisticsRental = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="form-actions">
               <button className="contact-button">
                 <Phone size={16} />
