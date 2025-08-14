@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Building, Package, Truck, Clock, Phone, Mail } from 
 import './FBALocationDetail.css';
 import fbaLocationsData from '../data/fba-locations.json';
 import { processLocationData } from '../utils/fbaDataProcessor';
+import FBAComments from '../components/FBAComments';
 
 const FBALocationDetail = () => {
   const { id } = useParams();
@@ -142,59 +143,9 @@ const FBALocationDetail = () => {
               </div>
             </div>
 
-            {/* Capacity & Services */}
-            <div className="info-section">
-              <h2>
-                <Package size={24} />
-                设施容量
-              </h2>
-              <div className="capacity-info">
-                <p>{location.capacity}</p>
-              </div>
-              
-              <h3>提供服务</h3>
-              <div className="services-list">
-                {location.services.map((service, index) => (
-                  <div key={index} className="service-item">
-                    <span className="service-dot"></span>
-                    {service}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Features */}
-            <div className="info-section">
-              <h2>设施特色</h2>
-              <div className="features-grid">
-                {location.features.map((feature, index) => (
-                  <div key={index} className="feature-item">
-                    <div className="feature-icon">✓</div>
-                    <div className="feature-text">{feature}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Contact Information */}
-            <div className="info-section">
-              <h2>联系方式</h2>
-              <div className="contact-info">
-                <div className="contact-item">
-                  <Phone size={18} />
-                  <div>
-                    <div className="contact-label">客服电话</div>
-                    <div className="contact-value">{location.contact.phone}</div>
-                  </div>
-                </div>
-                <div className="contact-item">
-                  <Mail size={18} />
-                  <div>
-                    <div className="contact-label">邮箱支持</div>
-                    <div className="contact-value">{location.contact.email}</div>
-                  </div>
-                </div>
-              </div>
+            {/* 用户评论区域 */}
+            <div className="info-section full-width">
+              <FBAComments locationCode={location.code} />
             </div>
 
             {/* Additional Info */}

@@ -1,0 +1,462 @@
+.comments-section {
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 2px solid #f0f2f5;
+}
+
+.comments-header {
+  margin-bottom: 30px;
+}
+
+.comments-header h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a202c;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+/* 评论表单 */
+.comment-form {
+  margin-bottom: 40px;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.comment-input {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.comment-input textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.comment-input textarea:focus {
+  outline: none;
+  border-color: #3182ce;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.comment-input textarea::placeholder {
+  color: #a0aec0;
+}
+
+/* 文件选择预览 */
+.selected-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4a5568;
+}
+
+.remove-file {
+  background: none;
+  border: none;
+  color: #e53e3e;
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.remove-file:hover {
+  background: #fed7d7;
+}
+
+.input-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.left-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.media-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.media-btn:hover:not(:disabled) {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.media-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.submit-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #3182ce;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #2c5aa0;
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 登录提示 */
+.login-prompt {
+  text-align: center;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.login-prompt a {
+  color: #3182ce;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-prompt a:hover {
+  text-decoration: underline;
+}
+
+/* 评论列表 */
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.no-comments {
+  text-align: center;
+  padding: 60px 20px;
+  color: #718096;
+}
+
+.no-comments svg {
+  margin-bottom: 16px;
+  color: #cbd5e0;
+}
+
+.no-comments p {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #4a5568;
+}
+
+/* 评论项 */
+.comment {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  transition: box-shadow 0.2s ease;
+}
+
+.comment:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.comment.reply {
+  margin-left: 40px;
+  border-left: 3px solid #3182ce;
+  background: #f8fafc;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.comment-time {
+  font-size: 12px;
+  color: #718096;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.delete-btn {
+  background: none;
+  border: none;
+  color: #e53e3e;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.delete-btn:hover {
+  background: #fed7d7;
+}
+
+/* 评论内容 */
+.comment-content {
+  margin-bottom: 16px;
+}
+
+.comment-content p {
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* 媒体文件 */
+.comment-media {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.media-item {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.media-image {
+  max-width: 200px;
+  max-height: 200px;
+  width: auto;
+  height: auto;
+  display: block;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.media-image:hover {
+  transform: scale(1.02);
+}
+
+.media-video {
+  max-width: 300px;
+  max-height: 200px;
+  width: auto;
+  height: auto;
+  display: block;
+}
+
+/* 评论操作 */
+.comment-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #718096;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover:not(:disabled) {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+  color: #4a5568;
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-btn.liked {
+  color: #e53e3e;
+  border-color: #feb2b2;
+  background: #fed7d7;
+}
+
+.action-btn.liked:hover {
+  background: #fbb6ce;
+}
+
+/* 回复表单 */
+.reply-form {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.reply-form .comment-input textarea {
+  min-height: 60px;
+}
+
+.reply-form .input-actions {
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.reply-form .action-btn {
+  background: #f7fafc;
+}
+
+/* 回复列表 */
+.replies {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .comment {
+    padding: 16px;
+    border-radius: 8px;
+  }
+  
+  .comment.reply {
+    margin-left: 20px;
+  }
+  
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  
+  .comment-form {
+    padding: 20px;
+  }
+  
+  .input-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .left-actions {
+    width: 100%;
+  }
+  
+  .submit-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .media-image {
+    max-width: 150px;
+    max-height: 150px;
+  }
+  
+  .media-video {
+    max-width: 250px;
+    max-height: 150px;
+  }
+  
+  .comment-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .action-btn {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+}

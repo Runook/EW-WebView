@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 const { testConnection } = require('./config/database');
 const config = require('./config/app');
 const logger = require('./utils/logger');
@@ -88,6 +89,9 @@ app.use(compression());
 app.use(morgan(config.logging.format));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// 静态文件服务 - 为上传的媒体文件提供服务
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // 请求日志中间件
 app.use((req, res, next) => {
@@ -197,6 +201,7 @@ app.get('/api', (req, res) => {
       jobs: '/api/jobs',
       resumes: '/api/resumes',
       users: '/api/user-management',
+      fba: '/api/fba',
     }
   });
 });
@@ -208,6 +213,19 @@ app.use('/api/companies', require('./routes/companies'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/resumes', require('./routes/resumes'));
 app.use('/api/user-management', require('./routes/user-management'));
+// 临时测试路由
+app.get('/api/fba/test', (req, res) => {
+  res.json({ message: 'FBA test route working!' });
+});
+
+// 使用简化版本的FBA API
+try {
+  const fbaRoutes = require('./routes/fba-simple');
+  app.use('/api/fba', fbaRoutes);
+  console.log('FBA routes loaded successfully');
+} catch (error) {
+  console.error('Error loading FBA routes:', error);
+}
 
 // 404 处理
 app.use('*', (req, res) => {

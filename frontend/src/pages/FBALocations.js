@@ -80,10 +80,10 @@ const FBALocations = () => {
     });
   };
 
-  // 处理评论功能 - 简单的评论显示
+  // 处理评论功能 - 导航到详情页面
   const handleComment = (location) => {
-    // 这里可以实现一个简单的评论功能
-    alert(`${location.code} 的评论功能开发中...`);
+    // 导航到FBA位置详情页面，那里有完整的评论功能
+    navigate(`/fba-location/${location.id}`);
   };
 
   return (

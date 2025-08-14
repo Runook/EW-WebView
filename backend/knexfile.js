@@ -8,7 +8,7 @@ module.exports = {
       port: process.env.DB_PORT || 5432,
       database: process.env.DB_NAME || 'ew_logistics',
       user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || '199808068138'
+      password: process.env.DB_PASSWORD || 'password'
     },
     migrations: {
       directory: './migrations',
