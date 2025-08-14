@@ -44,7 +44,7 @@ import { useForm, useToggle, useConfirmDialog, useAsyncState } from '../hooks';
 import { Modal, Button } from './common';
 import { geocodeAddress as geocodeUtil } from '../config/googleMaps'; // Corrected path
 
-const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
+const PostLoadModal = ({ isOpen, onClose, onSubmit, fbaDestination }) => {
   // 表单初始数据
   const initialFormData = {
     type: 'load',
@@ -390,6 +390,21 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       calculateFreightClass(formData, false);
     }
   }, [formData.weight, formData.length, formData.width, formData.height, formData.hazmat, formData.fragile, formData.serviceType, calculateFreightClass, formData]);
+
+  // Handle FBA destination when modal opens with FBA data
+  useEffect(() => {
+    if (isOpen && fbaDestination) {
+      // Only use FBA code as destination
+      const fbaCode = fbaDestination.code;
+      
+      // Update the form with FBA destination
+      setFormData(prev => ({ 
+        ...prev, 
+        destination: fbaCode,
+        destinationLocationTypes: ['fba'] // Mark as FBA location
+      }));
+    }
+  }, [isOpen, fbaDestination, setFormData]);
 
   // ====== 表单事件处理函数 (约100行) ======
   
@@ -825,13 +840,14 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               />
 
               <GoogleMapsAddressInput
-                label="终点 (Destination)"
+                label={formData.destinationLocationTypes?.includes('fba') ? "终点 (Destination) - 🏭 FBA仓库" : "终点 (Destination)"}
                 placeholder="输入城市名、街道地址或邮编（如：10001 或 Wall Street）"
                 value={formData.destination}
                 onChange={(value) => setFormData(prev => ({ ...prev, destination: value }))}
                 onPlaceSelected={handleDestinationPlaceSelected}
                 required={true}
                 icon={MapPin}
+                className={formData.destinationLocationTypes?.includes('fba') ? 'fba-destination' : ''}
               />
 
               <div className="form-group">
