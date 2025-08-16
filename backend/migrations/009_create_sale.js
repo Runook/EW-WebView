@@ -18,6 +18,7 @@ exports.up = function(knex) {
       table.text('images').notNullable();
       table.string('contact_phone', 50).nullable();
       table.string('contact_email', 255).nullable();
+      table.string('company', 255).nullable();
       table.string('contact_person', 100).nullable();
       table.integer('views').notNullable().defaultTo(0);
       table.boolean('is_active').notNullable().defaultTo(true);
@@ -26,6 +27,8 @@ exports.up = function(knex) {
       
       // 索引
       table.index(['sub_category']);
+      table.index(['company']);
+      table.index(['category']);
       table.index(['location']);
       table.index(['condition']);
       table.index(['is_active']);
