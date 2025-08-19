@@ -30,7 +30,6 @@ class FBAExchange {
     try {
       let query = db('fba_exchanges')
         .select('*')
-        .where('status', 'active')
         .orderBy('created_at', 'desc');
 
       // 应用筛选条件
@@ -87,7 +86,6 @@ class FBAExchange {
       return await db('fba_exchanges')
         .select('*')
         .where('user_id', userId)
-        .where('status', 'active') // 只返回活跃状态的记录
         .orderBy('created_at', 'desc');
     } catch (error) {
       throw new Error(`查询用户FBA交换记录失败: ${error.message}`);
@@ -111,12 +109,10 @@ class FBAExchange {
 
   static async delete(id) {
     try {
+      // 硬删除：真正从数据库中删除记录
       return await db('fba_exchanges')
         .where('id', id)
-        .update({
-          status: 'cancelled',
-          updated_at: new Date()
-        });
+        .del();
     } catch (error) {
       throw new Error(`删除FBA交换记录失败: ${error.message}`);
     }
@@ -139,7 +135,6 @@ class FBAExchange {
           db.raw('COUNT(*) as total_exchanges'),
           db.raw('COUNT(*) FILTER (WHERE exchange_type = ?) as supply_count', ['出让预约']),
           db.raw('COUNT(*) FILTER (WHERE exchange_type = ?) as demand_count', ['寻求预约']),
-          db.raw('COUNT(*) FILTER (WHERE status = ?) as active_count', ['active']),
           db.raw('COUNT(*) FILTER (WHERE is_urgent = true) as urgent_count')
         )
         .first();
@@ -148,7 +143,6 @@ class FBAExchange {
         total_exchanges: parseInt(stats.total_exchanges) || 0,
         supply_count: parseInt(stats.supply_count) || 0,
         demand_count: parseInt(stats.demand_count) || 0,
-        active_count: parseInt(stats.active_count) || 0,
         urgent_count: parseInt(stats.urgent_count) || 0
       };
     } catch (error) {
@@ -158,13 +152,10 @@ class FBAExchange {
 
   static async cleanupExpired() {
     try {
+      // 硬删除过期记录
       return await db('fba_exchanges')
         .where('expires_at', '<', new Date())
-        .where('status', 'active')
-        .update({
-          status: 'cancelled',
-          updated_at: new Date()
-        });
+        .del();
     } catch (error) {
       throw new Error(`清理过期记录失败: ${error.message}`);
     }
