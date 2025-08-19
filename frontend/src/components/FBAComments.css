@@ -368,11 +368,11 @@
 .action-btn.liked {
   color: #e53e3e;
   border-color: #feb2b2;
-  background: #fed7d7;
 }
 
 .action-btn.liked:hover {
-  background: #fbb6ce;
+  background: #f7fafc;
+  border-color: #feb2b2;
 }
 
 /* 回复表单 */

@@ -14621,19 +14621,57 @@ router.get('/locations/:code/comments', optionalAuth, (req, res) => {
       });
     }
 
-    const locationComments = commentStorage.filter(c => 
+    // 获取所有父评论
+    const parentComments = commentStorage.filter(c => 
       c.fba_location_id === code && 
       !c.is_deleted && 
       !c.parent_id
     );
 
+    // 为每个父评论加载回复
+    const commentsWithReplies = parentComments.map(parent => {
+      // 查找该父评论的所有回复
+      const replies = commentStorage.filter(c => 
+        c.fba_location_id === code && 
+        !c.is_deleted && 
+        c.parent_id === parent.id
+      );
+
+      // 为回复添加点赞状态和计数
+      const repliesWithLikes = replies.map(reply => {
+        const likeCount = commentLikes.filter(l => l.comment_id === reply.id).length;
+        const isLiked = req.user ? 
+          commentLikes.some(l => l.comment_id === reply.id && l.user_id === req.user.id) : 
+          false;
+
+        return {
+          ...reply,
+          like_count: likeCount,
+          is_liked: isLiked
+        };
+      });
+
+      // 为父评论添加点赞状态、计数和回复
+      const likeCount = commentLikes.filter(l => l.comment_id === parent.id).length;
+      const isLiked = req.user ? 
+        commentLikes.some(l => l.comment_id === parent.id && l.user_id === req.user.id) : 
+        false;
+
+      return {
+        ...parent,
+        like_count: likeCount,
+        is_liked: isLiked,
+        replies: repliesWithLikes
+      };
+    });
+
     res.json({
       success: true,
-      data: locationComments,
+      data: commentsWithReplies,
       pagination: {
         page: 1,
         limit: 10,
-        total: locationComments.length,
+        total: commentsWithReplies.length,
         pages: 1
       }
     });

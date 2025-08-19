@@ -4,6 +4,7 @@ import './FBALocations.css';
 import fbaLocationsData from '../data/fba-locations.json';
 import { processLocationData } from '../utils/fbaDataProcessor';
 import { useAuth } from '../contexts/AuthContext';
+import FBAExchangeModal from '../components/FBAExchangeModal';
 
 const FBALocations = () => {
   const [locations, setLocations] = useState([]);
@@ -11,6 +12,8 @@ const FBALocations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState('');
   const [selectedType, setSelectedType] = useState('');
+  const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -84,6 +87,12 @@ const FBALocations = () => {
   const handleComment = (location) => {
     // 导航到FBA位置详情页面，那里有完整的评论功能
     navigate(`/fba-location/${location.id}`);
+  };
+
+  // 处理预约交换功能
+  const handleExchange = (location) => {
+    setSelectedLocation(location);
+    setExchangeModalOpen(true);
   };
 
   return (
@@ -179,6 +188,12 @@ const FBALocations = () => {
                             发布货源
                           </button>
                           <button 
+                            onClick={() => handleExchange(location)}
+                            className="action-btn exchange-btn"
+                          >
+                            预约交换
+                          </button>
+                          <button 
                             onClick={() => handleComment(location)}
                             className="action-btn comment-btn"
                           >
@@ -218,6 +233,17 @@ const FBALocations = () => {
           </div>
         </div>
       </section>
+
+      {/* FBA Exchange Modal */}
+      <FBAExchangeModal
+        isOpen={exchangeModalOpen}
+        onClose={() => setExchangeModalOpen(false)}
+        location={selectedLocation}
+        onSuccess={() => {
+          // 可以在这里添加成功后的处理，比如刷新数据
+          console.log('预约交换信息发布成功');
+        }}
+      />
     </div>
   );
 };

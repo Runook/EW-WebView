@@ -32,7 +32,8 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "objection": "^3.1.5",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "eslint": "^8.49.0",

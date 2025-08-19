@@ -9,11 +9,11 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=5001
-      - DB_HOST=host.docker.internal  # 连接到宿主机的数据库
+      - DB_HOST=host.docker.internal  # 连接到宿主机的本地PostgreSQL
       - DB_PORT=5432
       - DB_NAME=ew_logistics
-      - DB_USER=ew-user
-      - DB_PASSWORD=ew_logistics123
+      - DB_USER=ew-josh
+      - DB_PASSWORD=
       - JWT_SECRET=dev-secret-key-change-in-production
       - FRONTEND_URL=http://localhost:3000
     volumes:
@@ -52,7 +52,6 @@ services:
   #     - "5432:5432"
   #   volumes:
   #     - postgres_data:/var/lib/postgresql/data
-  #     - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
   #   networks:
   #     - app-network
   #   restart: unless-stopped

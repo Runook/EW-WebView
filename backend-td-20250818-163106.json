@@ -2,7 +2,7 @@
   "containerDefinitions": [
     {
       "name": "ew-logistics-backend",
-      "image": "470489279883.dkr.ecr.us-east-1.amazonaws.com/ew-logistics-backend:fix-auth-system",
+      "image": "470489279883.dkr.ecr.us-east-1.amazonaws.com/ew-logistics-backend:20250818-163106",
       "cpu": 0,
       "portMappings": [
         {
@@ -23,23 +23,23 @@
           "value": "5001"
         },
         {
-          "name": "DB_HOST",
+          "name": "RDS_ENDPOINT",
           "value": "ew-logistics-db.ccju8uyckbbt.us-east-1.rds.amazonaws.com"
         },
         {
-          "name": "DB_PORT",
+          "name": "RDS_PORT",
           "value": "5432"
         },
         {
-          "name": "DB_NAME",
+          "name": "RDS_DB_NAME",
           "value": "ewlogistics"
         },
         {
-          "name": "DB_USER",
+          "name": "RDS_USERNAME",
           "value": "ewjosh"
         },
         {
-          "name": "DB_PASSWORD",
+          "name": "RDS_PASSWORD",
           "value": "Ew95279527"
         },
         {

@@ -222,7 +222,13 @@ app.get('/api/fba/test', (req, res) => {
 try {
   const fbaRoutes = require('./routes/fba-simple');
   app.use('/api/fba', fbaRoutes);
+  
+  // 添加FBA Exchange路由
+  const fbaExchangeRoutes = require('./routes/fba-exchange');
+  app.use('/api/fba-exchange', fbaExchangeRoutes);
+  
   console.log('FBA routes loaded successfully');
+  console.log('FBA Exchange routes loaded successfully');
 } catch (error) {
   console.error('Error loading FBA routes:', error);
 }
