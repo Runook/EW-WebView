@@ -123,7 +123,7 @@ router.post('/', auth, async (req, res) => {
       fba_location_id: null,
       fba_code,
       exchange_type,
-      pricing_strategy: pricing_strategy || '市价',
+      pricing_strategy: pricing_strategy || '普通',
       contact_person,
       contact_phone,
       appointment_date,

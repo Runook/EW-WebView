@@ -10,16 +10,16 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
   const [myExchanges, setMyExchanges] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
-    exchange_type: '',
-    cargo_type: '',
-    pricing_strategy: ''
+    exchange_type: [],
+    pricing_strategy: []
   });
+  const [searchTerm, setSearchTerm] = useState('');
 
   // 发布表单数据
   const [formData, setFormData] = useState({
     fba_code: location?.code || '',
-    exchange_type: '寻求预约',
-    pricing_strategy: '', // 改为空值，让用户必须选择
+    exchange_type: '出让预约',
+    pricing_strategy: '普通', // 默认选择普通
     contact_person: user?.first_name || '',
     contact_phone: user?.phone || '',
     appointment_date: '',
@@ -36,25 +36,11 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
   const fetchExchanges = async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        ...filters
-      });
-      
-      // 只有在筛选器中明确设置了fba_code时才添加
-      if (filters.fba_code) {
-        params.set('fba_code', filters.fba_code);
-      }
-
-      // 移除空值
-      Object.keys(params).forEach(key => {
-        if (!params.get(key)) params.delete(key);
-      });
-
-      const response = await apiClient.get(`/fba-exchange?${params.toString()}`);
+      // 不发送筛选参数到后端，获取所有数据，在前端进行筛选
+      const response = await apiClient.get('/fba-exchange');
       
       if (response.success) {
         console.log('FBA Exchange API 返回数据:', response.data.length, '条记录');
-        console.log('前5条数据:', response.data.slice(0, 5));
         setExchanges(response.data);
       }
     } catch (error) {
@@ -109,7 +95,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
     } else if (isOpen && activeTab === 'my-posts') {
       fetchMyExchanges();
     }
-  }, [isOpen, activeTab, filters, location]);
+  }, [isOpen, activeTab, location]); // 移除filters依赖，因为不再发送到后端
 
   useEffect(() => {
     if (isOpen && location) {
@@ -120,11 +106,31 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
     }
   }, [isOpen, location]);
 
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
+  const handleFilterChange = (key, value, checked) => {
+    setFilters(prev => {
+      const currentArray = prev[key];
+      if (checked) {
+        // 添加到数组
+        return {
+          ...prev,
+          [key]: [...currentArray, value]
+        };
+      } else {
+        // 从数组中移除
+        return {
+          ...prev,
+          [key]: currentArray.filter(item => item !== value)
+        };
+      }
+    });
+  };
+
+  const clearAllFilters = () => {
+    setFilters({
+      exchange_type: [],
+      pricing_strategy: []
+    });
+    setSearchTerm('');
   };
 
   const handleFormChange = (e) => {
@@ -189,8 +195,8 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
         // 重置表单
         setFormData({
           fba_code: location?.code || '',
-          exchange_type: '寻求预约',
-          pricing_strategy: '', // 改为空值，让用户必须选择
+          exchange_type: '出让预约',
+          pricing_strategy: '普通', // 默认选择普通
           contact_person: user?.first_name || '',
           contact_phone: user?.phone || '',
           appointment_date: '',
@@ -288,102 +294,253 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
           <div className="market-tab">
             {/* 筛选器 */}
             <div className="filters">
-              <div className="filter-row">
-                <select 
-                  value={filters.exchange_type} 
-                  onChange={(e) => handleFilterChange('exchange_type', e.target.value)}
+              <div className="filter-inline">
+                {/* 所有筛选选项在一行 */}
+                <label className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={filters.exchange_type.includes('出让预约')}
+                    onChange={(e) => handleFilterChange('exchange_type', '出让预约', e.target.checked)}
+                  />
+                  <span className="checkmark"></span>
+                  出让预约
+                </label>
+                <label className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={filters.exchange_type.includes('寻求预约')}
+                    onChange={(e) => handleFilterChange('exchange_type', '寻求预约', e.target.checked)}
+                  />
+                  <span className="checkmark"></span>
+                  寻求预约
+                </label>
+
+                <label className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={filters.pricing_strategy.includes('急需')}
+                    onChange={(e) => handleFilterChange('pricing_strategy', '急需', e.target.checked)}
+                  />
+                  <span className="checkmark"></span>
+                  急单
+                </label>
+                
+                {/* FBA代码搜索框 */}
+                <div className="search-box">
+                  <input
+                    type="text"
+                    placeholder="搜索FBA代码"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-input"
+                  />
+                </div>
+                
+                {/* 清除筛选按钮 */}
+                <button 
+                  className="clear-filters-btn"
+                  onClick={clearAllFilters}
+                  disabled={filters.exchange_type.length === 0 && filters.pricing_strategy.length === 0 && !searchTerm}
                 >
-                  <option value="">全部</option>
-                  <option value="出让预约">出让预约</option>
-                  <option value="寻求预约">寻求预约</option>
-                </select>
-                <select 
-                  value={filters.cargo_type} 
-                  onChange={(e) => handleFilterChange('cargo_type', e.target.value)}
-                >
-                  <option value="">全部类型</option>
-                  <option value="地板">地板</option>
-                  <option value="卡板">卡板</option>
-                </select>
-                <select 
-                  value={filters.pricing_strategy} 
-                  onChange={(e) => handleFilterChange('pricing_strategy', e.target.value)}
-                >
-                  <option value="">全部策略</option>
-                  <option value="急需">急需</option>
-                  <option value="好价">好价</option>
-                  <option value="市价">市价</option>
-                </select>
+                  清除筛选
+                </button>
               </div>
             </div>
 
-            <p className="results-count">共 {exchanges.length} 条记录</p>
+            {(() => {
+              // 计算筛选后的结果数量 - 使用与显示相同的筛选逻辑
+              let filteredExchanges = exchanges;
 
-            {/* 交换列表 */}
-            <div className="exchanges-list">
-              {loading ? (
-                <div className="loading">加载中...</div>
-              ) : exchanges.length === 0 ? (
-                <div className="no-results">暂无相关预约交换信息</div>
-              ) : (
-                exchanges.map((exchange) => (
-                  <div key={exchange.id} className="exchange-item">
-                    <div className="exchange-info-row">
-                      <span className={`exchange-type ${exchange.exchange_type === '出让预约' ? 'supply' : 'demand'}`}>
-                        {exchange.exchange_type === '出让预约' ? '出让' : '寻求'}
-                      </span>
-                      
-                      <span className="cargo-type">{exchange.cargo_type}</span>
-                      
-                      {exchange.pricing_strategy !== '市价' && (
-                        <span className={`pricing ${exchange.pricing_strategy === '急需' ? 'urgent' : 'good-price'}`}>
-                          {exchange.pricing_strategy}
-                        </span>
+              const allExchangeTypes = ['出让预约', '寻求预约'];
+              const allPricingStrategies = ['急需'];
+
+              if (filters.exchange_type.length > 0 && filters.exchange_type.length < allExchangeTypes.length) {
+                filteredExchanges = filteredExchanges.filter(ex => 
+                  filters.exchange_type.includes(ex.exchange_type)
+                );
+              }
+
+              // 只有选择了急单时才筛选，否则显示所有
+              if (filters.pricing_strategy.length > 0) {
+                filteredExchanges = filteredExchanges.filter(ex => 
+                  filters.pricing_strategy.includes(ex.pricing_strategy)
+                );
+              }
+
+              // 按搜索词筛选FBA代码
+              if (searchTerm.trim()) {
+                filteredExchanges = filteredExchanges.filter(ex => 
+                  ex.fba_code && ex.fba_code.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+              }
+              
+              return <p className="results-count">共 {filteredExchanges.length} 条记录</p>;
+            })()}
+
+            {loading ? (
+              <div className="loading">加载中...</div>
+            ) : exchanges.length === 0 ? (
+              <div className="no-results">暂无相关预约交换信息</div>
+            ) : (
+              <>
+                {/* 根据筛选器显示内容 */}
+                {(() => {
+                  // 筛选逻辑：如果选择了全部选项或没选择，则等同于不筛选
+                  let filteredExchanges = exchanges;
+
+                  // 所有可能的选项
+                  const allExchangeTypes = ['出让预约', '寻求预约'];
+                  const allPricingStrategies = ['急需'];
+
+                  // 按交换类型筛选 - 只有在选择了部分选项时才筛选
+                  if (filters.exchange_type.length > 0 && filters.exchange_type.length < allExchangeTypes.length) {
+                    filteredExchanges = filteredExchanges.filter(ex => 
+                      filters.exchange_type.includes(ex.exchange_type)
+                    );
+                  }
+
+                  // 只有选择了急单时才筛选，否则显示所有
+                  if (filters.pricing_strategy.length > 0) {
+                    filteredExchanges = filteredExchanges.filter(ex => 
+                      filters.pricing_strategy.includes(ex.pricing_strategy)
+                    );
+                  }
+
+                  // 按搜索词筛选FBA代码
+                  if (searchTerm.trim()) {
+                    filteredExchanges = filteredExchanges.filter(ex => 
+                      ex.fba_code && ex.fba_code.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                  }
+
+                  const demandExchanges = filteredExchanges.filter(ex => ex.exchange_type === '寻求预约');
+                  const supplyExchanges = filteredExchanges.filter(ex => ex.exchange_type === '出让预约');
+
+                  return (
+                    <>
+                      {/* 出让预约部分 - 优先显示 */}
+                      {supplyExchanges.length > 0 && (
+                        <div className="exchange-section">
+                          <h3 className="section-title supply-title">出让预约 ({supplyExchanges.length})</h3>
+                          <div className="exchanges-list">
+                            {supplyExchanges.map((exchange) => (
+                              <div key={exchange.id} className={`exchange-item supply-item ${exchange.pricing_strategy === '急需' ? 'urgent-item' : ''}`}>
+                                <div className="exchange-info-row">
+                                  <span className="info-item">
+                                    <span className="info-label">仓库:</span>
+                                    <span className="info-value">{exchange.fba_code}</span>
+                                  </span>
+                                  
+                                  <span className="info-item">
+                                    <span className="info-label">日期:</span>
+                                    <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
+                                  </span>
+                                  
+                                  <span className="info-item">
+                                    <span className="info-label">时间:</span>
+                                    <span className="info-value">
+                                      {new Date(`2000-01-01T${exchange.appointment_time}`).toLocaleTimeString('en-US', {
+                                        hour: 'numeric',
+                                        minute: '2-digit',
+                                        hour12: true
+                                      })}
+                                    </span>
+                                  </span>
+                                  
+                                  <span className={`cargo-type ${exchange.cargo_type === '地板' ? 'floor-cargo' : 'pallet-cargo'}`}>
+                                    {exchange.cargo_type}
+                                  </span>
+                                  
+                                  <span className="info-item">
+                                    <span className="info-label">联系人:</span>
+                                    <span className="info-value">{exchange.contact_person}</span>
+                                  </span>
+                                  
+                                  <button 
+                                    className="contact-btn-inline"
+                                    onClick={() => handleContact(exchange.id)}
+                                  >
+                                    联系TA
+                                  </button>
+                                </div>
+                                
+                                {exchange.description && (
+                                  <div className="exchange-description">
+                                    {exchange.description}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       )}
-                      
-                      <span className="info-item">
-                        <span className="info-label">仓库:</span>
-                        <span className="info-value">{exchange.fba_code}</span>
-                      </span>
-                      
-                      <span className="info-item">
-                        <span className="info-label">日期:</span>
-                        <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
-                      </span>
-                      
-                      <span className="info-item">
-                        <span className="info-label">时间:</span>
-                        <span className="info-value">
-                          {new Date(`2000-01-01T${exchange.appointment_time}`).toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                            hour12: true
-                          })}
-                        </span>
-                      </span>
-                      
-                      <span className="info-item">
-                        <span className="info-label">联系人:</span>
-                        <span className="info-value">{exchange.contact_person}</span>
-                      </span>
-                      
-                      <button 
-                        className="contact-btn-inline"
-                        onClick={() => handleContact(exchange.id)}
-                      >
-                        联系TA
-                      </button>
-                    </div>
-                    
-                    {exchange.description && (
-                      <div className="exchange-description">
-                        {exchange.description}
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
+
+                      {/* 寻求预约部分 */}
+                      {demandExchanges.length > 0 && (
+                        <div className="exchange-section">
+                          <h3 className="section-title demand-title">寻求预约 ({demandExchanges.length})</h3>
+                          <div className="exchanges-list">
+                            {demandExchanges.map((exchange) => (
+                              <div key={exchange.id} className={`exchange-item demand-item ${exchange.pricing_strategy === '急需' ? 'urgent-item' : ''}`}>
+                                <div className="exchange-info-row">
+                                  <span className="info-item">
+                                    <span className="info-label">仓库:</span>
+                                    <span className="info-value">{exchange.fba_code}</span>
+                                  </span>
+                                  
+                                  <span className="info-item">
+                                    <span className="info-label">日期:</span>
+                                    <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
+                                  </span>
+                                  
+                                  <span className="info-item">
+                                    <span className="info-label">时间:</span>
+                                    <span className="info-value">
+                                      {new Date(`2000-01-01T${exchange.appointment_time}`).toLocaleTimeString('en-US', {
+                                        hour: 'numeric',
+                                        minute: '2-digit',
+                                        hour12: true
+                                      })}
+                                    </span>
+                                  </span>
+                                  
+                                  <span className={`cargo-type ${exchange.cargo_type === '地板' ? 'floor-cargo' : 'pallet-cargo'}`}>
+                                    {exchange.cargo_type}
+                                  </span>
+                                  
+                                  <span className="info-item">
+                                    <span className="info-label">联系人:</span>
+                                    <span className="info-value">{exchange.contact_person}</span>
+                                  </span>
+                                  
+                                  <button 
+                                    className="contact-btn-inline"
+                                    onClick={() => handleContact(exchange.id)}
+                                  >
+                                    联系TA
+                                  </button>
+                                </div>
+                                
+                                {exchange.description && (
+                                  <div className="exchange-description">
+                                    {exchange.description}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 如果筛选后没有结果 */}
+                      {demandExchanges.length === 0 && supplyExchanges.length === 0 && (
+                        <div className="no-results">没有符合筛选条件的预约交换信息</div>
+                      )}
+                    </>
+                  );
+                })()}
+              </>
+            )}
           </div>
         )}
 
@@ -410,13 +567,13 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                             {exchange.exchange_type === '出让预约' ? '出让' : '寻求'}
                           </span>
                           
-                          <span className="cargo-type">{exchange.cargo_type}</span>
+                          <span className={`cargo-type ${exchange.cargo_type === '地板' ? 'floor-cargo' : 'pallet-cargo'}`}>
+                            {exchange.cargo_type}
+                          </span>
                           
-                          {exchange.pricing_strategy !== '市价' && (
-                            <span className={`pricing ${exchange.pricing_strategy === '急需' ? 'urgent' : 'good-price'}`}>
-                              {exchange.pricing_strategy}
-                            </span>
-                          )}
+                          <span className={`pricing ${exchange.pricing_strategy === '急需' ? 'urgent' : 'normal'}`}>
+                            {exchange.pricing_strategy === '急需' ? '急' : '普通'}
+                          </span>
                           
                           <span className="info-item">
                             <span className="info-label">仓库:</span>
@@ -486,8 +643,8 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                       onChange={handleFormChange}
                       required
                     >
-                      <option value="寻求预约">寻求预约</option>
                       <option value="出让预约">出让预约</option>
+                      <option value="寻求预约">寻求预约</option>
                     </select>
                   </div>
                   <div className="form-group">
@@ -499,9 +656,8 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                       required
                     >
                       <option value="">请选择策略</option>
-                      <option value="市价">市价</option>
-                      <option value="好价">好价</option>
-                      <option value="急需">急需</option>
+                      <option value="普通">普通</option>
+                      <option value="急需">急单</option>
                     </select>
                     {formErrors.pricing_strategy && <span className="error">{formErrors.pricing_strategy}</span>}
                   </div>
@@ -548,7 +704,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                     />
                   </div>
                   <div className="form-group">
-                    <label>日期<span className="required">*</span></label>
+                    <label>预约日期<span className="required">*</span></label>
                     <input
                       type="date"
                       name="appointment_date"
