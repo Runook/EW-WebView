@@ -605,7 +605,7 @@ const LogisticsRental = () => {
           onClick={() => setActiveTab('rental')}
         >
           <Building size={20} />
-          
+          物流出租
         </button>
         <button
           className={`tab-button ${activeTab === 'sale' ? 'active' : ''}`}
