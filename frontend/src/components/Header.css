@@ -214,6 +214,45 @@
   position: relative;
 }
 
+/* 桌面端submenu触发按钮 */
+.submenu-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 20px;
+  background: #f7fafc;
+  border: none;
+  border-left: 4px solid var(--ferrari-red);
+  color: #4a5568;
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submenu-trigger:hover {
+  background: #edf2f7;
+  color: #2d3748;
+  transform: translateX(8px);
+}
+
+.submenu-trigger.active {
+  background: var(--ferrari-red-alpha);
+  color: var(--ferrari-red);
+  transform: translateX(8px);
+}
+
+.submenu-trigger .submenu-dropdown-icon {
+  transition: transform 0.3s ease;
+}
+
+.submenu-trigger.active .submenu-dropdown-icon {
+  transform: rotate(180deg);
+}
+
+/* 保留原有的submenu-label样式以兼容其他地方可能的使用 */
 .submenu-label {
   padding: 12px 20px;
   font-weight: 600;
@@ -319,6 +358,88 @@
 
 .mobile-dropdown-item.submenu-action {
   padding-left: 3.5rem !important;
+}
+
+/* Mobile Submenu Styles */
+.mobile-submenu-wrapper {
+  position: relative;
+}
+
+.mobile-submenu-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-3) var(--space-6);
+  background: #f7fafc;
+  border: none;
+  border-left: 4px solid var(--ferrari-red);
+  border-bottom: 1px solid var(--ferrari-red-alpha);
+  color: #4a5568;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mobile-submenu-trigger:hover {
+  background: #edf2f7;
+  color: #2d3748;
+}
+
+.mobile-submenu-trigger.active {
+  background: var(--ferrari-red-alpha);
+  color: var(--ferrari-red);
+}
+
+.submenu-dropdown-icon {
+  transition: transform 0.3s ease;
+}
+
+.mobile-submenu-trigger.active .submenu-dropdown-icon {
+  transform: rotate(180deg);
+}
+
+/* 统一移动端的submenu-dropdown-icon样式 */
+.mobile-submenu-trigger .submenu-dropdown-icon {
+  transition: transform 0.3s ease;
+}
+
+.mobile-submenu-items {
+  background: #f8fafc;
+  padding: var(--space-2) 0;
+}
+
+.mobile-submenu-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-2) var(--space-8);
+  margin-left: var(--space-4);
+  color: #4a5568;
+  text-decoration: none;
+  font-size: var(--font-size-xs);
+  transition: all 0.3s ease;
+  border-left: 3px solid transparent;
+  border-bottom: 1px solid rgba(116, 42, 42, 0.1);
+}
+
+.mobile-submenu-item:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+  color: #2d3748;
+  border-left-color: var(--ferrari-red);
+  text-decoration: none;
+}
+
+.mobile-submenu-item.active {
+  background: var(--ferrari-red-alpha);
+  color: var(--primary-green);
+  border-left-color: var(--primary-green);
+  font-weight: 600;
+}
+
+.mobile-submenu-item:last-child {
+  border-bottom: none;
 }
 
 /* Header Actions */

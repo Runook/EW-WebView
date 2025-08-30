@@ -14,6 +14,7 @@ const FBALocations = () => {
   const [selectedType, setSelectedType] = useState('');
   const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -23,6 +24,18 @@ const FBALocations = () => {
     console.log('处理后的FBA数据:', processedData.length, '个位置');
     setLocations(processedData);
     setFilteredLocations(processedData);
+  }, []);
+
+  // 检测屏幕大小变化
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkIfMobile(); // 初始检查
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
   useEffect(() => {
@@ -95,6 +108,50 @@ const FBALocations = () => {
     setExchangeModalOpen(true);
   };
 
+  // 渲染移动端卡片
+  const renderMobileCards = () => {
+    return (
+      <div className="mobile-location-cards">
+        {filteredLocations.map((location) => (
+          <div key={location.id} className="mobile-location-card">
+            <div className="mobile-card-header">
+              <div className="mobile-card-badges">
+                <div className="mobile-card-code badge-item">{location.code}</div>
+                <span className={`type-badge type-${location.type?.toLowerCase()} badge-item`}>
+                  {location.type}
+                </span>
+                <div className="mobile-card-state badge-item">{location.state}</div>
+              </div>
+            </div>
+            <div className="mobile-card-address">
+              {location.address}
+            </div>
+            <div className="mobile-card-actions">
+              <button 
+                onClick={() => handlePublishCargo(location)}
+                className="action-btn publish-btn"
+              >
+                发布货源
+              </button>
+              <button 
+                onClick={() => handleExchange(location)}
+                className="action-btn exchange-btn"
+              >
+                预约交换
+              </button>
+              <button 
+                onClick={() => handleComment(location)}
+                className="action-btn comment-btn"
+              >
+                评论
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="fba-locations-page">
       {/* Hero Section */}
@@ -152,6 +209,8 @@ const FBALocations = () => {
             <div className="no-results">
               <p>未找到匹配的位置，请调整搜索条件。</p>
             </div>
+          ) : isMobile ? (
+            renderMobileCards()
           ) : (
             <div className="locations-table-wrapper">
               <table className="locations-table">

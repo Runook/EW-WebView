@@ -565,8 +565,8 @@
   padding: 0 1rem;
 }
 
-/* Responsive Design */
-@media (min-width: 768px) {
+/* 桌面端响应式设计 */
+@media (min-width: 769px) {
   .detail-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -576,36 +576,241 @@
   }
 }
 
+/* 移动端优化的响应式设计 */
 @media (max-width: 768px) {
+  .fba-detail-page {
+    background: #f8fafc;
+  }
+  
+  /* Header区域优化 */
+  .fba-detail-header {
+    padding: 2rem 0 1.5rem;
+  }
+  
+  .back-btn {
+    padding: 12px 20px;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .location-header h1 {
+    font-size: 2.2rem;
+    line-height: 1.3;
+    margin: 1rem 0;
+  }
+  
+  .location-subtitle {
+    font-size: 1.2rem;
+  }
+  
+  /* 内容区域优化 */
+  .fba-detail-content {
+    padding: 2rem 0;
+  }
+  
+  .detail-grid {
+    gap: 1.5rem;
+  }
+  
+  .info-section {
+    padding: 2rem 1.8rem;
+    border-radius: 16px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .info-section h2 {
+    font-size: 1.6rem;
+    margin-bottom: 1.8rem;
+  }
+  
+  /* 信息卡片网格优化 */
+  .info-cards {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+  
+  .info-card {
+    padding: 1.8rem 1.5rem;
+    border-radius: 12px;
+  }
+  
+  .info-label {
+    font-size: 1rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .info-value {
+    font-size: 1.2rem;
+  }
+  
+  /* 地址区域优化 */
+  .address-card {
+    padding: 2rem 1.8rem;
+    border-radius: 12px;
+  }
+  
+  .address-text {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+  
+  .address-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .map-btn, .direction-btn {
+    padding: 16px 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    justify-content: center;
+    border-radius: 12px;
+  }
+  
+  /* 联系信息优化 */
+  .contact-item {
+    padding: 1.8rem;
+    border-radius: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+  
+  .contact-label {
+    font-size: 1rem;
+  }
+  
+  .contact-value {
+    font-size: 1.2rem;
+  }
+  
+  /* 服务列表优化 */
+  .services-list {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .service-item {
+    padding: 1rem 1.2rem;
+    border-radius: 12px;
+  }
+  
+  /* 特性网格优化 */
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.2rem;
+  }
+  
+  .feature-item {
+    padding: 1.5rem;
+    border-radius: 12px;
+  }
+  
+  /* 警告框优化 */
+  .alert-box {
+    padding: 2rem 1.8rem;
+    border-radius: 12px;
+  }
+  
+  .alert-box h4 {
+    font-size: 1.3rem;
+    margin-bottom: 1.2rem;
+  }
+  
+  .alert-box ul {
+    font-size: 1.05rem;
+  }
+  
+  /* 操作区域优化 */
+  .fba-actions {
+    padding: 2rem 0;
+  }
+  
+  .actions-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .action-card {
+    padding: 2rem 1.8rem;
+    border-radius: 16px;
+    flex-direction: row;
+    text-align: left;
+    align-items: center;
+  }
+  
+  .action-icon {
+    font-size: 2rem;
+    margin-right: 0.5rem;
+  }
+  
+  .action-content h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.8rem;
+  }
+  
+  .action-content p {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+  
+  /* 容器优化 */
+  .container {
+    padding: 0 1.2rem;
+  }
+}
+
+/* 更小屏幕的进一步优化 */
+@media (max-width: 480px) {
   .fba-detail-header {
     padding: 1.5rem 0;
   }
   
   .location-header h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
   
-  .address-actions {
-    flex-direction: column;
+  .location-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .info-section {
+    padding: 1.5rem 1.2rem;
+  }
+  
+  .info-section h2 {
+    font-size: 1.4rem;
+  }
+  
+  .address-card {
+    padding: 1.5rem 1.2rem;
+  }
+  
+  .address-text {
+    font-size: 1.1rem;
   }
   
   .map-btn, .direction-btn {
-    justify-content: center;
-  }
-  
-  .contact-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  
-  .actions-grid {
-    grid-template-columns: 1fr;
+    padding: 14px 18px;
+    font-size: 1rem;
   }
   
   .action-card {
+    padding: 1.5rem 1.2rem;
     flex-direction: column;
     text-align: center;
+    gap: 1rem;
+  }
+  
+  .action-icon {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+  
+  .container {
+    padding: 0 1rem;
   }
 }
 

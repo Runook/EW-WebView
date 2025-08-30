@@ -41,16 +41,28 @@ function App() {
     }, 2000);
   }, []);
 
-  // GA4 SPA 路由切换上报
+  // GA4 SPA 路由切换上报 - 添加调试信息
   useEffect(() => {
     try {
       if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+        console.log('🟢 GA4 Loaded Successfully');
+        console.log('📊 Tracking Page:', location.pathname + location.search);
+        console.log('🏷️  Using GA ID: G-MTZCJ79H05');
+        
         window.gtag('config', 'G-MTZCJ79H05', {
           page_path: location.pathname + location.search,
+          debug_mode: process.env.NODE_ENV === 'development' // 开发环境启用调试
+        });
+      } else {
+        console.warn('🔴 GA4 gtag function not available');
+        console.log('🔍 Debug info:', {
+          gtag_exists: typeof window.gtag,
+          dataLayer_exists: !!window.dataLayer,
+          dataLayer_length: window.dataLayer ? window.dataLayer.length : 0
         });
       }
     } catch (err) {
-      // 忽略分析上报异常
+      console.error('🔴 GA4 tracking error:', err);
     }
   }, [location]);
 
