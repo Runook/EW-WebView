@@ -67,23 +67,11 @@
   margin-bottom: var(--space-6);
 }
 
+/* 联系信息样式 - 与描述文字完全一致 */
 .footer-contact {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.contact-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
   color: #C7C7CC;
-  font-size: var(--font-size-sm);
-}
-
-.contact-item svg {
-  color: var(--primary-green);
-  flex-shrink: 0;
+  line-height: 1.6;
+  margin-bottom: var(--space-6);
 }
 
 /* Other Sections */
@@ -248,9 +236,7 @@
     gap: var(--space-2);
   }
 
-  .footer-contact {
-    align-items: center;
-  }
+
 
   .social-links {
     flex-wrap: wrap;

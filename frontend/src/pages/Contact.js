@@ -7,13 +7,13 @@ const Contact = () => {
     {
       icon: <Phone size={24} />,
       title: '联系电话',
-      details: '7186599888',
+      details: '5164277016',
       description: '周一至周五 8:00-18:00 EST'
     },
     {
       icon: <Mail size={24} />,
       title: '邮箱地址',
-      details: 'ltl.48ew@gmail.com',
+      details: 'ftl.us48@gmail.com',
       description: '在线支持'
     },
     {

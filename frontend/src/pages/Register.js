@@ -294,7 +294,7 @@ const Register = () => {
             onClick={() => setShowPassword(!showPassword)}
             className="password-toggle"
           >
-            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
         <p className="form-hint">密码至少包含6个字符</p>
@@ -320,7 +320,7 @@ const Register = () => {
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             className="password-toggle"
           >
-            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
       </div>
