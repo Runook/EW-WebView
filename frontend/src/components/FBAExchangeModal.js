@@ -14,6 +14,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
     pricing_strategy: []
   });
   const [searchTerm, setSearchTerm] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
 
   // 发布表单数据
   const [formData, setFormData] = useState({
@@ -105,6 +106,18 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
       }));
     }
   }, [isOpen, location]);
+
+  // 检测屏幕大小变化 - 参照FBALocations的设计
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkIfMobile(); // 初始检查
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   const handleFilterChange = (key, value, checked) => {
     setFilters(prev => {
@@ -256,6 +269,130 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
     }
   };
 
+  // 移动端专用的交换项目渲染函数 - 参照FBALocations的紧凑设计
+  const renderMobileExchangeItem = (exchange) => {
+    const isUrgent = exchange.pricing_strategy === '急需';
+    const isSupply = exchange.exchange_type === '出让预约';
+    
+    return (
+      <div 
+        key={exchange.id} 
+        className={`exchange-item ${isSupply ? 'supply-item' : 'demand-item'} ${isUrgent ? 'urgent-item' : ''}`}
+      >
+        {/* 移动端徽章区域 - 第一行（仓库代码改为醒目徽章） */}
+        <div className="mobile-exchange-badges">
+          <div className="mobile-badge warehouse-badge">
+            {exchange.fba_code}
+          </div>
+          {isUrgent && (
+            <div className="mobile-badge urgent-badge">
+              急单
+            </div>
+          )}
+        </div>
+
+        {/* 紧凑的信息行 - 第二行（地板/卡板改为普通文字） */}
+        <div className="mobile-compact-info">
+          <span className="info-compact">
+            <span className="label">类型</span>{exchange.cargo_type}
+          </span>
+          <span className="info-compact">
+            <span className="label">日期</span>{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}
+          </span>
+          <span className="info-compact">
+            <span className="label">时间</span>
+            {new Date(`2000-01-01T${exchange.appointment_time}`).toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            })}
+          </span>
+          <span className="info-compact">
+            <span className="label">联系人</span>{exchange.contact_person}
+          </span>
+        </div>
+
+        {/* 描述信息 - 第三行（可选） */}
+        {exchange.description && (
+          <div className="exchange-description">
+            {exchange.description}
+          </div>
+        )}
+
+        {/* 联系按钮 - 第四行 */}
+        <button 
+          className="contact-btn-inline"
+          onClick={() => handleContact(exchange.id)}
+        >
+          联系TA
+        </button>
+      </div>
+    );
+  };
+
+  // 移动端专用的"我的发布"项目渲染函数
+  const renderMobileMyExchangeItem = (exchange) => {
+    const isUrgent = exchange.pricing_strategy === '急需';
+    const isSupply = exchange.exchange_type === '出让预约';
+    
+    return (
+      <div key={exchange.id} className="exchange-item my-exchange-item">
+        {/* 移动端徽章区域 - 第一行（仓库代码改为醒目徽章） */}
+        <div className="mobile-exchange-badges">
+          <div className="mobile-badge warehouse-badge">
+            {exchange.fba_code}
+          </div>
+          {isUrgent && (
+            <div className="mobile-badge urgent-badge">
+              急单
+            </div>
+          )}
+        </div>
+
+        {/* 紧凑的信息行 - 第二行（地板/卡板改为普通文字） */}
+        <div className="mobile-compact-info">
+          <span className="info-compact">
+            <span className="label">类型</span>{exchange.cargo_type}
+          </span>
+          <span className="info-compact">
+            <span className="label">日期</span>{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}
+          </span>
+          <span className="info-compact">
+            <span className="label">时间</span>
+            {new Date(`2000-01-01T${exchange.appointment_time}`).toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            })}
+          </span>
+          <span className="info-compact">
+            <span className="label">浏览</span>{exchange.view_count}次
+          </span>
+        </div>
+
+        {/* 描述信息 - 第三行（可选） */}
+        {exchange.description && (
+          <div className="exchange-description">
+            {exchange.description}
+          </div>
+        )}
+
+        {/* 发布时间和删除按钮 - 第四行 */}
+        <div className="mobile-my-exchange-footer">
+          <span className="created-date">
+            发布于 {new Date(exchange.created_at).toLocaleDateString('zh-CN')}
+          </span>
+          <button 
+            className="delete-btn-compact"
+            onClick={() => handleDeleteMyExchange(exchange.id)}
+          >
+            删除
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -292,58 +429,109 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
 
         {activeTab === 'market' && (
           <div className="market-tab">
-            {/* 筛选器 */}
+            {/* 筛选器 - 桌面版和移动端不同设计 */}
             <div className="filters">
               <div className="filter-inline">
-                {/* 所有筛选选项在一行 */}
-                <label className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={filters.exchange_type.includes('出让预约')}
-                    onChange={(e) => handleFilterChange('exchange_type', '出让预约', e.target.checked)}
-                  />
-                  <span className="checkmark"></span>
-                  出让预约
-                </label>
-                <label className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={filters.exchange_type.includes('寻求预约')}
-                    onChange={(e) => handleFilterChange('exchange_type', '寻求预约', e.target.checked)}
-                  />
-                  <span className="checkmark"></span>
-                  寻求预约
-                </label>
-
-                <label className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    checked={filters.pricing_strategy.includes('急需')}
-                    onChange={(e) => handleFilterChange('pricing_strategy', '急需', e.target.checked)}
-                  />
-                  <span className="checkmark"></span>
-                  急单
-                </label>
-                
-                {/* FBA代码搜索框 */}
-                <div className="search-box">
-                  <input
-                    type="text"
-                    placeholder="搜索FBA代码"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="search-input"
-                  />
-                </div>
-                
-                {/* 清除筛选按钮 */}
-                <button 
-                  className="clear-filters-btn"
-                  onClick={clearAllFilters}
-                  disabled={filters.exchange_type.length === 0 && filters.pricing_strategy.length === 0 && !searchTerm}
-                >
-                  清除筛选
-                </button>
+                {/* 桌面版：所有元素在一行；移动端：分两行 */}
+                {!isMobile ? (
+                  <>
+                    {/* 桌面版布局 */}
+                    <label className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={filters.exchange_type.includes('出让预约')}
+                        onChange={(e) => handleFilterChange('exchange_type', '出让预约', e.target.checked)}
+                      />
+                      <span className="checkmark"></span>
+                      出让预约
+                    </label>
+                    <label className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={filters.exchange_type.includes('寻求预约')}
+                        onChange={(e) => handleFilterChange('exchange_type', '寻求预约', e.target.checked)}
+                      />
+                      <span className="checkmark"></span>
+                      寻求预约
+                    </label>
+                    <label className="checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={filters.pricing_strategy.includes('急需')}
+                        onChange={(e) => handleFilterChange('pricing_strategy', '急需', e.target.checked)}
+                      />
+                      <span className="checkmark"></span>
+                      急单
+                    </label>
+                    <div className="search-box">
+                      <input
+                        type="text"
+                        placeholder="搜索FBA代码"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="search-input"
+                      />
+                    </div>
+                    <button 
+                      className="clear-filters-btn"
+                      onClick={clearAllFilters}
+                      disabled={filters.exchange_type.length === 0 && filters.pricing_strategy.length === 0 && !searchTerm}
+                    >
+                      清除筛选
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {/* 移动端布局 */}
+                    <div className="filter-checkboxes">
+                      <label className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={filters.exchange_type.includes('出让预约')}
+                          onChange={(e) => handleFilterChange('exchange_type', '出让预约', e.target.checked)}
+                        />
+                        <span className="checkmark"></span>
+                        出让预约
+                      </label>
+                      <label className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={filters.exchange_type.includes('寻求预约')}
+                          onChange={(e) => handleFilterChange('exchange_type', '寻求预约', e.target.checked)}
+                        />
+                        <span className="checkmark"></span>
+                        寻求预约
+                      </label>
+                      <label className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={filters.pricing_strategy.includes('急需')}
+                          onChange={(e) => handleFilterChange('pricing_strategy', '急需', e.target.checked)}
+                        />
+                        <span className="checkmark"></span>
+                        急单
+                      </label>
+                    </div>
+                    <div className="filter-bottom-row">
+                      <div className="search-box">
+                        <input
+                          type="text"
+                          placeholder="搜索FBA代码"
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="search-input"
+                        />
+                      </div>
+                      <button 
+                        className="clear-filters-btn"
+                        onClick={clearAllFilters}
+                        disabled={filters.exchange_type.length === 0 && filters.pricing_strategy.length === 0 && !searchTerm}
+                      >
+                        清除
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -423,54 +611,56 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                         <div className="exchange-section">
                           <h3 className="section-title supply-title">出让预约 ({supplyExchanges.length})</h3>
                           <div className="exchanges-list">
-                            {supplyExchanges.map((exchange) => (
-                              <div key={exchange.id} className={`exchange-item supply-item ${exchange.pricing_strategy === '急需' ? 'urgent-item' : ''}`}>
-                                <div className="exchange-info-row">
-                                  <span className="info-item">
-                                    <span className="info-label">仓库:</span>
-                                    <span className="info-value">{exchange.fba_code}</span>
-                                  </span>
-                                  
-                                  <span className="info-item">
-                                    <span className="info-label">日期:</span>
-                                    <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
-                                  </span>
-                                  
-                                  <span className="info-item">
-                                    <span className="info-label">时间:</span>
-                                    <span className="info-value">
-                                      {new Date(`2000-01-01T${exchange.appointment_time}`).toLocaleTimeString('en-US', {
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                        hour12: true
-                                      })}
+                            {supplyExchanges.map((exchange) => 
+                              isMobile ? renderMobileExchangeItem(exchange) : (
+                                <div key={exchange.id} className={`exchange-item supply-item ${exchange.pricing_strategy === '急需' ? 'urgent-item' : ''}`}>
+                                  <div className="exchange-info-row">
+                                    <span className="warehouse-code-desktop">
+                                      {exchange.fba_code}
                                     </span>
-                                  </span>
-                                  
-                                  <span className={`cargo-type ${exchange.cargo_type === '地板' ? 'floor-cargo' : 'pallet-cargo'}`}>
-                                    {exchange.cargo_type}
-                                  </span>
-                                  
-                                  <span className="info-item">
-                                    <span className="info-label">联系人:</span>
-                                    <span className="info-value">{exchange.contact_person}</span>
-                                  </span>
-                                  
-                                  <button 
-                                    className="contact-btn-inline"
-                                    onClick={() => handleContact(exchange.id)}
-                                  >
-                                    联系TA
-                                  </button>
-                                </div>
-                                
-                                {exchange.description && (
-                                  <div className="exchange-description">
-                                    {exchange.description}
+                                    
+                                    <span className="info-item">
+                                      <span className="info-label">日期:</span>
+                                      <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
+                                    </span>
+                                    
+                                    <span className="info-item">
+                                      <span className="info-label">时间:</span>
+                                      <span className="info-value">
+                                        {new Date(`2000-01-01T${exchange.appointment_time}`).toLocaleTimeString('en-US', {
+                                          hour: 'numeric',
+                                          minute: '2-digit',
+                                          hour12: true
+                                        })}
+                                      </span>
+                                    </span>
+                                    
+                                    <span className="info-item">
+                                      <span className="info-label">类型:</span>
+                                      <span className="info-value">{exchange.cargo_type}</span>
+                                    </span>
+                                    
+                                    <span className="info-item">
+                                      <span className="info-label">联系人:</span>
+                                      <span className="info-value">{exchange.contact_person}</span>
+                                    </span>
+                                    
+                                    <button 
+                                      className="contact-btn-inline"
+                                      onClick={() => handleContact(exchange.id)}
+                                    >
+                                      联系TA
+                                    </button>
                                   </div>
-                                )}
-                              </div>
-                            ))}
+                                  
+                                  {exchange.description && (
+                                    <div className="exchange-description">
+                                      {exchange.description}
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            )}
                           </div>
                         </div>
                       )}
@@ -480,54 +670,56 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                         <div className="exchange-section">
                           <h3 className="section-title demand-title">寻求预约 ({demandExchanges.length})</h3>
                           <div className="exchanges-list">
-                            {demandExchanges.map((exchange) => (
-                              <div key={exchange.id} className={`exchange-item demand-item ${exchange.pricing_strategy === '急需' ? 'urgent-item' : ''}`}>
-                                <div className="exchange-info-row">
-                                  <span className="info-item">
-                                    <span className="info-label">仓库:</span>
-                                    <span className="info-value">{exchange.fba_code}</span>
-                                  </span>
-                                  
-                                  <span className="info-item">
-                                    <span className="info-label">日期:</span>
-                                    <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
-                                  </span>
-                                  
-                                  <span className="info-item">
-                                    <span className="info-label">时间:</span>
-                                    <span className="info-value">
-                                      {new Date(`2000-01-01T${exchange.appointment_time}`).toLocaleTimeString('en-US', {
-                                        hour: 'numeric',
-                                        minute: '2-digit',
-                                        hour12: true
-                                      })}
+                            {demandExchanges.map((exchange) => 
+                              isMobile ? renderMobileExchangeItem(exchange) : (
+                                <div key={exchange.id} className={`exchange-item demand-item ${exchange.pricing_strategy === '急需' ? 'urgent-item' : ''}`}>
+                                  <div className="exchange-info-row">
+                                    <span className="warehouse-code-desktop">
+                                      {exchange.fba_code}
                                     </span>
-                                  </span>
-                                  
-                                  <span className={`cargo-type ${exchange.cargo_type === '地板' ? 'floor-cargo' : 'pallet-cargo'}`}>
-                                    {exchange.cargo_type}
-                                  </span>
-                                  
-                                  <span className="info-item">
-                                    <span className="info-label">联系人:</span>
-                                    <span className="info-value">{exchange.contact_person}</span>
-                                  </span>
-                                  
-                                  <button 
-                                    className="contact-btn-inline"
-                                    onClick={() => handleContact(exchange.id)}
-                                  >
-                                    联系TA
-                                  </button>
-                                </div>
-                                
-                                {exchange.description && (
-                                  <div className="exchange-description">
-                                    {exchange.description}
+                                    
+                                    <span className="info-item">
+                                      <span className="info-label">日期:</span>
+                                      <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
+                                    </span>
+                                    
+                                    <span className="info-item">
+                                      <span className="info-label">时间:</span>
+                                      <span className="info-value">
+                                        {new Date(`2000-01-01T${exchange.appointment_time}`).toLocaleTimeString('en-US', {
+                                          hour: 'numeric',
+                                          minute: '2-digit',
+                                          hour12: true
+                                        })}
+                                      </span>
+                                    </span>
+                                    
+                                    <span className="info-item">
+                                      <span className="info-label">类型:</span>
+                                      <span className="info-value">{exchange.cargo_type}</span>
+                                    </span>
+                                    
+                                    <span className="info-item">
+                                      <span className="info-label">联系人:</span>
+                                      <span className="info-value">{exchange.contact_person}</span>
+                                    </span>
+                                    
+                                    <button 
+                                      className="contact-btn-inline"
+                                      onClick={() => handleContact(exchange.id)}
+                                    >
+                                      联系TA
+                                    </button>
                                   </div>
-                                )}
-                              </div>
-                            ))}
+                                  
+                                  {exchange.description && (
+                                    <div className="exchange-description">
+                                      {exchange.description}
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            )}
                           </div>
                         </div>
                       )}
@@ -560,62 +752,60 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                   ) : myExchanges.length === 0 ? (
                     <div className="no-results">您还没有发布任何预约交换信息</div>
                   ) : (
-                    myExchanges.map((exchange) => (
-                      <div key={exchange.id} className="exchange-item my-exchange-item">
-                        <div className="exchange-info-row">
-                          <span className={`exchange-type ${exchange.exchange_type === '出让预约' ? 'supply' : 'demand'}`}>
-                            {exchange.exchange_type === '出让预约' ? '出让' : '寻求'}
-                          </span>
-                          
-                          <span className={`cargo-type ${exchange.cargo_type === '地板' ? 'floor-cargo' : 'pallet-cargo'}`}>
-                            {exchange.cargo_type}
-                          </span>
-                          
-                          <span className={`pricing ${exchange.pricing_strategy === '急需' ? 'urgent' : 'normal'}`}>
-                            {exchange.pricing_strategy === '急需' ? '急' : '普通'}
-                          </span>
-                          
-                          <span className="info-item">
-                            <span className="info-label">仓库:</span>
-                            <span className="info-value">{exchange.fba_code}</span>
-                          </span>
-                          
-                          <span className="info-item">
-                            <span className="info-label">日期:</span>
-                            <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
-                          </span>
-                          
-                          <span className="info-item">
-                            <span className="info-label">时间:</span>
-                            <span className="info-value">
-                              {new Date(`2000-01-01T${exchange.appointment_time}`).toLocaleTimeString('en-US', {
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                hour12: true
-                              })}
+                    myExchanges.map((exchange) => 
+                      isMobile ? renderMobileMyExchangeItem(exchange) : (
+                        <div key={exchange.id} className="exchange-item my-exchange-item">
+                          <div className="exchange-info-row">
+                            <span className="warehouse-code-desktop">
+                              {exchange.fba_code}
                             </span>
-                          </span>
-                          
-                          <button 
-                            className="delete-btn"
-                            onClick={() => handleDeleteMyExchange(exchange.id)}
-                          >
-                            删除
-                          </button>
-                        </div>
-                        
-                        {exchange.description && (
-                          <div className="exchange-description">
-                            {exchange.description}
+                            
+                            <span className={`pricing ${exchange.pricing_strategy === '急需' ? 'urgent' : 'normal'}`}>
+                              {exchange.pricing_strategy === '急需' ? '急' : '普通'}
+                            </span>
+                            
+                            <span className="info-item">
+                              <span className="info-label">类型:</span>
+                              <span className="info-value">{exchange.cargo_type}</span>
+                            </span>
+                            
+                            <span className="info-item">
+                              <span className="info-label">日期:</span>
+                              <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
+                            </span>
+                            
+                            <span className="info-item">
+                              <span className="info-label">时间:</span>
+                              <span className="info-value">
+                                {new Date(`2000-01-01T${exchange.appointment_time}`).toLocaleTimeString('en-US', {
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                  hour12: true
+                                })}
+                              </span>
+                            </span>
+                            
+                            <button 
+                              className="delete-btn"
+                              onClick={() => handleDeleteMyExchange(exchange.id)}
+                            >
+                              删除
+                            </button>
                           </div>
-                        )}
-                        
-                        <div className="exchange-meta">
-                          <span className="view-count">浏览 {exchange.view_count} 次</span>
-                          <span className="created-date">发布于 {new Date(exchange.created_at).toLocaleDateString('zh-CN')}</span>
+                          
+                          {exchange.description && (
+                            <div className="exchange-description">
+                              {exchange.description}
+                            </div>
+                          )}
+                          
+                          <div className="exchange-meta">
+                            <span className="view-count">浏览 {exchange.view_count} 次</span>
+                            <span className="created-date">发布于 {new Date(exchange.created_at).toLocaleDateString('zh-CN')}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      )
+                    )
                   )}
                 </div>
               </>
