@@ -7,7 +7,8 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api
 
 // 获取认证token
 const getAuthToken = () => {
-  return localStorage.getItem('authToken') || localStorage.getItem('token');
+  // 优先使用Cognito的accessToken，兼容旧的token
+  return localStorage.getItem('accessToken') || localStorage.getItem('idToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
 };
 
 // 获取认证头

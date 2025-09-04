@@ -4,6 +4,7 @@
   "description": "Modern logistics platform inspired by DAT with Apple Messages green styling",
   "private": true,
   "dependencies": {
+    "aws-amplify": "^6.15.5",
     "lucide-react": "^0.263.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

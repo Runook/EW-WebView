@@ -223,12 +223,15 @@ const Header = () => {
 
   const getUserDisplayName = () => {
     if (!user) return '';
-    return `${user.firstName} ${user.lastName}`;
+    // 兼容新旧两种格式
+    const firstName = user.firstName || user.first_name || user.attributes?.given_name || '';
+    const lastName = user.lastName || user.last_name || user.attributes?.family_name || '';
+    return `${firstName} ${lastName}`.trim() || user.email || user.username || '用户';
   };
 
   const getUserTypeLabel = () => {
     if (!user) return '';
-    return user.userType === 'shipper' ? '货主' : '承运商';
+    return '用户'; // 统一显示用户，不再区分类型
   };
 
   // 检查是否有子菜单项是活跃的

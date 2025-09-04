@@ -195,19 +195,19 @@ app.get('/api', (req, res) => {
       ready: '/ready',
       live: '/live',
       api: '/api',
-      auth: '/api/auth',
       freight: '/api/landfreight',
       companies: '/api/companies',
       jobs: '/api/jobs',
       resumes: '/api/resumes',
       users: '/api/user-management',
       fba: '/api/fba',
+      auth: 'AWS Cognito (外部认证)'
     }
   });
 });
 
-// 路由文件
-app.use('/api/auth', require('./routes/auth'));
+// 路由文件 - auth路由已移除，改用AWS Cognito
+// app.use('/api/auth', require('./routes/auth'));
 app.use('/api/landfreight', require('./routes/landfreight'));
 app.use('/api/companies', require('./routes/companies'));
 app.use('/api/jobs', require('./routes/jobs'));
@@ -313,7 +313,7 @@ app.listen(PORT, () => {
   logger.info(`📊 Environment: ${config.app.env}`);
   logger.info(`🐘 Database: PostgreSQL`);
   logger.info(`🌐 Health check: http://localhost:${PORT}/health`);
-  logger.info(`🔐 Auth API: http://localhost:${PORT}/api/auth`);
+  logger.info(`🔐 Auth: AWS Cognito (外部认证)`);
 });
 
 module.exports = app; 
