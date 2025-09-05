@@ -184,6 +184,61 @@ export async function signOut() {
   return { success: true };
 }
 
+// 忘记密码
+export async function forgotPassword(username) {
+  try {
+    console.log('🔐 发送密码重置验证码...');
+    
+    // 计算SECRET_HASH
+    const secretHash = await calculateSecretHash(username);
+    
+    // 调用ForgotPassword
+    const result = await cognitoRequest('ForgotPassword', {
+      ClientId: CLIENT_ID,
+      Username: username,
+      SecretHash: secretHash
+    });
+    
+    console.log('✅ 验证码已发送!');
+    return {
+      success: true,
+      codeDeliveryDetails: result.CodeDeliveryDetails
+    };
+    
+  } catch (error) {
+    console.error('❌ 发送验证码失败:', error);
+    throw error;
+  }
+}
+
+// 确认忘记密码（重置密码）
+export async function confirmForgotPassword(username, code, newPassword) {
+  try {
+    console.log('🔐 重置密码...');
+    
+    // 计算SECRET_HASH
+    const secretHash = await calculateSecretHash(username);
+    
+    // 调用ConfirmForgotPassword
+    const result = await cognitoRequest('ConfirmForgotPassword', {
+      ClientId: CLIENT_ID,
+      Username: username,
+      ConfirmationCode: code,
+      Password: newPassword,
+      SecretHash: secretHash
+    });
+    
+    console.log('✅ 密码重置成功!');
+    return {
+      success: true
+    };
+    
+  } catch (error) {
+    console.error('❌ 密码重置失败:', error);
+    throw error;
+  }
+}
+
 // 获取当前用户（从token）
 export function getCurrentUser() {
   const idToken = localStorage.getItem('idToken');

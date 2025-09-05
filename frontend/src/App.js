@@ -9,6 +9,8 @@ import Home from './pages/Home';
 import FreightBoard from './pages/FreightBoard';
 import Contact from './pages/Contact';
 import CognitoAuth from './components/CognitoAuth';
+import Register from './pages/Register';
+import AuthCallback from './pages/AuthCallback';
 import SeaFreightPlatform from './pages/SeaFreightPlatform';
 import AirFreightPlatform from './pages/AirFreightPlatform';
 import MultimodalPlatform from './pages/MultimodalPlatform';
@@ -76,7 +78,8 @@ function App() {
               {/* 首页 */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<CognitoAuth type="login" />} />
-              <Route path="/register" element={<CognitoAuth type="register" />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               
               {/* 陆运服务 */}
               <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<FreightBoard />} />

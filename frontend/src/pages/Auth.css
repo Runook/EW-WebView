@@ -569,9 +569,10 @@
 /* Form Options */
 .form-options {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: var(--space-6);
+  margin-top: var(--space-2);
 }
 
 .checkbox-label {
@@ -640,6 +641,10 @@
   font-size: var(--font-size-sm);
   text-decoration: none;
   font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .forgot-link:hover {
@@ -1716,4 +1721,38 @@ body .auth-page .auth-container.register .password-toggle:hover {
   box-shadow: none !important;
   outline: none !important;
   color: var(--primary-green) !important;
+}
+
+/* 加载动画 */
+.spinner-wrapper {
+  display: inline-block;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #3366ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-icon {
+  color: #ff4444;
+  margin-bottom: 1rem;
+}
+
+.auth-loading {
+  text-align: center;
+  padding: 40px 0;
+}
+
+.auth-footer-text {
+  display: inline;
+  margin-right: 0.5rem;
 } 

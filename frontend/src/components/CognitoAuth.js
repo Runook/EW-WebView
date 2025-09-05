@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signIn, signUp, confirmSignUp } from '../utils/cognitoAuth'; // 使用直接API，不用Amplify!
+import { signIn, signUp, confirmSignUp, forgotPassword, confirmForgotPassword } from '../utils/cognitoAuth'; // 使用直接API，不用Amplify!
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Mail, Lock, User, Phone, AlertCircle, ArrowRight } from 'lucide-react';
 import '../pages/Auth.css';
@@ -23,6 +23,8 @@ const CognitoAuth = ({ type = 'login' }) => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordStep, setForgotPasswordStep] = useState(1); // 1: 输入邮箱, 2: 输入验证码和新密码
 
   // 格式化电话号码为国际格式
   const formatPhoneNumber = (phone, countryCode = formData.countryCode) => {
@@ -82,6 +84,71 @@ const CognitoAuth = ({ type = 'login' }) => {
     } catch (error) {
       console.error('❌ 登录失败:', error);
       setError(error.message || '登录失败，请检查邮箱和密码');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      console.log('🔐 发送密码重置验证码...');
+      
+      const result = await forgotPassword(formData.email);
+      
+      console.log('✅ 验证码发送成功:', result);
+      setSuccess('验证码已发送到您的邮箱，请查收');
+      setForgotPasswordStep(2);
+      
+    } catch (error) {
+      console.error('❌ 发送验证码失败:', error);
+      setError(error.message || '发送验证码失败，请稍后重试');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('密码确认不一致');
+      setIsLoading(false);
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError('密码至少需要8位字符');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      console.log('🔐 重置密码...');
+      
+      const result = await confirmForgotPassword(
+        formData.email,
+        formData.confirmationCode,
+        formData.password
+      );
+      
+      console.log('✅ 密码重置成功:', result);
+      setSuccess('密码重置成功！正在跳转到登录页面...');
+      
+      setTimeout(() => {
+        setShowForgotPassword(false);
+        setForgotPasswordStep(1);
+        setFormData(prev => ({ ...prev, password: '', confirmPassword: '', confirmationCode: '' }));
+      }, 2000);
+      
+    } catch (error) {
+      console.error('❌ 密码重置失败:', error);
+      setError(error.message || '密码重置失败，请检查验证码是否正确');
     } finally {
       setIsLoading(false);
     }
@@ -228,6 +295,187 @@ const CognitoAuth = ({ type = 'login' }) => {
                 {isLoading ? '验证中...' : '确认验证'}
               </button>
             </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 忘记密码UI
+  if (showForgotPassword) {
+    return (
+      <div className="auth-page">
+        <div className="auth-container">
+          <div className="auth-card">
+            <div className="auth-header">
+              <div className="auth-logo">
+                <img src="/logo.png" alt="EW Logistics" className="auth-logo-image" />
+              </div>
+              <h1 className="auth-title">
+                {forgotPasswordStep === 1 ? '重置密码' : '设置新密码'}
+              </h1>
+              <p className="auth-subtitle">
+                {forgotPasswordStep === 1 
+                  ? '输入您的邮箱地址，我们将发送验证码' 
+                  : '输入验证码和新密码'}
+              </p>
+            </div>
+
+            {forgotPasswordStep === 1 ? (
+              <form onSubmit={handleForgotPassword} className="auth-form">
+                {error && (
+                  <div className="auth-error">
+                    <AlertCircle size={20} />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {success && (
+                  <div className="auth-success">
+                    <span>{success}</span>
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label htmlFor="email" className="form-label">邮箱地址</label>
+                  <div className="input-wrapper">
+                    <Mail className="input-icon" size={20} />
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="form-input"
+                      style={{ paddingLeft: '50px' }}
+                      placeholder="输入您的邮箱地址"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className={`auth-submit-btn ${isLoading ? 'loading' : ''}`}
+                  disabled={isLoading}
+                >
+                  {isLoading ? '发送中...' : '发送验证码'}
+                </button>
+
+                <div className="auth-footer">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setError('');
+                      setSuccess('');
+                    }}
+                    className="auth-link"
+                  >
+                    返回登录
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleResetPassword} className="auth-form">
+                {error && (
+                  <div className="auth-error">
+                    <AlertCircle size={20} />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                {success && (
+                  <div className="auth-success">
+                    <span>{success}</span>
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label htmlFor="confirmationCode" className="form-label">验证码</label>
+                  <div className="input-wrapper">
+                    <Mail className="input-icon" size={20} />
+                    <input
+                      id="confirmationCode"
+                      name="confirmationCode"
+                      type="text"
+                      value={formData.confirmationCode}
+                      onChange={handleInputChange}
+                      className="form-input"
+                      style={{ paddingLeft: '50px' }}
+                      placeholder="输入6位验证码"
+                      maxLength="6"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="password" className="form-label">新密码</label>
+                  <div className="input-wrapper">
+                    <Lock className="input-icon" size={20} />
+                    <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="form-input"
+                      style={{ paddingLeft: '50px' }}
+                      placeholder="至少8位字符"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="password-toggle"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="confirmPassword" className="form-label">确认新密码</label>
+                  <div className="input-wrapper">
+                    <Lock className="input-icon" size={20} />
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className="form-input"
+                      style={{ paddingLeft: '50px' }}
+                      placeholder="再次输入新密码"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className={`auth-submit-btn ${isLoading ? 'loading' : ''}`}
+                  disabled={isLoading}
+                >
+                  {isLoading ? '重置中...' : '重置密码'}
+                </button>
+
+                <div className="auth-footer">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotPasswordStep(1);
+                      setError('');
+                      setSuccess('');
+                    }}
+                    className="auth-link"
+                  >
+                    重新发送验证码
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </div>
@@ -386,6 +634,19 @@ const CognitoAuth = ({ type = 'login' }) => {
                 </button>
               </div>
             </div>
+
+            {/* 忘记密码链接（仅登录时显示） */}
+            {type === 'login' && (
+              <div className="form-options">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="forgot-link"
+                >
+                  忘记密码？
+                </button>
+              </div>
+            )}
 
             {/* 确认密码（仅注册时显示） */}
             {type === 'register' && (
