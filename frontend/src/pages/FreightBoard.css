@@ -5,6 +5,7 @@
   /* 颜色变量 */
   --primary-green: #34C759;
   --secondary-green: #2ecc71;
+  --ferrari-red-alpha: rgba(220, 20, 60, 0.25);
   --text-primary: #1d1d1f;
   --text-secondary: #6e6e73;
   --text-muted: #666;
@@ -147,6 +148,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(255, 40, 0, 0.2);
 }
 
 .tab:hover:not(.active) {

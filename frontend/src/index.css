@@ -1,5 +1,6 @@
 /* Import Global Design System */
 @import './styles/global.css';
+@import './styles/ferrari-enhanced-theme.css';
 
 * {
   margin: 0;

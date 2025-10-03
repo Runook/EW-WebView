@@ -37,7 +37,7 @@ const Contact = () => {
         <div className="contact-header">
           <h1 className="contact-title">联系我们</h1>
           <p className="contact-description">
-            随时联系我们的专业团队，获取个性化的物流解决方案和报价
+            随时联系我们的专业团队Wechat： LtlshippingtoUsa，获取个性化的物流解决方案和报价
           </p>
         </div>
 
