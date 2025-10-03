@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const LandFreight = require('../models/LandFreight');
 const UserManagement = require('../models/UserManagement');
-const { auth } = require('../middleware/auth');
+const { auth } = require('../middleware');
 
 // 可选认证中间件（用于兼容现有测试）
 const optionalAuth = (req, res, next) => {

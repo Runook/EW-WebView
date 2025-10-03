@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { signOut, getCurrentUser } from '../utils/cognitoAuth'; // 使用直接API
+import { isMockMode, autoMockLogin, getMockUser, getMockToken } from '../utils/mockAuth';
 
 const AuthContext = createContext();
 
@@ -31,15 +32,28 @@ export const AuthProvider = ({ children }) => {
     try {
       console.log('🔍 AuthContext: 检查认证状态...');
       
-      // 使用新的getCurrentUser函数（从localStorage读取）
-      const currentUser = getCurrentUser();
-      
-      if (currentUser) {
-        console.log('✅ AuthContext: 找到已登录用户:', currentUser);
-        setUser(currentUser);
+      // 检查是否为Mock模式
+      if (isMockMode()) {
+        console.log('🔧 AuthContext: Mock模式 (开发环境)');
+        
+        // 自动Mock登录
+        autoMockLogin();
+        
+        // 使用Mock用户
+        const mockUser = getMockUser();
+        console.log('✅ AuthContext: 使用Mock用户:', mockUser);
+        setUser(mockUser);
       } else {
-        console.log('ℹ️ AuthContext: 用户未登录');
-        setUser(null);
+        // 生产模式：使用Cognito认证
+        const currentUser = getCurrentUser();
+        
+        if (currentUser) {
+          console.log('✅ AuthContext: 找到已登录用户:', currentUser);
+          setUser(currentUser);
+        } else {
+          console.log('ℹ️ AuthContext: 用户未登录');
+          setUser(null);
+        }
       }
       
     } catch (error) {

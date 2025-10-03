@@ -7,7 +7,9 @@ services:
     ports:
       - "5001:5001"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=${NODE_ENV:-development}
+      - ENV_MODE=${ENV_MODE:-local}
+      - AUTH_MODE=${AUTH_MODE:-mock}
       - PORT=5001
       - DB_HOST=host.docker.internal  # 连接到宿主机的本地PostgreSQL
       - DB_PORT=5432
@@ -16,6 +18,9 @@ services:
       - DB_PASSWORD=
       - JWT_SECRET=dev-secret-key-change-in-production
       - FRONTEND_URL=http://localhost:3000
+      - MOCK_USER_ID=${MOCK_USER_ID:-1}
+      - MOCK_USER_EMAIL=${MOCK_USER_EMAIL:-dev@ewltl.com}
+      - MOCK_USER_CREDITS=${MOCK_USER_CREDITS:-9999}
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -32,6 +37,8 @@ services:
       - "3000:3000"
     environment:
       - REACT_APP_API_URL=http://localhost:5001/api
+      - REACT_APP_AUTH_MODE=${AUTH_MODE:-mock}
+      - HOST=0.0.0.0
     depends_on:
       - backend
     volumes:

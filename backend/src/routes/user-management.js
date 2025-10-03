@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const UserManagement = require('../models/UserManagement');
-const { auth } = require('../middleware/auth');
+const { auth } = require('../middleware');
 
 /**
  * GET /api/user-management/credits

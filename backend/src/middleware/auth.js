@@ -77,11 +77,17 @@ const syncCognitoUser = async (cognitoPayload) => {
     
     const cognitoSub = cognitoPayload.sub;
     // 修正email字段获取 - Cognito的ID token中email字段就是email
-    const email = cognitoPayload.email || cognitoPayload['email'] || cognitoPayload['cognito:username'] || cognitoPayload.username;
+    let email = cognitoPayload.email || cognitoPayload['email'] || cognitoPayload['cognito:username'] || cognitoPayload.username;
+    
+    // 检查email是否为UUID格式（错误的数据），如果是则生成临时email
+    if (email && email.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      console.warn('⚠️ Email为UUID格式，使用cognito_sub生成临时email');
+      email = `user_${cognitoSub.substring(0, 8)}@ewltl.com`;
+    }
     
     if (!email) {
-      console.error('❌ 无法从Cognito payload中获取email');
-      throw new Error('Email not found in token');
+      console.error('❌ 无法从Cognito payload中获取email，使用cognito_sub生成临时email');
+      email = `user_${cognitoSub.substring(0, 8)}@ewltl.com`;
     }
     
     // 查找现有用户（先尝试cognito_sub，再尝试email）
@@ -100,11 +106,12 @@ const syncCognitoUser = async (cognitoPayload) => {
       // 创建新用户
       console.log(`📝 创建新的Cognito用户: ${email}`);
       
-      // 确保email不为空
-      const userEmail = email || `cognito_${cognitoSub}@ewltl.com`; // 生成一个临时email
+      // 获取注册奖励积分
+      const registrationBonus = await require('../models/UserManagement').getSystemConfig('user_registration_bonus');
+      const bonusCredits = parseInt(registrationBonus) || 500;
       
       const insertData = {
-        email: userEmail,
+        email: email,
         cognito_sub: cognitoSub,
         first_name: cognitoPayload.given_name || cognitoPayload.name?.split(' ')[0] || '',
         last_name: cognitoPayload.family_name || cognitoPayload.name?.split(' ')[1] || '',
@@ -112,8 +119,8 @@ const syncCognitoUser = async (cognitoPayload) => {
         user_type: 'shipper', // 统一使用shipper
         is_active: true,
         is_verified: cognitoPayload.email_verified || false,
-        credits: 100, // 新用户赠送100积分
-        total_credits_earned: 100,
+        credits: bonusCredits, // 使用系统配置的注册奖励
+        total_credits_earned: bonusCredits,
         total_credits_spent: 0,
         last_login_at: new Date()
       };
