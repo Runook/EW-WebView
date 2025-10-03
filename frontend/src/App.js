@@ -24,6 +24,7 @@ import Profile from './pages/Profile/Profile';
 import KgcmConverter from './pages/KgcmConverter';
 import FBALocations from './pages/FBALocations';
 import FBALocationDetail from './pages/FBALocationDetail';
+import GATest from './pages/GATest';
 import './App.css';
 import './config/amplify'; 
 
@@ -87,6 +88,9 @@ function App() {
               {/* FBA 仓库查询 */}
               <Route path="/fba-locations" element={<FBALocations />} />
               <Route path="/fba-location/:id" element={<FBALocationDetail />} />
+              
+              {/* GA 测试工具 */}
+              <Route path="/ga-test" element={<GATest />} />
               
               {/* 海运服务 */}
               
