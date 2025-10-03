@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './components/common/Notification';
 import { Package, BookOpen, Briefcase, ShoppingBag } from 'lucide-react';
@@ -8,8 +8,9 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import FreightBoard from './pages/FreightBoard';
 import Contact from './pages/Contact';
-import Login from './pages/Login';
+import CognitoAuth from './components/CognitoAuth';
 import Register from './pages/Register';
+import AuthCallback from './pages/AuthCallback';
 import SeaFreightPlatform from './pages/SeaFreightPlatform';
 import AirFreightPlatform from './pages/AirFreightPlatform';
 import MultimodalPlatform from './pages/MultimodalPlatform';
@@ -24,11 +25,13 @@ import KgcmConverter from './pages/KgcmConverter';
 import FBALocations from './pages/FBALocations';
 import FBALocationDetail from './pages/FBALocationDetail';
 import './App.css';
+import './config/amplify'; 
 
 // 导入 Google Maps 诊断功能
 import { diagnoseGoogleMapsIssues } from './config/googleMaps';
 
 function App() {
+  const location = useLocation();
   useEffect(() => {
     // 在应用启动时运行 Google Maps 诊断
     console.log('🚀 EW 物流平台启动');
@@ -40,6 +43,31 @@ function App() {
     }, 2000);
   }, []);
 
+  // GA4 SPA 路由切换上报 - 添加调试信息
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+        console.log('🟢 GA4 Loaded Successfully');
+        console.log('📊 Tracking Page:', location.pathname + location.search);
+        console.log('🏷️  Using GA ID: G-MTZCJ79H05');
+        
+        window.gtag('config', 'G-MTZCJ79H05', {
+          page_path: location.pathname + location.search,
+          debug_mode: process.env.NODE_ENV === 'development' // 开发环境启用调试
+        });
+      } else {
+        console.warn('🔴 GA4 gtag function not available');
+        console.log('🔍 Debug info:', {
+          gtag_exists: typeof window.gtag,
+          dataLayer_exists: !!window.dataLayer,
+          dataLayer_length: window.dataLayer ? window.dataLayer.length : 0
+        });
+      }
+    } catch (err) {
+      console.error('🔴 GA4 tracking error:', err);
+    }
+  }, [location]);
+
   return (
     <NotificationProvider>
       <AuthProvider>
@@ -49,16 +77,16 @@ function App() {
             <Routes>
               {/* 首页 */}
               <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/login" element={<CognitoAuth type="login" />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               
               {/* 陆运服务 */}
               <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<FreightBoard />} />
-              
+                           
               {/* FBA 仓库查询 */}
               <Route path="/fba-locations" element={<FBALocations />} />
               <Route path="/fba-location/:id" element={<FBALocationDetail />} />
-             
               
               {/* 海运服务 */}
               

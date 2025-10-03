@@ -130,11 +130,8 @@
 /* ===== 标签页和操作按钮 ===== */
 .board-tabs {
   display: flex;
-  gap: var(--gap-sm);
+  gap: var(--gap-lg);
   margin-bottom: var(--gap-2xl);
-  background: transparent;
-  padding: var(--gap-xs);
-  border-radius: var(--radius-lg);
 }
 
 .tab {
@@ -145,24 +142,25 @@
   gap: var(--gap-sm);
   padding: var(--gap-md) var(--gap-lg);
   border-radius: var(--radius-md);
-  background: var(--ferrari-red);
-  border: none;
-  color: var(--bg-white);
+  background: none;
+  border: 2px solid var(--primary-green);
+  color: var(--primary-green);
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(255, 40, 0, 0.2);
 }
 
-.tab.active {
+.tab:hover:not(.active) {
   background: var(--primary-green);
   color: var(--bg-white);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  transform: translateY(-1px);
 }
 
-.tab:hover:not(.active) {
-  background: var(--ferrari-red-dark);
-  opacity: 0.8;
+.tab.active {
+  background: var(--ferrari-red);
+  border-color: var(--ferrari-red);
+  color: var(--bg-white);
 }
 
 .tab-count {

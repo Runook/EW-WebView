@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Company = require('../models/Company');
 const UserManagement = require('../models/UserManagement');
-const { auth } = require('../middleware/auth');
+const { auth } = require('../middleware');
 
 /**
  * 商家黄页路由

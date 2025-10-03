@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Search, 
   Calendar, 
@@ -62,6 +62,7 @@ const FreightBoard = () => {
   // 路由相关
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // 通知和日志系统
   const { success, error: showError, apiError } = useNotification();
@@ -78,6 +79,7 @@ const FreightBoard = () => {
   const [selectedItem, setSelectedItem] = useState(null); // 详情模态框中选中的项目
   const [currentPostType, setCurrentPostType] = useState(null);
   const [currentFormData, setCurrentFormData] = useState(null);
+  const [fbaDestination, setFbaDestination] = useState(null); // FBA destination data from navigation
 
   // 加载状态 - 使用新的Hook系统
   const { loading, withLoading } = useLoading(false);
@@ -233,6 +235,17 @@ const FreightBoard = () => {
 
     loadData();
   }, [fetchLoads, fetchTrucks, showError, withLoading]);
+
+  // Handle FBA destination data from navigation
+  useEffect(() => {
+    if (location.state?.openPostModal && location.state?.fbaDestination) {
+      setFbaDestination(location.state.fbaDestination);
+      postLoadModal.open();
+      
+      // Clear the navigation state to prevent reopening on refresh
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, navigate, location.pathname, postLoadModal]);
 
   // === 筛选和搜索功能 ===
   /**
@@ -410,7 +423,6 @@ const FreightBoard = () => {
       showError('请先登录再发布');
       return;
     }
-
     // 确定发布类型
     const postType = postData.type === 'load' ? 'load' : 'truck';
     
@@ -432,7 +444,6 @@ const FreightBoard = () => {
         publicationDate: new Date().toISOString(),
         premium: premium
       };
-
       // 使用统一的API服务
       const result = formData.type === 'load' 
         ? await apiServices.landFreight.createLoad(enhancedData)
@@ -1034,8 +1045,12 @@ const FreightBoard = () => {
       {/* 发布货源模态框 */}
       <PostLoadModal 
         isOpen={postLoadModal.isOpen}
-        onClose={postLoadModal.close}
+        onClose={() => {
+          postLoadModal.close();
+          setFbaDestination(null); // Clear FBA destination when closing
+        }}
         onSubmit={handlePostSubmit}
+        fbaDestination={fbaDestination}
       />
       
       {/* 发布车源模态框 */}

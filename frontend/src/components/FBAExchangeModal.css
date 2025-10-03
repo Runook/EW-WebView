@@ -1,0 +1,1399 @@
+/* FBA Exchange Modal Styles */
+.fba-exchange-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+}
+
+.fba-exchange-modal {
+  background: white;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Modal Header */
+.modal-header {
+  background: linear-gradient(135deg, #2d5aa0 0%, #1e3a6f 100%);
+  color: white;
+  padding: 24px 32px;
+  position: relative;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.modal-header p {
+  margin: 8px 0 0 0;
+  opacity: 0.9;
+  font-size: 1rem;
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 32px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 8px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Tab Buttons */
+.tab-buttons {
+  display: flex;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 16px 24px;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab-btn.active {
+  color: #2d5aa0;
+  background: white;
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(135deg, #2d5aa0 0%, #1e3a6f 100%);
+}
+
+.tab-btn:hover:not(.active) {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Tab Content */
+.market-tab,
+.publish-tab {
+  padding: 24px 32px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Filters */
+.filters {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+}
+
+.filter-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center !important;
+  gap: 20px;  /* 增大gap */
+  flex-wrap: wrap;
+  padding: 20px 32px;  /* 大幅增加padding */
+  min-width: 0; /* 允许flex项目收缩 */
+  text-align: center;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* 尝试让筛选器优先保持在一行 */
+@media (min-width: 768px) {
+  .filter-inline {
+    flex-wrap: nowrap;
+    gap: 24px;  /* 增大桌面端gap */
+    justify-content: center !important;
+    margin: 0 auto; 
+    padding: 20px 40px;  /* 桌面端更大的padding */
+  }
+  
+  .checkbox-item:first-child {
+    margin-left: 20px; /* 桌面端给更多左边距 */
+  }
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+  font-size: 0.9rem;
+  color: #374151;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.checkbox-item:hover {
+  background-color: rgba(45, 90, 160, 0.05);
+}
+
+
+
+
+
+.checkbox-item input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  position: relative;
+  transition: all 0.3s ease;
+  background: white;
+  flex-shrink: 0;
+}
+
+.checkbox-item:hover .checkmark {
+  border-color: #2d5aa0;
+}
+
+.checkbox-item input[type="checkbox"]:checked + .checkmark {
+  background: linear-gradient(135deg, #2d5aa0 0%, #1e3a6f 100%);
+  border-color: #2d5aa0;
+}
+
+.checkbox-item input[type="checkbox"]:checked + .checkmark::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.clear-filters-btn {
+  background: #6b7280;
+  color: white;
+  border: none;
+  padding: 4px 6px;  /* 进一步减小padding */
+  border-radius: 6px;  /* 减小圆角 */
+  font-size: 0.75rem;  /* 减小字体 */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: -8px;  /* 更大的负margin来节省空间 */
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.clear-filters-btn:hover:not(:disabled) {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.clear-filters-btn:disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Search Box */
+.search-box {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.search-input {
+  padding: 6px 10px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  width: 120px;
+  transition: all 0.3s ease;
+  background: white;
+  color: #374151;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #2d5aa0;
+  box-shadow: 0 0 0 3px rgba(45, 90, 160, 0.1);
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+.results-count {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+/* Exchange List */
+.exchanges-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 交换部分样式 */
+.exchange-section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border-left: 4px solid;
+}
+
+.section-title.demand-title {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-left-color: #3b82f6;
+  color: #1d4ed8;
+}
+
+.section-title.supply-title {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-left-color: #10b981;
+  color: #059669;
+}
+
+/* 不同类型的交换项目样式 */
+.exchange-item.demand-item {
+  border-left: 3px solid #3b82f6;
+}
+
+.exchange-item.supply-item {
+  border-left: 3px solid #10b981;
+}
+
+.exchange-item {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.exchange-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+/* 紧急项目的红光包围效果 */
+.exchange-item.urgent-item {
+  border-color: #ef4444;
+  box-shadow: 
+    0 0 10px rgba(239, 68, 68, 0.3),
+    0 0 20px rgba(239, 68, 68, 0.2),
+    0 0 30px rgba(239, 68, 68, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.08);
+  animation: urgentPulse 3s ease-in-out infinite;
+}
+
+.exchange-item.urgent-item:hover {
+  border-color: #dc2626;
+  box-shadow: 
+    0 0 15px rgba(239, 68, 68, 0.4),
+    0 0 25px rgba(239, 68, 68, 0.3),
+    0 0 35px rgba(239, 68, 68, 0.2),
+    0 6px 25px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+}
+
+/* 红光脉动动画 */
+@keyframes urgentPulse {
+  0% {
+    box-shadow: 
+      0 0 8px rgba(239, 68, 68, 0.2),
+      0 0 16px rgba(239, 68, 68, 0.15),
+      0 0 24px rgba(239, 68, 68, 0.08),
+      0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+  50% {
+    box-shadow: 
+      0 0 12px rgba(239, 68, 68, 0.4),
+      0 0 24px rgba(239, 68, 68, 0.3),
+      0 0 36px rgba(239, 68, 68, 0.15),
+      0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+  100% {
+    box-shadow: 
+      0 0 8px rgba(239, 68, 68, 0.2),
+      0 0 16px rgba(239, 68, 68, 0.15),
+      0 0 24px rgba(239, 68, 68, 0.08),
+      0 4px 20px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.exchange-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  font-size: 0.9rem;
+}
+
+.info-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.info-label {
+  color: #6b7280;
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+.info-value {
+  color: #111827;
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.exchange-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.exchange-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.exchange-type,
+.cargo-type,
+.pricing {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.exchange-type.supply {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.exchange-type.demand {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+}
+
+.cargo-type {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+/* 货物类型颜色区分 */
+.cargo-type.floor-cargo {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.cargo-type.pallet-cargo {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+
+
+.contact-info {
+  font-size: 0.9rem;
+  color: #374151;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exchange-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-item .label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.detail-item .value {
+  font-size: 0.9rem;
+  color: #111827;
+  font-weight: 600;
+}
+
+.exchange-description {
+  color: #374151;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+
+.exchange-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.contact-btn {
+  background: linear-gradient(135deg, #2d5aa0 0%, #1e3a6f 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.contact-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(45, 90, 160, 0.3);
+}
+
+.contact-icon {
+  font-size: 1rem;
+}
+
+/* 桌面版仓库代码徽章样式 - 参照FBALocations的location-code */
+/* 只在非移动端设备上应用 */
+@media (min-width: 769px) {
+  .warehouse-code-desktop {
+    background: linear-gradient(135deg, var(--royal-blue) 0%, var(--royal-blue-dark) 100%) !important;
+    color: white !important;
+    padding: 6px 12px !important;
+    border-radius: 20px !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    white-space: nowrap;
+    display: inline-block;
+  }
+  
+  /* 桌面版搜索筛选器重新设计 - 完全删除背景方框 */
+  .filters {
+    margin-bottom: 32px;
+    padding: 0; /* 完全移除padding，避免超出边界 */
+    display: flex;
+    justify-content: flex-start; /* 左对齐 */
+  }
+  
+  .filter-inline {
+    display: grid;
+    grid-template-columns: auto auto auto 1fr auto;
+    gap: 20px;
+    align-items: center;
+    /* 完全删除所有背景、边框和阴影 */
+    background: none;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    margin-left: 20em; /* 增加右移距离，向右移动更多 */
+  }
+  
+  .checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .checkbox-item:hover {
+    background: var(--royal-blue-alpha);
+    transform: translateY(-1px);
+  }
+  
+  .checkmark {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--royal-blue);
+    border-radius: 4px;
+    background: white;
+  }
+  
+  .checkbox-item input[type="checkbox"]:checked + .checkmark {
+    background: linear-gradient(135deg, var(--royal-blue) 0%, var(--royal-blue-dark) 100%);
+    border-color: var(--royal-blue);
+  }
+  
+  .search-input {
+    padding: 10px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    background: white;
+    transition: all 0.3s ease;
+    min-width: 200px;
+  }
+  
+  .search-input:focus {
+    border-color: var(--royal-blue);
+    box-shadow: 0 0 0 3px var(--royal-blue-alpha);
+  }
+  
+  .clear-filters-btn {
+    background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+  
+  .clear-filters-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+  }
+  
+  .clear-filters-btn:disabled {
+    background: #e5e7eb;
+    color: #9ca3af;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  /* 确保桌面版"我的发布"页面样式正确 */
+  .my-exchange-item .warehouse-code-desktop {
+    background: linear-gradient(135deg, var(--royal-blue) 0%, var(--royal-blue-dark) 100%) !important;
+    color: white !important;
+    padding: 6px 12px !important;
+    border-radius: 20px !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    white-space: nowrap;
+    display: inline-block;
+  }
+  
+  /* 确保所有交换项目的仓库代码都使用正确样式 */
+  .exchange-item .warehouse-code-desktop,
+  .supply-item .warehouse-code-desktop,
+  .demand-item .warehouse-code-desktop,
+  .my-exchange-item .warehouse-code-desktop {
+    background: linear-gradient(135deg, var(--royal-blue) 0%, var(--royal-blue-dark) 100%) !important;
+    color: white !important;
+    padding: 6px 12px !important;
+    border-radius: 20px !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    white-space: nowrap;
+    display: inline-block;
+    border: none !important;
+    text-decoration: none !important;
+  }
+}
+
+/* 内联联系按钮 - 使用EW主题绿色 */
+.contact-btn-inline {
+  background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.contact-btn-inline:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(52, 199, 89, 0.3);
+}
+
+/* Publish Form */
+.login-prompt {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #2d5aa0 0%, #1e3a6f 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(45, 90, 160, 0.3);
+}
+
+.publish-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+/* 必填符号样式 - 简单有效的方法 */
+.form-group label .required {
+  color: #ef4444;
+  font-weight: bold;
+  margin-left: 2px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #2d5aa0;
+  box-shadow: 0 0 0 3px rgba(45, 90, 160, 0.1);
+}
+
+.form-group input:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.error {
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+  color: white;
+  border: none;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 8px;
+}
+
+.submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(17, 24, 39, 0.3);
+}
+
+.submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Loading and Empty States */
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-size: 1rem;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px 20px;
+  color: #64748b;
+  font-size: 1rem;
+}
+
+/* 我的发布样式 */
+.my-posts-tab {
+  padding: 24px 32px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.my-exchange-item {
+  border-left: 4px solid #2d5aa0;
+}
+
+.my-post-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.delete-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.delete-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.exchange-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f3f4f6;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.view-count {
+  font-weight: 500;
+}
+
+.created-date {
+  font-style: italic;
+}
+
+/* ==================== 全新响应式设计 ==================== */
+/* 参照FBALocations页面的优秀响应式设计模式 */
+
+/* 平板端优化 */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .fba-exchange-modal {
+    width: 92%;
+    max-width: 800px;
+  }
+  
+  .modal-header {
+    padding: 22px 28px;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.6rem;
+  }
+  
+  .market-tab,
+  .publish-tab,
+  .my-posts-tab {
+    padding: 22px 28px;
+  }
+  
+  /* 筛选器优化 */
+  .filter-inline {
+    gap: 18px;
+    padding: 18px 32px;
+  }
+  
+  .search-input {
+    width: 140px;
+    font-size: 0.85rem;
+  }
+}
+
+/* 移动端响应式设计 - 主要适配 */
+@media (max-width: 768px) {
+  /* 模态框整体优化 */
+  .fba-exchange-modal {
+    width: 95%;
+    margin: 15px;
+    max-height: calc(100vh - 30px);
+    border-radius: 20px;
+  }
+  
+  .modal-header {
+    padding: 18px 20px;
+    border-radius: 20px 20px 0 0;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.4rem;
+  }
+  
+  .modal-header p {
+    font-size: 0.9rem;
+  }
+  
+  .close-btn {
+    top: 12px;
+    right: 16px;
+    font-size: 26px;
+  }
+  
+  /* 标签页优化 */
+  .tab-buttons {
+    background: #f8fafc;
+  }
+  
+  .tab-btn {
+    padding: 14px 16px;
+    font-size: 0.9rem;
+  }
+  
+  /* 内容区域优化 */
+  .market-tab,
+  .publish-tab,
+  .my-posts-tab {
+    padding: 18px 20px;
+    max-height: 65vh;
+  }
+  
+  /* 筛选器移动端优化 - 更紧凑的设计 */
+  .filters {
+    margin-bottom: 16px;
+  }
+  
+  .filter-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: 10px;
+    margin: 0;
+  }
+  
+  /* 第一行：复选框 - 强制在一行显示 */
+  .filter-checkboxes {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: nowrap; /* 强制不换行 */
+  }
+  
+  .checkbox-item {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    white-space: nowrap;
+    border-radius: 6px;
+    flex-shrink: 1; /* 允许缩小 */
+    min-width: 0; /* 允许缩小到最小 */
+  }
+  
+  .checkbox-item:first-child {
+    margin-left: 0;
+  }
+  
+  /* 第二行：搜索框和清除按钮 */
+  .filter-bottom-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+  
+  .search-box {
+    flex: 1;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+    height: 32px;
+    box-sizing: border-box;
+  }
+  
+  .clear-filters-btn {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    border-radius: 8px;
+    margin-left: 0;
+    height: 32px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  /* 移动端交换卡片样式 - 参照FBALocations的mobile-location-card */
+  .exchange-item {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+  }
+  
+  .exchange-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 移动端信息行重新设计 - 更紧凑的布局 */
+  .exchange-info-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
+    font-size: 0.85rem;
+  }
+  
+  /* 第一行：交换类型和货物类型徽章 */
+  .exchange-info-row::before {
+    content: '';
+    order: -1;
+  }
+  
+  /* 创建移动端专用的徽章容器 */
+  .mobile-exchange-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  
+  /* 移动端徽章样式 */
+  .mobile-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: white;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  
+  .mobile-badge.exchange-type-badge {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  }
+  
+  .mobile-badge.supply-badge {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  }
+  
+  .mobile-badge.cargo-badge {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  }
+  
+  .mobile-badge.urgent-badge {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  }
+  
+  .mobile-badge.warehouse-badge {
+    background: linear-gradient(135deg, var(--royal-blue) 0%, var(--royal-blue-dark) 100%);
+    color: white;
+    font-weight: 700;
+  }
+  
+  /* 移动端紧凑信息行 - 参照FBALocations的设计 */
+  .mobile-compact-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    margin: 8px 0;
+    font-size: 0.8rem;
+    line-height: 1.3;
+  }
+  
+  .info-compact {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    white-space: nowrap;
+    color: #111827;
+    font-weight: 600;
+  }
+  
+  .info-compact .label {
+    color: #6b7280;
+    font-weight: 500;
+    font-size: 0.75rem;
+  }
+  
+  .info-compact .label::after {
+    content: ':';
+    margin-right: 2px;
+  }
+  
+  /* 我的发布页面底部行 */
+  .mobile-my-exchange-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f3f4f6;
+  }
+  
+  .mobile-my-exchange-footer .created-date {
+    font-size: 0.75rem !important;
+    color: #6b7280;
+    font-weight: 400;
+  }
+  
+  .delete-btn-compact {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .delete-btn-compact:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  }
+  
+  /* 移动端联系按钮 - 确保使用EW主题绿色 */
+  .contact-btn-inline {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%) !important;
+  }
+  
+  /* 移动端筛选器布局不受桌面版影响 */
+  .filters {
+    margin-bottom: 16px;
+    padding: 0; /* 重置桌面版的padding */
+  }
+  
+  /* 移动端描述 */
+  .exchange-description {
+    font-size: 0.85rem;
+    margin: 8px 0;
+    padding: 8px 0;
+    border-top: 1px solid #f3f4f6;
+  }
+  
+  /* 发布表单移动端优化 */
+  .publish-form {
+    gap: 16px;
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .form-group {
+    gap: 6px;
+  }
+  
+  .form-group label {
+    font-size: 0.85rem;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+  
+  .submit-btn {
+    padding: 14px 20px;
+    font-size: 0.95rem;
+    border-radius: 10px;
+  }
+  
+  /* 我的发布页面移动端优化 */
+  .my-exchange-item {
+    border-left: 3px solid #2d5aa0;
+  }
+  
+  .delete-btn {
+    width: 100%;
+    margin-top: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  
+  /* 结果计数优化 */
+  .results-count {
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+    text-align: center;
+    color: #64748b;
+  }
+  
+  /* 区段标题优化 */
+  .section-title {
+    font-size: 1.1rem;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+  }
+}
+
+/* 小屏手机优化 */
+@media (max-width: 480px) {
+  .fba-exchange-modal {
+    width: 98%;
+    margin: 10px;
+    max-height: calc(100vh - 20px);
+    border-radius: 16px;
+  }
+  
+  .modal-header {
+    padding: 16px 18px;
+    border-radius: 16px 16px 0 0;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .modal-header p {
+    font-size: 0.85rem;
+  }
+  
+  .close-btn {
+    top: 10px;
+    right: 14px;
+    font-size: 24px;
+  }
+  
+  .tab-btn {
+    padding: 12px 10px;
+    font-size: 0.8rem;
+  }
+  
+  .market-tab,
+  .publish-tab,
+  .my-posts-tab {
+    padding: 16px 18px;
+    max-height: 70vh;
+  }
+  
+  /* 筛选器小屏优化 */
+  .filter-inline {
+    gap: 8px;
+    padding: 10px;
+  }
+  
+  .filter-checkboxes {
+    gap: 6px; /* 小屏幕缩小间距 */
+    flex-wrap: nowrap; /* 强制不换行 */
+  }
+  
+  .checkbox-item {
+    font-size: 0.65rem; /* 稍微减小字体 */
+    padding: 3px 6px;
+    flex-shrink: 1;
+    min-width: 0;
+  }
+  
+  .filter-bottom-row {
+    gap: 6px;
+  }
+  
+  .search-input {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    height: 28px;
+  }
+  
+  .clear-filters-btn {
+    padding: 5px 8px;
+    font-size: 0.7rem;
+    height: 28px;
+  }
+  
+  /* 小屏卡片优化 */
+  .exchange-item {
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+  }
+  
+  .mobile-badge {
+    font-size: 0.7rem;
+    padding: 3px 8px;
+    border-radius: 10px;
+  }
+  
+  /* 小屏幕紧凑信息行 */
+  .mobile-compact-info {
+    gap: 6px 8px;
+    margin: 6px 0;
+    font-size: 0.75rem;
+  }
+  
+  .info-compact .label {
+    font-size: 0.7rem;
+  }
+  
+  .contact-btn-inline {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    margin-top: 10px;
+    background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%) !important;
+  }
+  
+  /* 小屏幕筛选器布局重置 */
+  .filters {
+    margin-bottom: 12px;
+    padding: 0; /* 重置桌面版的padding */
+  }
+  
+  .exchange-description {
+    font-size: 0.8rem;
+  }
+  
+  .section-title {
+    font-size: 1rem;
+    padding: 8px 12px;
+  }
+  
+  /* 表单小屏优化 */
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+  
+  .submit-btn {
+    padding: 12px 18px;
+    font-size: 0.9rem;
+  }
+  
+  .results-count {
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+  }
+  
+  /* 小屏幕发布日期字体大小 */
+  .mobile-my-exchange-footer .created-date {
+    font-size: 0.7rem !important;
+  }
+}
+

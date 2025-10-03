@@ -6,10 +6,7 @@ import {
   Mail, 
   Lock, 
   ArrowRight, 
-  AlertCircle,
-  Truck,
-  BarChart3,
-  Shield
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
@@ -108,7 +105,7 @@ const Login = () => {
 
   return (
     <div className="auth-page">
-      <div className="auth-container">
+      <div className="auth-container login">
         <div className="auth-card">
           {/* Header */}
           <div className="auth-header">
@@ -173,7 +170,7 @@ const Login = () => {
                   className="password-toggle"
                   disabled={isLoading}
                 >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
@@ -214,42 +211,7 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Side Info */}
-        <div className="auth-side">
-          <div className="auth-side-content">
-            <h2>专业物流服务</h2>
-            <p>连接全球货主与承运商，提供安全、高效的物流解决方案</p>
-            <div className="auth-features">
-              <div className="feature-item">
-                <div className="feature-icon">
-                  <Truck size={32} color="white" />
-                </div>
-                <div>
-                  <h3>货运匹配</h3>
-                  <p>智能匹配最适合的运输方案</p>
-                </div>
-              </div>
-              <div className="feature-item">
-                <div className="feature-icon">
-                  <BarChart3 size={32} color="white" />
-                </div>
-                <div>
-                  <h3>实时追踪</h3>
-                  <p>全程可视化货物运输状态</p>
-                </div>
-              </div>
-              <div className="feature-item">
-                <div className="feature-icon">
-                  <Shield color="white" size={32} />
-                </div>
-                <div>
-                  <h3>安全保障</h3>
-                  <p>全面的货物保险和风险控制</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   );

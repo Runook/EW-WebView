@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './FBALocations.css';
 import fbaLocationsData from '../data/fba-locations.json';
 import { processLocationData } from '../utils/fbaDataProcessor';
+import { useAuth } from '../contexts/AuthContext';
+import FBAExchangeModal from '../components/FBAExchangeModal';
 
 const FBALocations = () => {
   const [locations, setLocations] = useState([]);
@@ -10,6 +12,11 @@ const FBALocations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedState, setSelectedState] = useState('');
   const [selectedType, setSelectedType] = useState('');
+  const [exchangeModalOpen, setExchangeModalOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     // 处理和清理数据
@@ -17,6 +24,18 @@ const FBALocations = () => {
     console.log('处理后的FBA数据:', processedData.length, '个位置');
     setLocations(processedData);
     setFilteredLocations(processedData);
+  }, []);
+
+  // 检测屏幕大小变化
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkIfMobile(); // 初始检查
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
   useEffect(() => {
@@ -50,6 +69,88 @@ const FBALocations = () => {
   
   // 获取唯一的类型
   const uniqueTypes = [...new Set(locations.map(loc => loc.type))].filter(Boolean).sort();
+
+  // 处理发布货源
+  const handlePublishCargo = (location) => {
+    if (!user) {
+      alert('请先登录');
+      navigate('/login');
+      return;
+    }
+    
+    // 准备FBA位置数据传递给发布货源页面
+    const fbaData = {
+      code: location.code,
+      address: location.address,
+      city: location.city,
+      state: location.state,
+      isFBA: true
+    };
+    
+    // 导航到发布货源页面，并传递FBA数据
+    navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区', { 
+      state: { 
+        openPostModal: true, 
+        fbaDestination: fbaData 
+      } 
+    });
+  };
+
+  // 处理评论功能 - 导航到详情页面
+  const handleComment = (location) => {
+    // 导航到FBA位置详情页面，那里有完整的评论功能
+    navigate(`/fba-location/${location.id}`);
+  };
+
+  // 处理预约交换功能
+  const handleExchange = (location) => {
+    setSelectedLocation(location);
+    setExchangeModalOpen(true);
+  };
+
+  // 渲染移动端卡片
+  const renderMobileCards = () => {
+    return (
+      <div className="mobile-location-cards">
+        {filteredLocations.map((location) => (
+          <div key={location.id} className="mobile-location-card">
+            <div className="mobile-card-header">
+              <div className="mobile-card-badges">
+                <div className="mobile-card-code badge-item">{location.code}</div>
+                <span className={`type-badge type-${location.type?.toLowerCase()} badge-item`}>
+                  {location.type}
+                </span>
+                <div className="mobile-card-state badge-item">{location.state}</div>
+              </div>
+            </div>
+            <div className="mobile-card-address">
+              {location.address}
+            </div>
+            <div className="mobile-card-actions">
+              <button 
+                onClick={() => handlePublishCargo(location)}
+                className="action-btn publish-btn"
+              >
+                发布货源
+              </button>
+              <button 
+                onClick={() => handleExchange(location)}
+                className="action-btn exchange-btn"
+              >
+                预约交换
+              </button>
+              <button 
+                onClick={() => handleComment(location)}
+                className="action-btn comment-btn"
+              >
+                评论
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="fba-locations-page">
@@ -98,35 +199,18 @@ const FBALocations = () => {
         </div>
       </section>
 
-      {/* Statistics */}
-      <section className="fba-stats">
-        <div className="container">
-          <div className="stats-grid">
-            <div className="stat-item">
-              <div className="stat-number">{filteredLocations.length}</div>
-              <div className="stat-label">找到的位置</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{uniqueStates.length}</div>
-              <div className="stat-label">覆盖州数</div>
-            </div>
-            <div className="stat-item">
-              <div className="stat-number">{uniqueTypes.length}</div>
-              <div className="stat-label">设施类型</div>
-            </div>
-          </div>
-        </div>
-      </section>
+
 
       {/* Locations Table */}
       <section className="fba-locations-list">
         <div className="container">
-          <h2>FBA 仓库位置列表</h2>
           
           {filteredLocations.length === 0 ? (
             <div className="no-results">
               <p>未找到匹配的位置，请调整搜索条件。</p>
             </div>
+          ) : isMobile ? (
+            renderMobileCards()
           ) : (
             <div className="locations-table-wrapper">
               <table className="locations-table">
@@ -155,12 +239,26 @@ const FBALocations = () => {
                         {location.address}
                       </td>
                       <td>
-                        <Link 
-                          to={`/fba-location/${location.id}`}
-                          className="view-details-btn"
-                        >
-                          查看详情
-                        </Link>
+                        <div className="action-buttons">
+                          <button 
+                            onClick={() => handlePublishCargo(location)}
+                            className="action-btn publish-btn"
+                          >
+                            发布货源
+                          </button>
+                          <button 
+                            onClick={() => handleExchange(location)}
+                            className="action-btn exchange-btn"
+                          >
+                            预约交换
+                          </button>
+                          <button 
+                            onClick={() => handleComment(location)}
+                            className="action-btn comment-btn"
+                          >
+                            评论
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -194,6 +292,17 @@ const FBALocations = () => {
           </div>
         </div>
       </section>
+
+      {/* FBA Exchange Modal */}
+      <FBAExchangeModal
+        isOpen={exchangeModalOpen}
+        onClose={() => setExchangeModalOpen(false)}
+        location={selectedLocation}
+        onSuccess={() => {
+          // 可以在这里添加成功后的处理，比如刷新数据
+          console.log('预约交换信息发布成功');
+        }}
+      />
     </div>
   );
 };

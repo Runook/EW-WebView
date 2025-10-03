@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getAuthToken, apiClient } from '../utils/apiClient';
+import { signOut, getCurrentUser } from '../utils/cognitoAuth'; // 使用直接API
+import { isMockMode, autoMockLogin, getMockUser, getMockToken } from '../utils/mockAuth';
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within AuthProvider');
   }
   return context;
 };
@@ -16,77 +17,78 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 检查本地存储的token
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = getAuthToken();
-        
-        if (token) {
-          try {
-            const userData = await apiClient.get('/auth/verify');
-            setUser(userData.user);
-          } catch (error) {
-            localStorage.removeItem('authToken');
-          }
-        }
-      } catch (error) {
-        console.error('AuthContext: Auth check failed:', error);
-        localStorage.removeItem('authToken');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // 添加setUserState函数供CognitoAuth使用
+  const setUserState = (cognitoUser) => {
+    console.log('📌 AuthContext: 设置用户状态:', cognitoUser);
+    setUser(cognitoUser);
+  };
 
+  // 检查认证状态
+  useEffect(() => {
     checkAuth();
   }, []);
 
-  // 登录函数
+  const checkAuth = async () => {
+    try {
+      console.log('🔍 AuthContext: 检查认证状态...');
+      
+      // 检查是否为Mock模式
+      if (isMockMode()) {
+        console.log('🔧 AuthContext: Mock模式 (开发环境)');
+        
+        // 自动Mock登录
+        autoMockLogin();
+        
+        // 使用Mock用户
+        const mockUser = getMockUser();
+        console.log('✅ AuthContext: 使用Mock用户:', mockUser);
+        setUser(mockUser);
+      } else {
+        // 生产模式：使用Cognito认证
+        const currentUser = getCurrentUser();
+        
+        if (currentUser) {
+          console.log('✅ AuthContext: 找到已登录用户:', currentUser);
+          setUser(currentUser);
+        } else {
+          console.log('ℹ️ AuthContext: 用户未登录');
+          setUser(null);
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ AuthContext: 认证检查错误:', error);
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 登录（保留接口兼容性）
   const login = async (email, password) => {
-    try {
-      setError(null);
-      
-      const data = await apiClient.post('/auth/login', { email, password });
-
-      localStorage.setItem('authToken', data.token);
-      setUser(data.user);
-      return { success: true };
-    } catch (error) {
-      console.error('AuthContext: 登录网络错误:', error);
-      const errorMsg = error.message || '网络错误，请稍后重试';
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
-    }
+    console.log('ℹ️ AuthContext: login()被调用，请使用CognitoAuth组件');
+    return { success: false, error: '请使用新的登录页面' };
   };
 
-  // 注册函数
+  // 注册（保留接口兼容性）
   const register = async (userData) => {
+    console.log('ℹ️ AuthContext: register()被调用，请使用CognitoAuth组件');
+    return { success: false, error: '请使用新的注册页面' };
+  };
+
+  // 登出
+  const logout = async () => {
     try {
+      console.log('🚪 AuthContext: 执行登出...');
+      
+      await signOut();
+      setUser(null);
       setError(null);
       
-      const data = await apiClient.post('/auth/register', userData);
-
-      localStorage.setItem('authToken', data.token);
-      setUser(data.user);
-      return { success: true };
+      console.log('✅ AuthContext: 登出成功');
     } catch (error) {
-      console.error('AuthContext: 注册网络错误:', error);
-      const errorMsg = error.message || '网络错误，请稍后重试';
-      setError(errorMsg);
-      return { success: false, error: errorMsg };
+      console.error('❌ AuthContext: 退出登录失败:', error);
     }
-  };
-
-  // 退出登录
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    setUser(null);
-    setError(null);
-  };
-
-  // 更新用户信息
-  const updateUser = (userData) => {
-    setUser(prev => ({ ...prev, ...userData }));
   };
 
   // 清除错误
@@ -101,9 +103,9 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    updateUser,
     clearError,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    setUserState
   };
 
   return (
@@ -111,4 +113,4 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-}; 
+};

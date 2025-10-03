@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const LandFreight = require('../models/LandFreight');
 const UserManagement = require('../models/UserManagement');
-const { auth } = require('../middleware/auth');
+const { auth } = require('../middleware');
 
 // 可选认证中间件（用于兼容现有测试）
 const optionalAuth = (req, res, next) => {
@@ -109,6 +109,19 @@ router.post('/loads', auth, async (req, res) => {
     // 标准化日期字段名
     if (!loadData.pickupDate && loadData.requiredDate) {
       loadData.pickupDate = loadData.requiredDate;
+    }
+
+    // 可选字段：deliveryDate 允许为空字符串 → 归一为 null，避免写入 DATE 列报错
+    if (typeof loadData.deliveryDate === 'string' && loadData.deliveryDate.trim() === '') {
+      loadData.deliveryDate = null;
+    }
+
+    // 可选字段：pallets（整数）允许为空字符串/未提供 → 归一为 null；数字字符串 → 转整数
+    if (loadData.pallets === '' || loadData.pallets === undefined || loadData.pallets === null) {
+      loadData.pallets = null;
+    } else if (typeof loadData.pallets === 'string') {
+      const parsed = parseInt(loadData.pallets, 10);
+      loadData.pallets = Number.isNaN(parsed) ? null : parsed;
     }
 
     // 验证必填字段

@@ -5,8 +5,14 @@
 /* Extended CSS Variables */
 :root {
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, var(--primary-green), var(--primary-green-light));
-  --gradient-primary-dark: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+  --gradient-primary: linear-gradient(135deg, 
+    var(--primary-green) 0%, 
+    var(--royal-blue) 50%, 
+    var(--ferrari-red) 100%);
+  --gradient-primary-dark: linear-gradient(135deg, 
+    var(--primary-green-dark) 0%, 
+    var(--royal-blue-dark) 50%, 
+    var(--ferrari-red-dark) 100%);
   --gradient-gold: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
   --gradient-gold-light: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 165, 0, 0.05) 100%);
   --gradient-gold-bg: linear-gradient(135deg, #FFFBF0 0%, #FFF8E1 100%);

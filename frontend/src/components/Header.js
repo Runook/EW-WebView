@@ -8,6 +8,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [activeSubmenu, setActiveSubmenu] = useState(null);
   const [hoverTimeout, setHoverTimeout] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const Header = () => {
           !event.target.closest('.user-menu') &&
           !event.target.closest('.mobile-nav-dropdown')) {
         setActiveDropdown(null);
+        setActiveSubmenu(null);
         setIsUserMenuOpen(false);
       }
     };
@@ -27,6 +29,7 @@ const Header = () => {
     const handleResize = () => {
       // 窗口大小变化时关闭所有下拉菜单
       setActiveDropdown(null);
+      setActiveSubmenu(null);
       setIsUserMenuOpen(false);
       // 清理任何待定的定时器
       if (hoverTimeout) {
@@ -55,6 +58,7 @@ const Header = () => {
   useEffect(() => {
     setIsMenuOpen(false);
     setActiveDropdown(null);
+    setActiveSubmenu(null);
     setIsUserMenuOpen(false);
   }, [location.pathname]);
 
@@ -79,7 +83,6 @@ const Header = () => {
           type: 'submenu',
           items: [
             { path: '/fba-locations', label: 'FBA 查询' },
-            { path: '/land-warehouse', label: '陆运仓库' }
           ]
         },
       ]
@@ -154,7 +157,14 @@ const Header = () => {
     const isMobile = window.innerWidth <= 1024;
     if (isMobile) {
       setActiveDropdown(activeDropdown === dropdownId ? null : dropdownId);
+      // 切换主菜单时清理子菜单状态
+      setActiveSubmenu(null);
     }
+  };
+
+  const handleSubmenuToggle = (submenuId) => {
+    // 桌面端和移动端都支持子菜单切换逻辑
+    setActiveSubmenu(activeSubmenu === submenuId ? null : submenuId);
   };
 
   // 桌面端鼠标悬停处理 - 改进版
@@ -207,17 +217,21 @@ const Header = () => {
     logout();
     setIsUserMenuOpen(false);
     setActiveDropdown(null);
+    setActiveSubmenu(null);
     navigate('/');
   };
 
   const getUserDisplayName = () => {
     if (!user) return '';
-    return `${user.firstName} ${user.lastName}`;
+    // 兼容新旧两种格式
+    const firstName = user.firstName || user.first_name || user.attributes?.given_name || '';
+    const lastName = user.lastName || user.last_name || user.attributes?.family_name || '';
+    return `${firstName} ${lastName}`.trim() || user.email || user.username || '用户';
   };
 
   const getUserTypeLabel = () => {
     if (!user) return '';
-    return user.userType === 'shipper' ? '货主' : '承运商';
+    return '用户'; // 统一显示用户，不再区分类型
   };
 
   // 检查是否有子菜单项是活跃的
@@ -296,23 +310,34 @@ const Header = () => {
                           );
                         }
                         
-                        // Handle submenu items
+                        // Handle submenu items - 桌面端也改为点击展开
                         if (subItem.type === 'submenu') {
                           return (
                             <div key={subItem.id} className="submenu-wrapper">
-                              <div className="submenu-label">{subItem.label}</div>
-                              <div className="submenu-items">
-                                {subItem.items.map((subsubItem) => (
-                                  <Link
-                                    key={subsubItem.path}
-                                    to={subsubItem.path}
-                                    className={`submenu-item ${isActive(subsubItem.path) ? 'active' : ''}`}
-                                    onClick={() => setActiveDropdown(null)}
-                                  >
-                                    {subsubItem.label}
-                                  </Link>
-                                ))}
-                              </div>
+                              <button
+                                className={`submenu-trigger ${activeSubmenu === subItem.id ? 'active' : ''}`}
+                                onClick={() => handleSubmenuToggle(subItem.id)}
+                              >
+                                {subItem.label}
+                                <ChevronDown size={14} className="submenu-dropdown-icon" />
+                              </button>
+                              {activeSubmenu === subItem.id && (
+                                <div className="submenu-items">
+                                  {subItem.items.map((subsubItem) => (
+                                    <Link
+                                      key={subsubItem.path}
+                                      to={subsubItem.path}
+                                      className={`submenu-item ${isActive(subsubItem.path) ? 'active' : ''}`}
+                                      onClick={() => {
+                                        setActiveDropdown(null);
+                                        setActiveSubmenu(null);
+                                      }}
+                                    >
+                                      {subsubItem.label}
+                                    </Link>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           );
                         }
@@ -454,6 +479,40 @@ const Header = () => {
                               </button>
                             );
                           }
+                          
+                          // Handle submenu items in mobile
+                          if (subItem.type === 'submenu') {
+                            return (
+                              <div key={subItem.id} className="mobile-submenu-wrapper">
+                                <button
+                                  className={`mobile-submenu-trigger ${activeSubmenu === subItem.id ? 'active' : ''}`}
+                                  onClick={() => handleSubmenuToggle(subItem.id)}
+                                >
+                                  {subItem.label}
+                                  <ChevronDown size={16} className="submenu-dropdown-icon" />
+                                </button>
+                                {activeSubmenu === subItem.id && (
+                                  <div className="mobile-submenu-items">
+                                    {subItem.items.map((subsubItem) => (
+                                      <Link
+                                        key={subsubItem.path}
+                                        to={subsubItem.path}
+                                        className={`mobile-submenu-item ${isActive(subsubItem.path) ? 'active' : ''}`}
+                                        onClick={() => {
+                                          setActiveDropdown(null);
+                                          setActiveSubmenu(null);
+                                          setIsMenuOpen(false);
+                                        }}
+                                      >
+                                        {subsubItem.label}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                          
                           return (
                             <Link
                               key={subItem.path}

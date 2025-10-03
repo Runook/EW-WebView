@@ -287,8 +287,35 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
               </div>
             </div>
           </div>
+          
+{/* 运营路线 */}
+<div className="form-section">
+  <h3>运营路线</h3>
+  <div className="form-grid">
+    <GoogleMapsAddressInput
+      label="常跑起点"
+      placeholder="输入常跑起点城市名、街道地址或ZIP代码"
+      value={formData.preferredOrigin}
+      onChange={(value) => setFieldValue('preferredOrigin', value)}
+      onPlaceSelected={() => {}}
+      icon={MapPin}
+      className={errors.preferredOrigin ? 'error' : ''}
+    />
+    {errors.preferredOrigin && <div className="form-error">{errors.preferredOrigin}</div>}
 
-          {/* 运营路线 */}
+    <GoogleMapsAddressInput
+      label="常跑终点"
+      placeholder="输入常跑终点城市名、街道地址或ZIP代码"
+      value={formData.preferredDestination}
+      onChange={(value) => setFieldValue('preferredDestination', value)}
+      onPlaceSelected={() => {}}
+      icon={MapPin}
+      className={errors.preferredDestination ? 'error' : ''}
+    />
+    {errors.preferredDestination && <div className="form-error">{errors.preferredDestination}</div>}
+  </div>
+</div>
+          {/* 运营路线
           <div className="form-section">
             <h3>运营路线</h3>
             <div className="form-grid">
@@ -316,7 +343,7 @@ const PostTruckModal = ({ isOpen, onClose, onSubmit }) => {
               />
               {errors.preferredDestination && <div className="form-error">{errors.preferredDestination}</div>}
             </div>
-          </div>
+          </div> */}
 
           {/* 联系信息 */}
           <div className="form-section">

@@ -114,11 +114,16 @@ class LandFreight {
           (typeof loadData.distanceInfo === 'string' ? loadData.distanceInfo : 
            (typeof loadData.distanceInfo === 'object' ? JSON.stringify(loadData.distanceInfo) : null)) : null,
         pickup_date: loadData.requiredDate || loadData.pickupDate,
-        delivery_date: loadData.deliveryDate,
+        delivery_date:
+          loadData.deliveryDate && String(loadData.deliveryDate).trim() !== ''
+            ? loadData.deliveryDate
+            : null,
         weight: loadData.weight,
         commodity: loadData.cargoType || loadData.commodity,
         cargo_value: loadData.cargoValue,
-        pallets: loadData.pallets,
+        pallets: (loadData.pallets === '' || loadData.pallets === undefined || loadData.pallets === null)
+          ? null
+          : (typeof loadData.pallets === 'string' ? (Number.isNaN(parseInt(loadData.pallets, 10)) ? null : parseInt(loadData.pallets, 10)) : loadData.pallets),
         freight_class: loadData.freightClass,
         service_type: loadData.serviceType,
         truck_type: loadData.truckType,
@@ -178,11 +183,16 @@ class LandFreight {
           (typeof loadData.distanceInfo === 'string' ? loadData.distanceInfo : 
            (typeof loadData.distanceInfo === 'object' ? JSON.stringify(loadData.distanceInfo) : null)) : null,
         pickup_date: loadData.requiredDate || loadData.pickupDate,
-        delivery_date: loadData.deliveryDate,
+        delivery_date:
+          loadData.deliveryDate && String(loadData.deliveryDate).trim() !== ''
+            ? loadData.deliveryDate
+            : null,
         weight: loadData.weight,
         commodity: loadData.cargoType || loadData.commodity,
         cargo_value: loadData.cargoValue,
-        pallets: loadData.pallets,
+        pallets: (loadData.pallets === '' || loadData.pallets === undefined || loadData.pallets === null)
+          ? null
+          : (typeof loadData.pallets === 'string' ? (Number.isNaN(parseInt(loadData.pallets, 10)) ? null : parseInt(loadData.pallets, 10)) : loadData.pallets),
         freight_class: loadData.freightClass,
         service_type: loadData.serviceType,
         truck_type: loadData.truckType,

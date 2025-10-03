@@ -5,9 +5,23 @@
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
+// 检查是否为Mock模式
+const isMockMode = () => {
+  return window.location.hostname === 'localhost' || 
+         window.location.hostname === '127.0.0.1' ||
+         process.env.REACT_APP_AUTH_MODE === 'mock';
+};
+
 // 获取认证token
 const getAuthToken = () => {
-  return localStorage.getItem('authToken') || localStorage.getItem('token');
+  // Mock模式：使用固定的mock token
+  if (isMockMode()) {
+    console.log('🔧 使用Mock Token');
+    return 'mock-jwt-token-for-development';
+  }
+  
+  // 生产模式：使用Cognito token
+  return localStorage.getItem('accessToken') || localStorage.getItem('idToken') || localStorage.getItem('authToken') || localStorage.getItem('token');
 };
 
 // 获取认证头

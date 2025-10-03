@@ -2,11 +2,22 @@
 
 /**
  * 清理和标准化FBA位置数据
- * @param {Array} rawData - 原始Excel转换的JSON数据
+ * @param {Array|Object} rawData - 原始Excel转换的JSON数据或按州分组的新格式数据
  * @returns {Array} - 处理后的标准化数据
  */
 export const processLocationData = (rawData) => {
-  if (!rawData || !Array.isArray(rawData)) {
+  if (!rawData) {
+    return [];
+  }
+
+  // 检查是否为新的按州分组格式
+  if (typeof rawData === 'object' && !Array.isArray(rawData)) {
+    console.log('使用新的按州分组的FBA数据格式');
+    return processGroupedData(rawData);
+  }
+
+  // 处理原来的数组格式
+  if (!Array.isArray(rawData)) {
     return [];
   }
 
@@ -79,6 +90,67 @@ export const processLocationData = (rawData) => {
       }
       return a.code.localeCompare(b.code);
     });
+};
+
+/**
+ * 处理新的按州分组格式的数据
+ * @param {Object} groupedData - 按州分组的数据对象
+ * @returns {Array} - 处理后的标准化数据
+ */
+const processGroupedData = (groupedData) => {
+  const allLocations = [];
+  let index = 0;
+
+  // 遍历每个州的数据
+  for (const [stateName, stateLocations] of Object.entries(groupedData)) {
+    if (Array.isArray(stateLocations)) {
+      stateLocations.forEach(location => {
+        try {
+          // 直接使用新格式的数据，无需复杂的解析
+          const processedLocation = {
+            id: location.code || generateUniqueId(stateName, location.code || `LOC${index}`, index),
+            state: stateName,
+            city: location.city || 'Unknown City',
+            code: location.code || `LOC${index}`,
+            type: location.type || 'FC',
+            address: location.address || 'Address not available',
+            stateCode: stateName, // 使用州名作为代码
+            zipCode: location.zip || location.zip_code || 'N/A',
+            county: null, // 新格式中没有县信息
+            description: location.description || generateDescription(location.type || 'FC', location.city, stateName),
+            coordinates: {
+              latitude: location.latitude,
+              longitude: location.longitude
+            },
+            // 保持与原有格式的兼容性
+            operatingHours: '24/7',
+            capacity: getCapacityByType(location.type || 'FC'),
+            services: getServicesByType(location.type || 'FC'),
+            contact: getContactInfo(),
+            features: getFeaturesbyType(location.type || 'FC', location.city || 'Unknown City'),
+            lastUpdated: new Date().toISOString(),
+            isActive: location.is_active !== false,
+            // 新格式特有的字段
+            name: location.name || `${location.code} - ${location.city}`,
+            country: location.country || 'US'
+          };
+
+          allLocations.push(processedLocation);
+          index++;
+        } catch (error) {
+          console.warn(`处理位置数据时出错 (${stateName}):`, error, location);
+        }
+      });
+    }
+  }
+
+  // 按州名和代码排序
+  return allLocations.sort((a, b) => {
+    if (a.state !== b.state) {
+      return a.state.localeCompare(b.state);
+    }
+    return a.code.localeCompare(b.code);
+  });
 };
 
 /**

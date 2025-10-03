@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
+import { Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
@@ -47,20 +47,11 @@ const Footer = () => {
             <p className="footer-description">
               为全球客户提供专业、高效、可靠的物流运输服务，致力于成为您最信赖的物流合作伙伴。
             </p>
-            <div className="footer-contact">
-              <div className="contact-item">
-                <Phone size={16} />
-                <span>+1 (516) 427-7016</span>
-              </div>
-              <div className="contact-item">
-                <Mail size={16} />
-                <span>ftl.us48@gmail.com</span>
-              </div>
-              <div className="contact-item">
-                <MapPin size={16} />
-                <span>Hauppauge, New York, USA</span>
-              </div>
-            </div>
+            <p className="footer-contact">
+              5164277016<br/>
+              ftl.us48@gmail.com<br/>
+              Hauppauge, New York, USA
+            </p>
           </div>
 
           {/* Quick Links */}

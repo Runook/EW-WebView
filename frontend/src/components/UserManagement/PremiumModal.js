@@ -32,7 +32,7 @@ const PremiumModal = ({ isOpen, onClose, postType, postId, onSuccess }) => {
     try {
       const response = await fetch('/api/user-management/credits', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('idToken') || localStorage.getItem('token')}`
         }
       });
       if (response.ok) {
@@ -73,7 +73,7 @@ const PremiumModal = ({ isOpen, onClose, postType, postId, onSuccess }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          'Authorization': `Bearer ${localStorage.getItem('accessToken') || localStorage.getItem('idToken') || localStorage.getItem('token')}`
         },
         body: JSON.stringify({
           premiumType,

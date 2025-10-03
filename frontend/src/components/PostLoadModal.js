@@ -44,7 +44,7 @@ import { useForm, useToggle, useConfirmDialog, useAsyncState } from '../hooks';
 import { Modal, Button } from './common';
 import { geocodeAddress as geocodeUtil } from '../config/googleMaps'; // Corrected path
 
-const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
+const PostLoadModal = ({ isOpen, onClose, onSubmit, fbaDestination }) => {
   // 表单初始数据
   const initialFormData = {
     type: 'load',
@@ -61,7 +61,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     weightKg: '',
     originLocationTypes: [],
     destinationLocationTypes: [],
-    pallets: '',
+    pallets: 0,
     cargoItems: [
       {
         id: 1,
@@ -391,6 +391,21 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
     }
   }, [formData.weight, formData.length, formData.width, formData.height, formData.hazmat, formData.fragile, formData.serviceType, calculateFreightClass, formData]);
 
+  // Handle FBA destination when modal opens with FBA data
+  useEffect(() => {
+    if (isOpen && fbaDestination) {
+      // Only use FBA code as destination
+      const fbaCode = fbaDestination.code;
+      
+      // Update the form with FBA destination
+      setFormData(prev => ({ 
+        ...prev, 
+        destination: fbaCode,
+        destinationLocationTypes: ['fba'] // Mark as FBA location
+      }));
+    }
+  }, [isOpen, fbaDestination, setFormData]);
+
   // ====== 表单事件处理函数 (约100行) ======
   
   // 创建自定义的输入处理函数，用于处理单位转换
@@ -516,7 +531,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       }
     } else {
       // FTL验证
-      const requiredFields = [...baseRequiredFields, 'weight', 'truckType'];
+      const requiredFields = [...baseRequiredFields, 'weight', 'truckType'];      
       const missingFields = requiredFields.filter(field => !formData[field]);
       if (missingFields.length > 0) {
         return `请填写所有必填字段: ${missingFields.join(', ')}`;
@@ -546,8 +561,10 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
    
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateFormData()) {
+
+    const validationError =  validateFormData();
+    if (validationError) {
+      alert(validationError);
       return;
     }
 
@@ -574,7 +591,6 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
         destination_lng: destinationCoords ? destinationCoords.lng : null,
         destination_formatted_address: destinationCoords ? destinationCoords.formattedAddress : formData.destination,
       };
-
       await onSubmit(submissionData);
     } catch (error) {
       console.error('Submission failed after geocoding:', error);
@@ -696,7 +712,7 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
       weightKg: '',
       originLocationTypes: [],
       destinationLocationTypes: [],
-      pallets: '',
+      pallets: 0,
       cargoItems: [
         {
           id: 1,
@@ -824,13 +840,14 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit }) => {
               />
 
               <GoogleMapsAddressInput
-                label="终点 (Destination)"
+                label={formData.destinationLocationTypes?.includes('fba') ? "终点 (Destination) - 🏭 FBA仓库" : "终点 (Destination)"}
                 placeholder="输入城市名、街道地址或邮编（如：10001 或 Wall Street）"
                 value={formData.destination}
                 onChange={(value) => setFormData(prev => ({ ...prev, destination: value }))}
                 onPlaceSelected={handleDestinationPlaceSelected}
                 required={true}
                 icon={MapPin}
+                className={formData.destinationLocationTypes?.includes('fba') ? 'fba-destination' : ''}
               />
 
               <div className="form-group">
