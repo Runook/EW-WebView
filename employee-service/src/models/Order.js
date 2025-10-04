@@ -880,6 +880,54 @@ class Order {
       throw error;
     }
   }
+  
+  /**
+   * 取消订单
+   * @param {number} orderId - 订单ID
+   * @param {number} cancelledBy - 取消员工ID
+   * @returns {Promise<Object>} 取消结果
+   */
+  static async cancelOrder(orderId, cancelledBy) {
+    const trx = await db.transaction();
+    
+    try {
+      const existingOrder = await trx('employee_orders')
+        .where('id', orderId)
+        .whereIn('status', ['quote', 'ordered'])
+        .first();
+      
+      if (!existingOrder) {
+        throw new Error('只有报价单或已下单的订单可以取消');
+      }
+      
+      const [order] = await trx('employee_orders')
+        .where('id', orderId)
+        .update({
+          status: 'cancelled',
+          cancelled_by: cancelledBy,
+          cancelled_at: new Date(),
+          updated_by: cancelledBy
+        })
+        .returning('*');
+      
+      // 记录取消日志
+      await trx('employee_order_logs').insert({
+        order_id: orderId,
+        user_id: cancelledBy,
+        action_type: 'order_cancelled',
+        old_value: existingOrder.status,
+        new_value: 'cancelled',
+        description: '订单已取消'
+      });
+      
+      await trx.commit();
+      return { success: true, order };
+    } catch (error) {
+      await trx.rollback();
+      console.error('取消订单失败:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = Order;

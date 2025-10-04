@@ -497,5 +497,33 @@ router.post('/:id/resolve-claim', auth, requireEmployee, async (req, res) => {
   }
 });
 
+/**
+ * POST /api/orders/:id/cancel
+ * 取消订单
+ */
+router.post('/:id/cancel', auth, requireEmployee, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const result = await Order.cancelOrder(
+      parseInt(id),
+      req.user.id
+    );
+    
+    res.json({
+      success: true,
+      data: result.order,
+      message: '订单已取消'
+    });
+  } catch (error) {
+    console.error('取消订单失败:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || '取消订单失败',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
 

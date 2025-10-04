@@ -558,6 +558,28 @@ const BrokerOrdersNew = () => {
     }
   };
 
+  const handleReopenOrder = async (orderId) => {
+    if (!window.confirm('确定要重新打开此订单吗？订单将回到"已下单"状态。')) {
+      return;
+    }
+    
+    try {
+      const response = await orderApi.updateOrder(orderId, {
+        status: 'ordered',
+        sub_status: 'waiting_driver'
+      });
+      if (response.success) {
+        alert('订单已重新打开！');
+        await loadOrders();
+        // 切换到已下单标签
+        navigate('/employee/broker-orders?status=ordered');
+      }
+    } catch (error) {
+      console.error('❌ 重新打开订单失败:', error);
+      alert('重新打开订单失败: ' + error.message);
+    }
+  };
+
   return (
     <div className="broker-orders-container">
       {/* 侧边栏 */}
@@ -866,6 +888,60 @@ const BrokerOrdersNew = () => {
                                 <option value="completed">已完成</option>
                                 <option value="claim">需要索赔</option>
                                 <option value="cancel">取消订单</option>
+                              </select>
+                            </div>
+                          </div>
+                        ) : order.status === 'completed' ? (
+                          <div className="completed-actions">
+                            <div 
+                              className="sub-status-dropdown"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <select
+                                value="completed"
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  const newStatus = e.target.value;
+                                  if (newStatus === 'reopen') {
+                                    handleReopenOrder(order.id);
+                                  } else if (newStatus === 'claim') {
+                                    handleRequestClaim(order.id);
+                                  } else if (newStatus === 'cancel') {
+                                    handleCancelOrder(order.id);
+                                  }
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                className="sub-status-select"
+                              >
+                                <option value="completed">已完成</option>
+                                <option value="reopen">重新打开</option>
+                                <option value="claim">需要索赔</option>
+                                <option value="cancel">取消订单</option>
+                              </select>
+                            </div>
+                          </div>
+                        ) : order.status === 'cancelled' ? (
+                          <div className="cancelled-actions">
+                            <div 
+                              className="sub-status-dropdown"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <select
+                                value="cancelled"
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  const newStatus = e.target.value;
+                                  if (newStatus === 'reopen') {
+                                    handleReopenOrder(order.id);
+                                  }
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                className="sub-status-select"
+                              >
+                                <option value="cancelled">已取消</option>
+                                <option value="reopen">重新打开</option>
                               </select>
                             </div>
                           </div>

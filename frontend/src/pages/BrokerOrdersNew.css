@@ -402,6 +402,28 @@
 
 /* 索赔和取消按钮已移到下拉菜单中，不再需要独立样式 */
 
+/* 已完成状态操作样式 */
+.completed-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.completed-actions .sub-status-dropdown {
+  flex: 1;
+}
+
+/* 已取消状态操作样式 */
+.cancelled-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cancelled-actions .sub-status-dropdown {
+  flex: 1;
+}
+
 .list-content {
   background: white;
   border: 1px solid #e1e8ed;
