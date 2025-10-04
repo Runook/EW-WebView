@@ -28,6 +28,31 @@ services:
       - app-network
     restart: unless-stopped
 
+  # 员工服务 (微服务)
+  employee-service:
+    build:
+      context: ./employee-service
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=3001
+      - DB_HOST=host.docker.internal  # 连接到宿主机的本地PostgreSQL
+      - DB_PORT=5432
+      - DB_NAME=ew_logistics
+      - DB_USER=ew-josh
+      - DB_PASSWORD=
+      - COGNITO_REGION=us-east-1
+      - COGNITO_USER_POOL_ID=us-east-1_HU9W7uLQA
+      - CORS_ORIGIN=http://localhost:3000
+    volumes:
+      - ./employee-service:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    restart: unless-stopped
+
   # 前端服务
   frontend:
     build:
@@ -37,10 +62,12 @@ services:
       - "3000:3000"
     environment:
       - REACT_APP_API_URL=http://localhost:5001/api
+      - REACT_APP_EMPLOYEE_API_URL=http://localhost:3001/api
       - REACT_APP_AUTH_MODE=${AUTH_MODE:-mock}
       - HOST=0.0.0.0
     depends_on:
       - backend
+      - employee-service
     volumes:
       - ./frontend:/app
       - /app/node_modules

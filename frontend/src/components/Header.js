@@ -70,6 +70,14 @@ const Header = () => {
       path: '/',
       type: 'single'
     },
+    // 员工系统入口（仅员工可见）- 直接指向Broker订单
+    ...(user?.isEmployee ? [{
+      id: 'employee',
+      label: '员工系统',
+      path: '/employee/broker-orders',
+      type: 'single',
+      className: 'employee-menu-item'
+    }] : []),
     {
       id: 'landServices',
       label: '陆运服务',

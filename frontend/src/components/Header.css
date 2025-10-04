@@ -735,4 +735,23 @@
     width: 240px;
     right: -20px;
   }
+}
+
+/* 员工系统特殊样式 */
+.employee-menu-item .nav-link {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white !important;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.employee-menu-item .nav-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.employee-menu-item .nav-link.active {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
 } 

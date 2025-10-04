@@ -1507,6 +1507,20 @@
       "longitude": null,
       "description": null,
       "is_active": true
+    },
+    {
+      "code": "XPB2",
+      "address": "4661 Apopka Logistics Pkwy",
+      "city": "Apopka",
+      "state": "FL",
+      "zip": "32712",
+      "type": "FC",
+      "country": "US",
+      "name": "XPB2 - Apopka",
+      "latitude": null,
+      "longitude": null,
+      "description": null,
+      "is_active": true
     }
   ],
   "IN": [

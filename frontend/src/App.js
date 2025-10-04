@@ -25,6 +25,11 @@ import KgcmConverter from './pages/KgcmConverter';
 import FBALocations from './pages/FBALocations';
 import FBALocationDetail from './pages/FBALocationDetail';
 import GATest from './pages/GATest';
+import EmployeeSystem from './pages/EmployeeSystem';
+import EmployeeOrders from './pages/EmployeeOrders';
+import EmployeeAdmin from './pages/EmployeeAdmin';
+import BrokerOrders from './pages/BrokerOrdersNew';
+import BrokerOrderForm from './pages/BrokerOrderForm';
 import './App.css';
 import './config/amplify'; 
 
@@ -145,6 +150,13 @@ function App() {
               {/* 用户管理 */}
               <Route path="/profile" element={<Profile />} />
               <Route path="/profile/:section" element={<Profile />} />
+              
+              {/* 员工系统 - Broker订单系统（简化导航）*/}
+              <Route path="/employee" element={<BrokerOrders />} />
+              <Route path="/employee/broker-orders" element={<BrokerOrders />} />
+              <Route path="/employee/broker-orders/new" element={<BrokerOrderForm />} />
+              <Route path="/employee/broker-orders/:orderId" element={<BrokerOrderForm />} />
+              <Route path="/employee/admin" element={<EmployeeAdmin />} />
               
               {/* 我们 */}
               <Route path="/my-points" element={
