@@ -56,6 +56,7 @@
   font-weight: 600;
 }
 
+
 .sidebar-footer {
   margin-top: auto;
   padding: 10px 0;
@@ -70,7 +71,7 @@
   padding: 15px;
   margin: 10px;
   background: rgba(0,0,0,0.2);
-  border-radius: 4px;
+  border-radius: 8px;
 }
 
 .sub-status-stats h3 {
@@ -78,22 +79,46 @@
   font-size: 0.85em;
   opacity: 0.8;
   text-transform: uppercase;
+  color: rgba(255,255,255,0.9);
 }
 
 .stat-item {
   display: flex;
   justify-content: space-between;
-  padding: 8px 10px;
-  margin-bottom: 6px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 3px;
-  border-left: 3px solid;
+  align-items: center;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
   font-size: 0.9em;
+  transition: all 0.2s;
 }
 
-.stat-item.waiting-driver { border-left-color: #e74c3c; }
-.stat-item.driver-found { border-left-color: #7f8c8d; }
-.stat-item.in-transit { border-left-color: #2ecc71; }
+.stat-item:hover {
+  transform: translateX(2px);
+}
+
+.stat-item span {
+  color: rgba(255,255,255,0.9);
+  font-size: 0.85em;
+}
+
+.stat-item strong {
+  color: white;
+  font-weight: 600;
+  font-size: 1.1em;
+}
+
+.stat-item.waiting-driver { 
+  background: #b91c1c;
+}
+
+.stat-item.driver-found { 
+  background: #3b82f6;
+}
+
+.stat-item.in-transit { 
+  background: #15803d;
+}
 
 /* 主内容 */
 .main-content {
@@ -197,15 +222,18 @@
 
 /* 子状态颜色 */
 .order-row.sub-status-waiting_driver {
-  background: rgba(231,76,60,0.03);
+  background: rgba(185, 28, 28, 0.25);
+  border-left: 4px solid #b91c1c;
 }
 
 .order-row.sub-status-driver_found {
-  background: rgba(149,165,166,0.03);
+  background: rgba(59, 130, 246, 0.25);
+  border-left: 4px solid #3b82f6;
 }
 
 .order-row.sub-status-in_transit {
-  background: rgba(46,204,113,0.03);
+  background: rgba(21, 128, 61, 0.25);
+  border-left: 4px solid #15803d;
 }
 
 .orders-table td {
@@ -372,6 +400,8 @@
   background: #7f8c8d;
 }
 
+/* 索赔和取消按钮已移到下拉菜单中，不再需要独立样式 */
+
 .list-content {
   background: white;
   border: 1px solid #e1e8ed;
@@ -515,18 +545,21 @@
 }
 
 .status-badge.sub-status-waiting_driver {
-  background: #e74c3c;
+  background: #b91c1c;
   color: white;
+  font-weight: 600;
 }
 
 .status-badge.sub-status-driver_found {
-  background: #7f8c8d;
+  background: #3b82f6;
   color: white;
+  font-weight: 600;
 }
 
 .status-badge.sub-status-in_transit {
-  background: #2ecc71;
+  background: #15803d;
   color: white;
+  font-weight: 600;
 }
 
 .truck-info-mini {
@@ -588,5 +621,98 @@
   .orders-table {
     min-width: 1200px;
   }
+}
+
+/* 无操作状态 */
+.no-action {
+  color: #999;
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+/* 已下单操作区域 */
+.ordered-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 120px;
+}
+
+/* 取消订单按钮 */
+.btn-cancel {
+  padding: 6px 12px;
+  background-color: #dc2626;
+  color: white;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+}
+
+/* 子状态下拉选择器 */
+.sub-status-dropdown {
+  min-width: 100px;
+  position: relative;
+  z-index: 10;
+}
+
+.sub-status-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 10;
+}
+
+.sub-status-select:hover {
+  border-color: #9ca3af;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sub-status-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 确保下拉选择器不会触发行点击 */
+.sub-status-dropdown * {
+  pointer-events: auto;
+}
+
+.sub-status-dropdown {
+  pointer-events: auto;
+}
+
+/* 根据状态显示不同颜色 */
+.sub-status-select[value="waiting_driver"] {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+.sub-status-select[value="driver_found"] {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.sub-status-select[value="in_transit"] {
+  border-color: #16a34a;
+  color: #16a34a;
 }
 

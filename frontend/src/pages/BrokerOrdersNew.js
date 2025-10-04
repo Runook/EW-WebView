@@ -138,14 +138,49 @@ const BrokerOrdersNew = () => {
   };
 
   const handleConfirmOrder = async (orderId) => {
+    // 显示卡车信息填写弹窗
+    const truckPayment = prompt('请输入付卡车价格（必填）:');
+    if (!truckPayment || truckPayment.trim() === '') {
+      alert('付卡车价格不能为空！');
+      return;
+    }
+
+    const mcNumber = prompt('请输入MC Number（必填）:');
+    if (!mcNumber || mcNumber.trim() === '') {
+      alert('MC Number不能为空！');
+      return;
+    }
+
+    const truckCompany = prompt('请输入卡车公司名（必填）:');
+    if (!truckCompany || truckCompany.trim() === '') {
+      alert('卡车公司名不能为空！');
+      return;
+    }
+
+    const truckContact = prompt('请输入联络方式（必填）:');
+    if (!truckContact || truckContact.trim() === '') {
+      alert('联络方式不能为空！');
+      return;
+    }
+
     if (!window.confirm('确定要将此订单标记为"已下单"吗？')) {
       return;
     }
     
     try {
+      // 先确认订单
       const response = await orderApi.confirmOrder(orderId, 'waiting_driver');
+      
       if (response.success) {
-        alert('订单已确认下单！');
+        // 然后更新卡车信息
+        await orderApi.updateOrder(orderId, {
+          truck_payment: parseFloat(truckPayment),
+          mc_number: mcNumber,
+          truck_company_name: truckCompany,
+          truck_contact: truckContact
+        });
+        
+        alert('订单已确认下单，卡车信息已保存！');
         // 刷新列表
         loadOrders();
         // 如果需要，切换到已下单标签
@@ -453,6 +488,76 @@ const BrokerOrdersNew = () => {
     );
   };
 
+  const handleUpdateSubStatus = async (orderId, subStatus) => {
+    try {
+      const response = await orderApi.updateSubStatus(orderId, subStatus);
+      if (response.success) {
+        console.log('✅ 子状态更新成功:', subStatus);
+        await loadOrders();
+      }
+    } catch (error) {
+      console.error('❌ 更新子状态失败:', error);
+      alert('更新状态失败: ' + error.message);
+    }
+  };
+
+  const handleCompleteOrder = async (orderId) => {
+    if (!window.confirm('确定要将此订单标记为"已完成"吗？')) {
+      return;
+    }
+    
+    try {
+      const response = await orderApi.completeOrder(orderId);
+      if (response.success) {
+        console.log('✅ 订单已完成');
+        await loadOrders();
+      }
+    } catch (error) {
+      console.error('❌ 完成订单失败:', error);
+      alert('完成订单失败: ' + error.message);
+    }
+  };
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm('确定要取消此订单吗？取消后订单将移到"已取消"标签。')) {
+      return;
+    }
+    
+    try {
+      const response = await orderApi.cancelOrder(orderId);
+      if (response.success) {
+        console.log('✅ 订单已取消');
+        await loadOrders();
+        // 如果需要，切换到已取消标签
+        navigate('/employee/broker-orders?status=cancelled');
+      }
+    } catch (error) {
+      console.error('❌ 取消订单失败:', error);
+      alert('取消订单失败: ' + error.message);
+    }
+  };
+
+  const handleRequestClaim = async (orderId) => {
+    const claimReason = prompt('请输入索赔原因:');
+    if (!claimReason || claimReason.trim() === '') {
+      alert('索赔原因不能为空！');
+      return;
+    }
+    
+    try {
+      const response = await orderApi.requestClaim(orderId, claimReason);
+      if (response.success) {
+        alert('索赔申请已提交！');
+        await loadOrders();
+        // 切换到需要索赔标签
+        navigate('/employee/broker-orders?status=claim');
+      }
+    } catch (error) {
+      console.error('❌ 申请索赔失败:', error);
+      alert('申请索赔失败: ' + error.message);
+    }
+  };
+
   return (
     <div className="broker-orders-container">
       {/* 侧边栏 */}
@@ -481,6 +586,20 @@ const BrokerOrdersNew = () => {
             onClick={() => handleStatusChange('completed')}
           >
             已完成
+          </button>
+          
+          <button
+            className={`nav-item ${currentStatus === 'cancelled' ? 'active' : ''}`}
+            onClick={() => handleStatusChange('cancelled')}
+          >
+            已取消
+          </button>
+          
+          <button
+            className={`nav-item ${currentStatus === 'claim' ? 'active' : ''}`}
+            onClick={() => handleStatusChange('claim')}
+          >
+            需索赔
           </button>
         </nav>
 
@@ -716,16 +835,42 @@ const BrokerOrdersNew = () => {
                           >
                             下单
                           </button>
+                        ) : order.status === 'ordered' ? (
+                          <div className="ordered-actions">
+                            <div 
+                              className="sub-status-dropdown"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <select
+                                value={order.sub_status || 'waiting_driver'}
+                                onChange={(e) => {
+                                  e.stopPropagation();
+                                  const newStatus = e.target.value;
+                                  if (newStatus === 'completed') {
+                                    handleCompleteOrder(order.id);
+                                  } else if (newStatus === 'claim') {
+                                    handleRequestClaim(order.id);
+                                  } else if (newStatus === 'cancel') {
+                                    handleCancelOrder(order.id);
+                                  } else {
+                                    handleUpdateSubStatus(order.id, newStatus);
+                                  }
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                                onMouseDown={(e) => e.stopPropagation()}
+                                className="sub-status-select"
+                              >
+                                <option value="waiting_driver">等待司机</option>
+                                <option value="driver_found">找到司机</option>
+                                <option value="in_transit">运输中</option>
+                                <option value="completed">已完成</option>
+                                <option value="claim">需要索赔</option>
+                                <option value="cancel">取消订单</option>
+                              </select>
+                            </div>
+                          </div>
                         ) : (
-                          <button
-                            className="btn-edit"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEdit(order.id);
-                            }}
-                          >
-                            编辑
-                          </button>
+                          <span className="no-action">-</span>
                         )}
                       </td>
                     </tr>
@@ -977,19 +1122,44 @@ const BrokerOrdersNew = () => {
                                 <div className="detail-grid">
                                   <div className="detail-item">
                                     <label>付卡车价格:</label>
-                                    <span>{formatCurrency(order.truck_payment)}</span>
+                                    <EditableCell
+                                      value={order.truck_payment}
+                                      orderId={order.id}
+                                      field="truck_payment"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
                                   </div>
                                   <div className="detail-item">
                                     <label>MC Number:</label>
-                                    <span>{order.mc_number || '-'}</span>
+                                    <EditableCell
+                                      value={order.mc_number}
+                                      orderId={order.id}
+                                      field="mc_number"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                    />
                                   </div>
                                   <div className="detail-item">
                                     <label>卡车公司:</label>
-                                    <span>{order.truck_company_name || '-'}</span>
+                                    <EditableCell
+                                      value={order.truck_company_name}
+                                      orderId={order.id}
+                                      field="truck_company_name"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                    />
                                   </div>
                                   <div className="detail-item">
                                     <label>联络方式:</label>
-                                    <span>{order.truck_contact || '-'}</span>
+                                    <EditableCell
+                                      value={order.truck_contact}
+                                      orderId={order.id}
+                                      field="truck_contact"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                    />
                                   </div>
                                 </div>
                               </div>

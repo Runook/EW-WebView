@@ -173,6 +173,21 @@ export const orderApi = {
   updateSubStatus: (id, subStatus) => {
     return request(`/orders/${id}/sub-status`, 'PUT', { sub_status: subStatus });
   },
+
+  // 取消订单
+  cancelOrder: (id) => {
+    return request(`/orders/${id}/cancel`, 'POST');
+  },
+  
+  // 申请索赔
+  requestClaim: (id, claimReason) => {
+    return request(`/orders/${id}/claim`, 'POST', { claim_reason: claimReason });
+  },
+  
+  // 解决索赔
+  resolveClaim: (id, resolution) => {
+    return request(`/orders/${id}/resolve-claim`, 'POST', { resolution });
+  },
 };
 
 // ==========================================

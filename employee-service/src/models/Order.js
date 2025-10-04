@@ -133,7 +133,12 @@ class Order {
       
       // 应用过滤条件
       if (filters.status) {
-        query = query.where('eo.status', filters.status);
+        if (filters.status === 'claim') {
+          // 索赔状态：需要索赔的订单
+          query = query.where('eo.needs_claim', true);
+        } else {
+          query = query.where('eo.status', filters.status);
+        }
       }
       
       if (filters.order_type) {
@@ -182,7 +187,12 @@ class Order {
       }
       
       if (filters.status) {
-        countQuery = countQuery.where('eo.status', filters.status);
+        if (filters.status === 'claim') {
+          // 索赔状态：需要索赔的订单
+          countQuery = countQuery.where('eo.needs_claim', true);
+        } else {
+          countQuery = countQuery.where('eo.status', filters.status);
+        }
       }
       
       if (filters.order_type) {
@@ -607,6 +617,7 @@ class Order {
           db.raw("COUNT(CASE WHEN status = 'ordered' AND sub_status = 'waiting_driver' THEN 1 END) as waiting_driver_count"),
           db.raw("COUNT(CASE WHEN status = 'ordered' AND sub_status = 'driver_found' THEN 1 END) as driver_found_count"),
           db.raw("COUNT(CASE WHEN status = 'ordered' AND sub_status = 'in_transit' THEN 1 END) as in_transit_count"),
+          db.raw("COUNT(CASE WHEN needs_claim = true THEN 1 END) as claim_orders"),
           db.raw('COALESCE(SUM(ew_final_price), 0) as total_revenue'),
           db.raw('COALESCE(SUM(profit), 0) as total_profit'),
           db.raw('COALESCE(AVG(ew_final_price), 0) as average_order_value')
@@ -621,6 +632,7 @@ class Order {
         waitingDriverCount: parseInt(stats.waiting_driver_count) || 0,
         driverFoundCount: parseInt(stats.driver_found_count) || 0,
         inTransitCount: parseInt(stats.in_transit_count) || 0,
+        claimOrders: parseInt(stats.claim_orders) || 0,
         totalRevenue: parseFloat(stats.total_revenue) || 0,
         totalProfit: parseFloat(stats.total_profit) || 0,
         averageOrderValue: parseFloat(stats.average_order_value) || 0
@@ -765,6 +777,106 @@ class Order {
     } catch (error) {
       await trx.rollback();
       console.error('更新子状态失败:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * 申请索赔
+   * @param {number} orderId - 订单ID
+   * @param {string} claimReason - 索赔原因
+   * @param {number} requestedBy - 申请人员工ID
+   * @returns {Promise<Object>} 申请结果
+   */
+  static async requestClaim(orderId, claimReason, requestedBy) {
+    const trx = await db.transaction();
+    
+    try {
+      const existingOrder = await trx('employee_orders')
+        .where('id', orderId)
+        .where('status', 'ordered')
+        .first();
+      
+      if (!existingOrder) {
+        throw new Error('只有已下单的订单可以申请索赔');
+      }
+      
+      const [order] = await trx('employee_orders')
+        .where('id', orderId)
+        .update({
+          needs_claim: true,
+          claim_reason: claimReason,
+          claim_requested_at: new Date(),
+          claim_requested_by: requestedBy,
+          updated_by: requestedBy
+        })
+        .returning('*');
+      
+      // 记录索赔申请日志
+      await trx('employee_order_logs').insert({
+        order_id: orderId,
+        user_id: requestedBy,
+        action_type: 'claim_requested',
+        old_value: 'false',
+        new_value: 'true',
+        description: `申请索赔: ${claimReason}`
+      });
+      
+      await trx.commit();
+      return { success: true, order };
+    } catch (error) {
+      await trx.rollback();
+      console.error('申请索赔失败:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * 解决索赔
+   * @param {number} orderId - 订单ID
+   * @param {string} resolution - 解决方案
+   * @param {number} resolvedBy - 解决人员工ID
+   * @returns {Promise<Object>} 解决结果
+   */
+  static async resolveClaim(orderId, resolution, resolvedBy) {
+    const trx = await db.transaction();
+    
+    try {
+      const existingOrder = await trx('employee_orders')
+        .where('id', orderId)
+        .where('needs_claim', true)
+        .first();
+      
+      if (!existingOrder) {
+        throw new Error('订单未申请索赔或索赔已解决');
+      }
+      
+      const [order] = await trx('employee_orders')
+        .where('id', orderId)
+        .update({
+          needs_claim: false,
+          claim_resolution: resolution,
+          claim_resolved_at: new Date(),
+          claim_resolved_by: resolvedBy,
+          updated_by: resolvedBy
+        })
+        .returning('*');
+      
+      // 记录索赔解决日志
+      await trx('employee_order_logs').insert({
+        order_id: orderId,
+        user_id: resolvedBy,
+        action_type: 'claim_resolved',
+        old_value: 'true',
+        new_value: 'false',
+        description: `索赔已解决: ${resolution}`
+      });
+      
+      await trx.commit();
+      return { success: true, order };
+    } catch (error) {
+      await trx.rollback();
+      console.error('解决索赔失败:', error);
       throw error;
     }
   }

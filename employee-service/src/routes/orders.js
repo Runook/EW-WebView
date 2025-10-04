@@ -423,5 +423,79 @@ router.post('/:id/assign', auth, requirePermission('order.assign'), async (req, 
   }
 });
 
+/**
+ * POST /api/orders/:id/claim
+ * 申请索赔
+ */
+router.post('/:id/claim', auth, requireEmployee, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { claim_reason } = req.body;
+    
+    if (!claim_reason || claim_reason.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: '索赔原因不能为空'
+      });
+    }
+    
+    const result = await Order.requestClaim(
+      parseInt(id),
+      claim_reason,
+      req.user.id
+    );
+    
+    res.json({
+      success: true,
+      data: result.order,
+      message: '索赔申请已提交'
+    });
+  } catch (error) {
+    console.error('申请索赔失败:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || '申请索赔失败',
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/orders/:id/resolve-claim
+ * 解决索赔
+ */
+router.post('/:id/resolve-claim', auth, requireEmployee, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { resolution } = req.body;
+    
+    if (!resolution || resolution.trim() === '') {
+      return res.status(400).json({
+        success: false,
+        message: '解决方案不能为空'
+      });
+    }
+    
+    const result = await Order.resolveClaim(
+      parseInt(id),
+      resolution,
+      req.user.id
+    );
+    
+    res.json({
+      success: true,
+      data: result.order,
+      message: '索赔已解决'
+    });
+  } catch (error) {
+    console.error('解决索赔失败:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || '解决索赔失败',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;
 
