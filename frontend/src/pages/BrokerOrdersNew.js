@@ -252,6 +252,28 @@ const BrokerOrdersNew = () => {
     setListInput('');
   };
 
+  // 计算报价参考及相关字段
+  const calculateQuoteReferences = (order) => {
+    const totalDat = parseFloat(order.total_dat) || 0;
+    const truckPallets = parseFloat(order.truck_pallets) || 1; // 避免除以0
+    const totalAreaPallets = parseFloat(order.total_area_pallets) || 0;
+    
+    // 报价参考 = (TOTAL DAT / 车类型) × 总面积板 + 100
+    const quoteReference = (totalDat / truckPallets) * totalAreaPallets + 100;
+    
+    // 参考+10%, +20%, +30%
+    const quoteRef10 = quoteReference * 1.1;
+    const quoteRef20 = quoteReference * 1.2;
+    const quoteRef30 = quoteReference * 1.3;
+    
+    return {
+      quote_reference: quoteReference,
+      quote_ref_10: quoteRef10,
+      quote_ref_20: quoteRef20,
+      quote_ref_30: quoteRef30
+    };
+  };
+
   // 单元格更新处理
   const handleCellUpdate = async (orderId, field, newValue) => {
     try {
@@ -271,6 +293,46 @@ const BrokerOrdersNew = () => {
           )
         );
         console.log('✅ 更新成功');
+      }
+    } catch (error) {
+      console.error('❌ 更新失败:', error);
+      throw error;
+    }
+  };
+
+  // 单元格更新处理（带自动计算）
+  const handleCellUpdateWithCalculation = async (orderId, field, newValue) => {
+    try {
+      console.log('💾 更新字段并计算:', { orderId, field, newValue });
+      
+      // 获取当前订单数据
+      const currentOrder = orders.find(o => o.id === orderId);
+      if (!currentOrder) return;
+      
+      // 创建更新后的订单对象
+      const updatedOrder = { ...currentOrder, [field]: newValue };
+      
+      // 计算报价参考及相关字段
+      const calculatedFields = calculateQuoteReferences(updatedOrder);
+      
+      // 合并所有要更新的字段
+      const updateData = {
+        [field]: newValue,
+        ...calculatedFields
+      };
+      
+      const response = await orderApi.updateOrder(orderId, updateData);
+      
+      if (response.success) {
+        // 更新本地state
+        setOrders(prevOrders => 
+          prevOrders.map(order => 
+            order.id === orderId 
+              ? { ...order, ...updateData }
+              : order
+          )
+        );
+        console.log('✅ 更新成功并自动计算完成');
       }
     } catch (error) {
       console.error('❌ 更新失败:', error);
@@ -580,6 +642,34 @@ const BrokerOrdersNew = () => {
     }
   };
 
+  const handleBackToQuote = async (orderId) => {
+    if (!window.confirm('确定要回到报价状态吗？这将清除所有卡车信息（付卡车价格、MC Number、卡车公司、联络方式），如需重新下单需重新填写。')) {
+      return;
+    }
+    
+    try {
+      const response = await orderApi.updateOrder(orderId, {
+        status: 'quote',
+        sub_status: null,
+        truck_payment: null,
+        mc_number: null,
+        truck_company_name: null,
+        truck_contact: null,
+        confirmed_by: null,
+        confirmed_at: null
+      });
+      if (response.success) {
+        alert('订单已回到报价状态，卡车信息已清除！');
+        await loadOrders();
+        // 切换到报价单标签
+        navigate('/employee/broker-orders?status=quote');
+      }
+    } catch (error) {
+      console.error('❌ 回到报价失败:', error);
+      alert('回到报价失败: ' + error.message);
+    }
+  };
+
   return (
     <div className="broker-orders-container">
       {/* 侧边栏 */}
@@ -705,8 +795,8 @@ const BrokerOrdersNew = () => {
                   <th width="30"></th>
                   <th>报价日期</th>
                   <th>询价公司</th>
-                  <th>EW单号</th>
                   <th>发货单号</th>
+                  <th>EW单号</th>
                   <th>货物类型</th>
                   <th>发货地</th>
                   <th>收货地</th>
@@ -758,20 +848,20 @@ const BrokerOrdersNew = () => {
                           onSave={handleCellUpdate}
                         />
                       </td>
-                      <td className="order-number">
-                        <EditableCell
-                          value={order.ew_quote_number || order.order_number}
-                          orderId={order.id}
-                          field="ew_quote_number"
-                          type="text"
-                          onSave={handleCellUpdate}
-                        />
-                      </td>
                       <td>
                         <EditableCell
                           value={order.shipment_number}
                           orderId={order.id}
                           field="shipment_number"
+                          type="text"
+                          onSave={handleCellUpdate}
+                        />
+                      </td>
+                      <td className="order-number">
+                        <EditableCell
+                          value={order.ew_quote_number || order.order_number}
+                          orderId={order.id}
+                          field="ew_quote_number"
                           type="text"
                           onSave={handleCellUpdate}
                         />
@@ -874,6 +964,8 @@ const BrokerOrdersNew = () => {
                                     handleRequestClaim(order.id);
                                   } else if (newStatus === 'cancel') {
                                     handleCancelOrder(order.id);
+                                  } else if (newStatus === 'back_to_quote') {
+                                    handleBackToQuote(order.id);
                                   } else {
                                     handleUpdateSubStatus(order.id, newStatus);
                                   }
@@ -887,6 +979,7 @@ const BrokerOrdersNew = () => {
                                 <option value="in_transit">运输中</option>
                                 <option value="completed">已完成</option>
                                 <option value="claim">需要索赔</option>
+                                <option value="back_to_quote">回到报价</option>
                                 <option value="cancel">取消订单</option>
                               </select>
                             </div>
@@ -1143,27 +1236,74 @@ const BrokerOrdersNew = () => {
                               </div>
                               <div className="detail-item">
                                 <label>总面积板:</label>
-                                <span>{formatNumber(order.total_area_pallets)}</span>
+                                <EditableCell
+                                  value={order.total_area_pallets}
+                                  orderId={order.id}
+                                  field="total_area_pallets"
+                                  type="number"
+                                  onSave={handleCellUpdateWithCalculation}
+                                  formatDisplay={(v) => formatNumber(v)}
+                                />
                               </div>
                               <div className="detail-item">
                                 <label>TOTAL DAT:</label>
-                                <span>{formatCurrency(order.total_dat)}</span>
+                                <EditableCell
+                                  value={order.total_dat}
+                                  orderId={order.id}
+                                  field="total_dat"
+                                  type="number"
+                                  onSave={handleCellUpdateWithCalculation}
+                                  formatDisplay={(v) => formatCurrency(v)}
+                                />
                               </div>
                               <div className="detail-item">
                                 <label>理想报价:</label>
-                                <span>{formatCurrency(order.ideal_quote)}</span>
+                                <EditableCell
+                                  value={order.ideal_quote}
+                                  orderId={order.id}
+                                  field="ideal_quote"
+                                  type="number"
+                                  onSave={handleCellUpdate}
+                                  formatDisplay={(v) => formatCurrency(v)}
+                                />
                               </div>
                               <div className="detail-item">
-                                <label>车辆板数:</label>
-                                <span>{order.truck_pallets || '-'}</span>
+                                <label>车类型:</label>
+                                <EditableCell
+                                  value={order.truck_pallets}
+                                  orderId={order.id}
+                                  field="truck_pallets"
+                                  type="select"
+                                  options={[
+                                    { value: '13', label: '13' },
+                                    { value: '18', label: '18' },
+                                    { value: '26', label: '26' }
+                                  ]}
+                                  onSave={handleCellUpdateWithCalculation}
+                                  formatDisplay={(v) => v || '-'}
+                                />
                               </div>
                               <div className="detail-item">
-                                <label>TQL价格1:</label>
-                                <span>{formatCurrency(order.tql_price_1)}</span>
+                                <label>比价平台Low1:</label>
+                                <EditableCell
+                                  value={order.tql_price_1}
+                                  orderId={order.id}
+                                  field="tql_price_1"
+                                  type="number"
+                                  onSave={handleCellUpdate}
+                                  formatDisplay={(v) => formatCurrency(v)}
+                                />
                               </div>
                               <div className="detail-item">
-                                <label>TQL价格2:</label>
-                                <span>{formatCurrency(order.tql_price_2)}</span>
+                                <label>比价平台Low2:</label>
+                                <EditableCell
+                                  value={order.tql_price_2}
+                                  orderId={order.id}
+                                  field="tql_price_2"
+                                  type="number"
+                                  onSave={handleCellUpdate}
+                                  formatDisplay={(v) => formatCurrency(v)}
+                                />
                               </div>
                               <div className="detail-item">
                                 <label>其他价格(API):</label>
@@ -1187,7 +1327,14 @@ const BrokerOrdersNew = () => {
                               </div>
                               <div className="detail-item profit">
                                 <label>利润:</label>
-                                <span className="profit-value">{formatCurrency(order.profit)}</span>
+                                <EditableCell
+                                  value={order.profit}
+                                  orderId={order.id}
+                                  field="profit"
+                                  type="number"
+                                  onSave={handleCellUpdate}
+                                  formatDisplay={(v) => <span className="profit-value">{formatCurrency(v)}</span>}
+                                />
                               </div>
                             </div>
 
