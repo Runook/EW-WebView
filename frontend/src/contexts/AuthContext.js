@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { signOut, getCurrentUser } from '../utils/cognitoAuth'; // 使用直接API
+import { signOut, getCurrentUser, fetchUserProfile } from '../utils/cognitoAuth'; // 使用直接API
 import { isMockMode, autoMockLogin, getMockUser, getMockToken } from '../utils/mockAuth';
 
 const AuthContext = createContext();
@@ -45,11 +45,25 @@ export const AuthProvider = ({ children }) => {
         setUser(mockUser);
       } else {
         // 生产模式：使用Cognito认证
+        // 首先快速检查token是否存在
         const currentUser = getCurrentUser();
         
         if (currentUser) {
-          console.log('✅ AuthContext: 找到已登录用户:', currentUser);
-          setUser(currentUser);
+          console.log('✅ AuthContext: 找到token，获取完整用户信息...');
+          // 从后端获取完整的用户信息（包括员工信息）
+          try {
+            const fullUserInfo = await fetchUserProfile();
+            if (fullUserInfo) {
+              console.log('✅ AuthContext: 获取完整用户信息成功:', fullUserInfo);
+              setUser(fullUserInfo);
+            } else {
+              console.log('⚠️ AuthContext: 无法获取完整信息，使用token信息');
+              setUser(currentUser);
+            }
+          } catch (error) {
+            console.error('❌ AuthContext: 获取完整信息失败，使用token信息:', error);
+            setUser(currentUser);
+          }
         } else {
           console.log('ℹ️ AuthContext: 用户未登录');
           setUser(null);

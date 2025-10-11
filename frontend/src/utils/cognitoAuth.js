@@ -239,7 +239,58 @@ export async function confirmForgotPassword(username, code, newPassword) {
   }
 }
 
-// 获取当前用户（从token）
+// 从后端获取完整的用户信息（包括员工信息）
+export async function fetchUserProfile() {
+  try {
+    const idToken = localStorage.getItem('idToken');
+    
+    if (!idToken) {
+      return null;
+    }
+    
+    // 调用后端API获取完整用户信息
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+    const response = await fetch(`${apiUrl}/api/user-management/profile`, {
+      headers: {
+        'Authorization': `Bearer ${idToken}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      console.error('获取用户信息失败:', response.status);
+      return null;
+    }
+    
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+      // 将后端的数据格式转换为前端期望的格式
+      return {
+        username: result.data.email,
+        attributes: {
+          email: result.data.email,
+          given_name: result.data.first_name,
+          family_name: result.data.last_name,
+          phone_number: result.data.phone_number,
+          sub: result.data.userId
+        },
+        // 额外的数据库字段
+        isEmployee: result.data.isEmployee,
+        employeeRole: result.data.employeeRole,
+        employeeId: result.data.employeeId,
+        credits: result.data.credits
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('获取用户信息失败:', error);
+    return null;
+  }
+}
+
+// 获取当前用户（从token）- 仅用于快速检查
 export function getCurrentUser() {
   const idToken = localStorage.getItem('idToken');
   

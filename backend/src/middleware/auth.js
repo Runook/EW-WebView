@@ -211,7 +211,11 @@ const auth = async (req, res, next) => {
         phone_number: dbUser.phone,
         credits: dbUser.credits,
         first_name: dbUser.first_name,
-        last_name: dbUser.last_name
+        last_name: dbUser.last_name,
+        // 员工系统相关字段
+        isEmployee: dbUser.is_employee || false,
+        employeeRole: dbUser.employee_role || null,
+        employeeId: dbUser.employee_id || null
       };
       
       next();
@@ -271,7 +275,11 @@ const optionalAuth = async (req, res, next) => {
           first_name: dbUser.first_name,
           last_name: dbUser.last_name,
           phone_number: dbUser.phone,
-          credits: dbUser.credits
+          credits: dbUser.credits,
+          // 员工系统相关字段
+          isEmployee: dbUser.is_employee || false,
+          employeeRole: dbUser.employee_role || null,
+          employeeId: dbUser.employee_id || null
         };
       } catch (syncError) {
         console.error('❌ 可选认证：同步用户失败:', syncError.message);

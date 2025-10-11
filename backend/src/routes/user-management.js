@@ -4,6 +4,27 @@ const UserManagement = require('../models/UserManagement');
 const { auth } = require('../middleware');
 
 /**
+ * GET /api/user-management/profile
+ * 获取当前用户的完整信息 (需要认证)
+ */
+router.get('/profile', auth, async (req, res) => {
+  try {
+    // req.user已经包含了数据库中的完整信息（由auth中间件设置）
+    res.json({
+      success: true,
+      data: req.user
+    });
+  } catch (error) {
+    console.error('获取用户信息失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取用户信息失败',
+      error: error.message
+    });
+  }
+});
+
+/**
  * GET /api/user-management/credits
  * 获取用户积分信息 (需要认证)
  */
