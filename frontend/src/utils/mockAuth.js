@@ -9,7 +9,11 @@ const MOCK_USER = {
   given_name: '开发',
   family_name: '者',
   phone_number: '+1234567890',
-  email_verified: true
+  email_verified: true,
+  // 员工系统相关字段（本地开发用）
+  isEmployee: true,
+  employeeRole: 'admin', // admin, manager, employee
+  employeeId: 'EW240001'
 };
 
 const MOCK_TOKEN = 'mock-jwt-token-for-development';
