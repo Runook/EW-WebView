@@ -111,8 +111,15 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 2rem;
-  max-width: 800px;
+  max-width: 1200px; /* 从800px增加到1200px，适合桌面端 */
   margin: 0 auto;
+}
+
+/* 手机端恢复窄一些 */
+@media (max-width: 768px) {
+  .stats-grid {
+    max-width: 100%;
+  }
 }
 
 .stat-item {

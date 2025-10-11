@@ -11,9 +11,16 @@
 
 /* ====== 模态框基础样式 ====== */
 .large-modal {
-  max-width: 800px;
+  max-width: 1200px; /* 增大到1200px，适合桌面端 */
   max-height: 90vh;
   overflow-y: auto;
+}
+
+/* 手机端恢复窄一些 */
+@media (max-width: 768px) {
+  .large-modal {
+    max-width: 95vw;
+  }
 }
 
 /* ====== 表单区块样式 ====== */

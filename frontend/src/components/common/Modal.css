@@ -39,30 +39,30 @@
   }
 }
 
-/* 模态框尺寸 */
+/* 模态框尺寸 - 桌面端优化 */
 .modal-small {
   width: 90%;
-  max-width: 400px;
+  max-width: 500px; /* 从400px增加到500px */
 }
 
 .modal-medium {
   width: 90%;
-  max-width: 600px;
+  max-width: 750px; /* 从600px增加到750px */
 }
 
 .modal-large {
   width: 90%;
-  max-width: 800px;
+  max-width: 1000px; /* 从800px增加到1000px */
 }
 
 .modal-xlarge {
   width: 95%;
-  max-width: 1200px;
+  max-width: 1300px; /* 从1200px增加到1300px */
 }
 
 .modal-extra-large {
   width: 98%;
-  max-width: 1400px;
+  max-width: 1500px; /* 从1400px增加到1500px */
 }
 
 /* 模态框头部 */
