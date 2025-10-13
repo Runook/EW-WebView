@@ -1,0 +1,271 @@
+.modal-overlay-confirm {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content-confirm {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header-confirm {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 30px;
+  border-bottom: 2px solid #e5e7eb;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+
+.modal-header-confirm h2 {
+  margin: 0;
+  font-size: 1.8em;
+  color: #111827;
+}
+
+.modal-close-confirm {
+  background: none;
+  border: none;
+  font-size: 1.8em;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.modal-close-confirm:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.modal-body-confirm {
+  padding: 30px;
+}
+
+/* 订单概览 */
+.order-summary {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.order-summary h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.2em;
+  color: #374151;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.summary-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.summary-item .label {
+  font-weight: 600;
+  color: #6b7280;
+  min-width: 80px;
+}
+
+.summary-item .value {
+  color: #111827;
+  font-weight: 500;
+}
+
+/* 表单部分 */
+.form-section {
+  margin-bottom: 30px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.form-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 20px;
+}
+
+.form-section h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.3em;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.required {
+  color: #ef4444;
+  font-size: 0.9em;
+}
+
+.optional {
+  color: #6b7280;
+  font-size: 0.85em;
+  font-weight: normal;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 0.95em;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-group input {
+  padding: 10px 14px;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95em;
+  transition: all 0.2s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group input.error {
+  border-color: #ef4444;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.85em;
+  margin-top: -2px;
+}
+
+/* 备用司机部分 */
+.backup-section {
+  background: #fefce8;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #fde047;
+}
+
+.backup-driver-group {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.backup-driver-group:last-child {
+  margin-bottom: 0;
+}
+
+.backup-header {
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 12px;
+  font-size: 1em;
+}
+
+/* 按钮 */
+.modal-actions-confirm {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 2px solid #e5e7eb;
+}
+
+.btn-cancel-confirm,
+.btn-submit-confirm {
+  padding: 12px 32px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel-confirm {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.btn-cancel-confirm:hover {
+  background: #e5e7eb;
+}
+
+.btn-submit-confirm {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-submit-confirm:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .modal-content-confirm {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-body-confirm {
+    padding: 20px;
+  }
+}
+

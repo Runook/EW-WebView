@@ -110,6 +110,12 @@ export const employeeApi = {
   getEmployeePermissions: (id) => {
     return request(`/employees/${id}/permissions`);
   },
+
+  // 搜索非员工用户
+  searchUsers: (query) => {
+    const queryParams = new URLSearchParams({ query }).toString();
+    return request(`/employees/search-users?${queryParams}`);
+  },
 };
 
 // ==========================================

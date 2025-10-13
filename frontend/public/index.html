@@ -7,9 +7,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#34C759" />
     
-    <!-- Content Security Policy - Allow AWS Cognito (for local development) -->
-    <!-- Production CSP is handled by nginx.conf -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' http: https: data: blob: 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: http: blob:; connect-src 'self' https://cognito-idp.us-east-1.amazonaws.com https://*.auth.us-east-1.amazoncognito.com https://us-east-1hu9w7ulqa.auth.us-east-1.amazoncognito.com https://www.google-analytics.com https://www.googletagmanager.com http://localhost:* https://www.ewltl.com; frame-src 'self' https://*.auth.us-east-1.amazoncognito.com https://us-east-1hu9w7ulqa.auth.us-east-1.amazoncognito.com;">
+    <!-- Content Security Policy - Disabled in production, handled by nginx.conf instead -->
+    <!-- For local development, CSP is lenient. Production CSP is configured in nginx.conf -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' http: https: data: blob: 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https: http: blob:; connect-src 'self' https://cognito-idp.us-east-1.amazonaws.com https://*.auth.us-east-1.amazoncognito.com https://us-east-1hu9w7ulqa.auth.us-east-1.amazoncognito.com https://www.google-analytics.com https://www.googletagmanager.com http://localhost:* https://www.ewltl.com; frame-src 'self' https://*.auth.us-east-1.amazoncognito.com https://us-east-1hu9w7ulqa.auth.us-east-1.amazoncognito.com;"> -->
 
     <!-- Google Search Console Verification -->
     <meta name="google-site-verification" content="GYzmJQa__yuaJYS0Tk8j4bPAmb_DQ0AqvGEDH4709oc" />

@@ -757,3 +757,40 @@
   color: #16a34a;
 }
 
+/* 备用司机信息样式 */
+.backup-drivers-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #6c757d;
+}
+
+.backup-drivers-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 1.1em;
+  color: #495057;
+  font-weight: 600;
+}
+
+.backup-driver-group {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.backup-driver-group:last-child {
+  margin-bottom: 0;
+}
+
+.backup-driver-header {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 10px;
+  font-size: 0.95em;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #dee2e6;
+}
+

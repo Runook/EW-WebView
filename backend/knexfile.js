@@ -52,7 +52,7 @@ module.exports = {
     connection: {
       host: process.env.NODE_ENV === 'production' ? process.env.RDS_ENDPOINT : process.env.DB_HOST,
       port: process.env.NODE_ENV === 'production' ? process.env.RDS_PORT : process.env.DB_PORT || 5432,
-      database: process.env.NODE_ENV === 'production' ? process.env.RDS_DB_NAME : process.env.DB_NAME,
+      database: process.env.NODE_ENV === 'production' ? process.env.RDS_DATABASE || process.env.RDS_DB_NAME : process.env.DB_NAME,
       user: process.env.NODE_ENV === 'production' ? process.env.RDS_USERNAME : process.env.DB_USER,
       password: process.env.NODE_ENV === 'production' ? process.env.RDS_PASSWORD : process.env.DB_PASSWORD,
       ssl: { rejectUnauthorized: false }
@@ -66,14 +66,14 @@ module.exports = {
     },
     pool: {
       min: 2,
-      max: 10,
+      max: 20,  // 增加最大连接数
       createTimeoutMillis: 3000,
-      acquireTimeoutMillis: 60000,
-      idleTimeoutMillis: 30000,
+      acquireTimeoutMillis: 10000,  // 减少超时时间到10秒
+      idleTimeoutMillis: 10000,  // 减少空闲超时，更快释放连接
       reapIntervalMillis: 1000,
       createRetryIntervalMillis: 100,
       propagateCreateError: false
     },
-    acquireConnectionTimeout: 60000
+    acquireConnectionTimeout: 10000  // 减少到10秒
   }
 }; 

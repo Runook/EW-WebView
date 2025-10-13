@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { orderApi } from '../config/employeeApi';
 import EditableCell from '../components/EditableCell';
+import ConfirmOrderModal from '../components/ConfirmOrderModal';
 import { parseWeightList, parseDimensionsList, calculateTotalVolume } from '../utils/pasteParser';
 import { loadGoogleMapsScript, diagnoseGoogleMapsIssues } from '../config/googleMaps';
 import './BrokerOrdersNew.css';
@@ -22,6 +23,8 @@ const BrokerOrdersNew = () => {
     driver_found: 0,
     in_transit: 0
   });
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   
   const currentStatus = searchParams.get('status') || 'quote';
   
@@ -138,55 +141,52 @@ const BrokerOrdersNew = () => {
   };
 
   const handleConfirmOrder = async (orderId) => {
-    // 显示卡车信息填写弹窗
-    const truckPayment = prompt('请输入付卡车价格（必填）:');
-    if (!truckPayment || truckPayment.trim() === '') {
-      alert('付卡车价格不能为空！');
-      return;
-    }
-
-    const mcNumber = prompt('请输入MC Number（必填）:');
-    if (!mcNumber || mcNumber.trim() === '') {
-      alert('MC Number不能为空！');
-      return;
-    }
-
-    const truckCompany = prompt('请输入卡车公司名（必填）:');
-    if (!truckCompany || truckCompany.trim() === '') {
-      alert('卡车公司名不能为空！');
-      return;
-    }
-
-    const truckContact = prompt('请输入联络方式（必填）:');
-    if (!truckContact || truckContact.trim() === '') {
-      alert('联络方式不能为空！');
-      return;
-    }
-
-    if (!window.confirm('确定要将此订单标记为"已下单"吗？')) {
+    // 找到对应的订单
+    const order = orders.find(o => o.id === orderId);
+    if (!order) {
+      alert('订单不存在');
       return;
     }
     
+    // 显示确认下单模态框
+    setSelectedOrder(order);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmOrderSubmit = async (formData) => {
     try {
       // 先确认订单
-      const response = await orderApi.confirmOrder(orderId, 'waiting_driver');
+      const response = await orderApi.confirmOrder(selectedOrder.id, 'waiting_driver');
       
       if (response.success) {
-        // 然后更新卡车信息
-        await orderApi.updateOrder(orderId, {
-          truck_payment: parseFloat(truckPayment),
-          mc_number: mcNumber,
-          truck_company_name: truckCompany,
-          truck_contact: truckContact
+        // 然后更新卡车和备用司机信息
+        await orderApi.updateOrder(selectedOrder.id, {
+          truck_payment: parseFloat(formData.truck_payment),
+          mc_number: formData.mc_number,
+          truck_company_name: formData.truck_company_name,
+          truck_contact: formData.truck_contact,
+          backup_driver_1_name: formData.backup_driver_1_name || null,
+          backup_driver_1_phone: formData.backup_driver_1_phone || null,
+          backup_driver_2_name: formData.backup_driver_2_name || null,
+          backup_driver_2_phone: formData.backup_driver_2_phone || null,
+          backup_driver_3_name: formData.backup_driver_3_name || null,
+          backup_driver_3_phone: formData.backup_driver_3_phone || null
         });
         
-        alert('订单已确认下单，卡车信息已保存！');
+        alert('订单已确认下单，卡车和备用司机信息已保存！');
+        
+        // 关闭模态框
+        setShowConfirmModal(false);
+        setSelectedOrder(null);
+        
         // 刷新列表
         loadOrders();
-        // 如果需要，切换到已下单标签
+        
+        // 切换到已下单标签
         navigate('/employee/broker-orders?status=ordered');
       }
     } catch (error) {
+      console.error('下单失败:', error);
       alert('操作失败: ' + error.message);
     }
   };
@@ -932,9 +932,11 @@ const BrokerOrdersNew = () => {
                         </td>
                       )}
                       <td>
-                        {currentStatus === 'quote' && order.creator_info?.name}
-                        {currentStatus === 'ordered' && order.confirmed_by && `确认: ${order.confirmed_by}`}
-                        {currentStatus === 'completed' && order.completed_by && `完成: ${order.completed_by}`}
+                        {currentStatus === 'quote' && (order.creator_info?.name || '-')}
+                        {currentStatus === 'ordered' && (order.confirmer_info?.name || order.assignee_info?.name || '-')}
+                        {currentStatus === 'completed' && (order.completer_info?.name || '-')}
+                        {currentStatus === 'cancelled' && (order.canceller_info?.name || '-')}
+                        {currentStatus === 'claim' && (order.assignee_info?.name || order.creator_info?.name || '-')}
                       </td>
                       <td>
                         {order.status === 'quote' ? (
@@ -1385,6 +1387,92 @@ const BrokerOrdersNew = () => {
                                     />
                                   </div>
                                 </div>
+
+                                {/* 备用司机信息 */}
+                                <div className="backup-drivers-section">
+                                  <h4>备用司机信息</h4>
+                                  
+                                  {/* 备用司机1 */}
+                                  <div className="backup-driver-group">
+                                    <div className="backup-driver-header">备用司机 1</div>
+                                    <div className="detail-grid">
+                                      <div className="detail-item">
+                                        <label>姓名:</label>
+                                        <EditableCell
+                                          value={order.backup_driver_1_name}
+                                          orderId={order.id}
+                                          field="backup_driver_1_name"
+                                          type="text"
+                                          onSave={handleCellUpdate}
+                                        />
+                                      </div>
+                                      <div className="detail-item">
+                                        <label>电话:</label>
+                                        <EditableCell
+                                          value={order.backup_driver_1_phone}
+                                          orderId={order.id}
+                                          field="backup_driver_1_phone"
+                                          type="text"
+                                          onSave={handleCellUpdate}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* 备用司机2 */}
+                                  <div className="backup-driver-group">
+                                    <div className="backup-driver-header">备用司机 2</div>
+                                    <div className="detail-grid">
+                                      <div className="detail-item">
+                                        <label>姓名:</label>
+                                        <EditableCell
+                                          value={order.backup_driver_2_name}
+                                          orderId={order.id}
+                                          field="backup_driver_2_name"
+                                          type="text"
+                                          onSave={handleCellUpdate}
+                                        />
+                                      </div>
+                                      <div className="detail-item">
+                                        <label>电话:</label>
+                                        <EditableCell
+                                          value={order.backup_driver_2_phone}
+                                          orderId={order.id}
+                                          field="backup_driver_2_phone"
+                                          type="text"
+                                          onSave={handleCellUpdate}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* 备用司机3 */}
+                                  <div className="backup-driver-group">
+                                    <div className="backup-driver-header">备用司机 3</div>
+                                    <div className="detail-grid">
+                                      <div className="detail-item">
+                                        <label>姓名:</label>
+                                        <EditableCell
+                                          value={order.backup_driver_3_name}
+                                          orderId={order.id}
+                                          field="backup_driver_3_name"
+                                          type="text"
+                                          onSave={handleCellUpdate}
+                                        />
+                                      </div>
+                                      <div className="detail-item">
+                                        <label>电话:</label>
+                                        <EditableCell
+                                          value={order.backup_driver_3_phone}
+                                          orderId={order.id}
+                                          field="backup_driver_3_phone"
+                                          type="text"
+                                          onSave={handleCellUpdate}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>
@@ -1398,6 +1486,18 @@ const BrokerOrdersNew = () => {
           </div>
         )}
       </div>
+
+      {/* 确认下单模态框 */}
+      {showConfirmModal && selectedOrder && (
+        <ConfirmOrderModal
+          order={selectedOrder}
+          onClose={() => {
+            setShowConfirmModal(false);
+            setSelectedOrder(null);
+          }}
+          onConfirm={handleConfirmOrderSubmit}
+        />
+      )}
     </div>
   );
 };

@@ -213,6 +213,11 @@ app.use('/api/companies', require('./routes/companies'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/resumes', require('./routes/resumes'));
 app.use('/api/user-management', require('./routes/user-management'));
+
+// 员工系统路由
+app.use('/api/employees', require('./routes/employees'));
+app.use('/api/orders', require('./routes/employee-orders'));
+
 // 临时测试路由
 app.get('/api/fba/test', (req, res) => {
   res.json({ message: 'FBA test route working!' });

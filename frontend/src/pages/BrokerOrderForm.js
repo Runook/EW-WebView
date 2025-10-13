@@ -193,22 +193,23 @@ const BrokerOrderForm = () => {
       return;
     }
 
+    // 准备提交数据（在 try 外部定义，以便在 catch 块中也能访问）
+    const submitData = {
+      ...formData,
+      weight_list: JSON.stringify(formData.weight_list),
+      dimensions_list: JSON.stringify(formData.dimensions_list),
+      order_type: 'land_freight',
+      customer_name: formData.inquiry_company || '未命名客户',
+      // 兼容后端验证（后端还在验证老字段）
+      cargo_description: formData.cargo_description_detailed || '货物描述'
+    };
+    
+    // 移除前端临时字段
+    delete submitData.weight_input;
+    delete submitData.dimensions_input;
+
     try {
       setLoading(true);
-      
-      const submitData = {
-        ...formData,
-        weight_list: JSON.stringify(formData.weight_list),
-        dimensions_list: JSON.stringify(formData.dimensions_list),
-        order_type: 'land_freight',
-        customer_name: formData.inquiry_company || '未命名客户',
-        // 兼容后端验证（后端还在验证老字段）
-        cargo_description: formData.cargo_description_detailed || '货物描述'
-      };
-      
-      // 移除前端临时字段
-      delete submitData.weight_input;
-      delete submitData.dimensions_input;
       
       // Debug输出
       console.log('📤 提交订单数据:', {
@@ -234,6 +235,34 @@ const BrokerOrderForm = () => {
     } catch (error) {
       console.error('❌ 保存订单失败:', error);
       console.error('错误详情:', error.response || error);
+      
+      // 处理需要确认更换操作员的情况
+      if (error.response?.code === 'OPERATOR_CHANGE_REQUIRED') {
+        const details = error.response.details;
+        const message = `此订单不是你的订单！\n\n` +
+          `当前操作员：${details.currentOperator.name}\n` +
+          `订单编号：${details.orderNumber}\n` +
+          `订单状态：${details.status}\n\n` +
+          `是否要更换操作员为你自己？`;
+        
+        if (window.confirm(message)) {
+          // 用户确认更换操作员，重新提交
+          try {
+            submitData.changeOperator = true;
+            const retryResponse = await orderApi.updateOrder(orderId, submitData);
+            if (retryResponse.success) {
+              alert('订单已更换操作员并更新成功！');
+              navigate('/employee/broker-orders?status=quote');
+            }
+          } catch (retryError) {
+            console.error('❌ 更换操作员失败:', retryError);
+            alert(`更换操作员失败：${retryError.message}`);
+          }
+        }
+        setLoading(false);
+        return;
+      }
+      
       alert(`保存失败：${error.message}\n\n请查看浏览器控制台(F12)了解详情`);
     } finally {
       setLoading(false);

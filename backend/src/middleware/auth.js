@@ -332,8 +332,98 @@ const requireRole = (roles) => {
   };
 };
 
+// 员工认证中间件 - 要求用户必须是员工
+const requireEmployee = async (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ 
+      success: false, 
+      message: '需要登录' 
+    });
+  }
+  
+  if (!req.user.isEmployee) {
+    return res.status(403).json({ 
+      success: false, 
+      message: '只有员工可以访问此功能' 
+    });
+  }
+  
+  next();
+};
+
+// 员工角色验证中间件
+const requireEmployeeRole = (allowedRoles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ 
+        success: false, 
+        message: '需要登录' 
+      });
+    }
+    
+    if (!req.user.isEmployee) {
+      return res.status(403).json({ 
+        success: false, 
+        message: '只有员工可以访问' 
+      });
+    }
+    
+    const userRole = req.user.employeeRole;
+    
+    if (!allowedRoles.includes(userRole)) {
+      return res.status(403).json({ 
+        success: false, 
+        message: '权限不足' 
+      });
+    }
+    
+    next();
+  };
+};
+
+// 权限检查中间件
+const requirePermission = (permissionKey) => {
+  return async (req, res, next) => {
+    if (!req.user || !req.user.isEmployee) {
+      return res.status(403).json({ 
+        success: false, 
+        message: '权限不足' 
+      });
+    }
+    
+    try {
+      const userRole = req.user.employeeRole;
+      
+      // 检查该角色是否有此权限
+      const hasPermission = await db('employee_role_permissions as erp')
+        .join('employee_permissions as ep', 'erp.permission_id', 'ep.id')
+        .where('erp.role', userRole)
+        .where('ep.permission_key', permissionKey)
+        .first();
+      
+      if (!hasPermission) {
+        return res.status(403).json({ 
+          success: false, 
+          message: '您没有执行此操作的权限' 
+        });
+      }
+      
+      next();
+    } catch (error) {
+      console.error('权限检查失败:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: '权限检查失败' 
+      });
+    }
+  };
+};
+
 module.exports = {
   auth,
   optionalAuth,
-  requireRole
+  requireRole,
+  requireEmployee,
+  requireEmployeeRole,
+  requirePermission
 };

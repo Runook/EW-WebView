@@ -12,6 +12,10 @@ const EmployeeAdmin = () => {
     role: 'employee',
     employeeId: ''
   });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     loadEmployees();
@@ -35,8 +39,45 @@ const EmployeeAdmin = () => {
     }
   };
 
+  const handleSearchUsers = async (query) => {
+    setSearchQuery(query);
+    
+    if (!query || query.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    
+    try {
+      setSearching(true);
+      const response = await employeeApi.searchUsers(query);
+      
+      if (response.success) {
+        setSearchResults(response.data);
+      }
+    } catch (err) {
+      console.error('搜索用户失败:', err);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleSelectUser = (user) => {
+    setSelectedUser(user);
+    setNewEmployee({
+      ...newEmployee,
+      userId: user.id.toString()
+    });
+    setSearchQuery(`${user.email} - ${user.first_name} ${user.last_name}`);
+    setSearchResults([]);
+  };
+
   const handleSetEmployee = async (e) => {
     e.preventDefault();
+    
+    if (!newEmployee.userId) {
+      alert('请先搜索并选择一个用户');
+      return;
+    }
     
     try {
       const response = await employeeApi.setUserAsEmployee(
@@ -49,12 +90,23 @@ const EmployeeAdmin = () => {
         alert('员工设置成功！');
         setShowSetEmployeeModal(false);
         setNewEmployee({ userId: '', role: 'employee', employeeId: '' });
+        setSearchQuery('');
+        setSelectedUser(null);
+        setSearchResults([]);
         loadEmployees();
       }
     } catch (err) {
       console.error('设置员工失败:', err);
       alert(err.message || '设置失败');
     }
+  };
+
+  const handleCloseModal = () => {
+    setShowSetEmployeeModal(false);
+    setNewEmployee({ userId: '', role: 'employee', employeeId: '' });
+    setSearchQuery('');
+    setSelectedUser(null);
+    setSearchResults([]);
   };
 
   const handleUpdateRole = async (employeeId, newRole) => {
@@ -179,27 +231,70 @@ const EmployeeAdmin = () => {
 
       {/* 添加员工模态框 */}
       {showSetEmployeeModal && (
-        <div className="modal-overlay" onClick={() => setShowSetEmployeeModal(false)}>
+        <div className="modal-overlay" onClick={handleCloseModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>添加员工</h2>
-              <button className="modal-close" onClick={() => setShowSetEmployeeModal(false)}>
+              <button className="modal-close" onClick={handleCloseModal}>
                 ✕
               </button>
             </div>
             
             <form onSubmit={handleSetEmployee}>
               <div className="form-group">
-                <label>用户ID *</label>
+                <label>搜索用户 *</label>
                 <input
-                  type="number"
+                  type="text"
                   required
-                  value={newEmployee.userId}
-                  onChange={(e) => setNewEmployee({...newEmployee, userId: e.target.value})}
-                  placeholder="输入现有用户的ID"
+                  value={searchQuery}
+                  onChange={(e) => handleSearchUsers(e.target.value)}
+                  placeholder="输入用户的邮箱或姓名搜索"
+                  autoComplete="off"
                 />
-                <small>请输入系统中已存在用户的ID</small>
+                <small>搜索已注册但还不是员工的用户</small>
+                
+                {/* 搜索结果下拉列表 */}
+                {searching && (
+                  <div className="search-results">
+                    <div className="search-loading">搜索中...</div>
+                  </div>
+                )}
+                
+                {!searching && searchResults.length > 0 && (
+                  <div className="search-results">
+                    {searchResults.map((user) => (
+                      <div
+                        key={user.id}
+                        className="search-result-item"
+                        onClick={() => handleSelectUser(user)}
+                      >
+                        <div className="user-info">
+                          <strong>{user.email}</strong>
+                          <span className="user-name">
+                            {user.first_name} {user.last_name}
+                          </span>
+                        </div>
+                        <small className="user-id">ID: {user.id}</small>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {!searching && searchQuery.length >= 2 && searchResults.length === 0 && (
+                  <div className="search-results">
+                    <div className="no-results">未找到匹配的用户</div>
+                  </div>
+                )}
               </div>
+              
+              {selectedUser && (
+                <div className="selected-user-info">
+                  <strong>已选择用户：</strong>
+                  <div>{selectedUser.email}</div>
+                  <div>{selectedUser.first_name} {selectedUser.last_name}</div>
+                  <small>用户ID: {selectedUser.id}</small>
+                </div>
+              )}
 
               <div className="form-group">
                 <label>角色 *</label>
@@ -226,10 +321,10 @@ const EmployeeAdmin = () => {
               </div>
 
               <div className="modal-actions">
-                <button type="button" onClick={() => setShowSetEmployeeModal(false)} className="btn-cancel">
+                <button type="button" onClick={handleCloseModal} className="btn-cancel">
                   取消
                 </button>
-                <button type="submit" className="btn-submit">
+                <button type="submit" className="btn-submit" disabled={!selectedUser}>
                   确定
                 </button>
               </div>

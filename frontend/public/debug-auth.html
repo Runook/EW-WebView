@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>认证调试工具 - EW Logistics</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; margin-bottom: 30px; }
+        h2 { color: #666; margin-top: 30px; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #4CAF50;
+        }
+        .result {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            margin: 10px 0;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            border-left-color: #4CAF50;
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .highlight {
+            background: #ffeb3b;
+            padding: 2px 4px;
+            font-weight: bold;
+        }
+        .label {
+            font-weight: bold;
+            color: #666;
+            display: inline-block;
+            width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 EW Logistics 认证调试工具</h1>
+        
+        <div class="section">
+            <h2>1️⃣ 检查 Token</h2>
+            <button onclick="checkToken()">检查本地 Token</button>
+            <div id="tokenResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>2️⃣ 测试后端 API</h2>
+            <button onclick="testProfileAPI()">测试 /api/user-management/profile</button>
+            <div id="profileResult" class="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>3️⃣ 检查前端 User 对象</h2>
+            <p><em>请在React应用中打开控制台运行以下命令：</em></p>
+            <code style="background: #000; color: #0f0; padding: 10px; display: block; border-radius: 4px;">
+                // 在 www.ewltl.com 控制台运行<br>
+                console.log('User from AuthContext:', window.__REACT_DEVTOOLS_GLOBAL_HOOK__?.renderers)
+            </code>
+        </div>
+
+        <div class="section">
+            <h2>4️⃣ 数据库检查</h2>
+            <p>用户 <span class="highlight">cjx18002146886@outlook.com</span> 的数据库记录：</p>
+            <code style="background: #f5f5f5; padding: 10px; display: block; border-radius: 4px;">
+                PGPASSWORD='Ew95279527' psql -h ew-logistics-db.ccju8uyckbbt.us-east-1.rds.amazonaws.com -U ewjosh -d ewlogistics -p 5432 -c "SELECT id, email, is_employee, employee_role, employee_id FROM users WHERE email = 'cjx18002146886@outlook.com';"
+            </code>
+        </div>
+
+        <div class="section success" id="summary" style="display:none;">
+            <h2>✅ 诊断总结</h2>
+            <div id="summaryContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://www.ewltl.com/api';
+        
+        function checkToken() {
+            const resultDiv = document.getElementById('tokenResult');
+            const idToken = localStorage.getItem('idToken');
+            const accessToken = localStorage.getItem('accessToken');
+            
+            if (!idToken) {
+                resultDiv.innerHTML = '❌ 未找到 idToken，请先登录！';
+                resultDiv.className = 'result error';
+                return;
+            }
+            
+            try {
+                // 解析 JWT token
+                const parts = idToken.split('.');
+                const payload = JSON.parse(atob(parts[1]));
+                
+                // 检查过期时间
+                const now = Math.floor(Date.now() / 1000);
+                const expired = payload.exp < now;
+                
+                let output = '✅ Token 信息:\n\n';
+                output += `邮箱: ${payload.email}\n`;
+                output += `用户名: ${payload['cognito:username']}\n`;
+                output += `Sub: ${payload.sub}\n`;
+                output += `过期时间: ${new Date(payload.exp * 1000).toLocaleString()}\n`;
+                output += `是否过期: ${expired ? '❌ 是' : '✅ 否'}\n`;
+                output += `\n完整 Payload:\n${JSON.stringify(payload, null, 2)}`;
+                
+                resultDiv.innerHTML = output;
+                resultDiv.className = expired ? 'result error' : 'result';
+            } catch (error) {
+                resultDiv.innerHTML = '❌ Token 解析失败: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        async function testProfileAPI() {
+            const resultDiv = document.getElementById('profileResult');
+            const idToken = localStorage.getItem('idToken');
+            
+            if (!idToken) {
+                resultDiv.innerHTML = '❌ 未找到 token，请先登录！';
+                resultDiv.className = 'result error';
+                return;
+            }
+            
+            resultDiv.innerHTML = '⏳ 正在请求 API...';
+            resultDiv.className = 'result';
+            
+            try {
+                const response = await fetch(`${API_URL}/user-management/profile`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                let output = `HTTP Status: ${response.status} ${response.statusText}\n\n`;
+                
+                if (response.ok && data.success) {
+                    output += '✅ API 响应成功!\n\n';
+                    output += '=== 用户信息 ===\n';
+                    output += `ID: ${data.data.id}\n`;
+                    output += `邮箱: ${data.data.email}\n`;
+                    output += `姓名: ${data.data.first_name} ${data.data.last_name}\n`;
+                    output += `\n=== 🔑 员工信息（关键）===\n`;
+                    output += `是否员工 (isEmployee): ${data.data.isEmployee} ${data.data.isEmployee ? '✅' : '❌'}\n`;
+                    output += `员工角色 (employeeRole): ${data.data.employeeRole || '无'}\n`;
+                    output += `员工编号 (employeeId): ${data.data.employeeId || '无'}\n`;
+                    output += `\n完整响应:\n${JSON.stringify(data, null, 2)}`;
+                    
+                    resultDiv.className = 'result';
+                    
+                    // 显示总结
+                    showSummary(data.data);
+                } else {
+                    output += '❌ API 返回错误:\n\n';
+                    output += JSON.stringify(data, null, 2);
+                    resultDiv.className = 'result error';
+                }
+                
+                resultDiv.innerHTML = output;
+            } catch (error) {
+                resultDiv.innerHTML = '❌ 请求失败: ' + error.message;
+                resultDiv.className = 'result error';
+            }
+        }
+        
+        function showSummary(userData) {
+            const summaryDiv = document.getElementById('summary');
+            const summaryContent = document.getElementById('summaryContent');
+            
+            let html = '<h3>问题诊断：</h3>';
+            
+            if (userData.isEmployee === true) {
+                html += '<p style="color: #2e7d32; font-size: 18px;">✅ 后端API返回正确！用户是员工。</p>';
+                html += '<p><strong>如果前端仍然看不到员工系统入口，问题可能在于：</strong></p>';
+                html += '<ol>';
+                html += '<li>前端 AuthContext 没有调用 fetchUserProfile()</li>';
+                html += '<li>前端缓存了旧的用户数据</li>';
+                html += '<li>前端代码没有正确部署</li>';
+                html += '</ol>';
+                html += '<p><strong>解决方案：</strong></p>';
+                html += '<ol>';
+                html += '<li>清除浏览器缓存（Cmd+Shift+Delete）</li>';
+                html += '<li>退出并重新登录</li>';
+                html += '<li>确认前端代码已重新部署</li>';
+                html += '</ol>';
+            } else {
+                html += '<p style="color: #c62828; font-size: 18px;">❌ 后端API返回的 isEmployee = false</p>';
+                html += '<p><strong>问题出在后端，可能原因：</strong></p>';
+                html += '<ol>';
+                html += '<li>后端中间件代码没有正确部署</li>';
+                html += '<li>数据库连接有问题</li>';
+                html += '<li>用户数据库记录未正确更新</li>';
+                html += '</ol>';
+                html += '<p><strong>解决方案：</strong></p>';
+                html += '<ol>';
+                html += '<li>检查数据库记录（运行上面的SQL查询）</li>';
+                html += '<li>重新部署后端代码</li>';
+                html += '<li>检查后端日志</li>';
+                html += '</ol>';
+            }
+            
+            summaryContent.innerHTML = html;
+            summaryDiv.style.display = 'block';
+        }
+        
+        // 页面加载时自动检查
+        window.addEventListener('load', () => {
+            checkToken();
+        });
+    </script>
+</body>
+</html>
+

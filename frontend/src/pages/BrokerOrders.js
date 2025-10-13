@@ -265,7 +265,14 @@ const BrokerOrders = () => {
                         )}
                       </td>
                     )}
-                    <td>{order.assignee_info?.name || order.creator_info?.name || '-'}</td>
+                    <td>
+                      {/* 根据订单状态显示不同的操作员工 */}
+                      {currentStatus === 'quote' && (order.creator_info?.name || '-')}
+                      {currentStatus === 'ordered' && (order.confirmer_info?.name || order.assignee_info?.name || '-')}
+                      {currentStatus === 'completed' && (order.completer_info?.name || '-')}
+                      {currentStatus === 'cancelled' && (order.canceller_info?.name || '-')}
+                      {currentStatus === 'claim' && (order.assignee_info?.name || order.creator_info?.name || '-')}
+                    </td>
                     <td>
                       <button
                         className="btn-action"

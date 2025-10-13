@@ -249,8 +249,8 @@ export async function fetchUserProfile() {
     }
     
     // 调用后端API获取完整用户信息
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-    const response = await fetch(`${apiUrl}/api/user-management/profile`, {
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+    const response = await fetch(`${apiUrl}/user-management/profile`, {
       headers: {
         'Authorization': `Bearer ${idToken}`,
         'Content-Type': 'application/json'
