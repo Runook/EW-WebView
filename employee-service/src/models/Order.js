@@ -542,39 +542,45 @@ class Order {
   }
   
   /**
-   * 生成订单编号（EW单号格式：EW000001）
+   * 生成订单编号（EW单号格式：EW1, EW2, EW3...自动递增）
    * @returns {Promise<string>} 订单编号
    */
   static async generateOrderNumber() {
     try {
-      // 格式: EW + 6位序号
+      // 格式: EW + 数字（不补零，十进制递增）
       const prefix = 'EW';
       
-      // 获取最大的订单号
-      const result = await db('employee_orders')
+      // 获取所有EW开头的订单号，提取数字部分找到最大值
+      const results = await db('employee_orders')
         .where('order_number', 'like', `${prefix}%`)
-        .orderBy('order_number', 'desc')
-        .first();
+        .select('order_number');
       
-      let nextNumber = 1;
+      let maxNumber = 0;
       
-      if (result && result.order_number) {
-        // 提取数字部分
-        const match = result.order_number.match(/EW(\d+)/);
+      // 遍历所有订单号，找到最大的数字
+      results.forEach(row => {
+        const match = row.order_number.match(/^EW(\d+)$/);
         if (match) {
-          nextNumber = parseInt(match[1]) + 1;
+          const num = parseInt(match[1]);
+          if (num > maxNumber) {
+            maxNumber = num;
+          }
         }
-      }
+      });
       
-      // 生成新订单号：EW + 6位数字
-      const orderNumber = `${prefix}${nextNumber.toString().padStart(6, '0')}`;
+      // 下一个编号
+      const nextNumber = maxNumber + 1;
+      
+      // 生成新订单号：EW + 数字（不补零）
+      const orderNumber = `${prefix}${nextNumber}`;
       
       console.log('✅ 生成EW单号:', orderNumber);
       return orderNumber;
     } catch (error) {
       console.error('生成订单编号失败:', error);
-      // 如果失败，使用UUID作为备选
-      return `EW${uuidv4().slice(0, 6).toUpperCase()}`;
+      // 如果失败，使用时间戳
+      const timestamp = Date.now().toString().slice(-6);
+      return `EW${timestamp}`;
     }
   }
   

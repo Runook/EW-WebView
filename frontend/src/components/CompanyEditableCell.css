@@ -1,0 +1,187 @@
+.company-editable-cell {
+  position: relative;
+  width: 100%;
+}
+
+.editable-cell-display {
+  cursor: pointer;
+  padding: 4px;
+}
+
+.editable-cell-display:hover {
+  background: #f8f9fa;
+}
+
+.editable-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: 1px solid #3498db;
+  border-radius: 3px;
+  font-size: inherit;
+}
+
+.editable-input:focus {
+  outline: none;
+  border-color: #2980b9;
+}
+
+.suggestions-dropdown-small {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 0 0 4px 4px;
+  max-height: 250px;
+  overflow-y: auto;
+  z-index: 2000;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.suggestion-item-small {
+  padding: 8px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestion-item-small:hover {
+  background: #e3f2fd;
+}
+
+.suggestion-company-small {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.9em;
+}
+
+.suggestion-wechat-small {
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 2px;
+}
+
+.suggestion-create-small {
+  padding: 8px 10px;
+  cursor: pointer;
+  background: #e8f5e9;
+  color: #27ae60;
+  font-weight: 500;
+  border-top: 1px solid #c8e6c9;
+  font-size: 0.9em;
+}
+
+.suggestion-create-small:hover {
+  background: #c8e6c9;
+}
+
+.modal-overlay-inline {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.modal-content-inline {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.modal-header-inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-header-inline h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+}
+
+.close-btn-inline {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  line-height: 1;
+}
+
+.close-btn-inline:hover {
+  color: #333;
+}
+
+.modal-body-inline {
+  padding: 16px 20px;
+}
+
+.form-group-inline {
+  margin-bottom: 14px;
+}
+
+.form-group-inline label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #333;
+  font-size: 14px;
+}
+
+.form-group-inline input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.modal-footer-inline {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid #dee2e6;
+}
+
+.btn-cancel-inline, .btn-submit-inline {
+  padding: 7px 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.btn-cancel-inline {
+  background: #95a5a6;
+  color: white;
+}
+
+.btn-cancel-inline:hover {
+  background: #7f8c8d;
+}
+
+.btn-submit-inline {
+  background: #27ae60;
+  color: white;
+}
+
+.btn-submit-inline:hover {
+  background: #229954;
+}
+

@@ -827,3 +827,49 @@
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+/* 导航分割线 */
+.nav-divider {
+  height: 1px;
+  background: #dee2e6;
+  margin: 10px 0;
+}
+
+/* 客户表按钮 */
+.nav-customers {
+  background: #8e44ad;
+  color: white;
+}
+
+.nav-customers:hover {
+  background: #732d91;
+}
+
+/* 给3PL状态样式（黄色） */
+.order-row.sub-status-sent_to_3pl {
+  background: rgba(245, 158, 11, 0.25);
+  border-left: 4px solid #f59e0b;
+}
+
+.status-badge.sub-status-sent_to_3pl {
+  background: #f59e0b;
+  color: white;
+}
+
+.sub-status-select[value="sent_to_3pl"] {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+/* 生成报价按钮 */
+.btn-quote-header {
+  background: #9b59b6;
+  color: white;
+}
+
+.btn-quote-header:hover {
+  background: #8e44ad;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}

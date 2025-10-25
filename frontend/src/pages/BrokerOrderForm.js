@@ -383,7 +383,7 @@ const BrokerOrderForm = () => {
                 className={`status-btn ${formData.sub_status === 'waiting_driver' ? 'active' : ''} waiting-driver`}
                 onClick={() => handleUpdateSubStatus('waiting_driver')}
               >
-                🔴 等待司机
+                🔴 寻找司机
               </button>
               <button
                 type="button"
@@ -743,7 +743,7 @@ const BrokerOrderForm = () => {
             </div>
 
             <div className="form-group">
-              <label>总面积板</label>
+              <label>总面积板数</label>
               <input
                 type="number"
                 step="0.01"
@@ -830,7 +830,7 @@ const BrokerOrderForm = () => {
                 value={formData.quote_reference}
                 onChange={(e) => handleChange('quote_reference', e.target.value)}
               />
-              <small>公式: TOTAL DAT ÷ 车辆板数 × 总面积板 + 100</small>
+              <small>公式: TOTAL DAT ÷ 车辆板数 × 总面积板数 + 100</small>
             </div>
 
             <div className="form-group">

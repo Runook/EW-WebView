@@ -217,6 +217,7 @@ app.use('/api/user-management', require('./routes/user-management'));
 // 员工系统路由
 app.use('/api/employees', require('./routes/employees'));
 app.use('/api/orders', require('./routes/employee-orders'));
+app.use('/api/customers', require('./routes/customers'));
 
 // 临时测试路由
 app.get('/api/fba/test', (req, res) => {

@@ -3,8 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { orderApi } from '../config/employeeApi';
 import EditableCell from '../components/EditableCell';
+import CompanyEditableCell from '../components/CompanyEditableCell';
 import ConfirmOrderModal from '../components/ConfirmOrderModal';
 import DocumentGenerator from '../components/DocumentGenerator';
+import QuoteGenerator from '../components/QuoteGenerator';
 import { parseWeightList, parseDimensionsList, calculateTotalVolume } from '../utils/pasteParser';
 import { loadGoogleMapsScript, diagnoseGoogleMapsIssues } from '../config/googleMaps';
 import './BrokerOrdersNew.css';
@@ -30,6 +32,9 @@ const BrokerOrdersNew = () => {
   // 文档生成器状态
   const [showDocGenerator, setShowDocGenerator] = useState(false);
   const [documentType, setDocumentType] = useState(null); // 'BOL' 或 'RC'
+  
+  // 报价生成器状态
+  const [showQuoteGenerator, setShowQuoteGenerator] = useState(false);
   
   const currentStatus = searchParams.get('status') || 'quote';
   
@@ -231,7 +236,7 @@ const BrokerOrdersNew = () => {
         
         updates.dimensions_list = JSON.stringify(result);
         updates.total_volume = totalVol;
-        updates.actual_pallets = totalPallets; // 总板数 = 所有p的总和
+        updates.actual_pallets = totalPallets; // 总件数 = 所有p的总和
       }
 
       await orderApi.updateOrder(orderId, updates);
@@ -263,7 +268,7 @@ const BrokerOrdersNew = () => {
     const truckPallets = parseFloat(order.truck_pallets) || 1; // 避免除以0
     const totalAreaPallets = parseFloat(order.total_area_pallets) || 0;
     
-    // 报价参考 = (TOTAL DAT / 车类型) × 总面积板 + 100
+    // 报价参考 = (TOTAL DAT / 车类型) × 总面积板数 + 100
     const quoteReference = (totalDat / truckPallets) * totalAreaPallets + 100;
     
     // 参考+10%, +20%, +30%
@@ -544,8 +549,9 @@ const BrokerOrdersNew = () => {
   const getSubStatusBadge = (subStatus) => {
     if (!subStatus) return null;
     const labels = {
-      waiting_driver: '等待司机',
+      waiting_driver: '寻找司机',
       driver_found: '找到司机',
+      sent_to_3pl: '给3PL',
       in_transit: '运输中'
     };
     return (
@@ -720,12 +726,23 @@ const BrokerOrdersNew = () => {
           </button>
         </nav>
 
+        {/* 分割线 */}
+        <div className="nav-divider"></div>
+
+        {/* 客户表 */}
+        <button
+          className="nav-item nav-customers"
+          onClick={() => navigate('/employee/customers')}
+        >
+          👥 客户表
+        </button>
+
         {/* 已下单的子状态统计 */}
         {currentStatus === 'ordered' && (
           <div className="sub-status-stats">
             <h3>订单状态</h3>
             <div className="stat-item waiting-driver">
-              <span>等待司机</span>
+              <span>寻找司机</span>
               <strong>{stats.waiting_driver}</strong>
             </div>
             <div className="stat-item driver-found">
@@ -807,13 +824,27 @@ const BrokerOrdersNew = () => {
                   <th>收货地</th>
                   <th className="text-right">总重(lbs)</th>
                   <th className="text-right">总体积(ft³)</th>
-                  <th className="text-right">总板数</th>
+                  <th className="text-right">总件数</th>
                   <th className="text-right">EW报价</th>
                   <th className="text-right">运输距离</th>
                   {currentStatus === 'ordered' && <th>状态</th>}
                   {currentStatus === 'ordered' && <th>卡车信息</th>}
                   <th>操作员工</th>
                   <th>操作</th>
+                  {currentStatus === 'quote' && (
+                    <th>
+                      <button 
+                        className="btn-header btn-quote-header"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowQuoteGenerator(true);
+                        }}
+                        title="批量生成报价"
+                      >
+                        📋 报价
+                      </button>
+                    </th>
+                  )}
                   {currentStatus === 'ordered' && (
                     <>
                       <th>
@@ -875,11 +906,9 @@ const BrokerOrdersNew = () => {
                         />
                       </td>
                       <td>
-                        <EditableCell
+                        <CompanyEditableCell
                           value={order.inquiry_company || order.customer_name}
                           orderId={order.id}
-                          field="inquiry_company"
-                          type="text"
                           onSave={handleCellUpdate}
                         />
                       </td>
@@ -1011,8 +1040,9 @@ const BrokerOrdersNew = () => {
                                 onMouseDown={(e) => e.stopPropagation()}
                                 className="sub-status-select"
                               >
-                                <option value="waiting_driver">等待司机</option>
+                                <option value="waiting_driver">寻找司机</option>
                                 <option value="driver_found">找到司机</option>
+                                <option value="sent_to_3pl">给3PL</option>
                                 <option value="in_transit">运输中</option>
                                 <option value="completed">已完成</option>
                                 <option value="claim">需要索赔</option>
@@ -1079,6 +1109,7 @@ const BrokerOrdersNew = () => {
                           <span className="no-action">-</span>
                         )}
                       </td>
+                      {currentStatus === 'quote' && <td></td>}
                       {currentStatus === 'ordered' && (
                         <>
                           <td></td>
@@ -1278,7 +1309,7 @@ const BrokerOrdersNew = () => {
                                 />
                               </div>
                               <div className="detail-item">
-                                <label>总面积板:</label>
+                                <label>总面积板数:</label>
                                 <EditableCell
                                   value={order.total_area_pallets}
                                   orderId={order.id}
@@ -1548,6 +1579,13 @@ const BrokerOrdersNew = () => {
           setDocumentType(null);
         }}
         documentType={documentType}
+        orders={orders}
+      />
+
+      {/* 报价生成器对话框 */}
+      <QuoteGenerator
+        isOpen={showQuoteGenerator}
+        onClose={() => setShowQuoteGenerator(false)}
         orders={orders}
       />
     </div>

@@ -291,7 +291,7 @@ router.post('/:id/confirm', auth, requireEmployee, async (req, res) => {
     const { id } = req.params;
     const { sub_status } = req.body;
     
-    const validSubStatuses = ['waiting_driver', 'driver_found', 'in_transit'];
+    const validSubStatuses = ['waiting_driver', 'driver_found', 'sent_to_3pl', 'in_transit'];
     if (sub_status && !validSubStatuses.includes(sub_status)) {
       return res.status(400).json({
         success: false,
@@ -357,7 +357,7 @@ router.put('/:id/sub-status', auth, requireEmployee, async (req, res) => {
     const { id } = req.params;
     const { sub_status } = req.body;
     
-    const validSubStatuses = ['waiting_driver', 'driver_found', 'in_transit'];
+    const validSubStatuses = ['waiting_driver', 'driver_found', 'sent_to_3pl', 'in_transit'];
     if (!sub_status || !validSubStatuses.includes(sub_status)) {
       return res.status(400).json({
         success: false,

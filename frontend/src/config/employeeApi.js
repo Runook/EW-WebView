@@ -306,9 +306,38 @@ export const employeeUtils = {
   },
 };
 
+// 客户API
+const customerApi = {
+  // 获取客户列表
+  getCustomers: (search = '') => {
+    return request(`/customers?search=${encodeURIComponent(search)}`);
+  },
+
+  // 搜索客户（自动补全）
+  searchCustomers: (keyword) => {
+    return request(`/customers/search?keyword=${encodeURIComponent(keyword)}`);
+  },
+
+  // 创建客户
+  createCustomer: (customerData) => {
+    return request('/customers', 'POST', customerData);
+  },
+
+  // 更新客户
+  updateCustomer: (id, customerData) => {
+    return request(`/customers/${id}`, 'PUT', customerData);
+  },
+
+  // 删除客户
+  deleteCustomer: (id) => {
+    return request(`/customers/${id}`, 'DELETE');
+  },
+};
+
 export default {
   employeeApi,
   orderApi,
+  customerApi,
   employeeUtils,
 };
 

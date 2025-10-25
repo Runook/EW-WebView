@@ -113,9 +113,18 @@ const EmployeeSystem = () => {
             className="menu-card menu-card-primary" 
             onClick={() => navigate('/employee/broker-orders?status=quote')}
           >
-            <h3>📋 Broker订单系统</h3>
+            <h3>📋 订单管理</h3>
             <p>专业的陆运订单管理系统</p>
             <div className="menu-subtitle">报价单 · 已下单 · 已完成</div>
+          </div>
+
+          <div 
+            className="menu-card menu-card-customers" 
+            onClick={() => navigate('/employee/customers')}
+          >
+            <h3>👥 客户表</h3>
+            <p>客户信息管理</p>
+            <div className="menu-subtitle">询价公司 · 微信群名称</div>
           </div>
 
           {employee_role === 'admin' && (
@@ -144,7 +153,7 @@ const EmployeeSystem = () => {
             className="action-btn"
             onClick={() => navigate('/employee/broker-orders?status=ordered&sub_status=waiting_driver')}
           >
-            🚨 等待司机
+            🚨 寻找司机
           </button>
           <button 
             className="action-btn"
