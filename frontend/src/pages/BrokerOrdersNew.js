@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { orderApi } from '../config/employeeApi';
 import EditableCell from '../components/EditableCell';
 import ConfirmOrderModal from '../components/ConfirmOrderModal';
+import DocumentGenerator from '../components/DocumentGenerator';
 import { parseWeightList, parseDimensionsList, calculateTotalVolume } from '../utils/pasteParser';
 import { loadGoogleMapsScript, diagnoseGoogleMapsIssues } from '../config/googleMaps';
 import './BrokerOrdersNew.css';
@@ -25,6 +26,10 @@ const BrokerOrdersNew = () => {
   });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  
+  // 文档生成器状态
+  const [showDocGenerator, setShowDocGenerator] = useState(false);
+  const [documentType, setDocumentType] = useState(null); // 'BOL' 或 'RC'
   
   const currentStatus = searchParams.get('status') || 'quote';
   
@@ -809,6 +814,36 @@ const BrokerOrdersNew = () => {
                   {currentStatus === 'ordered' && <th>卡车信息</th>}
                   <th>操作员工</th>
                   <th>操作</th>
+                  {currentStatus === 'ordered' && (
+                    <>
+                      <th>
+                        <button 
+                          className="btn-header btn-bol-header"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDocumentType('BOL');
+                            setShowDocGenerator(true);
+                          }}
+                          title="批量生成BOL"
+                        >
+                          📄 BOL
+                        </button>
+                      </th>
+                      <th>
+                        <button 
+                          className="btn-header btn-rc-header"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDocumentType('RC');
+                            setShowDocGenerator(true);
+                          }}
+                          title="批量生成RC"
+                        >
+                          📊 RC
+                        </button>
+                      </th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -1044,6 +1079,12 @@ const BrokerOrdersNew = () => {
                           <span className="no-action">-</span>
                         )}
                       </td>
+                      {currentStatus === 'ordered' && (
+                        <>
+                          <td></td>
+                          <td></td>
+                        </>
+                      )}
                     </tr>
 
                     {/* 展开行（隐藏字段） */}
@@ -1498,6 +1539,17 @@ const BrokerOrdersNew = () => {
           onConfirm={handleConfirmOrderSubmit}
         />
       )}
+
+      {/* 文档生成器对话框 */}
+      <DocumentGenerator
+        isOpen={showDocGenerator}
+        onClose={() => {
+          setShowDocGenerator(false);
+          setDocumentType(null);
+        }}
+        documentType={documentType}
+        orders={orders}
+      />
     </div>
   );
 };

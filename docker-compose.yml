@@ -63,7 +63,8 @@ services:
     environment:
       - REACT_APP_API_URL=http://localhost:5001/api
       - REACT_APP_EMPLOYEE_API_URL=http://localhost:3001/api
-      - REACT_APP_AUTH_MODE=${AUTH_MODE:-mock}
+      - REACT_APP_AUTH_MODE=mock
+      - REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyB-uQvzsiFeJOr37qYg2EenJbaKUG7-KfE
       - HOST=0.0.0.0
     depends_on:
       - backend
