@@ -26,6 +26,9 @@ COPY --from=builder /app/package*.json ./
 # 复制应用代码
 COPY --chown=nodejs:nodejs . .
 
+# 创建uploads目录并设置权限
+RUN mkdir -p uploads && chown -R nodejs:nodejs uploads
+
 # 安装curl用于健康检查
 RUN apk add --no-cache curl
 

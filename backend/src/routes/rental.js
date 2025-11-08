@@ -1,11 +1,11 @@
 const express = require('express');
 const { body, validationResult, query } = require('express-validator');
-const Sale = require('../models/Sale');
+const Rental = require('../models/Rental');
 const UserManagement = require('../models/UserManagement');
 const { auth } = require('../middleware/auth');
 const router = express.Router();
 
-// 获取所有销售项（带筛选）
+// 获取所有租赁项（带筛选）
 router.get('/', [
   query('category').optional().isString(),
   query('sub_category').optional().isString(),
@@ -41,16 +41,16 @@ router.get('/', [
       if (!filters[key]) delete filters[key];
     });
 
-    const sales = await Sale.getAllSales(filters);
+    const rentals = await Rental.getAllRentals(filters);
 
     res.json({
       success: true,
-      data: sales,
-      total: sales.length
+      data: rentals,
+      total: rentals.length
     });
 
   } catch (error) {
-    console.error('GET /sales error:', error);
+    console.error('GET /rentals error:', error);
     res.status(500).json({
       success: false,
       message: '服务器错误'
@@ -61,14 +61,14 @@ router.get('/', [
 // 获取分类统计
 router.get('/stats/categories', async (req, res) => {
   try {
-    const stats = await Sale.getCategoryStats();
+    const stats = await Rental.getCategoryStats();
     
     res.json({
       success: true,
       data: stats
     });
   } catch (error) {
-    console.error('GET /sales/stats/categories error:', error);
+    console.error('GET /rentals/stats/categories error:', error);
     res.status(500).json({
       success: false,
       message: '服务器错误'
@@ -76,7 +76,7 @@ router.get('/stats/categories', async (req, res) => {
   }
 });
 
-// 搜索销售项
+// 搜索租赁项
 router.get('/search', [
   query('q').notEmpty().withMessage('搜索关键词不能为空'),
   query('category').optional().isString(),
@@ -108,17 +108,17 @@ router.get('/search', [
       if (!filters[key]) delete filters[key];
     });
 
-    const sales = await Sale.searchSales(searchTerm, filters);
+    const rentals = await Rental.searchRentals(searchTerm, filters);
 
     res.json({
       success: true,
-      data: sales,
-      total: sales.length,
+      data: rentals,
+      total: rentals.length,
       searchTerm
     });
 
   } catch (error) {
-    console.error('GET /sales/search error:', error);
+    console.error('GET /rentals/search error:', error);
     res.status(500).json({
       success: false,
       message: '搜索失败'
@@ -126,64 +126,64 @@ router.get('/search', [
   }
 });
 
-// 获取用户发布的销售项
+// 获取用户发布的租赁项
 router.get('/my/posts', auth, async (req, res) => {
   try {
-    const sales = await Sale.getUserSales(req.user.userId);
+    const rentals = await Rental.getUserRentals(req.user.userId);
     
     res.json({
       success: true,
-      data: sales,
-      total: sales.length
+      data: rentals,
+      total: rentals.length
     });
   } catch (error) {
-    console.error('GET /sales/my/posts error:', error);
+    console.error('GET /rentals/my/posts error:', error);
     res.status(500).json({
       success: false,
-      message: '获取我的销售项失败'
+      message: '获取我的租赁项失败'
     });
   }
 });
 
-// 获取单个销售项详情
+// 获取单个租赁项详情
 router.get('/:id', async (req, res) => {
   try {
-    const saleId = parseInt(req.params.id);
+    const rentalId = parseInt(req.params.id);
     
-    if (isNaN(saleId)) {
+    if (isNaN(rentalId)) {
       return res.status(400).json({
         success: false,
-        message: '无效的销售项ID'
+        message: '无效的租赁项ID'
       });
     }
 
-    const sale = await Sale.getSaleById(saleId);
+    const rental = await Rental.getRentalById(rentalId);
     
-    if (!sale) {
+    if (!rental) {
       return res.status(404).json({
         success: false,
-        message: '销售项不存在'
+        message: '租赁项不存在'
       });
     }
 
     // 增加浏览量
-    await Sale.incrementViews(saleId);
+    await Rental.incrementViews(rentalId);
 
     res.json({
       success: true,
-      data: sale
+      data: rental
     });
 
   } catch (error) {
-    console.error('GET /sales/:id error:', error);
+    console.error('GET /rentals/:id error:', error);
     res.status(500).json({
       success: false,
-      message: '获取销售项详情失败'
+      message: '获取租赁项详情失败'
     });
   }
 });
 
-// 创建新销售项（需要认证）
+// 创建新租赁项（需要认证）
 router.post('/', auth, [
   body('title').notEmpty().withMessage('标题不能为空'),
   body('category').notEmpty().withMessage('分类不能为空'),
@@ -200,7 +200,7 @@ router.post('/', auth, [
   body('specifications').optional().isString()
 ], async (req, res) => {
   try {
-    console.log('📥 接收到销售项发布请求:', {
+    console.log('📥 接收到租赁项发布请求:', {
       body: req.body,
       userId: req.user?.userId
     });
@@ -208,7 +208,7 @@ router.post('/', auth, [
     // 验证输入
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.error('❌ 销售验证失败:', errors.array());
+      console.error('❌ 租赁验证失败:', errors.array());
       return res.status(400).json({
         success: false,
         message: '输入信息有误',
@@ -217,7 +217,7 @@ router.post('/', auth, [
     }
 
     // 检查积分余额
-    const postCost = await UserManagement.getSystemConfig('post_costs.sale');
+    const postCost = await UserManagement.getSystemConfig('post_costs.rental');
     const userCredits = await UserManagement.getUserCredits(req.user.userId);
     
     if (userCredits.current < postCost) {
@@ -232,7 +232,7 @@ router.post('/', auth, [
       });
     }
 
-    const saleData = {
+    const rentalData = {
       userId: req.user.userId,
       title: req.body.title,
       category: req.body.category,
@@ -250,13 +250,13 @@ router.post('/', auth, [
       contactEmail: req.user.email // 使用用户注册邮箱
     };
 
-    const sale = await Sale.createSale(saleData);
+    const rental = await Rental.createRental(rentalData);
     
     let totalCreditsSpent = postCost;
     let premiumInfo = null;
     
     // 扣除基本发布积分
-    await UserManagement.chargeForPost(req.user.userId, 'sale', sale.id);
+    await UserManagement.chargeForPost(req.user.userId, 'rental', rental.id);
 
     // 处理Premium选项
     if (req.body.premium && req.body.premium.type) {
@@ -268,8 +268,8 @@ router.post('/', auth, [
         
         const premiumResult = await UserManagement.makePremium(
           req.user.userId, 
-          'sale', 
-          sale.id, 
+          'rental', 
+          rental.id, 
           premiumType, 
           duration
         );
@@ -290,32 +290,32 @@ router.post('/', auth, [
 
     res.status(201).json({
       success: true,
-      message: '销售项发布成功' + (premiumInfo ? `，${premiumInfo.type === 'top' ? '置顶' : '高亮'}功能已开通` : ''),
-      data: sale,
+      message: '租赁项发布成功' + (premiumInfo ? `，${premiumInfo.type === 'top' ? '置顶' : '高亮'}功能已开通` : ''),
+      data: rental,
       creditsSpent: totalCreditsSpent,
       premium: premiumInfo
     });
 
   } catch (error) {
-    console.error('POST /sales error:', error);
+    console.error('POST /rentals error:', error);
     res.status(500).json({
       success: false,
-      message: '发布销售项失败'
+      message: '发布租赁项失败'
     });
   }
 });
 
-// 更新销售项（需要认证，只能更新自己的）
+// 更新租赁项（需要认证，只能更新自己的）
 router.put('/:id', auth, [
   body('title').optional().notEmpty(),
   body('category').optional().notEmpty(),
   body('sub_category').optional().notEmpty(),
-  body('brand').optional().notEmpty(),
+  body('brand').optional().isString(),
   body('location').optional().notEmpty(),
   body('price').optional().notEmpty(),
   body('condition').optional().notEmpty(),
   body('description').optional().notEmpty(),
-  body('images').optional().notEmpty(),
+  body('images').optional(),
   body('contactPhone').optional(),
   body('contactPerson').optional().isString(),
   body('company').optional().isString(),
@@ -332,16 +332,16 @@ router.put('/:id', auth, [
       });
     }
 
-    const saleId = parseInt(req.params.id);
+    const rentalId = parseInt(req.params.id);
     
-    if (isNaN(saleId)) {
+    if (isNaN(rentalId)) {
       return res.status(400).json({
         success: false,
-        message: '无效的销售项ID'
+        message: '无效的租赁项ID'
       });
     }
 
-    const saleData = {
+    const rentalData = {
       title: req.body.title,
       category: req.body.category,
       sub_category: req.body.sub_category,
@@ -358,67 +358,68 @@ router.put('/:id', auth, [
     };
 
     // 移除undefined值
-    Object.keys(saleData).forEach(key => {
-      if (saleData[key] === undefined) delete saleData[key];
+    Object.keys(rentalData).forEach(key => {
+      if (rentalData[key] === undefined) delete rentalData[key];
     });
 
-    const updatedSale = await Sale.updateSale(saleId, saleData, req.user.userId);
+    const updatedRental = await Rental.updateRental(rentalId, rentalData, req.user.userId);
 
-    if (!updatedSale) {
+    if (!updatedRental) {
       return res.status(404).json({
         success: false,
-        message: '销售项不存在或无权限修改'
+        message: '租赁项不存在或无权限修改'
       });
     }
 
     res.json({
       success: true,
-      message: '销售项更新成功',
-      data: updatedSale
+      message: '租赁项更新成功',
+      data: updatedRental
     });
 
   } catch (error) {
-    console.error('PUT /sales/:id error:', error);
+    console.error('PUT /rentals/:id error:', error);
     res.status(500).json({
       success: false,
-      message: '更新销售项失败'
+      message: '更新租赁项失败'
     });
   }
 });
 
-// 删除销售项（需要认证，只能删除自己的）
+// 删除租赁项（需要认证，只能删除自己的）
 router.delete('/:id', auth, async (req, res) => {
   try {
-    const saleId = parseInt(req.params.id);
+    const rentalId = parseInt(req.params.id);
     
-    if (isNaN(saleId)) {
+    if (isNaN(rentalId)) {
       return res.status(400).json({
         success: false,
-        message: '无效的销售项ID'
+        message: '无效的租赁项ID'
       });
     }
 
-    const deleted = await Sale.deleteSale(saleId, req.user.userId);
+    const deleted = await Rental.deleteRental(rentalId, req.user.userId);
 
     if (!deleted) {
       return res.status(404).json({
         success: false,
-        message: '销售项不存在或无权限删除'
+        message: '租赁项不存在或无权限删除'
       });
     }
 
     res.json({
       success: true,
-      message: '销售项删除成功'
+      message: '租赁项删除成功'
     });
 
   } catch (error) {
-    console.error('DELETE /sales/:id error:', error);
+    console.error('DELETE /rentals/:id error:', error);
     res.status(500).json({
       success: false,
-      message: '删除销售项失败'
+      message: '删除租赁项失败'
     });
   }
 });
 
 module.exports = router;
+

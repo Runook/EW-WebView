@@ -87,11 +87,11 @@ app.use('/api/auth/', authLimiter);
 // 中间件
 app.use(compression());
 app.use(morgan(config.logging.format));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '50mb' })); // 增加JSON限制到50MB
+app.use(express.urlencoded({ extended: true, limit: '50mb' })); // 增加URL编码限制到50MB
 
-// 静态文件服务 - 为上传的媒体文件提供服务
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// 静态文件服务 - 为上传的媒体文件提供服务（通过/api/uploads路由）
+app.use('/api/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // 请求日志中间件
 app.use((req, res, next) => {
@@ -201,6 +201,9 @@ app.get('/api', (req, res) => {
       resumes: '/api/resumes',
       users: '/api/user-management',
       fba: '/api/fba',
+      rentals: '/api/rentals',
+      sales: '/api/sales',
+      upload: '/api/upload',
       auth: 'AWS Cognito (外部认证)'
     }
   });
@@ -218,6 +221,13 @@ app.use('/api/user-management', require('./routes/user-management'));
 app.use('/api/employees', require('./routes/employees'));
 app.use('/api/orders', require('./routes/employee-orders'));
 app.use('/api/customers', require('./routes/customers'));
+
+// 物流租售路由
+app.use('/api/rentals', require('./routes/rental'));
+app.use('/api/sales', require('./routes/sale'));
+
+// 文件上传路由
+app.use('/api/upload', require('./routes/upload'));
 
 // 临时测试路由
 app.get('/api/fba/test', (req, res) => {

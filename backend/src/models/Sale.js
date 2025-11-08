@@ -281,7 +281,7 @@ class Sale {
       condition: sale.condition,
       description: sale.description,
       specifications: sale.specifications,
-      images: sale.images ? sale.images.split(',') : [],
+      images: sale.images ? (sale.images.includes('|||') ? sale.images.split('|||').filter(img => img.trim()) : [sale.images]) : [],
       contactPhone: sale.contact_phone,
       contactEmail: sale.contact_email,
       contactPerson: sale.contact_person,
@@ -299,6 +299,11 @@ class Sale {
       premium_end_time: sale.premium_end_time || null,
       publisher: {
         userId: sale.user_id
+      },
+      contact: {
+        name: sale.contact_person,
+        company: sale.company,
+        phone: sale.contact_phone
       }
     };
   }

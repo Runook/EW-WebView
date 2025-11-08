@@ -5,6 +5,8 @@ import './LogisticsRental.css';
 import { useModal } from '../hooks';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../components/common/Notification';
+import { apiClient } from '../utils/apiClient';
+
 const LogisticsRental = () => {
 
   const [activeTab, setActiveTab] = useState('rental'); // 'rental' 或 'sale'
@@ -17,6 +19,7 @@ const LogisticsRental = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentFormData, setCurrentFormData] = useState(null);
+  const [loading, setLoading] = useState(false);
   const { isAuthenticated } = useAuth();
   const premiumModal = useModal();
     // 通知和日志系统
@@ -87,244 +90,117 @@ const LogisticsRental = () => {
     '场地卡车'
   ];
 
-  // 模拟出租数据（添加多张图片）
-  const mockRentalItems = useMemo(() => ([
-    {
-      id: 1,
-      title: '重型冷藏车出售',
-      category: '卡车',
-      subCategory: '冷藏车',
-      location: '纽约',
-      price: '$39000',
-      condition: '3800小时',
-      brand: 'Utility',
-      description: '2020年 Utility Reefer 53\' x 102\' x 13\'6\' 重型冷藏车，温度控制-18℃至+25℃，运行小时3800小时， Vin:1uyvs2534l6815402',
-      specifications: {
-        year: '2020年',
-        make: 'Utility',
-        model: 'Reefer',
-        mileage: '3800',
-        engine: '无发动机',
-        transmission: '无变速箱',
-        temperatureRange: '-18℃至+25℃'
-      },
-      images: [
-        '/rental1.jpg',
-        '/rental2.jpg',
-        '/rental3.jpg',
-        '/rental4.jpg',
-        '/rental5.jpg',
-        '/rental6.jpg',
-        '/rental7.jpg'
-      ],
-      coverImageIndex: 0,
-      publishDate: '2024-01-10',
-      posted: '2天前',
-      views: 125,
-      contact: {
-        name: '陈先生',
-        company: 'EW Logistics',
-        phone: '(646)-529-8575'
+  // 获取租赁数据
+  const fetchRentals = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/rentals');
+      if (response.success) {
+        setRentalItems(response.data);
       }
-    },
-    {
-      id: 2,
-      title: '长岛office出租',
-      category: '仓库/物流园区',
-      subCategory: '常温储存',
-      location: '纽约',
-      price: '$8000/月',
-      condition: '全新',
-      brand: '',
-      description: '10000平方英尺现代化仓库，配备装卸平台，适合电商仓储',
-      specifications: {
-        area: '10000平方英尺',
-        height: '24英尺',
-        doors: '6个装卸门',
-        parking: '20个停车位',
-        services: ['常温储存', '拣选包装', '短期储存']
-      },
-      images: [
-        '/office1.jpg',
-        '/office2.jpg',
-        '/office3.jpg',
-        '/office4.jpg',
-        '/office5.jpg',
-        '/office6.jpg',
-        '/office7.jpg',
-        '/office8.jpg',
-        '/office9.jpg'
-      ],
-      coverImageIndex: 0,
-      publishDate: '2024-01-11',
-      posted: '1天前',
-      views: 89,
-      contact: {
-        name: '翁总',
-        company: 'EW Logistics',
-        phone: '(646)-529-8575'
-      }
-    },
-    {
-      id: 3,
-      title: '叉车出售',
-      category: '叉车',
-      subCategory: '电动叉车',
-      location: '纽约',
-      price: '$电议',
-      condition: '8成新',
-      brand: 'Yale',
-      description: 'Yale叉车，载重2吨，适合仓库作业',
-      specifications: {
-        capacity: '2吨',
-        liftHeight: '3米',
-        power: '电动',
-        battery: '锂电池',
-        runtime: '10000小时'
-      },
-      images: [
-        'chache1.jpg',
-        '/chache2.jpg',
-        '/chache3.jpg'
-      ],
-      coverImageIndex: 0,
-      publishDate: '2024-01-09',
-      posted: '3天前',
-      views: 67,
-      contact: {
-        name: '翁总',
-        company: 'EW Logistics',
-        phone: '(646)-529-8575'
-      }
+    } catch (error) {
+      console.error('获取租赁数据失败:', error);
+      apiError(error);
+    } finally {
+      setLoading(false);
     }
-  ]), []);
+  };
 
-  // 模拟出售数据（添加多张图片）
-  const mockSaleItems = useMemo(() => ([
-    {
-      id: 1,
-      title: '2019年肯沃斯T680卡车出售',
-      category: '卡车出售',
-      subCategory: '重型卡车',
-      location: '芝加哥',
-      price: '$85000',
-      condition: '8成新',
-      brand: '肯沃斯',
-      description: '2019年肯沃斯T680，里程35万英里，保养良好，手续齐全',
-      specifications: {
-        year: '2019年',
-        make: '肯沃斯',
-        model: 'T680',
-        mileage: '35万英里',
-        engine: 'PACCAR MX-13',
-        transmission: '18速手动',
-        vin: 'VIN12345678901234567'
-      },
-      images: [
-        'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800&h=600&fit=crop'
-      ],
-      coverImageIndex: 0,
-      publishDate: '2024-01-08',
-      posted: '4天前',
-      views: 156,
-      contact: {
-        name: '陈老板',
-        company: '二手车行',
-        phone: '(456) 789-0123'
+  // 获取出售数据
+  const fetchSales = async () => {
+    try {
+      setLoading(true);
+      const response = await apiClient.get('/sales');
+      if (response.success) {
+        setSaleItems(response.data);
       }
-    },
-    {
-      id: 2,
-      title: '物流公司MC DOT出售',
-      category: '公司MC DOT',
-      subCategory: 'MC权限',
-      location: '休斯顿',
-      price: '$15000',
-      condition: '全新',
-      brand: '',
-      description: '正规物流公司MC DOT权限转让，运营记录良好，保险齐全',
-      specifications: {
-        mcNumber: 'MC-123456',
-        dotNumber: 'DOT-789012',
-        operatingYears: '5年',
-        safetyRating: 'Satisfactory',
-        insurance: '100万美元',
-        authority: 'Property'
-      },
-      images: [
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop'
-      ],
-      coverImageIndex: 0,
-      publishDate: '2024-01-07',
-      posted: '5天前',
-      views: 234,
-      contact: {
-        name: '刘总',
-        company: '物流咨询公司',
-        phone: '(567) 890-1234'
-      }
-    },
-    {
-      id: 3,
-      title: '仓库货架清仓出售',
-      category: '叉车货架',
-      subCategory: '重型货架',
-      location: '凤凰城',
-      price: '$50/组',
-      condition: '7成新',
-      brand: '钢铁侠',
-      description: '重型货架批量出售，高3米，承重2吨/层，适合仓库使用',
-      specifications: {
-        height: '3米',
-        width: '2.5米',
-        depth: '1米',
-        capacity: '2吨/层',
-        material: '钢材',
-        quantity: '50组'
-      },
-      images: [
-        'https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=800&h=600&fit=crop',
-        'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=800&h=600&fit=crop'
-      ],
-      coverImageIndex: 0,
-      publishDate: '2024-01-06',
-      posted: '6天前',
-      views: 78,
-      contact: {
-        name: '赵经理',
-        company: '仓储设备公司',
-        phone: '(678) 901-2345'
-      }
+    } catch (error) {
+      console.error('获取出售数据失败:', error);
+      apiError(error);
+    } finally {
+      setLoading(false);
     }
-  ]), []);
+  };
 
+  // 组件加载时获取数据
   useEffect(() => {
-    setRentalItems(mockRentalItems);
-    setSaleItems(mockSaleItems);
-  }, [mockRentalItems, mockSaleItems]);
+    fetchRentals();
+    fetchSales();
+  }, []);
 
-  // 处理照片上传
-  const handleImageUpload = (event) => {
+  // 压缩图片
+  const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // 如果图片太大，等比例缩小
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // 转换为Blob
+          canvas.toBlob((blob) => {
+            resolve(new File([blob], file.name, {
+              type: 'image/jpeg',
+              lastModified: Date.now()
+            }));
+          }, 'image/jpeg', quality);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // 处理照片上传 - 压缩后直接保存base64
+  const handleImageUpload = async (event) => {
     const files = Array.from(event.target.files);
 
-    files.forEach(file => {
+    for (const file of files) {
       if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setPostForm(prev => ({
-            ...prev,
-            images: [...prev.images, {
-              file: file,
-              url: e.target.result,
-              name: file.name
-            }]
-          }));
-        };
-        reader.readAsDataURL(file);
+        try {
+          // 压缩图片
+          const compressedFile = await compressImage(file);
+          console.log(`📸 图片压缩: ${(file.size / 1024).toFixed(1)}KB -> ${(compressedFile.size / 1024).toFixed(1)}KB`);
+
+          // 读取压缩后的图片为base64
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const base64Url = e.target.result;
+            console.log(`✅ 图片处理完成: ${file.name}, 大小: ${(compressedFile.size / 1024).toFixed(1)}KB`);
+            
+            setPostForm(prev => ({
+              ...prev,
+              images: [...prev.images, {
+                file: compressedFile,
+                url: base64Url,
+                serverUrl: base64Url, // 直接使用base64作为最终URL
+                name: file.name,
+                uploading: false,
+                failed: false
+              }]
+            }));
+          };
+          reader.readAsDataURL(compressedFile);
+        } catch (error) {
+          console.error('❌ 图片处理失败:', error);
+          showError(`图片 ${file.name} 处理失败: ${error.message}`);
+        }
       }
-    });
+    }
   };
 
   // 删除照片
@@ -490,74 +366,101 @@ const LogisticsRental = () => {
       showError('请先登录再发布');
       return;
     }
-    const newItem = {
-      id: (activeTab === 'rental' ? rentalItems.length : saleItems.length) + 1,
+    
+    // 保存表单数据，等待Premium选项
+    const postData = {
       title: formData.get('title'),
       category: formData.get('category'),
-      subCategory: formData.get('subCategory'),
       location: formData.get('location'),
       price: formData.get('price'),
       condition: formData.get('condition'),
-      brand: formData.get('brand'),
       description: formData.get('description'),
-      specifications: {},
-      images: postForm.images.map(img => img.url),
-      coverImageIndex: postForm.coverImageIndex,
-      publishDate: new Date().toISOString().split('T')[0],
-      posted: '刚刚',
-      views: 0,
-      contact: {
-        name: formData.get('contactName'),
-        company: formData.get('company'),
-        phone: formData.get('phone')
-      }
+      contactPhone: formData.get('phone'),
+      contactPerson: formData.get('contactName')
     };
 
-    if (activeTab === 'rental') {
-      setRentalItems([newItem, ...rentalItems]);
-    } else {
-      setSaleItems([newItem, ...saleItems]);
+    // 添加可选字段（只有非空时才添加）
+    const subCategory = formData.get('subCategory');
+    if (subCategory) {
+      postData.sub_category = subCategory;
     }
+
+    const brand = formData.get('brand');
+    if (brand) {
+      postData.brand = brand;
+    }
+
+    const company = formData.get('company');
+    if (company) {
+      postData.company = company;
+    }
+
+    // 处理图片 - 使用压缩后的base64
+    if (postForm.images && postForm.images.length > 0) {
+      // 确保所有图片都已处理完成
+      const processingImages = postForm.images.filter(img => img.uploading);
+      
+      if (processingImages.length > 0) {
+        showError('请等待图片处理完成...');
+        return;
+      }
+      
+      postData.images = postForm.images.map(img => img.serverUrl || img.url);
+    }
+
+    setCurrentFormData(postData);
     setShowPostModal(false);
     premiumModal.open();
-    resetPostForm();
   };
 
 
  // 确认发布函数
   const handleConfirmPost = async ({ formData, premium }) => {
-   
-  // await withLoading(async () => {
-  //   try {
-  //     const postData = {
-  //       ...formData,
-  //       premium: premium
-  //     };
-
-  //     const endpoint = activeTab === 'jobs' ? '/jobs' : '/resumes';
+    try {
+      setLoading(true);
       
-  //     const result = await apiClient.post(endpoint, postData);
+      const postData = {
+        ...currentFormData,
+        premium: premium
+      };
 
-  //     if (result.success) {
-  //       premiumModal.close();
-  //       setCurrentFormData(null);
-  //       if (activeTab === 'jobs') {
-  //         fetchJobs();
-  //       } else {
-  //         fetchResumes();
-  //       }
+      const endpoint = activeTab === 'rental' ? '/rentals' : '/sales';
+      
+      console.log('📤 发布数据:', {
+        endpoint,
+        postData,
+        activeTab
+      });
+      
+      const result = await apiClient.post(endpoint, postData);
+
+      console.log('✅ 发布结果:', result);
+
+      if (result.success) {
+        premiumModal.close();
+        setCurrentFormData(null);
+        resetPostForm();
         
-  //       const typeName = activeTab === 'jobs' ? '职位' : '简历';
-  //       success(`${typeName}发布成功！已扣除 ${result.creditsSpent} 积分`);
-  //     } else {
-  //       throw new Error(result.message || '发布失败');
-  //     }
-  //   } catch (error) {
-  //     apiLogger.error('发布失败', error);
-  //     showError('发布失败: ' + error.message);
-  //   }
-  // });
-};
+        // 刷新数据列表
+        if (activeTab === 'rental') {
+          await fetchRentals();
+        } else {
+          await fetchSales();
+        }
+        
+        const typeName = activeTab === 'rental' ? '租赁' : '出售';
+        success(`${typeName}信息发布成功！已扣除 ${result.creditsSpent} 积分`);
+      } else {
+        throw new Error(result.message || '发布失败');
+      }
+    } catch (error) {
+      console.error('❌ 发布失败详情:', error);
+      console.error('错误响应:', error.response);
+      showError('发布失败: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
   // 查看详情
   const handleViewDetails = (item) => {
     setSelectedItem(item);
@@ -915,6 +818,11 @@ const LogisticsRental = () => {
                       <option key={category} value={category}>{category}</option>
                     ))}
                   </select>
+                </div>
+
+                <div className="form-group">
+                  <label>子分类</label>
+                  <input type="text" name="subCategory" placeholder="如：重型卡车、中型卡车等" />
                 </div>
 
                 <div className="form-row">
