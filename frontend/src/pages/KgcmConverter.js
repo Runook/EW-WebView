@@ -96,7 +96,7 @@ export default function KgcmConverter() {
       const lbs = Math.ceil(g.values[0] * 2.20462);
       const p = g.count;
       if (p > 1) {
-        col1Arr.push(`${lbs}*${p}`);
+        col1Arr.push(`${lbs}*${p}p`);
         total += lbs * p;
       } else {
         col1Arr.push(`${lbs}`);

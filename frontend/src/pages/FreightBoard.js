@@ -907,7 +907,7 @@ const FreightBoard = () => {
   <Calendar size={14} />
   <span className="date-text">
     {load.pickupDate ? 
-      new Date(load.pickupDate).toLocaleDateString('en-US', {month: '2-digit', day: '2-digit'}) 
+      load.pickupDate.split('T')[0].slice(5).replace('-', '/') 
       : '未知日期'} 取货
   </span>
 </div>
@@ -1012,7 +1012,7 @@ const FreightBoard = () => {
                         <Calendar size={14} />
                         <span className="date-text">
                           {truck.availableDate ? 
-                            new Date(truck.availableDate).toLocaleDateString('en-US', {month: '2-digit', day: '2-digit'}) 
+                            truck.availableDate.split('T')[0].slice(5).replace('-', '/') 
                             : '未知日期'} 可用
                         </span>
                       </div>

@@ -297,7 +297,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
             <span className="label">类型</span>{exchange.cargo_type}
           </span>
           <span className="info-compact">
-            <span className="label">日期</span>{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}
+            <span className="label">日期</span>{exchange.appointment_date}
           </span>
           <span className="info-compact">
             <span className="label">时间</span>
@@ -355,7 +355,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
             <span className="label">类型</span>{exchange.cargo_type}
           </span>
           <span className="info-compact">
-            <span className="label">日期</span>{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}
+            <span className="label">日期</span>{exchange.appointment_date}
           </span>
           <span className="info-compact">
             <span className="label">时间</span>
@@ -380,7 +380,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
         {/* 发布时间和删除按钮 - 第四行 */}
         <div className="mobile-my-exchange-footer">
           <span className="created-date">
-            发布于 {new Date(exchange.created_at).toLocaleDateString('zh-CN')}
+            发布于 {new Date(exchange.created_at).toLocaleDateString('zh-CN', { timeZone: 'America/New_York' })}
           </span>
           <button 
             className="delete-btn-compact"
@@ -621,7 +621,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                                     
                                     <span className="info-item">
                                       <span className="info-label">日期:</span>
-                                      <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
+                                      <span className="info-value">{exchange.appointment_date}</span>
                                     </span>
                                     
                                     <span className="info-item">
@@ -680,7 +680,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                                     
                                     <span className="info-item">
                                       <span className="info-label">日期:</span>
-                                      <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
+                                      <span className="info-value">{exchange.appointment_date}</span>
                                     </span>
                                     
                                     <span className="info-item">
@@ -771,7 +771,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                             
                             <span className="info-item">
                               <span className="info-label">日期:</span>
-                              <span className="info-value">{new Date(exchange.appointment_date).toLocaleDateString('zh-CN')}</span>
+                              <span className="info-value">{exchange.appointment_date}</span>
                             </span>
                             
                             <span className="info-item">
@@ -801,7 +801,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                           
                           <div className="exchange-meta">
                             <span className="view-count">浏览 {exchange.view_count} 次</span>
-                            <span className="created-date">发布于 {new Date(exchange.created_at).toLocaleDateString('zh-CN')}</span>
+                            <span className="created-date">发布于 {new Date(exchange.created_at).toLocaleDateString('zh-CN', { timeZone: 'America/New_York' })}</span>
                           </div>
                         </div>
                       )
