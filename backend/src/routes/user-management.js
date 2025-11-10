@@ -104,7 +104,7 @@ router.put('/posts/:type/:id/status', auth, async (req, res) => {
     const { type, id } = req.params;
     const { status } = req.body;
     
-    const validTypes = ['load', 'truck', 'company', 'job', 'resume'];
+    const validTypes = ['load', 'truck', 'company', 'job', 'resume', 'rental', 'sale'];
     const validStatuses = ['active', 'inactive', 'completed', 'cancelled', 'filled', 'hired', 'pending'];
     
     if (!validTypes.includes(type)) {
@@ -157,7 +157,7 @@ router.delete('/posts/:type/:id', auth, async (req, res) => {
   try {
     const { type, id } = req.params;
     
-    const validTypes = ['load', 'truck', 'company', 'job', 'resume'];
+    const validTypes = ['load', 'truck', 'company', 'job', 'resume', 'rental', 'sale'];
     if (!validTypes.includes(type)) {
       return res.status(400).json({
         success: false,
@@ -201,7 +201,7 @@ router.post('/posts/:type/:id/premium', auth, async (req, res) => {
     const { type, id } = req.params;
     const { premiumType, duration = 24 } = req.body;
     
-    const validTypes = ['load', 'truck', 'company', 'job', 'resume'];
+    const validTypes = ['load', 'truck', 'company', 'job', 'resume', 'rental', 'sale'];
     const validPremiumTypes = ['top', 'highlight'];
     
     if (!validTypes.includes(type)) {

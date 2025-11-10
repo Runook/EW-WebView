@@ -294,7 +294,8 @@ class UserManagement {
       
       const [activeLoads, inactiveLoads, activeTrucks, inactiveTrucks, 
              activeCompanies, inactiveCompanies, activeJobs, inactiveJobs,
-             activeResumes, inactiveResumes] = await Promise.all([
+             activeResumes, inactiveResumes, activeRentals, inactiveRentals,
+             activeSales, inactiveSales] = await Promise.all([
         // 上架中的内容
         knex('land_loads').where('user_id', userId).where('is_active', true).orderBy('created_at', 'desc'),
         knex('land_loads').where('user_id', userId).where('is_active', false).orderBy('updated_at', 'desc'),
@@ -305,7 +306,11 @@ class UserManagement {
         knex('jobs').where('user_id', userId).where('is_active', true).orderBy('created_at', 'desc'),
         knex('jobs').where('user_id', userId).where('is_active', false).orderBy('updated_at', 'desc'),
         knex('resumes').where('user_id', userId).where('is_active', true).orderBy('created_at', 'desc'),
-        knex('resumes').where('user_id', userId).where('is_active', false).orderBy('updated_at', 'desc')
+        knex('resumes').where('user_id', userId).where('is_active', false).orderBy('updated_at', 'desc'),
+        knex('rentals').where('user_id', userId).where('is_active', true).orderBy('created_at', 'desc'),
+        knex('rentals').where('user_id', userId).where('is_active', false).orderBy('updated_at', 'desc'),
+        knex('sales').where('user_id', userId).where('is_active', true).orderBy('created_at', 'desc'),
+        knex('sales').where('user_id', userId).where('is_active', false).orderBy('updated_at', 'desc')
       ]);
       
       console.log('📊 查询结果:', {
@@ -318,7 +323,11 @@ class UserManagement {
         activeJobs: activeJobs.length,
         inactiveJobs: inactiveJobs.length,
         activeResumes: activeResumes.length,
-        inactiveResumes: inactiveResumes.length
+        inactiveResumes: inactiveResumes.length,
+        activeRentals: activeRentals.length,
+        inactiveRentals: inactiveRentals.length,
+        activeSales: activeSales.length,
+        inactiveSales: inactiveSales.length
       });
       
       return {
@@ -327,14 +336,18 @@ class UserManagement {
           trucks: activeTrucks.map(item => ({ ...item, type: 'truck', status: 'active' })),
           companies: activeCompanies.map(item => ({ ...item, type: 'company', status: 'active' })),
           jobs: activeJobs.map(item => ({ ...item, type: 'job', status: 'active' })),
-          resumes: activeResumes.map(item => ({ ...item, type: 'resume', status: 'active' }))
+          resumes: activeResumes.map(item => ({ ...item, type: 'resume', status: 'active' })),
+          rentals: activeRentals.map(item => ({ ...item, type: 'rental', status: 'active' })),
+          sales: activeSales.map(item => ({ ...item, type: 'sale', status: 'active' }))
         },
         inactive: {
           loads: inactiveLoads.map(item => ({ ...item, type: 'load', status: 'inactive' })),
           trucks: inactiveTrucks.map(item => ({ ...item, type: 'truck', status: 'inactive' })),
           companies: inactiveCompanies.map(item => ({ ...item, type: 'company', status: 'inactive' })),
           jobs: inactiveJobs.map(item => ({ ...item, type: 'job', status: 'inactive' })),
-          resumes: inactiveResumes.map(item => ({ ...item, type: 'resume', status: 'inactive' }))
+          resumes: inactiveResumes.map(item => ({ ...item, type: 'resume', status: 'inactive' })),
+          rentals: inactiveRentals.map(item => ({ ...item, type: 'rental', status: 'inactive' })),
+          sales: inactiveSales.map(item => ({ ...item, type: 'sale', status: 'inactive' }))
         }
       };
     } catch (error) {
@@ -447,7 +460,9 @@ class UserManagement {
       truck: 'land_trucks',
       company: 'companies',
       job: 'jobs',
-      resume: 'resumes'
+      resume: 'resumes',
+      rental: 'rentals',
+      sale: 'sales'
     };
     return tableMap[postType];
   }
@@ -458,7 +473,9 @@ class UserManagement {
       truck: '车源信息',
       company: '企业信息',
       job: '职位信息',
-      resume: '简历信息'
+      resume: '简历信息',
+      rental: '租赁信息',
+      sale: '出售信息'
     };
     return nameMap[postType] || postType;
   }

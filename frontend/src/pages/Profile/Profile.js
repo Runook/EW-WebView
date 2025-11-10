@@ -157,6 +157,10 @@ const Profile = () => {
           state: { editMode: true, editData: item, postType: 'resume' } 
         });
         break;
+      case 'rental':
+      case 'sale':
+        showError('租售信息编辑功能即将推出');
+        break;
       default:
         showError('暂不支持编辑此类型的内容');
     }
@@ -210,6 +214,10 @@ const Profile = () => {
           return item.title;
         case 'resume':
           return `${item.name} - ${item.position}`;
+        case 'rental':
+          return item.title;
+        case 'sale':
+          return item.title;
         default:
           return '未知';
       }
@@ -227,6 +235,10 @@ const Profile = () => {
           return `${item.company} | ${item.location}`;
         case 'resume':
           return `${item.experience} | ${item.location}`;
+        case 'rental':
+          return `${item.category} | ${item.location} | ${item.price}`;
+        case 'sale':
+          return `${item.category} | ${item.location} | ${item.price}`;
         default:
           return '';
       }
@@ -302,12 +314,14 @@ const Profile = () => {
     const active = posts.active ? 
       posts.active.loads.length + posts.active.trucks.length + 
       posts.active.companies.length + posts.active.jobs.length + 
-      posts.active.resumes.length : 0;
+      posts.active.resumes.length + 
+      (posts.active.rentals?.length || 0) + (posts.active.sales?.length || 0) : 0;
     
     const inactive = posts.inactive ? 
       posts.inactive.loads.length + posts.inactive.trucks.length + 
       posts.inactive.companies.length + posts.inactive.jobs.length + 
-      posts.inactive.resumes.length : 0;
+      posts.inactive.resumes.length +
+      (posts.inactive.rentals?.length || 0) + (posts.inactive.sales?.length || 0) : 0;
     
     return { active, inactive };
   };
@@ -489,6 +503,24 @@ const Profile = () => {
                       {posts[postsFilter].resumes.map(item => renderPostItem(item, 'resume'))}
                     </div>
                   </div>
+
+                  {posts[postsFilter].rentals && posts[postsFilter].rentals.length > 0 && (
+                    <div className="posts-category">
+                      <h2>租赁信息 ({posts[postsFilter].rentals.length})</h2>
+                      <div className="posts-list">
+                        {posts[postsFilter].rentals.map(item => renderPostItem(item, 'rental'))}
+                      </div>
+                    </div>
+                  )}
+
+                  {posts[postsFilter].sales && posts[postsFilter].sales.length > 0 && (
+                    <div className="posts-category">
+                      <h2>出售信息 ({posts[postsFilter].sales.length})</h2>
+                      <div className="posts-list">
+                        {posts[postsFilter].sales.map(item => renderPostItem(item, 'sale'))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
