@@ -172,6 +172,52 @@ const auth = async (req, res, next) => {
 
     const token = authHeader.substring(7); // 移除 'Bearer ' 前缀
     
+    // 🔧 Mock模式支持（本地开发）
+    if (token === 'mock-jwt-token-for-development') {
+      console.log('🔧 Mock模式 - 使用Mock用户');
+      
+      try {
+        // 从数据库获取Mock用户
+        const mockUser = await db('users')
+          .where('email', 'dev@ewltl.com')
+          .first();
+        
+        if (mockUser) {
+          req.user = {
+            id: mockUser.id,
+            userId: mockUser.id,
+            email: mockUser.email,
+            username: mockUser.email,
+            userType: 'shipper',
+            first_name: mockUser.first_name,
+            last_name: mockUser.last_name,
+            phone_number: mockUser.phone,
+            credits: mockUser.credits || 9999,
+            given_name: mockUser.first_name,
+            family_name: mockUser.last_name,
+            // 员工系统相关字段
+            isEmployee: mockUser.is_employee || false,
+            employeeRole: mockUser.employee_role || null,
+            employeeId: mockUser.employee_id || null
+          };
+          console.log('✅ Mock用户认证成功:', mockUser.email, '角色:', mockUser.employee_role);
+          return next();
+        } else {
+          console.error('❌ Mock用户不存在');
+          return res.status(401).json({ 
+            success: false, 
+            message: 'Mock用户未配置，请运行数据库导入脚本' 
+          });
+        }
+      } catch (error) {
+        console.error('❌ Mock认证失败:', error);
+        return res.status(401).json({ 
+          success: false, 
+          message: '认证失败' 
+        });
+      }
+    }
+    
     try {
       // 验证Cognito token
       const payload = await verifyCognitoToken(token);
@@ -260,6 +306,40 @@ const optionalAuth = async (req, res, next) => {
     }
 
     const token = authHeader.substring(7);
+    
+    // 🔧 Mock模式支持（本地开发）
+    if (token === 'mock-jwt-token-for-development') {
+      console.log('🔧 可选认证：Mock模式');
+      
+      try {
+        const mockUser = await db('users')
+          .where('email', 'dev@ewltl.com')
+          .first();
+        
+        if (mockUser) {
+          req.user = {
+            id: mockUser.id,
+            userId: mockUser.id,
+            email: mockUser.email,
+            username: mockUser.email,
+            userType: 'shipper',
+            first_name: mockUser.first_name,
+            last_name: mockUser.last_name,
+            phone_number: mockUser.phone,
+            credits: mockUser.credits || 9999,
+            // 员工系统相关字段
+            isEmployee: mockUser.is_employee || false,
+            employeeRole: mockUser.employee_role || null,
+            employeeId: mockUser.employee_id || null
+          };
+          return next();
+        }
+      } catch (error) {
+        console.error('❌ 可选认证：Mock用户获取失败:', error);
+      }
+      req.user = null;
+      return next();
+    }
     
     try {
       const payload = await verifyCognitoToken(token);
