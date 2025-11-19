@@ -1,0 +1,20 @@
+                                       Table "public.employee_order_comments"
+   Column    |           Type           | Collation | Nullable |                       Default                       
+-------------+--------------------------+-----------+----------+-----------------------------------------------------
+ id          | integer                  |           | not null | nextval('employee_order_comments_id_seq'::regclass)
+ order_id    | integer                  |           | not null | 
+ user_id     | integer                  |           | not null | 
+ comment     | text                     |           | not null | 
+ is_internal | boolean                  |           | not null | true
+ attachments | json                     |           |          | 
+ is_deleted  | boolean                  |           | not null | false
+ created_at  | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at  | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "employee_order_comments_pkey" PRIMARY KEY, btree (id)
+    "employee_order_comments_order_id_created_at_index" btree (order_id, created_at)
+    "employee_order_comments_user_id_index" btree (user_id)
+Foreign-key constraints:
+    "employee_order_comments_order_id_foreign" FOREIGN KEY (order_id) REFERENCES employee_orders(id) ON DELETE CASCADE
+    "employee_order_comments_user_id_foreign" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+

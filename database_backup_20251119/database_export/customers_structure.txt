@@ -1,0 +1,18 @@
+                                            Table "public.customers"
+      Column       |            Type             | Collation | Nullable |                Default                
+-------------------+-----------------------------+-----------+----------+---------------------------------------
+ id                | integer                     |           | not null | nextval('customers_id_seq'::regclass)
+ company_name      | character varying(255)      |           | not null | 
+ wechat_group_name | character varying(255)      |           |          | 
+ contact_person    | character varying(100)      |           |          | 
+ contact_phone     | character varying(50)       |           |          | 
+ contact_email     | character varying(255)      |           |          | 
+ notes             | text                        |           |          | 
+ created_by        | integer                     |           |          | 
+ created_at        | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at        | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "customers_pkey" PRIMARY KEY, btree (id)
+    "idx_customers_company_name" btree (company_name)
+    "idx_customers_wechat_group" btree (wechat_group_name)
+

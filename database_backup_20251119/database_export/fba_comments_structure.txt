@@ -1,0 +1,27 @@
+                                           Table "public.fba_comments"
+     Column      |            Type             | Collation | Nullable |                 Default                  
+-----------------+-----------------------------+-----------+----------+------------------------------------------
+ id              | integer                     |           | not null | nextval('fba_comments_id_seq'::regclass)
+ fba_location_id | character varying(20)       |           | not null | 
+ user_id         | integer                     |           | not null | 
+ parent_id       | integer                     |           |          | 
+ content         | text                        |           | not null | 
+ is_deleted      | boolean                     |           |          | false
+ created_at      | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+ updated_at      | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "fba_comments_pkey" PRIMARY KEY, btree (id)
+    "idx_fba_comments_created" btree (created_at)
+    "idx_fba_comments_deleted" btree (is_deleted)
+    "idx_fba_comments_location" btree (fba_location_id)
+    "idx_fba_comments_parent" btree (parent_id)
+    "idx_fba_comments_user" btree (user_id)
+Foreign-key constraints:
+    "fba_comments_fba_location_id_fkey" FOREIGN KEY (fba_location_id) REFERENCES fba_locations(code)
+    "fba_comments_parent_id_fkey" FOREIGN KEY (parent_id) REFERENCES fba_comments(id)
+    "fba_comments_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id)
+Referenced by:
+    TABLE "fba_comment_likes" CONSTRAINT "fba_comment_likes_comment_id_fkey" FOREIGN KEY (comment_id) REFERENCES fba_comments(id)
+    TABLE "fba_comments" CONSTRAINT "fba_comments_parent_id_fkey" FOREIGN KEY (parent_id) REFERENCES fba_comments(id)
+    TABLE "fba_media_files" CONSTRAINT "fba_media_files_comment_id_fkey" FOREIGN KEY (comment_id) REFERENCES fba_comments(id)
+

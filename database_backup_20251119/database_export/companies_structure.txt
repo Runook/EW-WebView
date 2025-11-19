@@ -1,0 +1,43 @@
+                                         Table "public.companies"
+     Column     |           Type           | Collation | Nullable |                Default                
+----------------+--------------------------+-----------+----------+---------------------------------------
+ id             | integer                  |           | not null | nextval('companies_id_seq'::regclass)
+ user_id        | integer                  |           |          | 
+ name           | character varying(500)   |           | not null | 
+ description    | text                     |           | not null | 
+ category       | character varying(100)   |           | not null | 
+ subcategory    | character varying(100)   |           | not null | 
+ phone          | character varying(50)    |           | not null | 
+ email          | character varying(255)   |           | not null | 
+ address        | character varying(500)   |           | not null | 
+ website        | character varying(255)   |           |          | 
+ verified       | boolean                  |           | not null | false
+ is_active      | boolean                  |           | not null | true
+ is_featured    | boolean                  |           | not null | false
+ views          | integer                  |           | not null | 0
+ notes          | text                     |           |          | 
+ services       | json                     |           |          | 
+ business_hours | json                     |           |          | 
+ created_at     | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at     | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ status         | text                     |           | not null | 'active'::text
+ is_premium     | boolean                  |           | not null | false
+ views_count    | integer                  |           | not null | 0
+ last_refreshed | timestamp with time zone |           |          | 
+Indexes:
+    "companies_pkey" PRIMARY KEY, btree (id)
+    "companies_category_index" btree (category)
+    "companies_created_at_index" btree (created_at)
+    "companies_is_active_index" btree (is_active)
+    "companies_is_featured_index" btree (is_featured)
+    "companies_is_premium_created_at_index" btree (is_premium, created_at)
+    "companies_name_index" btree (name)
+    "companies_status_is_active_index" btree (status, is_active)
+    "companies_subcategory_index" btree (subcategory)
+    "companies_user_id_index" btree (user_id)
+    "companies_verified_index" btree (verified)
+Check constraints:
+    "companies_status_check" CHECK (status = ANY (ARRAY['active'::text, 'inactive'::text, 'pending'::text]))
+Foreign-key constraints:
+    "companies_user_id_foreign" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+

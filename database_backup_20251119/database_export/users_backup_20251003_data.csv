@@ -1,0 +1,4 @@
+id,email,password,first_name,last_name,phone,user_type,company_name,company_type,address,city,state,zip_code,business_license,mc_number,dot_number,is_active,is_verified,last_login_at,created_at,updated_at,credits,total_credits_earned,total_credits_spent,cognito_sub
+22,14686498-d081-705f-6ca3-dca641ca7eeb,,"","","",shipper,,,,,,,,,,t,f,2025-09-19 16:08:22.06+00,2025-09-05 18:21:14.279928+00,2025-09-05 18:21:14.279928+00,840,1100,260,14686498-d081-705f-6ca3-dca641ca7eeb
+24,44c884d8-8001-7023-6e5a-a77f8cbec527,,"","","",shipper,,,,,,,,,,t,f,2025-10-03 15:40:19.02+00,2025-10-03 15:29:11.086039+00,2025-10-03 15:29:11.086039+00,600,600,0,44c884d8-8001-7023-6e5a-a77f8cbec527
+20,44682418-d0b1-70da-1da2-db4bbf9f7e4f,,"","","",shipper,,,,,,,,,,t,f,2025-09-04 14:08:26.524+00,2025-09-04 14:06:20.694257+00,2025-09-04 14:06:20.694257+00,540,600,60,44682418-d0b1-70da-1da2-db4bbf9f7e4f

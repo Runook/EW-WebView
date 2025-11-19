@@ -1,0 +1,51 @@
+                                            Table "public.land_trucks"
+        Column         |           Type           | Collation | Nullable |                 Default                 
+-----------------------+--------------------------+-----------+----------+-----------------------------------------
+ id                    | integer                  |           | not null | nextval('land_trucks_id_seq'::regclass)
+ user_id               | integer                  |           | not null | 
+ current_location      | character varying(500)   |           | not null | 
+ preferred_destination | character varying(500)   |           |          | 
+ preferred_origin      | character varying(500)   |           |          | 
+ available_date        | date                     |           | not null | 
+ truck_type            | character varying(255)   |           | not null | 
+ equipment             | character varying(255)   |           |          | 
+ capacity              | character varying(100)   |           | not null | 
+ length                | character varying(100)   |           |          | 
+ volume                | character varying(100)   |           |          | 
+ truck_features        | character varying(500)   |           |          | 
+ driver_license        | character varying(100)   |           |          | 
+ service_type          | text                     |           | not null | 
+ rate_range            | character varying(100)   |           |          | 
+ rate                  | character varying(100)   |           |          | 
+ company_name          | character varying(255)   |           |          | 
+ contact_name          | character varying(100)   |           |          | 
+ contact_phone         | character varying(50)    |           |          | 
+ contact_email         | character varying(255)   |           |          | 
+ ewid                  | character varying(100)   |           |          | 
+ notes                 | text                     |           |          | 
+ rating                | numeric(3,2)             |           | not null | '0'::numeric
+ is_active             | boolean                  |           | not null | true
+ created_at            | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at            | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ status                | text                     |           | not null | 'active'::text
+ is_premium            | boolean                  |           | not null | false
+ views_count           | integer                  |           | not null | 0
+ last_refreshed        | timestamp with time zone |           |          | 
+Indexes:
+    "land_trucks_pkey" PRIMARY KEY, btree (id)
+    "land_trucks_available_date_index" btree (available_date)
+    "land_trucks_current_location_index" btree (current_location)
+    "land_trucks_ewid_index" btree (ewid)
+    "land_trucks_ewid_unique" UNIQUE CONSTRAINT, btree (ewid)
+    "land_trucks_is_active_index" btree (is_active)
+    "land_trucks_is_premium_created_at_index" btree (is_premium, created_at)
+    "land_trucks_preferred_destination_index" btree (preferred_destination)
+    "land_trucks_service_type_index" btree (service_type)
+    "land_trucks_status_is_active_index" btree (status, is_active)
+    "land_trucks_user_id_index" btree (user_id)
+Check constraints:
+    "land_trucks_service_type_check" CHECK (service_type = ANY (ARRAY['FTL'::text, 'LTL'::text]))
+    "land_trucks_status_check" CHECK (status = ANY (ARRAY['active'::text, 'inactive'::text, 'completed'::text, 'cancelled'::text]))
+Foreign-key constraints:
+    "land_trucks_user_id_foreign" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+

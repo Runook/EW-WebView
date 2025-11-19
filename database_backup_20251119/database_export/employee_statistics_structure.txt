@@ -1,0 +1,20 @@
+                                          Table "public.employee_statistics"
+      Column      |           Type           | Collation | Nullable |                     Default                     
+------------------+--------------------------+-----------+----------+-------------------------------------------------
+ id               | integer                  |           | not null | nextval('employee_statistics_id_seq'::regclass)
+ employee_id      | integer                  |           | not null | 
+ stat_date        | date                     |           | not null | 
+ orders_created   | integer                  |           | not null | 0
+ orders_completed | integer                  |           | not null | 0
+ orders_cancelled | integer                  |           | not null | 0
+ total_revenue    | numeric(12,2)            |           |          | '0'::numeric
+ created_at       | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at       | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "employee_statistics_pkey" PRIMARY KEY, btree (id)
+    "employee_statistics_employee_id_stat_date_index" btree (employee_id, stat_date)
+    "employee_statistics_employee_id_stat_date_unique" UNIQUE CONSTRAINT, btree (employee_id, stat_date)
+    "employee_statistics_stat_date_index" btree (stat_date)
+Foreign-key constraints:
+    "employee_statistics_employee_id_foreign" FOREIGN KEY (employee_id) REFERENCES users(id) ON DELETE CASCADE
+

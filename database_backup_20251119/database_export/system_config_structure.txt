@@ -1,0 +1,17 @@
+                                        Table "public.system_config"
+    Column    |           Type           | Collation | Nullable |                  Default                  
+--------------+--------------------------+-----------+----------+-------------------------------------------
+ id           | integer                  |           | not null | nextval('system_config_id_seq'::regclass)
+ config_key   | character varying(100)   |           | not null | 
+ config_value | text                     |           | not null | 
+ description  | character varying(500)   |           |          | 
+ data_type    | text                     |           |          | 'string'::text
+ created_at   | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at   | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "system_config_pkey" PRIMARY KEY, btree (id)
+    "system_config_config_key_index" btree (config_key)
+    "system_config_config_key_unique" UNIQUE CONSTRAINT, btree (config_key)
+Check constraints:
+    "system_config_data_type_check" CHECK (data_type = ANY (ARRAY['string'::text, 'number'::text, 'boolean'::text, 'json'::text]))
+

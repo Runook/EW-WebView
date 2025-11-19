@@ -1,0 +1,23 @@
+                                         Table "public.user_credits_log"
+     Column     |           Type           | Collation | Nullable |                   Default                    
+----------------+--------------------------+-----------+----------+----------------------------------------------
+ id             | integer                  |           | not null | nextval('user_credits_log_id_seq'::regclass)
+ user_id        | integer                  |           | not null | 
+ type           | text                     |           | not null | 
+ amount         | integer                  |           | not null | 
+ balance_after  | integer                  |           | not null | 
+ description    | character varying(500)   |           |          | 
+ reference_type | character varying(50)    |           |          | 
+ reference_id   | integer                  |           |          | 
+ created_at     | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at     | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "user_credits_log_pkey" PRIMARY KEY, btree (id)
+    "user_credits_log_reference_type_reference_id_index" btree (reference_type, reference_id)
+    "user_credits_log_type_index" btree (type)
+    "user_credits_log_user_id_created_at_index" btree (user_id, created_at)
+Check constraints:
+    "user_credits_log_type_check" CHECK (type = ANY (ARRAY['earn'::text, 'spend'::text, 'refund'::text, 'admin_adjust'::text]))
+Foreign-key constraints:
+    "user_credits_log_user_id_foreign" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+

@@ -1,0 +1,15 @@
+                                        Table "public.fba_media_files"
+   Column   |            Type             | Collation | Nullable |                   Default                   
+------------+-----------------------------+-----------+----------+---------------------------------------------
+ id         | integer                     |           | not null | nextval('fba_media_files_id_seq'::regclass)
+ comment_id | integer                     |           | not null | 
+ file_name  | character varying(255)      |           | not null | 
+ file_url   | character varying(500)      |           | not null | 
+ file_type  | character varying(100)      |           | not null | 
+ file_size  | integer                     |           |          | 
+ created_at | timestamp without time zone |           |          | CURRENT_TIMESTAMP
+Indexes:
+    "fba_media_files_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "fba_media_files_comment_id_fkey" FOREIGN KEY (comment_id) REFERENCES fba_comments(id)
+

@@ -1,0 +1,55 @@
+                                            Table "public.land_loads"
+        Column        |           Type           | Collation | Nullable |                Default                 
+----------------------+--------------------------+-----------+----------+----------------------------------------
+ id                   | integer                  |           | not null | nextval('land_loads_id_seq'::regclass)
+ user_id              | integer                  |           | not null | 
+ origin               | character varying(500)   |           | not null | 
+ destination          | character varying(500)   |           | not null | 
+ origin_display       | character varying(500)   |           |          | 
+ destination_display  | character varying(500)   |           |          | 
+ distance_info        | json                     |           |          | 
+ pickup_date          | date                     |           | not null | 
+ delivery_date        | date                     |           |          | 
+ weight               | character varying(100)   |           | not null | 
+ commodity            | character varying(255)   |           |          | 
+ cargo_value          | character varying(100)   |           |          | 
+ pallets              | integer                  |           |          | 
+ freight_class        | character varying(50)    |           |          | 
+ service_type         | text                     |           | not null | 
+ truck_type           | character varying(255)   |           |          | 
+ equipment            | character varying(255)   |           |          | 
+ rate                 | character varying(100)   |           |          | 
+ max_rate             | character varying(100)   |           |          | 
+ company_name         | character varying(255)   |           |          | 
+ contact_phone        | character varying(50)    |           |          | 
+ contact_email        | character varying(255)   |           |          | 
+ ewid                 | character varying(100)   |           |          | 
+ shipping_number      | character varying(255)   |           |          | 
+ notes                | text                     |           |          | 
+ special_requirements | text                     |           |          | 
+ rating               | numeric(3,2)             |           | not null | '0'::numeric
+ is_active            | boolean                  |           | not null | true
+ created_at           | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at           | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ status               | text                     |           | not null | 'active'::text
+ is_premium           | boolean                  |           | not null | false
+ views_count          | integer                  |           | not null | 0
+ last_refreshed       | timestamp with time zone |           |          | 
+Indexes:
+    "land_loads_pkey" PRIMARY KEY, btree (id)
+    "land_loads_destination_index" btree (destination)
+    "land_loads_ewid_index" btree (ewid)
+    "land_loads_ewid_unique" UNIQUE CONSTRAINT, btree (ewid)
+    "land_loads_is_active_index" btree (is_active)
+    "land_loads_is_premium_created_at_index" btree (is_premium, created_at)
+    "land_loads_origin_index" btree (origin)
+    "land_loads_pickup_date_index" btree (pickup_date)
+    "land_loads_service_type_index" btree (service_type)
+    "land_loads_status_is_active_index" btree (status, is_active)
+    "land_loads_user_id_index" btree (user_id)
+Check constraints:
+    "land_loads_service_type_check" CHECK (service_type = ANY (ARRAY['FTL'::text, 'LTL'::text]))
+    "land_loads_status_check" CHECK (status = ANY (ARRAY['active'::text, 'inactive'::text, 'completed'::text, 'cancelled'::text]))
+Foreign-key constraints:
+    "land_loads_user_id_foreign" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+

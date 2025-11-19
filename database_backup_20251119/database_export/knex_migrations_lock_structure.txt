@@ -1,0 +1,8 @@
+                               Table "public.knex_migrations_lock"
+  Column   |  Type   | Collation | Nullable |                       Default                       
+-----------+---------+-----------+----------+-----------------------------------------------------
+ index     | integer |           | not null | nextval('knex_migrations_lock_index_seq'::regclass)
+ is_locked | integer |           |          | 
+Indexes:
+    "knex_migrations_lock_pkey" PRIMARY KEY, btree (index)
+

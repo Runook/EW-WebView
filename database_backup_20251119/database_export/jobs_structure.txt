@@ -1,0 +1,39 @@
+                                         Table "public.jobs"
+     Column     |           Type           | Collation | Nullable |             Default              
+----------------+--------------------------+-----------+----------+----------------------------------
+ id             | integer                  |           | not null | nextval('jobs_id_seq'::regclass)
+ user_id        | integer                  |           |          | 
+ title          | character varying(255)   |           | not null | 
+ category       | character varying(100)   |           | not null | 
+ company        | character varying(255)   |           | not null | 
+ location       | character varying(100)   |           | not null | 
+ salary         | character varying(100)   |           | not null | 
+ work_type      | character varying(50)    |           | not null | 
+ experience     | character varying(50)    |           | not null | 
+ description    | text                     |           | not null | 
+ contact_phone  | character varying(50)    |           |          | 
+ contact_email  | character varying(255)   |           |          | 
+ contact_person | character varying(100)   |           |          | 
+ views          | integer                  |           | not null | 0
+ is_active      | boolean                  |           | not null | true
+ is_featured    | boolean                  |           | not null | false
+ created_at     | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at     | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ status         | text                     |           | not null | 'active'::text
+ is_premium     | boolean                  |           | not null | false
+ views_count    | integer                  |           | not null | 0
+ last_refreshed | timestamp with time zone |           |          | 
+Indexes:
+    "jobs_pkey" PRIMARY KEY, btree (id)
+    "jobs_category_index" btree (category)
+    "jobs_created_at_index" btree (created_at)
+    "jobs_is_active_index" btree (is_active)
+    "jobs_is_premium_created_at_index" btree (is_premium, created_at)
+    "jobs_location_index" btree (location)
+    "jobs_status_is_active_index" btree (status, is_active)
+    "jobs_work_type_index" btree (work_type)
+Check constraints:
+    "jobs_status_check" CHECK (status = ANY (ARRAY['active'::text, 'inactive'::text, 'filled'::text, 'cancelled'::text]))
+Foreign-key constraints:
+    "jobs_user_id_foreign" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+

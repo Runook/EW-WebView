@@ -1,0 +1,19 @@
+                                         Table "public.employee_permissions"
+     Column      |           Type           | Collation | Nullable |                     Default                      
+-----------------+--------------------------+-----------+----------+--------------------------------------------------
+ id              | integer                  |           | not null | nextval('employee_permissions_id_seq'::regclass)
+ permission_key  | character varying(100)   |           | not null | 
+ permission_name | character varying(200)   |           | not null | 
+ description     | character varying(500)   |           |          | 
+ category        | text                     |           | not null | 
+ created_at      | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at      | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "employee_permissions_pkey" PRIMARY KEY, btree (id)
+    "employee_permissions_category_index" btree (category)
+    "employee_permissions_permission_key_unique" UNIQUE CONSTRAINT, btree (permission_key)
+Check constraints:
+    "employee_permissions_category_check" CHECK (category = ANY (ARRAY['order'::text, 'customer'::text, 'employee'::text, 'report'::text, 'system'::text]))
+Referenced by:
+    TABLE "employee_role_permissions" CONSTRAINT "employee_role_permissions_permission_id_foreign" FOREIGN KEY (permission_id) REFERENCES employee_permissions(id) ON DELETE CASCADE
+

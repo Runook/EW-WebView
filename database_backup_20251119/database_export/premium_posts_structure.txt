@@ -1,0 +1,26 @@
+                                        Table "public.premium_posts"
+    Column    |           Type           | Collation | Nullable |                  Default                  
+--------------+--------------------------+-----------+----------+-------------------------------------------
+ id           | integer                  |           | not null | nextval('premium_posts_id_seq'::regclass)
+ user_id      | integer                  |           | not null | 
+ post_type    | text                     |           | not null | 
+ post_id      | integer                  |           | not null | 
+ premium_type | text                     |           | not null | 
+ credits_cost | integer                  |           | not null | 
+ start_time   | timestamp with time zone |           | not null | 
+ end_time     | timestamp with time zone |           | not null | 
+ is_active    | boolean                  |           | not null | true
+ created_at   | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+ updated_at   | timestamp with time zone |           | not null | CURRENT_TIMESTAMP
+Indexes:
+    "premium_posts_pkey" PRIMARY KEY, btree (id)
+    "premium_posts_end_time_index" btree (end_time)
+    "premium_posts_post_type_post_id_index" btree (post_type, post_id)
+    "premium_posts_premium_type_is_active_index" btree (premium_type, is_active)
+    "unique_premium_post" UNIQUE CONSTRAINT, btree (post_type, post_id, premium_type, start_time)
+Check constraints:
+    "premium_posts_post_type_check" CHECK (post_type = ANY (ARRAY['load'::text, 'truck'::text, 'company'::text, 'job'::text, 'resume'::text]))
+    "premium_posts_premium_type_check" CHECK (premium_type = ANY (ARRAY['top'::text, 'highlight'::text, 'urgent'::text]))
+Foreign-key constraints:
+    "premium_posts_user_id_foreign" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
