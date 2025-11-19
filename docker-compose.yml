@@ -1,9 +1,32 @@
 services:
+  # PostgreSQL 数据库 - 包含在 Docker 中，无需本地安装
+  postgres:
+    image: postgres:17-alpine
+    container_name: ewlogistics-postgres
+    environment:
+      - POSTGRES_DB=ewlogistics
+      - POSTGRES_USER=ewadmin
+      - POSTGRES_PASSWORD=ewlogistics2024
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database_backup_20251119/database_export:/docker-entrypoint-initdb.d/backup:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ewadmin -d ewlogistics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # 后端API服务
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: ewlogistics-backend
     ports:
       - "5001:5001"
     environment:
@@ -11,11 +34,11 @@ services:
       - ENV_MODE=${ENV_MODE:-local}
       - AUTH_MODE=${AUTH_MODE:-mock}
       - PORT=5001
-      - DB_HOST=host.docker.internal  # 连接到宿主机的本地PostgreSQL
+      - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=ew_logistics
-      - DB_USER=ew-josh
-      - DB_PASSWORD=
+      - DB_NAME=ewlogistics
+      - DB_USER=ewadmin
+      - DB_PASSWORD=ewlogistics2024
       - JWT_SECRET=dev-secret-key-change-in-production
       - FRONTEND_URL=http://localhost:3000
       - MOCK_USER_ID=${MOCK_USER_ID:-1}
@@ -24,6 +47,9 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - app-network
     restart: unless-stopped
@@ -33,22 +59,26 @@ services:
     build:
       context: ./employee-service
       dockerfile: Dockerfile
+    container_name: ewlogistics-employee-service
     ports:
       - "3001:3001"
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=3001
-      - DB_HOST=host.docker.internal  # 连接到宿主机的本地PostgreSQL
+      - DB_HOST=postgres
       - DB_PORT=5432
-      - DB_NAME=ew_logistics
-      - DB_USER=ew-josh
-      - DB_PASSWORD=
+      - DB_NAME=ewlogistics
+      - DB_USER=ewadmin
+      - DB_PASSWORD=ewlogistics2024
       - COGNITO_REGION=us-east-1
       - COGNITO_USER_POOL_ID=us-east-1_HU9W7uLQA
       - CORS_ORIGIN=http://localhost:3000
     volumes:
       - ./employee-service:/app
       - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - app-network
     restart: unless-stopped
@@ -58,6 +88,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: ewlogistics-frontend
     ports:
       - "3000:3000"
     environment:
@@ -76,24 +107,10 @@ services:
       - app-network
     restart: unless-stopped
 
-  # PostgreSQL数据库 (注释掉，使用本地数据库)
-  # postgres:
-  #   image: postgres:15-alpine
-  #   environment:
-  #     - POSTGRES_DB=ew_logistics
-  #     - POSTGRES_USER=postgres
-  #     - POSTGRES_PASSWORD=password
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   networks:
-  #     - app-network
-  #   restart: unless-stopped
-
   # Redis (可选，用于缓存)
   redis:
     image: redis:7-alpine
+    container_name: ewlogistics-redis
     ports:
       - "6379:6379"
     volumes:
