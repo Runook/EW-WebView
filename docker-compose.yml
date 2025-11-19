@@ -11,10 +11,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # 自动初始化脚本（首次启动时执行）
-      - ./database_backup_20251119/database_export/init-database.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
-      - ./database_backup_20251119/database_export/complete_database_dump.sql:/docker-entrypoint-initdb.d/complete_database_dump.sql:ro
-      - ./database_backup_20251119/database_export:/docker-entrypoint-initdb.d/csv_data:ro
     networks:
       - app-network
     restart: unless-stopped

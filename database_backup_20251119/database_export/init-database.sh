@@ -7,12 +7,12 @@ echo "🚀 开始初始化 EW Logistics 数据库..."
 echo "✅ 数据库 ewlogistics 已创建"
 
 # 检查是否需要导入表结构
-if [ -f /docker-entrypoint-initdb.d/complete_database_dump.sql ]; then
-    echo "📋 导入数据库表结构..."
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" < /docker-entrypoint-initdb.d/complete_database_dump.sql
-    echo "✅ 表结构导入完成"
+if [ -f /docker-entrypoint-initdb.d/create_full_schema.sql ]; then
+    echo "📋 导入数据库结构（序列 + 表）..."
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" < /docker-entrypoint-initdb.d/create_full_schema.sql
+    echo "✅ 数据库结构导入完成"
 else
-    echo "⚠️  未找到表结构文件，跳过..."
+    echo "⚠️  未找到结构文件，跳过..."
 fi
 
 # 导入数据（CSV文件）
