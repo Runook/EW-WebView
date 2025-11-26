@@ -172,7 +172,7 @@ const auth = async (req, res, next) => {
 
     const token = authHeader.substring(7); // 移除 'Bearer ' 前缀
     
-    // 🔧 Mock模式支持（本地开发）
+    //  Mock模式支持（本地开发）
     if (token === 'mock-jwt-token-for-development') {
       console.log('🔧 Mock模式 - 使用Mock用户');
       
@@ -307,7 +307,7 @@ const optionalAuth = async (req, res, next) => {
 
     const token = authHeader.substring(7);
     
-    // 🔧 Mock模式支持（本地开发）
+    // Mock模式支持（本地开发）
     if (token === 'mock-jwt-token-for-development') {
       console.log('🔧 可选认证：Mock模式');
       
