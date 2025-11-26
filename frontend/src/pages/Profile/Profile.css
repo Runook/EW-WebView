@@ -201,6 +201,170 @@
   gap: 0.5rem;
 }
 
+/* ===== Quote卡片样式 (类似货源板) ===== */
+.quote-card-item {
+  background: white;
+  border: 1px solid #e5e5e7;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.quote-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #34C759;
+}
+
+.quote-card-item.inactive {
+  background: #f8f8f8;
+  opacity: 0.7;
+}
+
+.quote-card-item.premium {
+  border-color: #ff9800;
+  background: #fff9f0;
+}
+
+.quote-card-main {
+  display: grid;
+  grid-template-columns: 130px 1fr 100px 120px 140px 80px 150px;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.quote-service-type span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.quote-ftl-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.quote-route {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #333;
+  min-width: 0;
+}
+
+.quote-route svg {
+  color: #999;
+  flex-shrink: 0;
+}
+
+.quote-origin,
+.quote-destination {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quote-weight,
+.quote-date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.quote-date-text {
+  font-size: 0.85rem;
+}
+
+.quote-publication-date {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #888;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+.quote-publication-text {
+  font-style: italic;
+  letter-spacing: 0.25px;
+}
+
+.quote-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.quote-action-btn {
+  padding: 0.4rem 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  color: #666;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.quote-action-btn:hover {
+  border-color: #34C759;
+  color: #34C759;
+  background: #e8f5e8;
+}
+
+.quote-action-btn.active {
+  border-color: #34C759;
+  color: #34C759;
+  background: #e8f5e8;
+}
+
+.quote-action-btn.inactive {
+  border-color: #999;
+  color: #999;
+}
+
+.quote-action-btn.delete:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+  background: #ffebee;
+}
+
+/* 响应式 Quote 卡片 */
+@media (max-width: 1200px) {
+  .quote-card-main {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .quote-service-type,
+  .quote-route,
+  .quote-weight,
+  .quote-date,
+  .quote-publication-date {
+    justify-self: start;
+  }
+
+  .quote-actions {
+    justify-self: stretch;
+    justify-content: space-between;
+  }
+}
+
 /* ===== 单行紧凑发布项目样式 ===== */
 .post-item {
   background: white;

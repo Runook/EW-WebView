@@ -19,7 +19,12 @@ import {
   RefreshCw,
   Zap,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Package,
+  ArrowRight,
+  Scale,
+  Clock,
+  Calendar
 } from 'lucide-react';
 import { apiServices, handleApiError, apiClient } from '../../utils/apiClient';
 import './Profile.css';
@@ -201,14 +206,75 @@ const Profile = () => {
     }
   };
 
-  // 渲染发布项目 - 单行紧凑版本
+  // 渲染发布项目 - 使用货源板样式的卡片
   const renderPostItem = (item, type) => {
+    if (type === 'load') {
+      return (
+        <div key={`${type}-${item.id}`} className={`quote-card-item ${item.status} ${item.is_premium ? 'premium' : ''}`}>
+          <div className="quote-card-main">
+            {/* 服务类型标识 */}
+            <div className="quote-service-type">
+              <span className="quote-ftl-badge">
+                <Package size={16} />
+                整车 FTL
+              </span>
+            </div>
+            
+            {/* 运输路线 */}
+            <div className="quote-route">
+              <span className="quote-origin">{item.origin}</span>
+              <ArrowRight size={16} />
+              <span className="quote-destination">{item.destination}</span>
+            </div>
+
+            {/* 货物重量 */}
+            <div className="quote-weight">
+              <Scale size={14} />
+              {item.weight}
+            </div>
+            
+            {/* 取货日期 */}
+            <div className="quote-date">
+              <Calendar size={14} />
+              <span className="quote-date-text">
+                {item.pickup_date ? 
+                  new Date(item.pickup_date).toLocaleDateString() 
+                  : '未知日期'}
+              </span>
+            </div>
+            
+            {/* 发布时间 */}
+            <div className="quote-publication-date">
+              <Clock size={14} />
+              <span className="quote-publication-text">
+                {new Date(item.created_at).toLocaleDateString()}
+              </span>
+            </div>
+
+            {/* 操作按钮 */}
+            <div className="quote-actions">
+              <button
+                className={`quote-action-btn ${item.status}`}
+                onClick={() => togglePostStatus(type, item.id, item.status)}
+                title={item.status === 'active' ? '点击下架' : '点击上架'}
+              >
+                {item.status === 'active' ? '上架' : '下架'}
+              </button>
+              <button
+                className="quote-action-btn delete"
+                onClick={() => deletePost(type, item.id)}
+                title="删除"
+              >
+                删除
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     const getTitle = () => {
       switch (type) {
-        case 'load':
-          return `${item.origin} → ${item.destination}`;
-        case 'truck':
-          return `${item.current_location} → ${item.preferred_destination || '全国各地'}`;
         case 'company':
           return item.name;
         case 'job':
@@ -226,10 +292,6 @@ const Profile = () => {
 
     const getSubtitle = () => {
       switch (type) {
-        case 'load':
-          return `${item.service_type || item.serviceType} | ${item.weight}`;
-        case 'truck':
-          return `${item.service_type || item.serviceType} | ${item.truck_type || item.truckType}`;
         case 'company':
           return item.category;
         case 'job':
@@ -284,18 +346,17 @@ const Profile = () => {
     );
   };
 
-  // 获取总计数
   const getTotalCounts = () => {
     if (!posts) return { active: 0, inactive: 0 };
     
     const active = posts.active ? 
-      posts.active.loads.length + posts.active.trucks.length + 
+      posts.active.loads.length + 
       posts.active.companies.length + posts.active.jobs.length + 
       posts.active.resumes.length + 
       (posts.active.rentals?.length || 0) + (posts.active.sales?.length || 0) : 0;
     
     const inactive = posts.inactive ? 
-      posts.inactive.loads.length + posts.inactive.trucks.length + 
+      posts.inactive.loads.length + 
       posts.inactive.companies.length + posts.inactive.jobs.length + 
       posts.inactive.resumes.length +
       (posts.inactive.rentals?.length || 0) + (posts.inactive.sales?.length || 0) : 0;
@@ -359,8 +420,7 @@ const Profile = () => {
                 <div className="activity-list">
                   {posts && posts.active && (
                     <>
-                      {posts.active.loads.slice(0, 2).map(item => renderPostItem(item, 'load'))}
-                      {posts.active.trucks.slice(0, 2).map(item => renderPostItem(item, 'truck'))}
+                      {posts.active.loads.slice(0, 3).map(item => renderPostItem(item, 'load'))}
                       {posts.active.companies.slice(0, 2).map(item => renderPostItem(item, 'company'))}
                     </>
                   )}
@@ -409,13 +469,7 @@ const Profile = () => {
                       className={`category-item ${postsCategoryFilter === 'loads' ? 'active' : ''}`}
                       onClick={() => setPostsCategoryFilter('loads')}
                     >
-                      货源 ({posts[postsFilter].loads.length})
-                    </button>
-                    <button
-                      className={`category-item ${postsCategoryFilter === 'trucks' ? 'active' : ''}`}
-                      onClick={() => setPostsCategoryFilter('trucks')}
-                    >
-                      车源 ({posts[postsFilter].trucks.length})
+                      已保存的Quote ({posts[postsFilter].loads.length})
                     </button>
                     <button
                       className={`category-item ${postsCategoryFilter === 'companies' ? 'active' : ''}`}
@@ -458,12 +512,6 @@ const Profile = () => {
                     {(postsCategoryFilter === 'all' || postsCategoryFilter === 'loads') && (
                       <div className="posts-list">
                         {posts[postsFilter].loads.map(item => renderPostItem(item, 'load'))}
-                      </div>
-                    )}
-
-                    {(postsCategoryFilter === 'all' || postsCategoryFilter === 'trucks') && (
-                      <div className="posts-list">
-                        {posts[postsFilter].trucks.map(item => renderPostItem(item, 'truck'))}
                       </div>
                     )}
 

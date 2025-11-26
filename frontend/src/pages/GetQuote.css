@@ -1,0 +1,2400 @@
+/* GetQuote 页面样式 */
+.get-quote-page {
+  min-height: 100vh;
+  background: #f8f9fa;
+  padding: 2rem 1rem;
+}
+
+.get-quote-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+/* Header 区域 */
+.page-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  background: white;
+  padding: 3rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 紧凑版 Header */
+.page-header.compact {
+  padding: 1.5rem 2rem;
+  margin-bottom: 2rem;
+}
+
+.header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #34C759, #30D158);
+  border-radius: 20px;
+  margin-bottom: 1.5rem;
+  color: white;
+}
+
+/* 小尺寸图标 */
+.header-icon.small {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 1rem;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 1rem;
+}
+
+/* 小尺寸标题 */
+.page-title.small {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.page-description {
+  font-size: 1.1rem;
+  color: #6e6e73;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* 表单样式 */
+.quote-form {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+}
+
+/* 简化的页面标题 */
+.page-title-simple {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #34C759;
+}
+
+.page-title-simple h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.form-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e5e5e7;
+}
+
+.form-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.form-section h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 1.5rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: #1d1d1f;
+  font-size: 0.95rem;
+}
+
+.form-group .required {
+  color: #dc2626;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #34C759;
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+/* 运输类型选择 */
+.service-type-selection {
+  display: grid;
+  gap: 1rem;
+}
+
+.service-type-option {
+  display: block;
+  cursor: pointer;
+  border: 2px solid #e5e5e7;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.2s ease;
+  background: white;
+}
+
+.service-type-option:hover {
+  border-color: #34C759;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.service-type-option.selected {
+  border-color: #34C759;
+  background: #e8f5e8;
+}
+
+.service-type-option input[type="radio"] {
+  display: none;
+}
+
+.service-type-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.service-type-content svg {
+  color: #34C759;
+  flex-shrink: 0;
+}
+
+.service-type-content strong {
+  display: block;
+  font-size: 1.2rem;
+  margin-bottom: 0.25rem;
+  color: #1d1d1f;
+}
+
+.service-type-content p {
+  color: #6e6e73;
+  margin: 0.25rem 0;
+  font-size: 0.95rem;
+}
+
+.service-type-content small {
+  color: #999;
+  font-size: 0.85rem;
+}
+
+/* 单位转换输入 */
+.dimension-input-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.dimension-input-group input {
+  flex: 1;
+}
+
+.conversion-input {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.conversion-input input {
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.unit-label {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* 路线查看区域 */
+.route-section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.route-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #34C759;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.route-btn:hover {
+  background: #2ecc71;
+  transform: translateY(-1px);
+}
+
+.route-description {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.distance-calculating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.loading-spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #34C759;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.distance-info {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e5e7;
+}
+
+.distance-summary {
+  display: flex;
+  gap: 2rem;
+  font-size: 0.95rem;
+}
+
+.distance-summary span {
+  color: #1d1d1f;
+}
+
+.distance-summary strong {
+  color: #34C759;
+  margin-right: 0.5rem;
+}
+
+/* 表单操作按钮 */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e5e7;
+  flex-wrap: wrap;
+}
+
+.form-actions button {
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.form-actions button[type="submit"] {
+  background: #34C759;
+  color: white;
+}
+
+.form-actions button[type="submit"]:hover:not(:disabled) {
+  background: #2ecc71;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+}
+
+.form-actions button[type="submit"]:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.form-actions button[type="button"] {
+  background: white;
+  color: #666;
+  border: 2px solid #ddd !important;
+}
+
+.form-actions button[type="button"]:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #34C759 !important;
+  color: #34C759;
+}
+
+.form-actions .btn-secondary {
+  border: 2px solid #e5e5e7;
+}
+
+.form-actions .btn-primary {
+  background: #007bff;
+}
+
+.form-actions .btn-primary:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+/* ====== LTL货物卡片样式 ====== */
+.cargo-item-card {
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: #f9f9f9;
+}
+
+.cargo-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.cargo-item-title {
+  margin: 0;
+  color: #34C759;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.cargo-basic-grid {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.dimensions-grid {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+/* 计算结果展示样式 */
+.calculation-results {
+  background: linear-gradient(135deg, #e8f5e8, #f0faf0);
+  border: 1px solid #34C759;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.calculation-title {
+  margin: 0 0 0.5rem 0;
+  color: #34C759;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.result-item {
+  background: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.result-item.primary {
+  background: #34C759;
+  color: white;
+}
+
+.result-label {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.result-item.primary .result-label {
+  color: white;
+}
+
+.result-value {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.result-item.primary .result-value {
+  font-weight: 700;
+}
+
+/* 特殊属性样式 */
+.special-attributes {
+  margin-top: 1rem;
+}
+
+.special-attributes h5 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #34C759;
+  cursor: pointer;
+}
+
+.checkbox-item span {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.checkbox-item.hazmat span {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+/* 货物操作按钮样式 */
+.cargo-item-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+  margin-top: 1rem;
+}
+
+.add-cargo-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #34C759;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.add-cargo-btn:hover {
+  background: #2ecc71;
+  transform: translateY(-1px);
+}
+
+.remove-cargo-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.remove-cargo-btn:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+/* 地址类型和服务选择 */
+.location-services-section {
+  margin: 1.5rem 0;
+  padding: 1.25rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.location-services-section h4 {
+  margin: 0 0 1.25rem 0;
+  color: #1d1d1f;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.address-types-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.services-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.service-group {
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #e5e5e7;
+}
+
+.service-group h5 {
+  margin: 0 0 0.75rem 0;
+  color: #34C759;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.service-checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.service-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.service-checkbox:hover {
+  background: #f8f9fa;
+}
+
+.service-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #34C759;
+  cursor: pointer;
+}
+
+.service-checkbox span {
+  font-size: 0.85rem;
+  color: #333;
+}
+
+/* 简化的计算结果 */
+.calculation-results-compact {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #e8f5e8, #f0faf0);
+  border: 1px solid #34C759;
+  border-radius: 6px;
+}
+
+.result-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  background: white;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.result-compact.primary {
+  background: #34C759;
+  color: white;
+  font-weight: 700;
+}
+
+.result-compact .label {
+  color: #666;
+  font-weight: 600;
+}
+
+.result-compact.primary .label {
+  color: white;
+}
+
+.result-compact .value {
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.result-compact.primary .value {
+  color: white;
+}
+
+/* 简化的特殊属性 */
+.special-attributes-compact {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+}
+
+.special-attributes-compact .checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e5e5e7;
+  border-radius: 6px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.special-attributes-compact .checkbox-item:hover {
+  border-color: #34C759;
+  background: #f8f9fa;
+}
+
+.special-attributes-compact .checkbox-item input[type="checkbox"]:checked + span {
+  font-weight: 600;
+}
+
+.special-attributes-compact .checkbox-item:has(input[type="checkbox"]:checked) {
+  border-color: #34C759;
+  background: #e8f5e8;
+}
+
+.special-attributes-compact .checkbox-item.hazmat:has(input[type="checkbox"]:checked) {
+  border-color: #dc2626;
+  background: #fee;
+}
+
+.special-attributes-compact .checkbox-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #34C759;
+  cursor: pointer;
+}
+
+.special-attributes-compact .checkbox-item.hazmat input[type="checkbox"] {
+  accent-color: #dc2626;
+}
+
+.special-attributes-compact .checkbox-item span {
+  font-size: 0.9rem;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+/* NMFC信息提示样式 */
+.nmfc-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+.nmfc-info svg {
+  color: #ff9800;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.nmfc-info p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #856404;
+  line-height: 1.4;
+}
+
+/* ====== LTL报价结果 - 横向表格式布局 ====== */
+
+/* 排序控件 */
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sort-controls label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.sort-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sort-btn {
+  padding: 0.4rem 0.9rem;
+  background: white;
+  border: 1.5px solid #e5e5e7;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+  border-color: #34C759;
+  color: #34C759;
+}
+
+.sort-btn.active {
+  background: #34C759;
+  border-color: #34C759;
+  color: white;
+}
+
+/* 报价卡片容器 */
+.quote-cards-container {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.quote-card-ltl {
+  background: white;
+  border: 1px solid #e5e5e7;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.quote-card-ltl:hover {
+  border-color: #34C759;
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.12);
+  transform: translateY(-1px);
+}
+
+/* 卡片主体 - 横向Grid布局 */
+.quote-card-main {
+  display: grid;
+  grid-template-columns: 40px 200px 180px 180px 120px 180px 120px;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  position: relative;
+}
+
+/* 展开箭头 - 左上角 */
+.btn-expand-corner {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: white;
+  color: #666;
+  border: 1px solid #e5e5e7;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-expand-corner:hover {
+  background: #34C759;
+  color: white;
+  border-color: #34C759;
+  transform: scale(1.1);
+}
+
+/* 第一列：承运商 */
+.col-carrier {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.carrier-logo {
+  width: 80px;
+  height: 40px;
+  object-fit: contain;
+  background: white;
+  padding: 0.35rem;
+  border: 1px solid #e5e5e7;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.carrier-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.carrier-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.view-restrictions {
+  font-size: 0.7rem;
+  color: #007bff;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.view-restrictions:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* 第二列：价格 */
+.col-price {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.service-level-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #34C759;
+  background: #e8f5e8;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  align-self: center;
+}
+
+.price-big {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #1d1d1f;
+  line-height: 1;
+}
+
+.exp-date-small {
+  font-size: 0.65rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* 第三列：服务类型 */
+.col-service {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.service-type-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.transit-time {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+/* 第四列：运输方式 */
+.col-transit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.transit-label {
+  font-size: 0.7rem;
+  color: #666;
+}
+
+.transit-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+/* 第五列：责任险 */
+.col-liability {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.liability-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.help-icon {
+  color: #666;
+  cursor: help;
+}
+
+.liability-amount {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+/* 第六列：预订按钮 */
+.col-action {
+  display: flex;
+  justify-content: center;
+}
+
+.btn-book-it {
+  padding: 0.6rem 1.25rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.btn-book-it:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* 展开的终端信息 */
+.quote-card-expanded {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
+  border-top: 1px solid #e5e5e7;
+  animation: expandAnimation 0.25s ease-out;
+}
+
+@keyframes expandAnimation {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.terminals-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 0.75rem;
+}
+
+.terminal-card {
+  background: white;
+  border: 1px solid #e5e5e7;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.terminal-header {
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, #34C759, #2ecc71);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.terminal-header h4 {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+}
+
+.terminal-body {
+  padding: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.terminal-item {
+  display: flex;
+  padding: 0.35rem 0.45rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.terminal-item .label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #666;
+  min-width: 60px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.terminal-item .label .inline-icon {
+  color: #34C759;
+  width: 12px;
+  height: 12px;
+}
+
+.terminal-item .value {
+  font-size: 0.75rem;
+  color: #1d1d1f;
+  font-weight: 500;
+  word-break: break-word;
+  flex: 1;
+  line-height: 1.3;
+}
+
+/* 响应式设计 */
+@media (max-width: 1400px) {
+  .quote-card-main {
+    grid-template-columns: 35px 180px 160px 160px 100px 160px 100px;
+    gap: 0.75rem;
+  }
+  
+  .carrier-logo {
+    width: 70px;
+    height: 35px;
+  }
+  
+  .price-big {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .quote-card-main {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+  
+  .btn-expand-corner {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+  }
+  
+  .col-carrier,
+  .col-price,
+  .col-service,
+  .col-transit,
+  .col-liability,
+  .col-action {
+    justify-self: start;
+    width: 100%;
+  }
+  
+  .col-carrier {
+    padding-left: 3rem;
+  }
+  
+  .terminals-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .address-types-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .services-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .calculation-results-compact {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .get-quote-page {
+    padding: 1rem 0.5rem;
+  }
+
+  .page-header {
+    padding: 2rem 1rem;
+  }
+
+  .page-header.compact {
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.8rem;
+  }
+
+  .page-title.small {
+    font-size: 1.4rem;
+  }
+
+  .page-description {
+    font-size: 1rem;
+  }
+
+  .quote-form {
+    padding: 1.5rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .service-type-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .distance-summary {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+  
+  .sort-controls {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+  }
+  
+  .sort-buttons {
+    justify-content: stretch;
+  }
+  
+  .sort-btn {
+    flex: 1;
+    text-align: center;
+  }
+  
+  .quote-card-main {
+    padding: 0.75rem;
+  }
+  
+  .col-carrier {
+    padding-left: 2.5rem;
+  }
+  
+  .carrier-logo {
+    width: 60px;
+    height: 30px;
+  }
+  
+  .price-big {
+    font-size: 1.3rem;
+  }
+  
+  .btn-book-it {
+    width: 100%;
+  }
+  
+  .terminal-item {
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.4rem;
+  }
+  
+  .terminal-item .label {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .page-title.small {
+    font-size: 1.2rem;
+  }
+
+  .page-description {
+    font-size: 0.9rem;
+  }
+
+  .dimension-input-group {
+    flex-direction: column;
+  }
+
+  .conversion-input {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .carrier-logo {
+    width: 55px;
+    height: 28px;
+  }
+  
+  .price-big {
+    font-size: 1.2rem;
+  }
+  
+  .btn-expand-corner {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+/* 报价结果区域 */
+.quote-results-section {
+  padding: 2rem 0;
+}
+
+.results-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.results-header .header-icon {
+  display: inline-flex;
+  margin-bottom: 1rem;
+}
+
+.results-header .page-title {
+  margin-bottom: 0.5rem;
+}
+
+.results-header .page-description {
+  margin-bottom: 1.5rem;
+}
+
+.results-header .page-description strong {
+  color: #34C759;
+  font-weight: 600;
+}
+
+.back-to-form-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #f8f9fa;
+  border: 1px solid #e5e5e7;
+  border-radius: 8px;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.back-to-form-btn:hover {
+  background: #e5e5e7;
+  transform: translateX(-2px);
+}
+
+.results-footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: #f8f9fa;
+  border-radius: 12px;
+  margin-top: 2rem;
+}
+
+.disclaimer {
+  font-size: 0.85rem;
+  color: #6e6e73;
+  margin: 0.5rem 0;
+  line-height: 1.6;
+}
+
+/* ====== 进度条样式 ====== */
+.progress-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  position: relative;
+}
+
+.step-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #e5e5e7;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+
+.step.completed .step-circle {
+  background: #34C759;
+  color: white;
+}
+
+.step.active .step-circle {
+  background: #34C759;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(52, 199, 89, 0.2);
+}
+
+.step-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #666;
+}
+
+.step.completed .step-label,
+.step.active .step-label {
+  color: #34C759;
+}
+
+.step-line {
+  width: 200px;
+  height: 2px;
+  background: #e5e5e7;
+  margin: 0 1rem;
+}
+
+.step.completed + .step-line {
+  background: #34C759;
+}
+
+/* ====== Shipment Summary样式 ====== */
+.shipment-summary {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.shipment-summary h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e5e7;
+}
+
+.summary-content {
+  margin-bottom: 1.5rem;
+}
+
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.summary-item label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: 100%;
+  text-align: left;
+}
+
+.summary-item div {
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #1d1d1f;
+  line-height: 1.4;
+  word-break: break-word;
+  width: 100%;
+  text-align: left;
+}
+
+.summary-actions {
+  display: flex;
+  justify-content: flex-start;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e5e7;
+}
+
+/* ====== 承运商选择区域 ====== */
+.carrier-rates-section {
+  margin-bottom: 2rem;
+}
+
+.carrier-rates-section h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 1.5rem;
+}
+
+/* ====== 步骤3：发货详情表单 ====== */
+.shipment-details-form {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.shipment-details-form h2 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 1rem;
+}
+
+.form-intro {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f0faf0;
+  border-left: 4px solid #34C759;
+  border-radius: 6px;
+}
+
+.form-intro strong {
+  color: #34C759;
+}
+
+.details-form .form-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e5e5e7;
+}
+
+.details-form .form-section:last-of-type {
+  border-bottom: none;
+}
+
+.details-form .form-section h3 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin-bottom: 1.5rem;
+}
+
+.section-header-with-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-header-with-action h3 {
+  margin: 0;
+}
+
+.address-book-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.address-book-btn:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.address-actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+}
+
+.save-address-btn-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: white;
+  border: 2px solid #e5e5e7;
+  border-radius: 6px;
+  color: #666;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.save-address-btn-compact:hover {
+  background: #f8f9fa;
+  border-color: #34C759;
+  color: #34C759;
+}
+
+.details-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.date-time-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.date-time-group input[type="date"] {
+  flex: 0 0 auto;
+  width: 150px;
+}
+
+.time-inputs {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.time-inputs input,
+.time-inputs select {
+  padding: 0.35rem 0.15rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  text-align: center;
+  height: 30px;
+  box-sizing: border-box;
+  line-height: 1;
+}
+
+.time-inputs input::placeholder {
+  font-size: 0.65rem;
+  opacity: 0.6;
+}
+
+.time-inputs input {
+  width: 40px !important;
+}
+
+.time-inputs select {
+  width: 45px !important;
+  padding: 0.35rem 0.1rem;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath fill='%23666' d='M4 6L1 3h6z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 2px center;
+  background-size: 6px;
+}
+
+.time-inputs span {
+  font-size: 0.7rem;
+  color: #666;
+  font-weight: 400;
+  margin: 0 2px;
+}
+
+.info-text {
+  color: #666;
+  font-size: 0.95rem;
+  margin: 0;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.terms-text {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.terms-link {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: inline-block;
+  margin-top: 0.5rem;
+}
+
+.terms-link:hover {
+  text-decoration: underline;
+}
+
+.char-count {
+  text-align: right;
+  font-size: 0.8rem;
+  color: #999;
+  margin-top: 0.25rem;
+}
+
+/* 货物详情卡片 */
+.item-detail-card {
+  background: #f8f9fa;
+  border: 2px solid #e5e5e7;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* 只读字段样式 */
+.readonly-field {
+  background: #f0f0f0 !important;
+  color: #666 !important;
+  cursor: not-allowed !important;
+  border-color: #d0d0d0 !important;
+}
+
+.readonly-field:hover {
+  border-color: #d0d0d0 !important;
+}
+
+.form-group input:disabled,
+.form-group input[readonly] {
+  background: #f0f0f0;
+  color: #666;
+  cursor: not-allowed;
+  border-color: #d0d0d0;
+}
+
+.item-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.item-detail-header h4 {
+  margin: 0;
+  color: #34C759;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.btn-remove-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.75rem;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-item:hover {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.item-totals {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e5e7;
+}
+
+.total-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.total-item .label {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.total-item .value {
+  font-size: 1.1rem;
+  color: #1d1d1f;
+  font-weight: 700;
+}
+
+.btn-secondary {
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid #e5e5e7;
+  background: white;
+  color: #666;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #34C759;
+  color: #34C759;
+}
+
+.btn-primary {
+  padding: 0.875rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: #34C759;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2ecc71;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ====== 地址簿弹窗样式 ====== */
+.address-book-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.address-book-modal {
+  background: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 2px solid #e5e5e7;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1d1d1f;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.close-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.close-btn:hover {
+  background: #e5e5e7;
+  color: #1d1d1f;
+  transform: rotate(90deg);
+}
+
+.modal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #e5e5e7;
+  background: #f8f9fa;
+}
+
+.modal-search {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.modal-search svg {
+  color: #666;
+  flex-shrink: 0;
+}
+
+.modal-search input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #e5e5e7;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.modal-search input:focus {
+  outline: none;
+  border-color: #34C759;
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.1);
+}
+
+.btn-add-address {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: #34C759;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-add-address:hover {
+  background: #2ecc71;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+}
+
+/* 添加地址表单 */
+.add-address-form {
+  padding: 1rem 2rem;
+  background: #f0faf0;
+  border-bottom: 2px solid #e5e5e7;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+.add-address-form h3 {
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #34C759;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.form-group-small {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.form-group-small.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group-small label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-group-small input {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.form-group-small input:focus {
+  outline: none;
+  border-color: #34C759;
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.1);
+}
+
+.form-actions-inline {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #ddd;
+}
+
+.btn-cancel {
+  padding: 0.5rem 1.25rem;
+  background: white;
+  color: #666;
+  border: 2px solid #e5e5e7;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: #f8f9fa;
+  border-color: #34C759;
+  color: #34C759;
+}
+
+.btn-save {
+  padding: 0.5rem 1.25rem;
+  background: #34C759;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-save:hover {
+  background: #2ecc71;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem 2rem;
+}
+
+.address-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.address-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.address-card {
+  background: #f8f9fa;
+  border: 2px solid #e5e5e7;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  position: relative;
+  min-height: 80px;
+}
+
+.address-card:hover {
+  border-color: #34C759;
+  background: #e8f5e8;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(52, 199, 89, 0.12);
+}
+
+.address-card-content {
+  padding: 0.75rem;
+  cursor: pointer;
+}
+
+.address-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.4rem;
+}
+
+.address-card-header h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  flex: 1;
+}
+
+.address-type-badge {
+  padding: 0.15rem 0.5rem;
+  background: #007bff;
+  color: white;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.address-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.address-line {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #666;
+  line-height: 1.3;
+  display: flex;
+  align-items: flex-start;
+}
+
+.address-line strong {
+  color: #1d1d1f;
+  font-weight: 600;
+  margin-right: 0.35rem;
+  min-width: 45px;
+  font-size: 0.7rem;
+}
+
+.btn-delete-address {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.address-card:hover .btn-delete-address {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.btn-delete-address:hover {
+  background: #b91c1c;
+  transform: scale(1.1);
+}
+
+.btn-delete-address svg {
+  width: 12px;
+  height: 12px;
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #999;
+}
+
+.no-results p {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.modal-footer {
+  padding: 1rem 2rem;
+  border-top: 1px solid #e5e5e7;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .address-book-modal {
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    padding: 1rem 1.5rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .modal-toolbar {
+    flex-direction: column;
+    padding: 0.75rem 1.5rem;
+  }
+
+  .btn-add-address {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .modal-body {
+    padding: 1rem 1.5rem;
+  }
+
+  .add-address-form {
+    padding: 1rem 1.5rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .address-card {
+    flex-direction: column;
+  }
+
+  .btn-delete-address {
+    width: 100%;
+    height: 40px;
+  }
+
+  .section-header-with-action {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .section-header-with-action h3 {
+    margin-bottom: 0;
+  }
+
+  .address-book-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .item-totals {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+/* 响应式 - 进度条和Summary */
+@media (max-width: 768px) {
+  .progress-steps {
+    padding: 1.5rem 1rem;
+  }
+  
+  .step-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .step-line {
+    width: 80px;
+    margin: 0 0.5rem;
+  }
+  
+  .step-label {
+    font-size: 0.75rem;
+  }
+  
+  .shipment-summary {
+    padding: 1.5rem;
+  }
+  
+  .summary-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .details-form .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .step-circle {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+  
+  .step-line {
+    width: 40px;
+  }
+  
+  .step-label {
+    font-size: 0.7rem;
+  }
+  
+  .summary-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .shipment-summary h2 {
+    font-size: 1.1rem;
+  }
+  
+  .calculation-results-compact {
+    flex-direction: column;
+  }
+  
+  .special-attributes-compact {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+
