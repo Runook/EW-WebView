@@ -181,14 +181,20 @@
   display: flex;
   align-items: center;
   gap: var(--gap-sm);
-  padding: var(--gap-md) var(--gap-xl);
+  padding: var(--gap-sm) var(--gap-lg);
   border-radius: var(--radius-md);
   font-weight: 600;
   transition: all 0.3s ease;
+  background: var(--primary-green);
+  color: var(--bg-white);
+  border: none;
+  cursor: pointer;
+  font-size: var(--font-md);
 }
 
 .post-btn:hover {
-  transform: translateY(-2px);
+  background: var(--secondary-green);
+  transform: translateY(-1px);
 }
 
 /* 发布按钮颜色联动样式 */

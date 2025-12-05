@@ -19,7 +19,12 @@ import {
   RefreshCw,
   Zap,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Package,
+  ArrowRight,
+  Scale,
+  Clock,
+  Calendar
 } from 'lucide-react';
 import { apiServices, handleApiError, apiClient } from '../../utils/apiClient';
 import './Profile.css';
@@ -32,6 +37,7 @@ const Profile = () => {
   
   const [activeTab, setActiveTab] = useState('overview');
   const [postsFilter, setPostsFilter] = useState('active'); // 'active' 或 'inactive'
+  const [postsCategoryFilter, setPostsCategoryFilter] = useState('all'); // 类别筛选
   const [credits, setCredits] = useState(null);
   const [posts, setPosts] = useState(null);
   const [creditHistory, setCreditHistory] = useState([]);
@@ -200,14 +206,75 @@ const Profile = () => {
     }
   };
 
-  // 渲染发布项目
+  // 渲染发布项目 - 使用货源板样式的卡片
   const renderPostItem = (item, type) => {
+    if (type === 'load') {
+      return (
+        <div key={`${type}-${item.id}`} className={`quote-card-item ${item.status} ${item.is_premium ? 'premium' : ''}`}>
+          <div className="quote-card-main">
+            {/* 服务类型标识 */}
+            <div className="quote-service-type">
+              <span className="quote-ftl-badge">
+                <Package size={16} />
+                整车 FTL
+              </span>
+            </div>
+            
+            {/* 运输路线 */}
+            <div className="quote-route">
+              <span className="quote-origin">{item.origin}</span>
+              <ArrowRight size={16} />
+              <span className="quote-destination">{item.destination}</span>
+            </div>
+
+            {/* 货物重量 */}
+            <div className="quote-weight">
+              <Scale size={14} />
+              {item.weight}
+            </div>
+            
+            {/* 取货日期 */}
+            <div className="quote-date">
+              <Calendar size={14} />
+              <span className="quote-date-text">
+                {item.pickup_date ? 
+                  new Date(item.pickup_date).toLocaleDateString() 
+                  : '未知日期'}
+              </span>
+            </div>
+            
+            {/* 发布时间 */}
+            <div className="quote-publication-date">
+              <Clock size={14} />
+              <span className="quote-publication-text">
+                {new Date(item.created_at).toLocaleDateString()}
+              </span>
+            </div>
+
+            {/* 操作按钮 */}
+            <div className="quote-actions">
+              <button
+                className={`quote-action-btn ${item.status}`}
+                onClick={() => togglePostStatus(type, item.id, item.status)}
+                title={item.status === 'active' ? '点击下架' : '点击上架'}
+              >
+                {item.status === 'active' ? '上架' : '下架'}
+              </button>
+              <button
+                className="quote-action-btn delete"
+                onClick={() => deletePost(type, item.id)}
+                title="删除"
+              >
+                删除
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     const getTitle = () => {
       switch (type) {
-        case 'load':
-          return `${item.origin} → ${item.destination}`;
-        case 'truck':
-          return `${item.current_location} → ${item.preferred_destination || '全国各地'}`;
         case 'company':
           return item.name;
         case 'job':
@@ -225,10 +292,6 @@ const Profile = () => {
 
     const getSubtitle = () => {
       switch (type) {
-        case 'load':
-          return `${item.service_type || item.serviceType} | ${item.weight}`;
-        case 'truck':
-          return `${item.service_type || item.serviceType} | ${item.truck_type || item.truckType}`;
         case 'company':
           return item.category;
         case 'job':
@@ -246,79 +309,54 @@ const Profile = () => {
 
     return (
       <div key={`${type}-${item.id}`} className={`post-item ${item.status} ${item.is_premium ? 'premium' : ''}`}>
-        {/* 高亮背景效果 */}
-        {item.is_premium && item.premium_type === 'highlight' && (
-          <div className="highlight-overlay"></div>
-        )}
-        
-        {/* 置顶标识 */}
-        {item.is_premium && item.premium_type === 'top' && (
-          <div className="top-badge">
-            <Star size={14} />
-            <span>置顶</span>
-          </div>
-        )}
-
         <div className="post-main">
-          <div className="post-header">
+          <div className="post-info">
             <h3 className="post-title">{getTitle()}</h3>
-            <div className="post-actions">
-              <button
-                className="edit-btn"
-                onClick={() => editPost(type, item)}
-                title="编辑"
-              >
-                <Edit size={16} />
-              </button>
-              <button
-                className={`status-btn ${item.status}`}
-                onClick={() => togglePostStatus(type, item.id, item.status)}
-                title={item.status === 'active' ? '点击下架' : '点击上架'}
-              >
-                {item.status === 'active' ? <Eye size={16} /> : <EyeOff size={16} />}
-                {item.status === 'active' ? '上架中' : '已下架'}
-              </button>
-              <button
-                className="delete-btn"
-                onClick={() => deletePost(type, item.id)}
-                title="删除"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-          <p className="post-subtitle">{getSubtitle()}</p>
-          <div className="post-meta">
+            <span className="post-subtitle">{getSubtitle()}</span>
             <span className="post-date">
-              发布于 {new Date(item.created_at).toLocaleDateString()}
+              {new Date(item.created_at).toLocaleDateString()}
             </span>
-            {item.is_premium && item.premium_type === 'highlight' && (
-              <span className="highlight-badge">
-                <Zap size={12} />
-                高亮
-              </span>
-            )}
-            <span className="views-count">
-              浏览 {item.views || item.views_count || 0} 次
-            </span>
+            {item.is_premium && <span className="premium-tag">置顶</span>}
+          </div>
+          <div className="post-actions">
+            <button
+              className="action-btn edit-btn"
+              onClick={() => editPost(type, item)}
+              title="编辑"
+            >
+              编辑
+            </button>
+            <button
+              className={`action-btn status-btn ${item.status}`}
+              onClick={() => togglePostStatus(type, item.id, item.status)}
+              title={item.status === 'active' ? '点击下架' : '点击上架'}
+            >
+              {item.status === 'active' ? '上架' : '下架'}
+            </button>
+            <button
+              className="action-btn delete-btn"
+              onClick={() => deletePost(type, item.id)}
+              title="删除"
+            >
+              删除
+            </button>
           </div>
         </div>
       </div>
     );
   };
 
-  // 获取总计数
   const getTotalCounts = () => {
     if (!posts) return { active: 0, inactive: 0 };
     
     const active = posts.active ? 
-      posts.active.loads.length + posts.active.trucks.length + 
+      posts.active.loads.length + 
       posts.active.companies.length + posts.active.jobs.length + 
       posts.active.resumes.length + 
       (posts.active.rentals?.length || 0) + (posts.active.sales?.length || 0) : 0;
     
     const inactive = posts.inactive ? 
-      posts.inactive.loads.length + posts.inactive.trucks.length + 
+      posts.inactive.loads.length + 
       posts.inactive.companies.length + posts.inactive.jobs.length + 
       posts.inactive.resumes.length +
       (posts.inactive.rentals?.length || 0) + (posts.inactive.sales?.length || 0) : 0;
@@ -342,53 +380,7 @@ const Profile = () => {
   return (
     <div className="profile-page">
       <div className="profile-container">
-        {/* 侧边栏 */}
-        <div className="profile-sidebar">
-          <div className="user-info">
-            <div className="user-avatar">
-              <User size={48} />
-            </div>
-            <h2>我的账户</h2>
-          </div>
-          
-          <nav className="profile-nav">
-            <button
-              className={`nav-item ${activeTab === 'overview' ? 'active' : ''}`}
-              onClick={() => navigate('/profile')}
-            >
-              <TrendingUp size={20} />
-              概览
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'posts' ? 'active' : ''}`}
-              onClick={() => navigate('/profile/posts')}
-            >
-              <FileText size={20} />
-              我的发布
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'credits' ? 'active' : ''}`}
-              onClick={() => {
-                navigate('/profile/credits');
-                if (creditHistory.length === 0) {
-                  fetchCreditHistory();
-                }
-              }}
-            >
-              <Coins size={20} />
-              积分管理
-            </button>
-            <button
-              className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
-              onClick={() => navigate('/profile/settings')}
-            >
-              <Settings size={20} />
-              账户设置
-            </button>
-          </nav>
-        </div>
-
-        {/* 主内容区 */}
+        {/* 主内容区 - 全宽 */}
         <div className="profile-content">
           {/* 概览页面 */}
           {activeTab === 'overview' && (
@@ -428,8 +420,7 @@ const Profile = () => {
                 <div className="activity-list">
                   {posts && posts.active && (
                     <>
-                      {posts.active.loads.slice(0, 2).map(item => renderPostItem(item, 'load'))}
-                      {posts.active.trucks.slice(0, 2).map(item => renderPostItem(item, 'truck'))}
+                      {posts.active.loads.slice(0, 3).map(item => renderPostItem(item, 'load'))}
                       {posts.active.companies.slice(0, 2).map(item => renderPostItem(item, 'company'))}
                     </>
                   )}
@@ -449,78 +440,111 @@ const Profile = () => {
                       className={`filter-tab ${postsFilter === 'active' ? 'active' : ''}`}
                       onClick={() => setPostsFilter('active')}
                     >
-                      <CheckCircle size={16} />
                       上架中 ({totalCounts.active})
                     </button>
                     <button
                       className={`filter-tab ${postsFilter === 'inactive' ? 'active' : ''}`}
                       onClick={() => setPostsFilter('inactive')}
                     >
-                      <AlertCircle size={16} />
                       已下架 ({totalCounts.inactive})
                     </button>
                   </div>
                   <button className="refresh-btn" onClick={fetchUserData}>
-                    <RefreshCw size={16} />
                     刷新
                   </button>
                 </div>
               </div>
 
               {posts && posts[postsFilter] && (
-                <div className="posts-content">
-                  <div className="posts-category">
-                    <h2>货源信息 ({posts[postsFilter].loads.length})</h2>
-                    <div className="posts-list">
-                      {posts[postsFilter].loads.map(item => renderPostItem(item, 'load'))}
-                    </div>
+                <div className="posts-content-wrapper">
+                  {/* 左侧类别菜单 */}
+                  <div className="posts-sidebar">
+                    <button
+                      className={`category-item ${postsCategoryFilter === 'all' ? 'active' : ''}`}
+                      onClick={() => setPostsCategoryFilter('all')}
+                    >
+                      全部
+                    </button>
+                    <button
+                      className={`category-item ${postsCategoryFilter === 'loads' ? 'active' : ''}`}
+                      onClick={() => setPostsCategoryFilter('loads')}
+                    >
+                      已保存的Quote ({posts[postsFilter].loads.length})
+                    </button>
+                    <button
+                      className={`category-item ${postsCategoryFilter === 'companies' ? 'active' : ''}`}
+                      onClick={() => setPostsCategoryFilter('companies')}
+                    >
+                      企业 ({posts[postsFilter].companies.length})
+                    </button>
+                    <button
+                      className={`category-item ${postsCategoryFilter === 'jobs' ? 'active' : ''}`}
+                      onClick={() => setPostsCategoryFilter('jobs')}
+                    >
+                      职位 ({posts[postsFilter].jobs.length})
+                    </button>
+                    <button
+                      className={`category-item ${postsCategoryFilter === 'resumes' ? 'active' : ''}`}
+                      onClick={() => setPostsCategoryFilter('resumes')}
+                    >
+                      简历 ({posts[postsFilter].resumes.length})
+                    </button>
+                    {posts[postsFilter].rentals && posts[postsFilter].rentals.length > 0 && (
+                      <button
+                        className={`category-item ${postsCategoryFilter === 'rentals' ? 'active' : ''}`}
+                        onClick={() => setPostsCategoryFilter('rentals')}
+                      >
+                        租赁 ({posts[postsFilter].rentals.length})
+                      </button>
+                    )}
+                    {posts[postsFilter].sales && posts[postsFilter].sales.length > 0 && (
+                      <button
+                        className={`category-item ${postsCategoryFilter === 'sales' ? 'active' : ''}`}
+                        onClick={() => setPostsCategoryFilter('sales')}
+                      >
+                        出售 ({posts[postsFilter].sales.length})
+                      </button>
+                    )}
                   </div>
 
-                  <div className="posts-category">
-                    <h2>车源信息 ({posts[postsFilter].trucks.length})</h2>
-                    <div className="posts-list">
-                      {posts[postsFilter].trucks.map(item => renderPostItem(item, 'truck'))}
-                    </div>
-                  </div>
+                  {/* 右侧内容区 */}
+                  <div className="posts-content">
+                    {(postsCategoryFilter === 'all' || postsCategoryFilter === 'loads') && (
+                      <div className="posts-list">
+                        {posts[postsFilter].loads.map(item => renderPostItem(item, 'load'))}
+                      </div>
+                    )}
 
-                  <div className="posts-category">
-                    <h2>企业信息 ({posts[postsFilter].companies.length})</h2>
-                    <div className="posts-list">
-                      {posts[postsFilter].companies.map(item => renderPostItem(item, 'company'))}
-                    </div>
-                  </div>
+                    {(postsCategoryFilter === 'all' || postsCategoryFilter === 'companies') && (
+                      <div className="posts-list">
+                        {posts[postsFilter].companies.map(item => renderPostItem(item, 'company'))}
+                      </div>
+                    )}
 
-                  <div className="posts-category">
-                    <h2>职位信息 ({posts[postsFilter].jobs.length})</h2>
-                    <div className="posts-list">
-                      {posts[postsFilter].jobs.map(item => renderPostItem(item, 'job'))}
-                    </div>
-                  </div>
+                    {(postsCategoryFilter === 'all' || postsCategoryFilter === 'jobs') && (
+                      <div className="posts-list">
+                        {posts[postsFilter].jobs.map(item => renderPostItem(item, 'job'))}
+                      </div>
+                    )}
 
-                  <div className="posts-category">
-                    <h2>简历信息 ({posts[postsFilter].resumes.length})</h2>
-                    <div className="posts-list">
-                      {posts[postsFilter].resumes.map(item => renderPostItem(item, 'resume'))}
-                    </div>
-                  </div>
+                    {(postsCategoryFilter === 'all' || postsCategoryFilter === 'resumes') && (
+                      <div className="posts-list">
+                        {posts[postsFilter].resumes.map(item => renderPostItem(item, 'resume'))}
+                      </div>
+                    )}
 
-                  {posts[postsFilter].rentals && posts[postsFilter].rentals.length > 0 && (
-                    <div className="posts-category">
-                      <h2>租赁信息 ({posts[postsFilter].rentals.length})</h2>
+                    {posts[postsFilter].rentals && (postsCategoryFilter === 'all' || postsCategoryFilter === 'rentals') && (
                       <div className="posts-list">
                         {posts[postsFilter].rentals.map(item => renderPostItem(item, 'rental'))}
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {posts[postsFilter].sales && posts[postsFilter].sales.length > 0 && (
-                    <div className="posts-category">
-                      <h2>出售信息 ({posts[postsFilter].sales.length})</h2>
+                    {posts[postsFilter].sales && (postsCategoryFilter === 'all' || postsCategoryFilter === 'sales') && (
                       <div className="posts-list">
                         {posts[postsFilter].sales.map(item => renderPostItem(item, 'sale'))}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               )}
             </div>

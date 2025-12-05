@@ -1,130 +1,37 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
-  Search, 
-  Calendar, 
-  Truck, 
   Package, 
-  Star,
   ArrowRight,
-  Plus,
   Loader2,
   AlertCircle,
   Clock,
   Scale,
-  RotateCcw,
   Info,
-  MapPin, // Import MapPin icon
-  Navigation, // Import Navigation icon
-  ChevronDown, // Import ChevronDown icon
-  Globe // Import Globe icon
+  Calendar
 } from 'lucide-react';
-// import { useLanguage } from '../contexts/LanguageContext';
-import PostLoadModal from '../components/PostLoadModal';
-import PostTruckModal from '../components/PostTruckModal';
-import DetailsModal from '../components/DetailsModal';
-import PremiumPostModal from '../components/PremiumPostModal';
 import { useAuth } from '../contexts/AuthContext';
 import { apiServices, handleApiError } from '../utils/apiClient';
 import { useNotification } from '../components/common/Notification';
 import { apiLogger } from '../utils/logger';
-import { useModal, useLoading } from '../hooks';
+import { useLoading } from '../hooks';
 import './PlatformPage.css';
 import './FreightBoard.css';
-import { loadGoogleMapsScript, reverseGeocode, calculateDistanceBetweenPoints, geocodeAddress } from '../config/googleMaps';
-import { getCoordsFromZip, extractZipCode } from '../utils/zipCodeService'; // Import zip code helpers
 
 /**
- * 陆运信息平台主组件
- * 
- * 功能概述：
- * - 显示货源和车源信息列表
- * - 支持搜索、筛选、排序功能
- * - 提供发布货源/车源的模态框
- * - 支持查看详细信息
- * - 自动生成EWID编号和发布时间显示
- * 
- * 主要状态：
- * - activeTab: 当前标签页 (loads/trucks)
- * - loads/trucks: 数据列表
- * - filters: 筛选条件
- * - searchQuery: 搜索关键词
- * - modal状态: 控制各种模态框显示
- * 
- * 核心功能：
- * - 数据获取 (fetchLoads/fetchTrucks)
- * - 数据筛选和排序 (filterData)
- * - EWID生成 (generateEWID)
- * - 发布时间格式化 (formatPublicationDate)
+ * 陆运信息平台主组件 - 简化版，只显示货源信息
  */
 const FreightBoard = () => {
-  // === 状态管理 ===
-  // 路由相关
-  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
   
-  // 通知和日志系统
   const { success, error: showError, apiError } = useNotification();
   
-  // 基础UI状态
-  const [activeTab, setActiveTab] = useState('loads'); // 当前激活的标签页 ('loads' | 'trucks')
-  const [error, setError] = useState(null); // 错误信息
+  const [error, setError] = useState(null);
+  const [loads, setLoads] = useState([]);
 
-  // 模态框状态 - 使用新的Hook系统
-  const postLoadModal = useModal();
-  const postTruckModal = useModal();
-  const detailsModal = useModal();
-  const premiumModal = useModal();
-  const [selectedItem, setSelectedItem] = useState(null); // 详情模态框中选中的项目
-  const [currentPostType, setCurrentPostType] = useState(null);
-  const [currentFormData, setCurrentFormData] = useState(null);
-  const [fbaDestination, setFbaDestination] = useState(null); // FBA destination data from navigation
-
-  // 加载状态 - 使用新的Hook系统
   const { loading, withLoading } = useLoading(false);
-
-  // 数据状态
-  const [loads, setLoads] = useState([]); // 货源列表
-  const [trucks, setTrucks] = useState([]); // 车源列表
-  const [filterOriginCoords, setFilterOriginCoords] = useState(null); // The coordinates of the filter's starting point.
-  const [isLocating, setIsLocating] = useState(false);
-  const [originDropdownOpen, setOriginDropdownOpen] = useState(false);
-  const [manualOrigin, setManualOrigin] = useState('');
-
-  // 统一的筛选状态管理
-  const [filters, setFilters] = useState({
-    origin: '', // 起始地筛选
-    destination: '', // 目的地筛选
-    serviceType: '', // 服务类型筛选 (FTL/LTL)
-    dateFrom: '', // 开始日期筛选
-    dateTo: '', // 结束日期筛选
-    sortBy: 'date', // 排序方式
-    distance: '' // New distance filter
-  });
-
   const { isAuthenticated } = useAuth();
-
-  // EWID计数器（在实际应用中应该从数据库获取）
-  const [ewidCounter, setEwidCounter] = useState(() => {
-    const saved = localStorage.getItem('ewidCounter');
-    return saved ? parseInt(saved) : 1;
-  });
-
-  // REMOVED the complex enrichDataWithCoordinates function
-
-  // 生成EWID单号 - 从EW000000001开始的顺序编号
-  const generateEWID = () => {
-    const paddedNumber = ewidCounter.toString().padStart(9, '0');
-    const ewid = `EW${paddedNumber}`;
-    
-    // 更新计数器
-    const newCounter = ewidCounter + 1;
-    setEwidCounter(newCounter);
-    localStorage.setItem('ewidCounter', newCounter.toString());
-    
-    return ewid;
-  };
 
   // 格式化发布时间
   const formatPublicationDate = (date) => {
@@ -143,10 +50,8 @@ const FreightBoard = () => {
     }
   };
 
-  // === 数据获取函数 ===
   /**
    * 获取货源数据
-   * @returns {Promise<Array>} 货源列表
    */
   const fetchLoads = useCallback(async () => {
     try {
@@ -160,71 +65,15 @@ const FreightBoard = () => {
   }, [apiError]);
 
   /**
-   * 获取车源数据
-   * @returns {Promise<Array>} 车源列表
-   */
-  const fetchTrucks = useCallback(async () => {
-    try {
-      const result = await apiServices.landFreight.getTrucks();
-      return result.data || [];
-    } catch (error) {
-      apiLogger.error('获取车源信息失败', error);
-      apiError('获取车源信息', error);
-      return [];
-    }
-  }, [apiError]);
-
-  useEffect(() => {
-    loadGoogleMapsScript().catch(error => {
-      showError("无法加载Google地图服务，部分功能可能受限。");
-      console.error("Google Maps Script Error:", error);
-    });
-  }, [showError]);
-  
-  const handleLocateMe = useCallback(async () => {
-    if (!navigator.geolocation) {
-      showError("您的浏览器不支持地理位置功能。");
-      return;
-    }
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const { latitude, longitude } = position.coords;
-      const location = { lat: latitude, lng: longitude };
-      setFilterOriginCoords(location); // Set the coordinates for filtering
-      try {
-        const { locationName } = await reverseGeocode(latitude, longitude);
-        updateFilter('origin', locationName);
-        setManualOrigin(locationName);
-        success(`已定位到: ${locationName}`);
-      } catch (error) {
-        showError("无法获取地址信息，请手动输入。");
-        console.error("Reverse geocoding error:", error);
-      } finally {
-        setIsLocating(false);
-      }
-    }, (error) => {
-      showError("无法获取您的位置，请检查权限设置。");
-      console.error("Geolocation error:", error);
-      setIsLocating(false);
-    });
-  }, [showError, success]);
-
-  // === 组件初始化 ===
-  /**
-   * 组件初始化 - 加载货源和车源数据
+   * 组件初始化 - 加载货源数据
    */
   useEffect(() => {
     const loadData = async () => {
       await withLoading(async () => {
         try {
           setError(null);
-          // 并行加载货源和车源数据 - No longer enriching here
-          const [loadData, truckData] = await Promise.all([
-            fetchLoads(),
-            fetchTrucks()
-          ]);
+          const loadData = await fetchLoads();
           setLoads(loadData);
-          setTrucks(truckData);
         } catch (err) {
           setError('加载数据失败，请稍后重试');
           apiLogger.error('数据加载失败', err);
@@ -234,385 +83,9 @@ const FreightBoard = () => {
     };
 
     loadData();
-  }, [fetchLoads, fetchTrucks, showError, withLoading]);
+  }, [fetchLoads, showError, withLoading]);
 
-  // Handle FBA destination data from navigation
-  useEffect(() => {
-    if (location.state?.openPostModal && location.state?.fbaDestination) {
-      setFbaDestination(location.state.fbaDestination);
-      postLoadModal.open();
-      
-      // Clear the navigation state to prevent reopening on refresh
-      navigate(location.pathname, { replace: true });
-    }
-  }, [location.state, navigate, location.pathname, postLoadModal]);
-
-  // === 筛选和搜索功能 ===
-  /**
-   * 统一的筛选条件更新函数
-   * @param {string} key - 筛选字段名
-   * @param {string} value - 筛选值
-   */
-  const updateFilter = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-
-  /**
-   * 重置所有筛选条件
-   */
-  const resetFilters = () => {
-    setFilters({
-      origin: '',
-      destination: '',
-      serviceType: '',
-      dateFrom: '',
-      dateTo: '',
-      sortBy: 'date'
-    });
-  };
-
-  /**
-   * 改进的数据筛选和排序函数
-   * @param {Array} data - 原始数据数组
-   * @returns {Array} 过滤和排序后的数据
-   */
-  const filterAndSortData = useCallback((data, dataType) => {
-    let filteredData = data.filter(item => {
-      // Distance filter - Simplified and more robust logic
-      if (filterOriginCoords && filters.distance) {
-        // Step 1: Get the address string from the item
-        const address = dataType === 'loads' ? item.origin : (item.currentLocation || item.preferredOrigin);
-        if (!address) return false;
-
-        // Step 2: Extract zip code from the address
-        const zip = extractZipCode(address);
-        if (!zip) return false;
-
-        // Step 3: Get coordinates from our fast local service
-        const itemCoords = getCoordsFromZip(zip);
-        if (!itemCoords) return false;
-
-        // Step 4: Calculate distance and filter
-        const distance = calculateDistanceBetweenPoints(filterOriginCoords, itemCoords);
-        if (distance === null || distance > parseFloat(filters.distance)) {
-          return false;
-        }
-      }
-      
-      // 起始地筛选 (城市或邮编)
-      if (filters.origin) {
-        const originLower = filters.origin.toLowerCase();
-        const originAddresses = [
-          item.origin,
-          item.location,
-          item.preferredOrigin,
-          item.originDisplay
-        ].filter(Boolean);
-        
-        const originMatches = originAddresses.some(address => 
-          address.toLowerCase().includes(originLower)
-        );
-        
-        if (!originMatches) return false;
-      }
-      
-      // 目的地筛选 (城市或邮编)
-      if (filters.destination) {
-        const destLower = filters.destination.toLowerCase();
-        const destAddresses = [
-          item.destination,
-          item.preferredDestination,
-          item.destinationDisplay
-        ].filter(Boolean);
-        
-        const destMatches = destAddresses.some(address => 
-          address.toLowerCase().includes(destLower)
-        );
-        
-        if (!destMatches) return false;
-      }
-      
-      // 服务类型筛选
-      if (filters.serviceType && item.serviceType !== filters.serviceType) {
-        return false;
-      }
-
-      // 日期范围筛选 - 根据数据类型选择正确的日期字段
-      const itemDate = item.pickupDate || item.availableDate || item.postedDate;
-      
-      if (filters.dateFrom && itemDate) {
-        try {
-          if (new Date(itemDate) < new Date(filters.dateFrom)) return false;
-        } catch (e) {
-          console.warn('Invalid date:', itemDate);
-        }
-      }
-      
-      if (filters.dateTo && itemDate) {
-        try {
-          if (new Date(itemDate) > new Date(filters.dateTo)) return false;
-        } catch (e) {
-          console.warn('Invalid date:', itemDate);
-        }
-      }
-
-      return true;
-    });
-
-    // 数据排序 - 保持置顶优先级
-    filteredData.sort((a, b) => {
-      // 1. 首先按置顶优先级排序（置顶在前）
-      const aIsTop = a.premium_type === 'top';
-      const bIsTop = b.premium_type === 'top';
-      
-      if (aIsTop && !bIsTop) return -1;
-      if (!aIsTop && bIsTop) return 1;
-      
-      // 2. 如果都是置顶，按置顶时间倒序（最新置顶在前）
-      if (aIsTop && bIsTop) {
-        const aPremiumDate = new Date(a.premium_created_at || a.premium_end_time || 0);
-        const bPremiumDate = new Date(b.premium_created_at || b.premium_end_time || 0);
-        return bPremiumDate - aPremiumDate;
-      }
-      
-      // 3. 如果都不是置顶，或没有指定排序方式，按用户选择的排序方式排序
-      if (!filters.sortBy) {
-        // 默认按发布时间倒序
-        const aPubDate = new Date(a.publicationDate || a.postedTime || a.pickupDate || a.availableDate || 0);
-        const bPubDate = new Date(b.publicationDate || b.postedTime || b.pickupDate || b.availableDate || 0);
-        return bPubDate - aPubDate;
-      }
-      
-      switch (filters.sortBy) {
-        case 'date':
-          const aDate = new Date(a.pickupDate || a.availableDate || a.postedDate || 0);
-          const bDate = new Date(b.pickupDate || b.availableDate || b.postedDate || 0);
-          return bDate - aDate;
-          
-        case 'publication':
-          const aPubDate = new Date(a.publicationDate || a.postedTime || a.pickupDate || a.availableDate || 0);
-          const bPubDate = new Date(b.publicationDate || b.postedTime || b.pickupDate || b.availableDate || 0);
-          return bPubDate - aPubDate;
-          
-        case 'rate':
-          const aRate = parseFloat((a.rate || a.rateRange || '0').replace(/[^\d.]/g, '')) || 0;
-          const bRate = parseFloat((b.rate || b.rateRange || '0').replace(/[^\d.]/g, '')) || 0;
-          return bRate - aRate;
-          
-        case 'weight':
-          const aWeight = parseFloat((a.weight || a.capacity || '0').replace(/[^\d.]/g, '')) || 0;
-          const bWeight = parseFloat((b.weight || b.capacity || '0').replace(/[^\d.]/g, '')) || 0;
-          return bWeight - aWeight;
-          
-        default:
-          return 0;
-      }
-    });
-
-    return filteredData;
-  }, [filters, filterOriginCoords]);
-
-  // === 事件处理函数 ===
-  /**
-   * 处理发布货源/车源
-   * @param {Object} postData - 发布的数据
-   */
-  // 原始发布处理函数（修改为显示积分模态框）
-  const handlePostSubmit = (postData) => {
-    if (!isAuthenticated) {
-      showError('请先登录再发布');
-      return;
-    }
-    // 确定发布类型
-    const postType = postData.type === 'load' ? 'load' : 'truck';
-    
-    setCurrentFormData(postData);
-    setCurrentPostType(postType);
-    postLoadModal.close();
-    postTruckModal.close();
-    premiumModal.open();
-  };
-
-  // 确认发布函数
-  const handleConfirmPost = async ({ formData, premium }) => {
-    try {
-      // 为数据添加EWID、发布时间和高级功能
-      const enhancedData = {
-        ...formData,
-        ewid: generateEWID(),
-        postedTime: new Date().toISOString(),
-        publicationDate: new Date().toISOString(),
-        premium: premium
-      };
-      // 使用统一的API服务
-      const result = formData.type === 'load' 
-        ? await apiServices.landFreight.createLoad(enhancedData)
-        : await apiServices.landFreight.createTruck(enhancedData);
-
-              if (result.success) {
-        const typeName = formData.type === 'load' ? '货源' : '车源';
-        success(`${typeName}发布成功！已扣除 ${result.creditsSpent} 积分`);
-        
-        // 关闭模态框
-        premiumModal.close();
-        setCurrentFormData(null);
-        setCurrentPostType(null);
-
-        // 重新加载数据以显示最新发布的信息
-        try {
-          const [loadData, truckData] = await Promise.all([
-            fetchLoads(),
-            fetchTrucks()
-          ]);
-          setLoads(loadData);
-          setTrucks(truckData);
-              } catch (reloadError) {
-          apiLogger.error('重新加载数据失败', reloadError);
-          showError('发布成功，但刷新列表失败，请手动刷新页面查看最新数据');
-        }
-      } else {
-        showError(result.message || '发布失败，请重试');
-      }
-    } catch (error) {
-      const errorMsg = handleApiError(error, '发布信息');
-      apiLogger.error('发布失败', error);
-      showError(errorMsg);
-    }
-  };
-
-  // === 计算衍生状态 ===
-  const filteredLoads = useMemo(() => filterAndSortData(loads, 'loads'), [loads, filterAndSortData]);
-  const filteredTrucks = useMemo(() => filterAndSortData(trucks, 'trucks'), [trucks, filterAndSortData]);
-  const hasAppliedFilters = useMemo(() => 
-    filters.origin || filters.destination || 
-    filters.serviceType || filters.dateFrom || filters.dateTo || 
-    filters.sortBy !== 'date' || filters.distance
-  , [filters]);
-
-  const handleOriginSelect = async (type) => {
-    setOriginDropdownOpen(false);
-    if (type === 'current') {
-      if (!navigator.geolocation) {
-        showError("您的浏览器不支持地理位置功能。");
-        return;
-      }
-      setIsLocating(true);
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        const { latitude, longitude } = position.coords;
-        const location = { lat: latitude, lng: longitude };
-        setFilterOriginCoords(location); // Set the coordinates for filtering
-        try {
-          const { locationName } = await reverseGeocode(latitude, longitude);
-          updateFilter('origin', locationName);
-          setManualOrigin(locationName);
-          success(`已定位到: ${locationName}`);
-        } catch (error) {
-          showError("无法获取地址信息，请手动输入。");
-        } finally {
-          setIsLocating(false);
-        }
-      }, (error) => {
-        showError("无法获取您的位置，请检查并开启浏览器定位权限。");
-        setIsLocating(false);
-      });
-    } else if (type === 'all') {
-      updateFilter('origin', '');
-      setManualOrigin('');
-      setFilterOriginCoords(null); // Clear the filter coordinates
-      updateFilter('distance', '');
-    }
-  };
-
-  const handleManualOriginSearch = async () => {
-    setOriginDropdownOpen(false);
-    if (!manualOrigin) {
-      updateFilter('origin', '');
-      setFilterOriginCoords(null);
-      return;
-    }
-
-    updateFilter('origin', manualOrigin);
-    try {
-      // Geocode the manually entered address to get its coordinates for filtering
-      const coords = await geocodeAddress(manualOrigin);
-      setFilterOriginCoords(coords);
-      success(`已将起点设置为: ${coords.formattedAddress || manualOrigin}`);
-    } catch (error) {
-      showError(`无法找到地址 "${manualOrigin}" 的坐标。`);
-      setFilterOriginCoords(null); // Clear coords if geocoding fails
-    }
-  };
-
-  /**
-   * 处理发布货源按钮点击
-   */
-  const handlePostLoadClick = useCallback(() => {
-    if (!isAuthenticated) {
-      showError('请先登录再发布货源信息');
-      return;
-    }
-    postLoadModal.open();
-  }, [isAuthenticated, postLoadModal, showError]);
-
-  /**
-   * 处理发布车源按钮点击
-   */
-  const handlePostTruckClick = useCallback(() => {
-    if (!isAuthenticated) {
-      showError('请先登录再发布车源信息');
-      return;
-    }
-    postTruckModal.open();
-  }, [isAuthenticated, postTruckModal, showError]);
-
-  useEffect(() => {
-    window.addEventListener('openPostLoadModal', handlePostLoadClick);
-    window.addEventListener('openPostTruckModal', handlePostTruckClick);
-
-    return () => {
-      window.removeEventListener('openPostLoadModal', handlePostLoadClick);
-      window.removeEventListener('openPostTruckModal', handlePostTruckClick);
-    };
-  }, [handlePostLoadClick, handlePostTruckClick]);
-
-  // 检查URL参数，自动打开对应的模态框
-  useEffect(() => {
-    const modalParam = searchParams.get('modal');
-    if (modalParam === 'post-load') {
-      // 自动打开货源发布模态框
-      handlePostLoadClick();
-      // 清理URL参数
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.delete('modal');
-      setSearchParams(newSearchParams, { replace: true });
-    } else if (modalParam === 'post-truck') {
-      // 自动打开车源发布模态框
-      handlePostTruckClick();
-      // 清理URL参数
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.delete('modal');
-      setSearchParams(newSearchParams, { replace: true });
-    }
-  }, [searchParams, setSearchParams, handlePostLoadClick, handlePostTruckClick]);
-
-  /**
-   * 处理详情模态框打开
-   * @param {Object} item - 选中的项目
-   */
-  const handleDetailsClick = (item) => {
-    setSelectedItem(item);
-    detailsModal.open();
-  };
-
-  /**
-   * 处理详情模态框关闭
-   */
-  const handleDetailsClose = () => {
-    detailsModal.close();
-    setSelectedItem(null);
-  };
-
-  // === 加载和错误状态渲染 ===
+  // 加载和错误状态渲染
   if (loading) {
     return (
       <div className="freight-board">
@@ -641,447 +114,94 @@ const FreightBoard = () => {
     );
   }
 
-  // === 主组件渲染 ===
   return (
     <div className="platform-page freight-board">
       <div className="container">
         {/* Header */}
         <div className="platform-header">
           <div className="platform-icon">
-            <Truck size={48} />
+            <Package size={48} />
           </div>
-          <h1 className="platform-title">搜索货源车源</h1>
+          <h1 className="platform-title">货源信息</h1>
           <p className="platform-description">
-            货主发布货源信息，承运商发布车源信息，通过智能匹配系统实现高效对接。
+            查看所有已发布的货源信息，了解最新的运输需求
           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="board-tabs">
-          <button 
-            className={`tab ${activeTab === 'loads' ? 'active' : ''}`}
-            onClick={() => setActiveTab('loads')}
-          >
-            <Package size={20} />
-            货源信息
-            {filteredLoads.length > 0 && (
-              <span className="tab-count">{filteredLoads.length}</span>
-            )}
-          </button>
-          <button 
-            className={`tab ${activeTab === 'trucks' ? 'active' : ''}`}
-            onClick={() => setActiveTab('trucks')}
-          >
-            <Truck size={20} />
-            车源信息
-            {filteredTrucks.length > 0 && (
-              <span className="tab-count">{filteredTrucks.length}</span>
-            )}
-          </button>
-        </div>
-
-        {/* Post Buttons */}
-        
-
-        {/* 搜索筛选区域 - 重新设计 */}
-        <div className="search-filter-section">
-          <div className="filters-row">
-            <div className="filter-dropdown-group">
-              <div className="filter-input-group" onClick={() => setOriginDropdownOpen(prev => !prev)}>
-                <input
-                  type="text"
-                  placeholder="选择或输入起始地"
-                  value={filters.origin || '全部地址'}
-                  readOnly
-                  className="filter-input dropdown-input"
-                />
-                <ChevronDown size={16} className={`dropdown-arrow ${originDropdownOpen ? 'open' : ''}`} />
+        {/* 主要内容区域 */}
+        <div className="freight-content">
+          {/* 货源信息列表 */}
+          <div className="freight-list">
+            {loads.length === 0 ? (
+              <div className="empty-state">
+                <Package size={48} />
+                <h3>暂无货源信息</h3>
+                <p>还没有货源信息</p>
               </div>
-              {originDropdownOpen && (
-                <div className="origin-dropdown">
-                  <div className="dropdown-item" onClick={() => handleOriginSelect('current')}>
-                    <MapPin size={16} />
-                    当前地址
-                  </div>
-                  <div className="dropdown-item" onClick={() => handleOriginSelect('all')}>
-                    <Globe size={16} />
-                    全部地址
-                  </div>
-                  <div className="manual-input-item">
-                    <input
-                      type="text"
-                      placeholder="输入城市或邮编后按回车"
-                      value={manualOrigin}
-                      onChange={(e) => setManualOrigin(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleManualOriginSearch()}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                     <button onClick={handleManualOriginSearch} className="manual-search-btn">
-                      <Search size={16} />
+            ) : (
+              loads.map(load => (
+                <div key={load.id} className={`simple-card load-card ${load.serviceType?.toLowerCase()}`}>
+                  <div className="card-main">
+                    {/* 服务类型标识 */}
+                    <div className="service-type">
+                      <span className="ftl-badge">
+                        <Package size={16} />
+                        整车 FTL
+                      </span>
+                    </div>
+                    
+                    {/* 运输路线 */}
+                    <div className="route">
+                      <span className="origin">{load.originDisplay || load.origin}</span>
+                      <ArrowRight size={16} />
+                      <span className="destination">{load.destinationDisplay || load.destination}</span>
+                    </div>
+
+                    {/* 货物重量 */}
+                    <div className="weight">
+                      <Scale size={14} />
+                      {load.weight} lbs
+                    </div>
+                    
+                    {/* 取货日期 */}
+                    <div className="date">
+                      <Calendar size={14} />
+                      <span className="date-text">
+                        {load.pickupDate ? 
+                          load.pickupDate.split('T')[0].slice(5).replace('-', '/') 
+                          : '未知日期'} 取货
+                      </span>
+                    </div>
+                    
+                    {/* 发布时间 */}
+                    <div className="publication-date">
+                      <Clock size={14} />
+                      <span className="publication-text">
+                        {load.publicationDate
+                          ? formatPublicationDate(load.publicationDate)
+                          : (load.postedTime || '未知时间')}
+                      </span>
+                    </div>
+
+                    {/* 详情按钮 */}
+                    <button 
+                      className="details-btn" 
+                      onClick={() => {
+                        showError('详情功能即将推出');
+                      }}
+                    >
+                      <Info size={14} />
+                      详情
                     </button>
                   </div>
                 </div>
-              )}
-            </div>
-            
-            <select
-              value={filters.distance}
-              onChange={(e) => updateFilter('distance', e.target.value)}
-              disabled={!filterOriginCoords}
-              className="filter-input"
-            >
-              <option value="">距离我</option>
-              <option value="50">50 mi</option>
-              <option value="100">100 mi</option>
-              <option value="250">250 mi</option>
-              <option value="500">500 mi</option>
-            </select>
-
-            <input
-              type="text"
-              placeholder="输入目的地城市或邮编"
-              value={filters.destination}
-              onChange={(e) => updateFilter('destination', e.target.value)}
-              className="filter-input"
-            />
-            
-            <select 
-              value={filters.serviceType} 
-              onChange={(e) => updateFilter('serviceType', e.target.value)}
-            >
-              <option value="">全部类型</option>
-              <option value="FTL">整车运输</option>
-              <option value="LTL">零担运输</option>
-            </select>
-
-            <div className="date-range">
-              <input
-                type="date"
-                value={filters.dateFrom}
-                onChange={(e) => updateFilter('dateFrom', e.target.value)}
-                placeholder={activeTab === 'loads' ? "取货开始日期" : "可用开始日期"}
-                title={activeTab === 'loads' ? "取货开始日期" : "可用开始日期"}
-              />
-              <span>-</span>
-              <input
-                type="date"
-                value={filters.dateTo}
-                onChange={(e) => updateFilter('dateTo', e.target.value)}
-                placeholder={activeTab === 'loads' ? "取货结束日期" : "可用结束日期"}
-                title={activeTab === 'loads' ? "取货结束日期" : "可用结束日期"}
-              />
-            </div>
-
-            <select value={filters.sortBy} onChange={(e) => updateFilter('sortBy', e.target.value)}>
-              <option value="date">按取货日期排序</option>
-              <option value="publication">按发布时间排序</option>
-              <option value="rate">按价格排序</option>
-              <option value="weight">按重量排序</option>
-            </select>
-
-            <button className="reset-btn" onClick={resetFilters}>
-              <RotateCcw size={16} />
-              重置
-            </button>
+              ))
+            )}
           </div>
-
-          {/* 活跃筛选标签 */}
-          {hasAppliedFilters && (
-            <div className="active-filters">
-              <span className="results-text">
-                找到 {activeTab === 'loads' ? filteredLoads.length : filteredTrucks.length} 条结果
-              </span>
-              <div className="filter-tags">
-                {filters.origin && (
-                  <span className="filter-tag">
-                    起始地: {filters.origin}
-                    <button onClick={() => updateFilter('origin', '')}>×</button>
-                  </span>
-                )}
-                {filters.destination && (
-                  <span className="filter-tag">
-                    目的地: {filters.destination}
-                    <button onClick={() => updateFilter('destination', '')}>×</button>
-                  </span>
-                )}
-                {filters.serviceType && (
-                  <span className="filter-tag">
-                    类型: {filters.serviceType === 'FTL' ? '整车' : '零担'}
-                    <button onClick={() => updateFilter('serviceType', '')}>×</button>
-                  </span>
-                )}
-                {(filters.dateFrom || filters.dateTo) && (
-                  <span className="filter-tag">
-                    日期: {filters.dateFrom || '不限'} - {filters.dateTo || '不限'}
-                    <button onClick={() => { 
-                      updateFilter('dateFrom', ''); 
-                      updateFilter('dateTo', ''); 
-                    }}>×</button>
-                  </span>
-                )}
-                {filters.sortBy !== 'date' && (
-                  <span className="filter-tag">
-                    排序: {
-                      filters.sortBy === 'publication' ? '发布时间' :
-                      filters.sortBy === 'rate' ? '价格' :
-                      filters.sortBy === 'weight' ? '重量' : '日期'
-                    }
-                    <button onClick={() => updateFilter('sortBy', 'date')}>×</button>
-                  </span>
-                )}
-                {filters.distance && (
-                  <span className="filter-tag">
-                    距离: {filters.distance} mi
-                    <button onClick={() => updateFilter('distance', '')}>×</button>
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* === 主要内容区域 === */}
-        <div className="freight-content">
-          {/* 货源信息列表 */}
-          {activeTab === 'loads' && (
-            <div className="freight-list">
-              {filteredLoads.length === 0 ? (
-                <div className="empty-state">
-                  <Package size={48} />
-                  <h3>暂无货源信息</h3>
-                  <p>还没有符合条件的货源信息</p>
-                </div>
-              ) : (
-                filteredLoads.map(load => (
-                  <div key={load.id} className={`simple-card load-card ${load.serviceType?.toLowerCase()}${load.is_premium ? ' premium-post' : ''}${load.premium_type === 'top' ? ' premium-top' : ''}${load.premium_type === 'highlight' ? ' premium-highlight' : ''}`}>
-                    {/* Premium标识 */}
-                    {load.premium_type === 'top' && (
-                      <div className="premium-badge premium-top-badge">
-                        <Star size={14} fill="currentColor" />
-                        置顶
-                      </div>
-                    )}
-                    {load.premium_type === 'highlight' && (
-                      <div className="premium-overlay"></div>
-                    )}
-                    
-                    {/* 卡片主要信息 */}
-                    <div className="card-main">
-                      {/* 服务类型标识 */}
-                      <div className="service-type">
-                        {load.serviceType === 'FTL' ? (
-                          <span className="ftl-badge">
-                            <Truck size={16} />
-                            整车 FTL
-                          </span>
-                        ) : (
-                          <span className="ltl-badge">
-                            <Package size={16} />
-                            零担 LTL
-                          </span>
-                        )}
-                      </div>
-                      
-                      {/* 运输路线 - 使用格式化地址 */}
-                      <div className="route">
-                        <span className="origin">{load.originDisplay || load.origin}</span>
-                        <ArrowRight size={16} />
-                        <span className="destination">{load.destinationDisplay || load.destination}</span>
-                      </div>
-
-                      {/* LTL特有信息：托盘数量 */}
-                      {load.serviceType === 'LTL' && (
-                        <div className="pallets">
-                          <span>板数: {load.pallets || '未知'}</span>
-                        </div>
-                      )}
-
-                      {/* 货物重量 */}
-                      <div className="weight">
-                        <Scale size={14} />
-                        {load.weight} lbs
-                      </div>
-                      
-                      {/* 取货日期 */}
-<div className="date">
-  <Calendar size={14} />
-  <span className="date-text">
-    {load.pickupDate ? 
-      load.pickupDate.split('T')[0].slice(5).replace('-', '/') 
-      : '未知日期'} 取货
-  </span>
-</div>
-                      
-                      {/* 距离信息 */}
-                      <div className="distance-info">
-                        {load.distanceInfo && (
-                          <span className="distance-badge">
-                            {load.distanceInfo.distance}
-                          </span>
-                        )}
-                      </div>
-                      
-
-                      {/* 发布时间 */}
-                      <div className="publication-date">
-                        <Clock size={14} />
-                        <span className="publication-text">
-                          {load.publicationDate
-                            ? formatPublicationDate(load.publicationDate)
-                            : (load.postedTime || '未知时间')}
-                        </span>
-                      </div>
-
-                      {/* 详情按钮 */}
-                      <button className="details-btn" onClick={() => handleDetailsClick(load)}>
-                        <Info size={14} />
-                        详情
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* 车源信息列表 */}
-          {activeTab === 'trucks' && (
-            <div className="freight-list">
-              {filteredTrucks.length === 0 ? (
-                <div className="empty-state">
-                  <Truck size={48} />
-                  <h3>暂无车源信息</h3>
-                  <p>还没有符合条件的车源信息</p>
-                </div>
-              ) : (
-                filteredTrucks.map(truck => (
-                  <div key={truck.id} className={`simple-card truck-card ${truck.serviceType?.toLowerCase().replace('/', '-')}${truck.is_premium ? ' premium-post' : ''}${truck.premium_type === 'top' ? ' premium-top' : ''}${truck.premium_type === 'highlight' ? ' premium-highlight' : ''}`}>
-                    {/* Premium标识 */}
-                    {truck.premium_type === 'top' && (
-                      <div className="premium-badge premium-top-badge">
-                        <Star size={14} fill="currentColor" />
-                        置顶
-                      </div>
-                    )}
-                    {truck.premium_type === 'highlight' && (
-                      <div className="premium-overlay"></div>
-                    )}
-                    
-                    {/* 卡片主要信息 */}
-                    <div className="card-main">
-                      {/* 服务类型标识 */}
-                      <div className="service-type">
-                        {truck.serviceType === 'FTL' ? (
-                          <span className="ftl-badge">
-                            <Truck size={16} />
-                            整车 FTL
-                          </span>
-                        ) : truck.serviceType === 'LTL' ? (
-                          <span className="ltl-badge">
-                            <Truck size={16} />
-                            零担 LTL
-                          </span>
-                        ) : (
-                          <span className="ftl-ltl-badge">
-                            <Truck size={16} />
-                            FTL/LTL
-                          </span>
-                        )}
-                      </div>
-                      
-                      {/* 运输路线 */}
-                      <div className="route">
-                        <span className="origin">{truck.preferredOrigin || truck.location}</span>
-                        <ArrowRight size={16} />
-                        <span className="destination">{truck.preferredDestination || truck.destination}</span>
-                      </div>
-
-                      {/* 车型 */}
-                      <div className="equipment">
-                        {truck.truckType}
-                      </div>
-                      
-                      {/* 载重能力 */}
-                      <div className="weight">
-                        <Scale size={14} />
-                        {truck.capacity}
-                      </div>
-                      
-                      {/* 可用日期 */}
-                      <div className="date">
-                        <Calendar size={14} />
-                        <span className="date-text">
-                          {truck.availableDate ? 
-                            truck.availableDate.split('T')[0].slice(5).replace('-', '/') 
-                            : '未知日期'} 可用
-                        </span>
-                      </div>
-                      
-                      {/* 发布时间 */}
-                      <div className="publication-date">
-                        <Clock size={14} />
-                        <span className="publication-text">
-                          {truck.publicationDate
-                            ? formatPublicationDate(truck.publicationDate)
-                            : (truck.postedTime || '未知时间')}
-                        </span>
-                      </div>
-
-                      {/* 详情按钮 */}
-                      <button className="details-btn" onClick={() => handleDetailsClick(truck)}>
-                        <Info size={14} />
-                        详情
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
         </div>
       </div>
-
-      {/* === 模态框组件 === */}
-      {/* 发布货源模态框 */}
-      <PostLoadModal 
-        isOpen={postLoadModal.isOpen}
-        onClose={() => {
-          postLoadModal.close();
-          setFbaDestination(null); // Clear FBA destination when closing
-        }}
-        onSubmit={handlePostSubmit}
-        fbaDestination={fbaDestination}
-      />
-      
-      {/* 发布车源模态框 */}
-      <PostTruckModal 
-        isOpen={postTruckModal.isOpen}
-        onClose={postTruckModal.close}
-        onSubmit={handlePostSubmit}
-      />
-
-      {/* 详情查看模态框 */}
-      <DetailsModal 
-        isOpen={detailsModal.isOpen}
-        onClose={handleDetailsClose}
-        item={selectedItem}
-      />
-
-      {/* 积分发布模态框 */}
-      <PremiumPostModal
-        isOpen={premiumModal.isOpen}
-        onClose={() => {
-          premiumModal.close();
-          setCurrentFormData(null);
-          setCurrentPostType(null);
-        }}
-        onConfirm={handleConfirmPost}
-        postType={currentPostType}
-        formData={currentFormData}
-      />
     </div>
   );
 };
 
-export default FreightBoard; 
-
+export default FreightBoard;

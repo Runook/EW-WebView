@@ -582,16 +582,53 @@ const PostLoadModal = ({ isOpen, onClose, onSubmit, fbaDestination }) => {
         })
       ]);
 
-      const submissionData = {
-        ...formData,
-        origin_lat: originCoords ? originCoords.lat : null,
-        origin_lng: originCoords ? originCoords.lng : null,
-        origin_formatted_address: originCoords ? originCoords.formattedAddress : formData.origin,
-        destination_lat: destinationCoords ? destinationCoords.lat : null,
-        destination_lng: destinationCoords ? destinationCoords.lng : null,
-        destination_formatted_address: destinationCoords ? destinationCoords.formattedAddress : formData.destination,
-      };
-      await onSubmit(submissionData);
+      // 根据服务类型处理提交数据
+      if (formData.serviceType === 'LTL') {
+        // LTL: 为每个货物项目创建单独的提交数据
+        for (const item of formData.cargoItems) {
+          const submissionData = {
+            ...formData,
+            type: 'load',
+            weight: item.weight, // 使用当前货物项的重量
+            cargoType: formData.cargoType ? `${formData.cargoType} - ${item.description}` : item.description,
+            pallets: item.pallets,
+            origin_lat: originCoords ? originCoords.lat : null,
+            origin_lng: originCoords ? originCoords.lng : null,
+            origin_formatted_address: originCoords ? originCoords.formattedAddress : formData.origin,
+            destination_lat: destinationCoords ? destinationCoords.lat : null,
+            destination_lng: destinationCoords ? destinationCoords.lng : null,
+            destination_formatted_address: destinationCoords ? destinationCoords.formattedAddress : formData.destination,
+            // 保存货物项的详细信息
+            cargoItemDetails: {
+              description: item.description,
+              weight: item.weight,
+              length: item.length,
+              width: item.width,
+              height: item.height,
+              volume: item.volume,
+              density: item.density,
+              freightClass: item.freightClass,
+              pallets: item.pallets,
+              stackable: item.stackable,
+              fragile: item.fragile,
+              hazmat: item.hazmat
+            }
+          };
+          await onSubmit(submissionData);
+        }
+      } else {
+        // FTL: 单个提交
+        const submissionData = {
+          ...formData,
+          origin_lat: originCoords ? originCoords.lat : null,
+          origin_lng: originCoords ? originCoords.lng : null,
+          origin_formatted_address: originCoords ? originCoords.formattedAddress : formData.origin,
+          destination_lat: destinationCoords ? destinationCoords.lat : null,
+          destination_lng: destinationCoords ? destinationCoords.lng : null,
+          destination_formatted_address: destinationCoords ? destinationCoords.formattedAddress : formData.destination,
+        };
+        await onSubmit(submissionData);
+      }
     } catch (error) {
       console.error('Submission failed after geocoding:', error);
       // The onSubmit function should handle error notifications

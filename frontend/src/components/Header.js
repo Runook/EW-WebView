@@ -83,16 +83,8 @@ const Header = () => {
       label: '陆运服务',
       type: 'dropdown',
       items: [
-        { id: 'post-load', label: '发布货源信息', type: 'button', className: 'submenu-action' },
-        { id: 'post-truck', label: '发布车源信息', type: 'button', className: 'submenu-action' },
-        { 
-          id: 'warehouse',
-          label: '仓库查询',
-          type: 'submenu',
-          items: [
-            { path: '/fba-locations', label: 'FBA 查询' },
-          ]
-        },
+        { path: '/get-quote-ltl', label: '获取LTL报价' },
+        { path: '/fba-locations', label: 'FBA仓库查询' },
       ]
     },
     {
@@ -297,27 +289,6 @@ const Header = () => {
                       onMouseLeave={handleDropdownMenuLeave}
                     >
                       {item.items.map((subItem) => {
-                        if (subItem.type === 'button') {
-                          return (
-                            <button
-                              key={subItem.id}
-                              className={`dropdown-item ${subItem.className || ''}`}
-                                                              onClick={() => {
-                                  if (subItem.id === 'post-load') {
-                                    // 跳转到搜索货源车源页面并带上参数，自动打开货源发布模态框
-                                    navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区?modal=post-load');
-                                  } else if (subItem.id === 'post-truck') {
-                                    // 跳转到搜索货源车源页面并带上参数，自动打开车源发布模态框
-                                    navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区?modal=post-truck');
-                                  }
-                                  setActiveDropdown(null);
-                                }}
-                            >
-                              {subItem.label}
-                            </button>
-                          );
-                        }
-                        
                         // Handle submenu items - 桌面端也改为点击展开
                         if (subItem.type === 'submenu') {
                           return (
@@ -466,28 +437,6 @@ const Header = () => {
                     {activeDropdown === item.id && (
                       <div className="mobile-dropdown-menu">
                         {item.items.map((subItem) => {
-                          if (subItem.type === 'button') {
-                            return (
-                              <button
-                                key={subItem.id}
-                                className={`mobile-dropdown-item ${subItem.className || ''}`}
-                                onClick={() => {
-                                  if (subItem.id === 'post-load') {
-                                    // 跳转到搜索货源车源页面并带上参数，自动打开货源发布模态框
-                                    navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区?modal=post-load');
-                                  } else if (subItem.id === 'post-truck') {
-                                    // 跳转到搜索货源车源页面并带上参数，自动打开车源发布模态框
-                                    navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区?modal=post-truck');
-                                  }
-                                  setActiveDropdown(null);
-                                  setIsMenuOpen(false);
-                                }}
-                              >
-                                {subItem.label}
-                              </button>
-                            );
-                          }
-                          
                           // Handle submenu items in mobile
                           if (subItem.type === 'submenu') {
                             return (

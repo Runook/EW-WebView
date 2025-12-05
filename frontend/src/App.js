@@ -7,6 +7,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import FreightBoard from './pages/FreightBoard';
+import GetQuoteLTL from './pages/GetQuoteLTL';
 import Contact from './pages/Contact';
 import CognitoAuth from './components/CognitoAuth';
 import Register from './pages/Register';
@@ -90,6 +91,7 @@ function App() {
               
               {/* 陆运服务 */}
               <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<FreightBoard />} />
+              <Route path="/get-quote-ltl" element={<GetQuoteLTL />} />
                            
               {/* FBA 仓库查询 */}
               <Route path="/fba-locations" element={<FBALocations />} />

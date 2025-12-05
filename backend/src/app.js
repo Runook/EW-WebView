@@ -229,6 +229,12 @@ app.use('/api/sales', require('./routes/sale'));
 // 文件上传路由
 app.use('/api/upload', require('./routes/upload'));
 
+// Warp Freight API 代理路由 (解决 CORS 问题)
+app.use('/api/warp', require('./routes/warp'));
+
+// RRTS (Roadrunner) Freight API 代理路由
+app.use('/api/rrts', require('./routes/rrts'));
+
 // 临时测试路由
 app.get('/api/fba/test', (req, res) => {
   res.json({ message: 'FBA test route working!' });

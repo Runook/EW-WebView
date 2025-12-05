@@ -39,7 +39,12 @@ cat > backend-td-$TIMESTAMP.json << 'EOL'
       {"name": "RDS_USERNAME", "value": "ewjosh"},
       {"name": "RDS_PASSWORD", "value": "Ew95279527"},
       {"name": "JWT_SECRET", "value": "ew-logistics-jwt-secret-prod-2025"},
-      {"name": "FRONTEND_URL", "value": "https://www.ewltl.com"}
+      {"name": "FRONTEND_URL", "value": "https://www.ewltl.com"},
+      {"name": "WARP_API_KEY", "value": "Fy1ur8h8psNFIkfNBqEdIPR4edGsYcsv/3p6yqGLFQbx7jp89j5lZ38Zg8Zm9gsWLfKrhWiwWBjBY9pcGS/FNc9KuwIDijYbGtWK4jmJJGQ="},
+      {"name": "RRTS_APP_ID", "value": "f850d178-35e2-4c8a-9a92-7a688b37d032"},
+      {"name": "RRTS_API_KEY", "value": "xe0Bo+JC3Ez7AzFci9i5yA=="},
+      {"name": "RRTS_USERNAME", "value": "HomeBay"},
+      {"name": "RRTS_PASSWORD", "value": "@Homebay1234"}
     ],
     "logConfiguration": {
       "logDriver": "awslogs",
