@@ -40,6 +40,11 @@ services:
       - DB_PASSWORD=ewlogistics2024
       - JWT_SECRET=dev-secret-key-change-in-production
       - FRONTEND_URL=http://localhost:3000
+      - WARP_API_KEY=Fy1ur8h8psNFIkfNBqEdIPR4edGsYcsv/3p6yqGLFQbx7jp89j5lZ38Zg8Zm9gsWLfKrhWiwWBjBY9pcGS/FNc9KuwIDijYbGtWK4jmJJGQ=
+      - RRTS_APP_ID=f850d178-35e2-4c8a-9a92-7a688b37d032
+      - RRTS_API_KEY=xe0Bo+JC3Ez7AzFci9i5yA==
+      - RRTS_USERNAME=HomeBay
+      - RRTS_PASSWORD=@Homebay1234
       - MOCK_USER_ID=${MOCK_USER_ID:-1}
       - MOCK_USER_EMAIL=${MOCK_USER_EMAIL:-dev@ewltl.com}
       - MOCK_USER_CREDITS=${MOCK_USER_CREDITS:-9999}

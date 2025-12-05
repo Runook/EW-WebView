@@ -33,6 +33,7 @@ import { apiLogger } from '../utils/logger';
 import ProgressSteps from '../components/ltl/ProgressSteps';
 import ShipmentSummary from '../components/ltl/ShipmentSummary';
 import ShipmentDetailsForm from '../components/ltl/ShipmentDetailsForm';
+import { warpApi } from '../config/warpApi';
 
 const GetQuoteLTL = ({ fbaDestination }) => {
   const navigate = useNavigate();
@@ -558,18 +559,68 @@ const GetQuoteLTL = ({ fbaDestination }) => {
 
     setIsSubmitting(true);
     try {
-      const [originCoords, destinationCoords] = await Promise.all([
-        geocodeUtil(formData.origin).catch(err => {
-          console.error("Geocoding origin failed:", err);
-          return null;
-        }),
-        geocodeUtil(formData.destination).catch(err => {
-          console.error("Geocoding destination failed:", err);
-          return null;
-        })
-      ]);
+      // 从selectedPlaces提取城市、州、邮编信息
+      const extractAddressComponents = (addressComponents) => {
+        let city = '', state = '', zip = '';
+        if (addressComponents) {
+          addressComponents.forEach(component => {
+            const types = component.types;
+            if (types.includes('locality')) city = component.long_name;
+            else if (types.includes('sublocality_level_1') && !city) city = component.long_name;
+            if (types.includes('administrative_area_level_1')) state = component.short_name;
+            if (types.includes('postal_code')) zip = component.long_name;
+          });
+        }
+        return { city, state, zip };
+      };
 
-      // 模拟生成报价结果（后端将来实现）
+      const originComponents = selectedPlaces?.origin?.addressComponents 
+        ? extractAddressComponents(selectedPlaces.origin.addressComponents)
+        : { city: '', state: '', zip: '' };
+
+      const destinationComponents = selectedPlaces?.destination?.addressComponents
+        ? extractAddressComponents(selectedPlaces.destination.addressComponents)
+        : { city: '', state: '', zip: '' };
+
+      // 准备Warp API请求数据
+      const warpQuoteData = {
+        originCity: originComponents.city,
+        originState: originComponents.state,
+        originZip: originComponents.zip,
+        originCountry: 'US',
+        originLocationType: formData.originLocationType,
+        destinationCity: destinationComponents.city,
+        destinationState: destinationComponents.state,
+        destinationZip: destinationComponents.zip,
+        destinationCountry: 'US',
+        destinationLocationType: formData.destinationLocationType,
+        pickupDate: formData.pickupDate,
+        deliveryDate: formData.deliveryDate,
+        items: formData.cargoItems,
+        pickupServices: formData.pickupServices,
+        deliveryServices: formData.deliveryServices
+      };
+
+      console.log('🚚 准备调用Warp API获取LTL报价...', warpQuoteData);
+
+      // 调用Warp API获取真实报价
+      const quotes = await warpApi.getLTLQuote(warpQuoteData);
+      
+      if (quotes && quotes.length > 0) {
+        setQuoteResults(quotes);
+        setShowQuoteResults(true);
+        setCurrentStep(2);
+        success(`成功获取 ${quotes.length} 个承运商报价！`);
+      } else {
+        showError('未找到可用的报价，请检查运输信息或稍后重试');
+      }
+      
+    } catch (error) {
+      console.error('❌ Warp API调用失败:', error);
+      showError('获取报价失败: ' + error.message);
+      
+      // 如果API失败，降级使用Mock数据进行测试
+      console.log('⚠️ 降级使用Mock数据...');
       const mockQuotes = [
         {
           id: 1,
@@ -604,125 +655,11 @@ const GetQuoteLTL = ({ fbaDestination }) => {
             phone: '213-744-0664',
             tollFree: '800-221-6084'
           }
-        },
-        {
-          id: 2,
-          carrier: 'XPO Logistics',
-          logo: 'https://via.placeholder.com/120x50?text=XPO',
-          serviceLevel: 'Standard LTL',
-          price: 894.74,
-          serviceType: '(S) Guaranteed 12 PM',
-          transitDays: '5 Days Guaranteed',
-          transitType: 'Direct',
-          maxLiability: { new: 1742.00, used: 355.00 },
-          expDate: '11/28/2025',
-          pickupTerminal: {
-            name: 'BROOKLYN [XBY]',
-            address1: '1313 GRAND STREET',
-            address2: '',
-            city: 'BROOKLYN',
-            state: 'NY',
-            zip: '11211',
-            country: 'USA',
-            phone: '718-381-3700',
-            tollFree: '800-896-8423'
-          },
-          dropTerminal: {
-            name: 'LOS ANGELES [ULX]',
-            address1: '1955 E WASHINGTON BLVD',
-            address2: '',
-            city: 'LOS ANGELES',
-            state: 'CA',
-            zip: '90021',
-            country: 'USA',
-            phone: '213-744-0664',
-            tollFree: '800-221-6084'
-          }
-        },
-        {
-          id: 3,
-          carrier: 'Central Transport',
-          logo: 'https://via.placeholder.com/120x50?text=Central',
-          serviceLevel: 'Standard LTL',
-          price: 948.75,
-          serviceType: '(S) Standard',
-          transitDays: '6 Days Estimated',
-          transitType: 'Direct',
-          maxLiability: { new: 3374.00, used: 35.50 },
-          expDate: '12/04/2025',
-          pickupTerminal: {
-            name: 'BROOKLYN [BRK]',
-            address1: '1400 AVENUE X',
-            address2: '',
-            city: 'BROOKLYN',
-            state: 'NY',
-            zip: '11235',
-            country: 'USA',
-            phone: '718-646-7200',
-            tollFree: '800-547-7487'
-          },
-          dropTerminal: {
-            name: 'LOS ANGELES [LAX]',
-            address1: '2150 SOUTH SANTA FE AVE',
-            address2: '',
-            city: 'LOS ANGELES',
-            state: 'CA',
-            zip: '90058',
-            country: 'USA',
-            phone: '323-589-7400',
-            tollFree: '800-234-5678'
-          }
         }
       ];
-
-      // 显示报价结果
       setQuoteResults(mockQuotes);
       setShowQuoteResults(true);
-      setCurrentStep(2); // 进入步骤2: 承运商选择
-      
-      // 后端实际实现时的代码（暂时注释）
-      /*
-      // LTL: 为每个货物项目创建单独的提交数据
-      for (const item of formData.cargoItems) {
-        const submissionData = {
-          ...formData,
-          type: 'quote',
-          serviceType: 'LTL',
-          weight: item.weight,
-          cargoType: formData.cargoType ? `${formData.cargoType} - ${item.description}` : item.description,
-          pallets: item.pallets,
-          origin_lat: originCoords ? originCoords.lat : null,
-          origin_lng: originCoords ? originCoords.lng : null,
-          origin_formatted_address: originCoords ? originCoords.formattedAddress : formData.origin,
-          destination_lat: destinationCoords ? destinationCoords.lat : null,
-          destination_lng: destinationCoords ? destinationCoords.lng : null,
-          destination_formatted_address: destinationCoords ? destinationCoords.formattedAddress : formData.destination,
-          cargoItemDetails: {
-            description: item.description,
-            weight: item.weight,
-            length: item.length,
-            width: item.width,
-            height: item.height,
-            volume: item.volume,
-            density: item.density,
-            freightClass: item.freightClass,
-            pallets: item.pallets,
-            stackable: item.stackable,
-            fragile: item.fragile,
-            hazmat: item.hazmat
-          }
-        };
-        
-        await apiServices.landFreight.createLoad(submissionData);
-      }
-
-      success('LTL报价请求已保存！我们会尽快与您联系');
-      resetForm();
-      setTimeout(() => navigate('/profile/posts'), 2000);
-      */
-    } catch (error) {
-      console.error('Submission failed:', error);
-      showError('获取报价失败: ' + error.message);
+      setCurrentStep(2);
     } finally {
       setIsSubmitting(false);
     }
