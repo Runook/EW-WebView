@@ -264,9 +264,15 @@ const BrokerOrdersNew = () => {
 
   // 计算报价参考及相关字段
   const calculateQuoteReferences = (order) => {
-    const totalDat = parseFloat(order.total_dat) || 0;
+    let totalDat = parseFloat(order.total_dat) || 0;
     const truckPallets = parseFloat(order.truck_pallets) || 1; // 避免除以0
     const totalAreaPallets = parseFloat(order.total_area_pallets) || 0;
+    const addressType = order.address_type || '';
+    
+    // 如果是 Residential，TOTAL DAT 乘以 0.7
+    if (addressType === 'Residential') {
+      totalDat = totalDat * 0.7;
+    }
     
     // 报价参考 = (TOTAL DAT / 车类型) × 总面积板数 + 100
     const quoteReference = (totalDat / truckPallets) * totalAreaPallets + 100;
@@ -857,7 +863,7 @@ const BrokerOrdersNew = () => {
                           }}
                           title="批量生成BOL"
                         >
-                          📄 BOL
+                          BOL
                         </button>
                       </th>
                       <th>
@@ -870,7 +876,7 @@ const BrokerOrdersNew = () => {
                           }}
                           title="批量生成RC"
                         >
-                          📊 RC
+                          RC
                         </button>
                       </th>
                     </>
@@ -1302,10 +1308,41 @@ const BrokerOrdersNew = () => {
                                   type="select"
                                   options={[
                                     { value: 'Residential', label: 'Residential' },
+                                    { value: 'Commercial+Lift', label: 'Commercial+Lift' },
                                     { value: 'Commercial', label: 'Commercial' },
                                     { value: 'Warehouse', label: 'Warehouse' }
                                   ]}
-                                  onSave={handleCellUpdate}
+                                  onSave={async (id, field, newValue) => {
+                                    // 地址类型与车类型联动
+                                    const truckType = newValue === 'Residential' ? '13' : '26';
+                                    
+                                    // 先更新地址类型
+                                    await handleCellUpdate(id, field, newValue);
+                                    
+                                    // 自动更新车类型
+                                    await handleCellUpdate(id, 'truck_pallets', truckType);
+                                    
+                                    // 获取当前订单并重新计算
+                                    const currentOrder = orders.find(o => o.id === id);
+                                    if (currentOrder) {
+                                      const updatedOrder = { 
+                                        ...currentOrder, 
+                                        address_type: newValue,
+                                        truck_pallets: truckType 
+                                      };
+                                      const calculations = calculateQuoteReferences(updatedOrder);
+                                      
+                                      // 更新计算结果
+                                      await orderApi.updateOrder(id, calculations);
+                                      
+                                      // 刷新订单列表
+                                      setOrders(prevOrders => 
+                                        prevOrders.map(o => 
+                                          o.id === id ? { ...o, ...updatedOrder, ...calculations } : o
+                                        )
+                                      );
+                                    }
+                                  }}
                                 />
                               </div>
                               <div className="detail-item">

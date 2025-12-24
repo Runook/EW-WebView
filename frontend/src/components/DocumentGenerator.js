@@ -84,202 +84,18 @@ const DocumentGenerator = ({ isOpen, onClose, documentType, orders }) => {
 
   const generateBOLDocuments = async (orderDetails) => {
     try {
-      const docx = await import('docx');
-      const { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle, Table, TableCell, TableRow, WidthType } = docx;
-      const fileSaver = await import('file-saver');
-      const saveAs = fileSaver.default || fileSaver.saveAs;
-
-      for (const order of orderDetails) {
-        console.log('📄 生成BOL for order:', order);
-        console.log('👤 当前用户信息:', user);
-
-        // 格式化日期为 月-日-年
-        const formatDate = (dateStr) => {
-          if (!dateStr) return new Date().toLocaleDateString('en-US');
-          const date = new Date(dateStr);
-          const month = date.getMonth() + 1;
-          const day = date.getDate();
-          const year = date.getFullYear();
-          return `${month}-${day}-${year}`;
-        };
-
-        // 准备数据
-        const data = {
-          Date: formatDate(order.quote_date),
-          BillOfLadingNumber: order.ew_quote_number || order.order_number || '',
-          ShipFrom: order.origin_address || `${order.origin_city || ''}, ${order.origin_state || ''}` || '',
-          ShipTo: order.destination_address || `${order.destination_city || ''}, ${order.destination_state || ''}` || '',
-          SpecialInstructions: order.cargo_type || '',
-          Contact: `${user?.given_name || user?.firstName || user?.first_name || ''} ${user?.family_name || user?.lastName || user?.last_name || ''}`.trim(),
-          ContactPhone: user?.phone_number || user?.phone || '',
-          CustomerOrderNo: order.shipment_number || '',
-          NumOfPackages: String(order.actual_pallets || order.total_pallets || ''),
-          Weight: order.total_weight_lbs ? `${order.total_weight_lbs}` : '',
-        };
-
-        console.log('📋 BOL数据:', data);
-
-        // 创建符合BOL模板格式的Word文档
-        const doc = new Document({
-          sections: [{
-            properties: {
-              page: {
-                margin: {
-                  top: 720,
-                  right: 720,
-                  bottom: 720,
-                  left: 720,
-                },
-              },
-            },
-            children: [
-              // 标题
-              new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { after: 300 },
-                children: [
-                  new TextRun({
-                    text: 'BILL OF LADING',
-                    bold: true,
-                    size: 28,
-                  }),
-                ],
-              }),
-
-              // Date
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'Date: ', bold: true }),
-                  new TextRun({ text: data.Date }),
-                ],
-                spacing: { after: 100 },
-              }),
-
-              // Bill of Lading Number
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'Bill of Lading Number: ', bold: true }),
-                  new TextRun({ text: data.BillOfLadingNumber }),
-                ],
-                spacing: { after: 300 },
-              }),
-
-              // SHIP FROM
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'SHIP FROM:', bold: true, underline: {} }),
-                ],
-                spacing: { after: 100 },
-              }),
-              new Paragraph({
-                text: data.ShipFrom,
-                spacing: { after: 300 },
-              }),
-
-              // SHIP TO
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'SHIP TO:', bold: true, underline: {} }),
-                ],
-                spacing: { after: 100 },
-              }),
-              new Paragraph({
-                text: data.ShipTo,
-                spacing: { after: 300 },
-              }),
-
-              // Customer Order No.
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'Customer Order No.: ', bold: true }),
-                  new TextRun({ text: data.CustomerOrderNo }),
-                ],
-                spacing: { after: 200 },
-              }),
-
-              // # of Packages
-              new Paragraph({
-                children: [
-                  new TextRun({ text: '# of Packages: ', bold: true }),
-                  new TextRun({ text: data.NumOfPackages }),
-                ],
-                spacing: { after: 100 },
-              }),
-
-              // Weight
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'Weight: ', bold: true }),
-                  new TextRun({ text: `${data.Weight} lbs` }),
-                ],
-                spacing: { after: 300 },
-              }),
-
-              // Special Instructions
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'Special Instructions:', bold: true, underline: {} }),
-                ],
-                spacing: { after: 100 },
-              }),
-              new Paragraph({
-                text: data.SpecialInstructions,
-                spacing: { after: 300 },
-              }),
-
-              // Contact
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'Contact: ', bold: true }),
-                  new TextRun({ text: data.Contact }),
-                ],
-              }),
-              new Paragraph({
-                children: [
-                  new TextRun({ text: 'Phone: ', bold: true }),
-                  new TextRun({ text: data.ContactPhone }),
-                ],
-                spacing: { after: 300 },
-              }),
-            ],
-          }],
-        });
-
-        // 生成并保存
-        const blob = await Packer.toBlob(doc);
-        const fileName = `BOL-${order.ew_quote_number || order.order_number || 'document'}.docx`;
-        saveAs(blob, fileName);
-      }
-    } catch (error) {
-      console.error('❌ BOL生成失败:', error);
-      throw new Error(`BOL生成失败: ${error.message}`);
-    }
-  };
-
-  const generateRCDocuments = async (orderDetails) => {
-    try {
       const ExcelJS = await import('exceljs');
       const fileSaver = await import('file-saver');
       const saveAs = fileSaver.default || fileSaver.saveAs;
 
       for (const order of orderDetails) {
-        console.log('📊 生成RC for order:', order);
-        console.log('👤 当前用户信息:', user);
-        console.log('👤 用户详细字段:', {
-          given_name: user?.given_name,
-          firstName: user?.firstName,
-          family_name: user?.family_name,
-          lastName: user?.lastName,
-          phone_number: user?.phone_number,
-          phone: user?.phone,
-          email: user?.email
-        });
+        console.log('📄 生成BOL for order:', order);
 
         // 加载模板文件
-        const templatePath = '/RC-template.xlsx';
+        const templatePath = '/BOL-template.xlsx';
         const response = await fetch(templatePath);
         if (!response.ok) {
-          throw new Error(`无法加载RC模板: ${response.status}`);
+          throw new Error(`无法加载BOL模板: ${response.status}`);
         }
         const arrayBuffer = await response.arrayBuffer();
 
@@ -297,23 +113,35 @@ const DocumentGenerator = ({ isOpen, onClose, documentType, orders }) => {
           return `${month}-${day}-${year}`;
         };
 
-        // 准备数据
-        const dispatcherName = `${user?.given_name || user?.firstName || user?.first_name || ''} ${user?.family_name || user?.lastName || user?.last_name || ''}`.trim();
-        const dispatcherPhone = user?.phone_number || user?.phone || '';
-        
+        // 准备数据 - 根据用户提供的配对规则
+        // 调试：打印订单中所有相关字段
+        console.log('🔍 订单原始数据 - BOL相关字段:', {
+          quote_date: order.quote_date,
+          origin_address: order.origin_address,
+          origin_city: order.origin_city,
+          origin_state: order.origin_state,
+          destination_address: order.destination_address,
+          destination_city: order.destination_city,
+          destination_state: order.destination_state,
+          ew_quote_number: order.ew_quote_number,
+          order_number: order.order_number,
+          shipment_number: order.shipment_number,
+          actual_pallets: order.actual_pallets,
+          total_pallets: order.total_pallets,
+          total_weight_lbs: order.total_weight_lbs
+        });
+
         const data = {
-          Date: formatDate(order.quote_date),
-          EW: order.ew_quote_number || order.order_number || '',
-          Dispatcher: dispatcherName || user?.email || 'N/A',
-          Tel: dispatcherPhone || 'N/A',
-          CarrierName: order.truck_company_name || '',
-          CarrierTel: order.truck_contact || '',
-          PickUp: order.origin_address || `${order.origin_city || ''}, ${order.origin_state || ''}` || '',
-          DropOff: order.destination_address || `${order.destination_city || ''}, ${order.destination_state || ''}` || '',
+          quoteDate: formatDate(order.quote_date),                                    // A1 - 报价日期
+          shipFrom: order.origin_address || `${order.origin_city || ''}, ${order.origin_state || ''}`.trim() || '',  // A3 - 发货地
+          shipTo: order.destination_address || `${order.destination_city || ''}, ${order.destination_state || ''}`.trim() || '',  // A5 - 收货地
+          ewNumber: order.ew_quote_number || order.order_number || '',               // F3 - EW单号
+          shipmentNumber: order.shipment_number || '',                               // A13 - 发货单号
+          totalPieces: String(order.actual_pallets || order.total_pallets || ''),    // D13 - 总件数
+          totalWeight: order.total_weight_lbs ? String(order.total_weight_lbs) : '', // E13 - 总重(lbs)
         };
 
-        console.log('📋 RC数据:', data);
-        console.log('📋 Dispatcher构建:', { dispatcherName, dispatcherPhone, finalDispatcher: data.Dispatcher });
+        console.log('📋 BOL填充数据:', data);
 
         console.log('🔍 模板工作表信息:', {
           name: worksheet.name,
@@ -321,61 +149,195 @@ const DocumentGenerator = ({ isOpen, onClose, documentType, orders }) => {
           columnCount: worksheet.columnCount
         });
 
-        // 填充数据到指定单元格
-        // Row 1: Date在H1，EW在I1
-        const h1 = worksheet.getCell('H1');
-        const currentH1 = h1.value;
-        console.log('📝 H1原值:', currentH1);
-        h1.value = data.Date;
-        
-        const i1 = worksheet.getCell('I1');
-        const currentI1 = i1.value;
-        console.log('📝 I1原值:', currentI1);
-        i1.value = data.EW;
-        
-        // Row 2: Dispatcher（填充F2-I2合并单元格区域的起始单元格）
-        const f2 = worksheet.getCell('F2');
-        console.log('📝 F2原值:', f2.value);
-        // 保留原有的"Dispatcher : "文本，在后面追加名字
-        const f2Current = String(f2.value || '');
-        if (f2Current.includes('Dispatcher')) {
-          f2.value = f2Current.replace(/Dispatcher\s*:\s*$/, `Dispatcher : ${data.Dispatcher}`);
-        } else {
-          f2.value = `Dispatcher : ${data.Dispatcher}`;
-        }
-        
-        // Row 3: Tel (需要保留原有的richText内容)
-        const f3 = worksheet.getCell('F3');
-        console.log('📝 F3原值:', f3.value);
-        const f3Current = f3.value;
-        if (f3Current && typeof f3Current === 'object' && f3Current.richText) {
-          // 创建新的richText，在Tel:后面添加电话号码
-          const newRichText = f3Current.richText.map(item => {
-            if (item.text && item.text.includes('Tel:')) {
-              return { ...item, text: `Tel: ${data.Tel}\n${item.text.replace(/Tel:\s*/g, '')}` };
-            }
-            return item;
+        // 辅助函数：安全地设置单元格值（处理richText等复杂格式）
+        const setCellValue = (cell, newValue) => {
+          const oldValue = cell.value;
+          const oldType = typeof oldValue;
+          const isRichText = oldValue && typeof oldValue === 'object' && oldValue.richText;
+          
+          console.log('📝 设置单元格', cell.address, {
+            原值类型: oldType,
+            是否richText: isRichText,
+            原值: oldValue,
+            新值: newValue,
+            新值是否为空: !newValue || newValue === ''
           });
-          f3.value = { richText: newRichText };
-        } else {
-          const originalText = String(f3Current || '').replace(/Tel:\s*/g, '');
-          f3.value = `Tel: ${data.Tel}\n${originalText}`;
+          
+          // 直接覆盖，不管原值是什么类型
+          cell.value = newValue;
+          
+          // 验证设置是否成功
+          console.log('✓ 设置后验证:', cell.address, '=', cell.value);
+        };
+
+        // 填充数据到指定单元格 - 根据用户提供的配对规则
+        // A1 - 报价日期
+        setCellValue(worksheet.getCell('A1'), data.quoteDate);
+
+        // A3 - 发货地
+        setCellValue(worksheet.getCell('A3'), data.shipFrom);
+
+        // A5 - 收货地
+        setCellValue(worksheet.getCell('A5'), data.shipTo);
+
+        // F3 - EW单号
+        setCellValue(worksheet.getCell('F3'), data.ewNumber);
+
+        // A13 - 发货单号
+        setCellValue(worksheet.getCell('A13'), data.shipmentNumber);
+
+        // D13 - 总件数
+        setCellValue(worksheet.getCell('D13'), data.totalPieces);
+
+        // E13 - 总重(lbs)
+        setCellValue(worksheet.getCell('E13'), data.totalWeight);
+
+        console.log('✅ BOL数据填充完成');
+
+        // 生成文件
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { 
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+        });
+        const fileName = `BOL-${order.ew_quote_number || order.order_number || 'document'}.xlsx`;
+        saveAs(blob, fileName);
+      }
+    } catch (error) {
+      console.error('❌ BOL生成失败:', error);
+      throw new Error(`BOL生成失败: ${error.message}`);
+    }
+  };
+
+  const generateRCDocuments = async (orderDetails) => {
+    try {
+      const ExcelJS = await import('exceljs');
+      const fileSaver = await import('file-saver');
+      const saveAs = fileSaver.default || fileSaver.saveAs;
+
+      for (const order of orderDetails) {
+        console.log('📊 生成RC for order:', order);
+        console.log('👤 当前用户信息:', user);
+
+        // 加载模板文件
+        const templatePath = '/RC-template.xlsx';
+        const response = await fetch(templatePath);
+        if (!response.ok) {
+          throw new Error(`无法加载RC模板: ${response.status}`);
         }
+        const arrayBuffer = await response.arrayBuffer();
+
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(arrayBuffer);
+        const worksheet = workbook.getWorksheet(1);
+
+        // 调试：打印订单中所有相关字段
+        console.log('🔍 订单原始数据 - RC相关字段:', {
+          origin_address: order.origin_address,
+          origin_city: order.origin_city,
+          origin_state: order.origin_state,
+          destination_address: order.destination_address,
+          destination_city: order.destination_city,
+          destination_state: order.destination_state,
+          shipment_number: order.shipment_number,
+          truck_payment: order.truck_payment,
+          mc_number: order.mc_number,
+          truck_company_name: order.truck_company_name,
+          truck_contact: order.truck_contact,
+          backup_driver_1_name: order.backup_driver_1_name
+        });
+
+        // 准备数据 - 根据新的配对规则
+        const operatorName = `${user?.given_name || user?.firstName || user?.first_name || ''} ${user?.family_name || user?.lastName || user?.last_name || ''}`.trim();
+        const operatorPhone = user?.phone_number || user?.phone || '';
+        const operatorEmail = user?.email || '';
         
-        // Row 4: Carrier Name和TEL
-        const a4 = worksheet.getCell('A4');
-        console.log('📝 A4原值:', a4.value);
-        a4.value = `Carrier Name: ${data.CarrierName}           TEL: ${data.CarrierTel}`;
-        
-        // Row 6: Pick up（不添加额外换行）
-        const a6 = worksheet.getCell('A6');
-        console.log('📝 A6原值:', a6.value);
-        a6.value = `Pick up: ${data.PickUp}`;
-        
-        // Row 7: Drop off（不添加额外换行）
-        const a7 = worksheet.getCell('A7');
-        console.log('📝 A7原值:', a7.value);
-        a7.value = `Drop off: ${data.DropOff}`;
+        const data = {
+          // A24 - 发货地
+          shipFrom: order.origin_address || `${order.origin_city || ''}, ${order.origin_state || ''}`.trim() || '',
+          // A26 - 收货地
+          shipTo: order.destination_address || `${order.destination_city || ''}, ${order.destination_state || ''}`.trim() || '',
+          // S1 - 发货单号
+          shipmentNumber: order.shipment_number || '',
+          // A8 - 操作员工
+          operatorName: operatorName || 'N/A',
+          // G8 - 注册账号电话
+          operatorPhone: operatorPhone || '',
+          // M8 - 注册账号邮箱
+          operatorEmail: operatorEmail || '',
+          // S19 - 付卡车价格
+          truckPayment: order.truck_payment ? String(order.truck_payment) : '',
+          // A11 - MC number
+          mcNumber: order.mc_number || '',
+          // C11 - 卡车公司
+          truckCompany: order.truck_company_name || '',
+          // I11 - 联络方式
+          truckContact: order.truck_contact || '',
+          // H15 - 备用司机1姓名
+          backupDriver1Name: order.backup_driver_1_name || '',
+        };
+
+        console.log('📋 RC填充数据:', data);
+
+        console.log('🔍 模板工作表信息:', {
+          name: worksheet.name,
+          rowCount: worksheet.rowCount,
+          columnCount: worksheet.columnCount
+        });
+
+        // 辅助函数：安全地设置单元格值
+        const setCellValue = (cell, newValue) => {
+          const oldValue = cell.value;
+          const oldType = typeof oldValue;
+          const isRichText = oldValue && typeof oldValue === 'object' && oldValue.richText;
+          
+          console.log('📝 设置单元格', cell.address, {
+            原值类型: oldType,
+            是否richText: isRichText,
+            原值: oldValue,
+            新值: newValue,
+            新值是否为空: !newValue || newValue === ''
+          });
+          
+          // 直接覆盖，不管原值是什么类型
+          cell.value = newValue;
+          
+          // 验证设置是否成功
+          console.log('✓ 设置后验证:', cell.address, '=', cell.value);
+        };
+
+        // 填充数据到指定单元格 - 根据新的配对规则
+        // S1 - 发货单号
+        setCellValue(worksheet.getCell('S1'), data.shipmentNumber);
+
+        // A8 - 操作员工
+        setCellValue(worksheet.getCell('A8'), data.operatorName);
+
+        // G8 - 注册账号电话
+        setCellValue(worksheet.getCell('G8'), data.operatorPhone);
+
+        // M8 - 注册账号邮箱
+        setCellValue(worksheet.getCell('M8'), data.operatorEmail);
+
+        // A11 - MC number
+        setCellValue(worksheet.getCell('A11'), data.mcNumber);
+
+        // C11 - 卡车公司
+        setCellValue(worksheet.getCell('C11'), data.truckCompany);
+
+        // I11 - 联络方式
+        setCellValue(worksheet.getCell('I11'), data.truckContact);
+
+        // H15 - 备用司机1姓名
+        setCellValue(worksheet.getCell('H15'), data.backupDriver1Name);
+
+        // S19 - 付卡车价格
+        setCellValue(worksheet.getCell('S19'), data.truckPayment);
+
+        // A24 - 发货地
+        setCellValue(worksheet.getCell('A24'), data.shipFrom);
+
+        // A26 - 收货地
+        setCellValue(worksheet.getCell('A26'), data.shipTo);
 
         console.log('✅ RC数据填充完成');
 
