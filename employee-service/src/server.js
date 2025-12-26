@@ -10,6 +10,7 @@ const { db } = require('./config/database');
 // 导入路由
 const employeesRouter = require('./routes/employees');
 const ordersRouter = require('./routes/orders');
+const truckContactsRouter = require('./routes/truck-contacts');
 
 // 创建Express应用
 const app = express();
@@ -64,6 +65,7 @@ app.get('/api/info', (req, res) => {
 // API路由
 app.use('/api/employees', employeesRouter);
 app.use('/api/orders', ordersRouter);
+app.use('/api/truck-contacts', truckContactsRouter);
 
 // 404处理
 app.use((req, res) => {
