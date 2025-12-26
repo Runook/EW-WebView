@@ -248,6 +248,216 @@
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
+/* ==========================================
+   联系簿相关样式
+   ========================================== */
+
+.form-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.form-section-header h3 {
+  margin: 0;
+}
+
+.contact-book-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-contact-book,
+.btn-save-contact {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-contact-book {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.btn-contact-book:hover {
+  background: #bfdbfe;
+}
+
+.btn-save-contact {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.btn-save-contact:hover {
+  background: #bbf7d0;
+}
+
+/* 保存消息提示 */
+.save-message {
+  padding: 10px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.save-message.success {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.save-message.error {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+/* 联系簿弹出框 */
+.contact-book-popup {
+  background: white;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.contact-book-header {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  background: #f0f9ff;
+  border-bottom: 1px solid #e0f2fe;
+}
+
+.contact-book-header input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95em;
+}
+
+.contact-book-header input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.contact-book-header button {
+  padding: 10px 16px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.contact-book-header button:hover {
+  background: #dc2626;
+}
+
+.contact-book-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.contact-book-item {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.contact-book-item:hover {
+  background: #f0f9ff;
+}
+
+.contact-book-item:last-child {
+  border-bottom: none;
+}
+
+.contact-mc {
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+.contact-company {
+  color: #374151;
+}
+
+.contact-phone {
+  color: #6b7280;
+  text-align: right;
+}
+
+.contact-book-loading,
+.contact-book-empty {
+  padding: 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* 自动补全样式 */
+.autocomplete-wrapper {
+  position: relative;
+}
+
+.autocomplete-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #3b82f6;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
+.suggestion-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.suggestion-item:hover {
+  background: #f0f9ff;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-mc {
+  font-weight: 600;
+  color: #1d4ed8;
+}
+
+.suggestion-company {
+  color: #374151;
+}
+
+.suggestion-phone {
+  font-weight: 500;
+  color: #059669;
+}
+
 /* 响应式 */
 @media (max-width: 768px) {
   .modal-content-confirm {
@@ -266,6 +476,21 @@
 
   .modal-body-confirm {
     padding: 20px;
+  }
+
+  .form-section-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .contact-book-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .contact-phone {
+    text-align: left;
   }
 }
 

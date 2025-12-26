@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { truckContactApi } from '../config/employeeApi';
 import './ConfirmOrderModal.css';
 
 const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
@@ -16,6 +17,79 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
   });
 
   const [errors, setErrors] = useState({});
+  
+  // 联系簿相关状态
+  const [showContactBook, setShowContactBook] = useState(false);
+  const [contactBookSearch, setContactBookSearch] = useState('');
+  const [contactBookResults, setContactBookResults] = useState([]);
+  const [contactBookLoading, setContactBookLoading] = useState(false);
+  
+  // 自动补全相关状态
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeField, setActiveField] = useState(null);
+  
+  // 保存状态
+  const [saveMessage, setSaveMessage] = useState(null);
+
+  // 防抖搜索
+  const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
+
+  // 搜索联系簿
+  const searchContactBook = async (keyword) => {
+    if (!keyword || keyword.trim().length < 1) {
+      setContactBookResults([]);
+      return;
+    }
+    
+    setContactBookLoading(true);
+    try {
+      const response = await truckContactApi.getContacts(keyword);
+      if (response.success) {
+        setContactBookResults(response.data || []);
+      }
+    } catch (error) {
+      console.error('搜索联系簿失败:', error);
+    } finally {
+      setContactBookLoading(false);
+    }
+  };
+
+  // 搜索自动补全建议
+  const searchSuggestions = async (value, field) => {
+    if (!value || value.trim().length < 1) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    
+    try {
+      const response = await truckContactApi.searchContacts(value, field);
+      if (response.success && response.data?.length > 0) {
+        setSuggestions(response.data);
+        setShowSuggestions(true);
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    } catch (error) {
+      console.error('搜索建议失败:', error);
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  // 防抖版本的搜索
+  const debouncedSearchSuggestions = useCallback(
+    debounce((value, field) => searchSuggestions(value, field), 300),
+    []
+  );
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -23,6 +97,56 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
+    
+    // 触发自动补全（仅对 MC Number、公司名、联络方式）
+    if (['mc_number', 'truck_company_name', 'truck_contact'].includes(field)) {
+      setActiveField(field);
+      debouncedSearchSuggestions(value, field);
+    }
+  };
+
+  // 选择联系人（从联系簿或建议中）
+  const selectContact = (contact) => {
+    setFormData(prev => ({
+      ...prev,
+      mc_number: contact.mc_number || prev.mc_number,
+      truck_company_name: contact.truck_company_name || prev.truck_company_name,
+      truck_contact: contact.truck_contact || prev.truck_contact
+    }));
+    setShowContactBook(false);
+    setShowSuggestions(false);
+    setSuggestions([]);
+    setContactBookSearch('');
+    setContactBookResults([]);
+  };
+
+  // 保存联系人到联系簿
+  const saveToContactBook = async () => {
+    const { mc_number, truck_company_name, truck_contact } = formData;
+    
+    if (!mc_number || !truck_company_name || !truck_contact) {
+      setSaveMessage({ type: 'error', text: '请先填写完整的卡车信息（MC Number、公司名、联络方式）' });
+      setTimeout(() => setSaveMessage(null), 3000);
+      return;
+    }
+    
+    try {
+      const response = await truckContactApi.saveContact({
+        mc_number,
+        truck_company_name,
+        truck_contact
+      });
+      
+      if (response.success) {
+        setSaveMessage({ type: 'success', text: '✓ 已保存到联系簿' });
+      } else {
+        setSaveMessage({ type: 'error', text: response.message || '保存失败' });
+      }
+    } catch (error) {
+      setSaveMessage({ type: 'error', text: error.message || '保存失败，请重试' });
+    }
+    
+    setTimeout(() => setSaveMessage(null), 3000);
   };
 
   const validate = () => {
@@ -57,6 +181,15 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
       onConfirm(formData);
     }
   };
+
+  // 点击外部关闭建议列表
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowSuggestions(false);
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   return (
     <div className="modal-overlay-confirm" onClick={onClose}>
@@ -97,7 +230,72 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
           {/* 下单表单 */}
           <form onSubmit={handleSubmit}>
             <div className="form-section">
-              <h3>卡车信息 <span className="required">*必填</span></h3>
+              <div className="form-section-header">
+                <h3>卡车信息 <span className="required">*必填</span></h3>
+                <div className="contact-book-actions">
+                  <button 
+                    type="button" 
+                    className="btn-contact-book"
+                    onClick={() => setShowContactBook(!showContactBook)}
+                  >
+                    📒 联系簿
+                  </button>
+                  <button 
+                    type="button" 
+                    className="btn-save-contact"
+                    onClick={saveToContactBook}
+                  >
+                    💾 保存联系
+                  </button>
+                </div>
+              </div>
+              
+              {/* 保存消息提示 */}
+              {saveMessage && (
+                <div className={`save-message ${saveMessage.type}`}>
+                  {saveMessage.text}
+                </div>
+              )}
+              
+              {/* 联系簿弹出框 */}
+              {showContactBook && (
+                <div className="contact-book-popup">
+                  <div className="contact-book-header">
+                    <input
+                      type="text"
+                      placeholder="搜索 MC Number / 公司名 / 联络方式..."
+                      value={contactBookSearch}
+                      onChange={(e) => {
+                        setContactBookSearch(e.target.value);
+                        searchContactBook(e.target.value);
+                      }}
+                      autoFocus
+                    />
+                    <button type="button" onClick={() => setShowContactBook(false)}>✕</button>
+                  </div>
+                  <div className="contact-book-list">
+                    {contactBookLoading ? (
+                      <div className="contact-book-loading">搜索中...</div>
+                    ) : contactBookResults.length > 0 ? (
+                      contactBookResults.map(contact => (
+                        <div 
+                          key={contact.id} 
+                          className="contact-book-item"
+                          onClick={() => selectContact(contact)}
+                        >
+                          <div className="contact-mc">{contact.mc_number}</div>
+                          <div className="contact-company">{contact.truck_company_name}</div>
+                          <div className="contact-phone">{contact.truck_contact}</div>
+                        </div>
+                      ))
+                    ) : contactBookSearch ? (
+                      <div className="contact-book-empty">未找到匹配的联系人</div>
+                    ) : (
+                      <div className="contact-book-empty">输入关键字搜索联系人</div>
+                    )}
+                  </div>
+                </div>
+              )}
               
               <div className="form-row">
                 <div className="form-group">
@@ -113,42 +311,84 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
                   {errors.truck_payment && <span className="error-message">{errors.truck_payment}</span>}
                 </div>
 
-                <div className="form-group">
+                <div className="form-group autocomplete-wrapper">
                   <label>MC Number <span className="required">*</span></label>
                   <input
                     type="text"
                     value={formData.mc_number}
                     onChange={(e) => handleChange('mc_number', e.target.value)}
+                    onFocus={() => setActiveField('mc_number')}
                     placeholder="请输入MC Number"
                     className={errors.mc_number ? 'error' : ''}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   {errors.mc_number && <span className="error-message">{errors.mc_number}</span>}
+                  
+                  {/* 自动补全建议 */}
+                  {showSuggestions && activeField === 'mc_number' && suggestions.length > 0 && (
+                    <div className="autocomplete-suggestions" onClick={(e) => e.stopPropagation()}>
+                      {suggestions.map(s => (
+                        <div key={s.id} className="suggestion-item" onClick={() => selectContact(s)}>
+                          <span className="suggestion-mc">{s.mc_number}</span>
+                          <span className="suggestion-company">{s.truck_company_name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="form-row">
-                <div className="form-group">
+                <div className="form-group autocomplete-wrapper">
                   <label>卡车公司名 <span className="required">*</span></label>
                   <input
                     type="text"
                     value={formData.truck_company_name}
                     onChange={(e) => handleChange('truck_company_name', e.target.value)}
+                    onFocus={() => setActiveField('truck_company_name')}
                     placeholder="请输入卡车公司名"
                     className={errors.truck_company_name ? 'error' : ''}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   {errors.truck_company_name && <span className="error-message">{errors.truck_company_name}</span>}
+                  
+                  {/* 自动补全建议 */}
+                  {showSuggestions && activeField === 'truck_company_name' && suggestions.length > 0 && (
+                    <div className="autocomplete-suggestions" onClick={(e) => e.stopPropagation()}>
+                      {suggestions.map(s => (
+                        <div key={s.id} className="suggestion-item" onClick={() => selectContact(s)}>
+                          <span className="suggestion-company">{s.truck_company_name}</span>
+                          <span className="suggestion-mc">{s.mc_number}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                <div className="form-group">
+                <div className="form-group autocomplete-wrapper">
                   <label>联络方式 <span className="required">*</span></label>
                   <input
                     type="text"
                     value={formData.truck_contact}
                     onChange={(e) => handleChange('truck_contact', e.target.value)}
+                    onFocus={() => setActiveField('truck_contact')}
                     placeholder="请输入联络方式"
                     className={errors.truck_contact ? 'error' : ''}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   {errors.truck_contact && <span className="error-message">{errors.truck_contact}</span>}
+                  
+                  {/* 自动补全建议 */}
+                  {showSuggestions && activeField === 'truck_contact' && suggestions.length > 0 && (
+                    <div className="autocomplete-suggestions" onClick={(e) => e.stopPropagation()}>
+                      {suggestions.map(s => (
+                        <div key={s.id} className="suggestion-item" onClick={() => selectContact(s)}>
+                          <span className="suggestion-phone">{s.truck_contact}</span>
+                          <span className="suggestion-company">{s.truck_company_name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -250,4 +490,3 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
 };
 
 export default ConfirmOrderModal;
-

@@ -334,10 +334,45 @@ const customerApi = {
   },
 };
 
+// ==========================================
+// 卡车联系簿 API
+// ==========================================
+
+export const truckContactApi = {
+  // 获取联系簿列表
+  getContacts: (search = '') => {
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    return request(`/truck-contacts${params}`);
+  },
+
+  // 搜索联系人（用于自动补全）
+  searchContacts: (keyword, field = '') => {
+    const params = new URLSearchParams({ q: keyword });
+    if (field) params.append('field', field);
+    return request(`/truck-contacts/search?${params.toString()}`);
+  },
+
+  // 保存新联系人
+  saveContact: (contactData) => {
+    return request('/truck-contacts', 'POST', contactData);
+  },
+
+  // 更新联系人
+  updateContact: (id, contactData) => {
+    return request(`/truck-contacts/${id}`, 'PUT', contactData);
+  },
+
+  // 删除联系人
+  deleteContact: (id) => {
+    return request(`/truck-contacts/${id}`, 'DELETE');
+  },
+};
+
 export default {
   employeeApi,
   orderApi,
   customerApi,
   employeeUtils,
+  truckContactApi,
 };
 

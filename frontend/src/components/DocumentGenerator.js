@@ -243,13 +243,22 @@ const DocumentGenerator = ({ isOpen, onClose, documentType, orders }) => {
           mc_number: order.mc_number,
           truck_company_name: order.truck_company_name,
           truck_contact: order.truck_contact,
-          backup_driver_1_name: order.backup_driver_1_name
+          backup_driver_1_name: order.backup_driver_1_name,
+          backup_driver_1_phone: order.backup_driver_1_phone
         });
 
+        // 调试：打印用户信息结构
+        console.log('👤 用户完整信息:', user);
+        console.log('👤 用户attributes:', user?.attributes);
+
         // 准备数据 - 根据新的配对规则
-        const operatorName = `${user?.given_name || user?.firstName || user?.first_name || ''} ${user?.family_name || user?.lastName || user?.last_name || ''}`.trim();
-        const operatorPhone = user?.phone_number || user?.phone || '';
-        const operatorEmail = user?.email || '';
+        // 用户信息在 user.attributes 中
+        const attrs = user?.attributes || user || {};
+        const operatorName = `${attrs.given_name || attrs.firstName || user?.given_name || ''} ${attrs.family_name || attrs.lastName || user?.family_name || ''}`.trim();
+        const operatorPhone = attrs.phone_number || attrs.phone || user?.phone_number || '';
+        const operatorEmail = attrs.email || user?.email || '';
+        
+        console.log('👤 提取的用户信息:', { operatorName, operatorPhone, operatorEmail });
         
         const data = {
           // A24 - 发货地
@@ -274,6 +283,8 @@ const DocumentGenerator = ({ isOpen, onClose, documentType, orders }) => {
           truckContact: order.truck_contact || '',
           // H15 - 备用司机1姓名
           backupDriver1Name: order.backup_driver_1_name || '',
+          // K15 - 备用司机1电话
+          backupDriver1Phone: order.backup_driver_1_phone || '',
         };
 
         console.log('📋 RC填充数据:', data);
@@ -329,6 +340,9 @@ const DocumentGenerator = ({ isOpen, onClose, documentType, orders }) => {
 
         // H15 - 备用司机1姓名
         setCellValue(worksheet.getCell('H15'), data.backupDriver1Name);
+
+        // K15 - 备用司机1电话
+        setCellValue(worksheet.getCell('K15'), data.backupDriver1Phone);
 
         // S19 - 付卡车价格
         setCellValue(worksheet.getCell('S19'), data.truckPayment);
