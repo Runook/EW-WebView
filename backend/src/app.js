@@ -221,6 +221,9 @@ app.use('/api/user-management', require('./routes/user-management'));
 app.use('/api/employees', require('./routes/employees'));
 app.use('/api/orders', require('./routes/employee-orders'));
 app.use('/api/customers', require('./routes/customers'));
+app.use('/api/vendors', require('./routes/vendors'));
+app.use('/api/payments', require('./routes/payments'));
+app.use('/api/service-items', require('./routes/service-items'));
 
 // 物流租售路由
 app.use('/api/rentals', require('./routes/rental'));
