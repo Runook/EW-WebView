@@ -335,7 +335,7 @@ const customerApi = {
 };
 
 // ==========================================
-// 卡车联系簿 API
+// 卡车联系簿 API (旧版兼容)
 // ==========================================
 
 export const truckContactApi = {
@@ -368,11 +368,176 @@ export const truckContactApi = {
   },
 };
 
+// ==========================================
+// 供应商管理 API (增强版卡车联系簿)
+// ==========================================
+
+export const vendorApi = {
+  // 获取供应商列表
+  getAll: (filters = {}) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    return request(`/vendors?${queryParams}`);
+  },
+
+  // 获取供应商详情
+  getById: (id) => {
+    return request(`/vendors/${id}`);
+  },
+
+  // 搜索供应商（用于自动补全）
+  search: (keyword, field = '') => {
+    const params = new URLSearchParams({ q: keyword });
+    if (field) params.append('field', field);
+    return request(`/vendors/search?${params.toString()}`);
+  },
+
+  // 创建供应商
+  create: (data) => {
+    return request('/vendors', 'POST', data);
+  },
+
+  // 更新供应商
+  update: (id, data) => {
+    return request(`/vendors/${id}`, 'PUT', data);
+  },
+
+  // 删除供应商
+  delete: (id) => {
+    return request(`/vendors/${id}`, 'DELETE');
+  },
+
+  // 获取供应商统计
+  getStats: (id) => {
+    return request(`/vendors/${id}/stats`);
+  },
+};
+
+// ==========================================
+// 付款记录 API
+// ==========================================
+
+export const paymentApi = {
+  // 获取付款记录列表
+  getAll: (filters = {}) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    return request(`/payments?${queryParams}`);
+  },
+
+  // 获取付款记录详情
+  getById: (id) => {
+    return request(`/payments/${id}`);
+  },
+
+  // 获取订单的付款记录
+  getByOrderId: (orderId) => {
+    return request(`/payments/order/${orderId}`);
+  },
+
+  // 获取付款统计
+  getStatistics: (filters = {}) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    return request(`/payments/statistics?${queryParams}`);
+  },
+
+  // 创建付款记录
+  create: (data) => {
+    return request('/payments', 'POST', data);
+  },
+
+  // 更新付款记录
+  update: (id, data) => {
+    return request(`/payments/${id}`, 'PUT', data);
+  },
+
+  // 删除付款记录
+  delete: (id) => {
+    return request(`/payments/${id}`, 'DELETE');
+  },
+};
+
+// ==========================================
+// 服务项目 API
+// ==========================================
+
+export const serviceItemApi = {
+  // 获取服务项目列表
+  getAll: (filters = {}) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    return request(`/service-items?${queryParams}`);
+  },
+
+  // 获取服务项目详情
+  getById: (id) => {
+    return request(`/service-items/${id}`);
+  },
+
+  // 创建服务项目
+  create: (data) => {
+    return request('/service-items', 'POST', data);
+  },
+
+  // 更新服务项目
+  update: (id, data) => {
+    return request(`/service-items/${id}`, 'PUT', data);
+  },
+
+  // 删除服务项目
+  delete: (id) => {
+    return request(`/service-items/${id}`, 'DELETE');
+  },
+
+  // 切换服务项目状态
+  toggle: (id) => {
+    return request(`/service-items/${id}/toggle`, 'POST');
+  },
+};
+
+// ==========================================
+// 工具函数扩展
+// ==========================================
+
+// 付款方式标签
+employeeUtils.getPaymentMethodLabel = (method) => {
+  const labels = {
+    check: '支票',
+    ach: 'ACH转账',
+    zelle: 'Zelle',
+    wire: '电汇',
+    credit_card: '信用卡',
+    cash: '现金'
+  };
+  return labels[method] || method;
+};
+
+// 付款类型标签
+employeeUtils.getPaymentTypeLabel = (type) => {
+  const labels = {
+    customer_payment: '客户付款',
+    vendor_payment: '供应商付款'
+  };
+  return labels[type] || type;
+};
+
+// 付款条款标签
+employeeUtils.getPaymentTermsLabel = (terms) => {
+  const labels = {
+    'Due on Receipt': '收到即付',
+    'Net 15': '15天内付款',
+    'Net 30': '30天内付款',
+    'Net 45': '45天内付款',
+    'Net 60': '60天内付款'
+  };
+  return labels[terms] || terms;
+};
+
 export default {
   employeeApi,
   orderApi,
   customerApi,
   employeeUtils,
   truckContactApi,
+  vendorApi,
+  paymentApi,
+  serviceItemApi,
 };
 

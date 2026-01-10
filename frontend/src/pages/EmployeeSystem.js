@@ -124,7 +124,25 @@ const EmployeeSystem = () => {
           >
             <h3>👥 客户表</h3>
             <p>客户信息管理</p>
-            <div className="menu-subtitle">询价公司 · 微信群名称</div>
+            <div className="menu-subtitle">询价公司 · 账单地址 · 付款条款</div>
+          </div>
+
+          <div 
+            className="menu-card menu-card-vendors" 
+            onClick={() => navigate('/employee/vendors')}
+          >
+            <h3>🚚 供应商管理</h3>
+            <p>卡车公司和司机信息</p>
+            <div className="menu-subtitle">MC# · 付款信息 · W9</div>
+          </div>
+
+          <div 
+            className="menu-card menu-card-payments" 
+            onClick={() => navigate('/employee/payments')}
+          >
+            <h3>💰 付款管理</h3>
+            <p>收款和付款记录</p>
+            <div className="menu-subtitle">客户收款 · 供应商付款</div>
           </div>
 
           {employee_role === 'admin' && (

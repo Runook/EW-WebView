@@ -11,6 +11,9 @@ const { db } = require('./config/database');
 const employeesRouter = require('./routes/employees');
 const ordersRouter = require('./routes/orders');
 const truckContactsRouter = require('./routes/truck-contacts');
+const vendorsRouter = require('./routes/vendors');
+const paymentsRouter = require('./routes/payments');
+const serviceItemsRouter = require('./routes/service-items');
 
 // 创建Express应用
 const app = express();
@@ -66,6 +69,9 @@ app.get('/api/info', (req, res) => {
 app.use('/api/employees', employeesRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/truck-contacts', truckContactsRouter);
+app.use('/api/vendors', vendorsRouter);
+app.use('/api/payments', paymentsRouter);
+app.use('/api/service-items', serviceItemsRouter);
 
 // 404处理
 app.use((req, res) => {

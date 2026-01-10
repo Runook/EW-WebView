@@ -164,6 +164,57 @@
   font-weight: 500;
 }
 
+/* 客户卡片 */
+.menu-card-customers {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+.menu-card-customers h3,
+.menu-card-customers p {
+  color: white;
+}
+
+.menu-card-customers .menu-subtitle {
+  margin-top: 12px;
+  font-size: 0.85em;
+  opacity: 0.9;
+}
+
+/* 供应商卡片 */
+.menu-card-vendors {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.menu-card-vendors h3,
+.menu-card-vendors p {
+  color: white;
+}
+
+.menu-card-vendors .menu-subtitle {
+  margin-top: 12px;
+  font-size: 0.85em;
+  opacity: 0.9;
+}
+
+/* 付款卡片 */
+.menu-card-payments {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+.menu-card-payments h3,
+.menu-card-payments p {
+  color: white;
+}
+
+.menu-card-payments .menu-subtitle {
+  margin-top: 12px;
+  font-size: 0.85em;
+  opacity: 0.9;
+}
+
 /* Quick Actions */
 .quick-actions {
   padding: 30px;

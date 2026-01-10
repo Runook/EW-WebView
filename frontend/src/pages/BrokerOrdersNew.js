@@ -743,6 +743,22 @@ const BrokerOrdersNew = () => {
           👥 客户表
         </button>
 
+        {/* 供应商管理 */}
+        <button
+          className="nav-item nav-vendors"
+          onClick={() => navigate('/employee/vendors')}
+        >
+          🚚 供应商
+        </button>
+
+        {/* 付款管理 */}
+        <button
+          className="nav-item nav-payments"
+          onClick={() => navigate('/employee/payments')}
+        >
+          💰 付款管理
+        </button>
+
         {/* 已下单的子状态统计 */}
         {currentStatus === 'ordered' && (
           <div className="sub-status-stats">

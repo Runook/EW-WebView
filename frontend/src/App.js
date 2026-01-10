@@ -32,6 +32,8 @@ import EmployeeAdmin from './pages/EmployeeAdmin';
 import BrokerOrders from './pages/BrokerOrdersNew';
 import BrokerOrderForm from './pages/BrokerOrderForm';
 import Customers from './pages/Customers';
+import Vendors from './pages/Vendors';
+import Payments from './pages/Payments';
 import './App.css';
 import './config/amplify'; 
 
@@ -160,6 +162,8 @@ function App() {
               <Route path="/employee/broker-orders/new" element={<BrokerOrderForm />} />
               <Route path="/employee/broker-orders/:orderId" element={<BrokerOrderForm />} />
               <Route path="/employee/customers" element={<Customers />} />
+              <Route path="/employee/vendors" element={<Vendors />} />
+              <Route path="/employee/payments" element={<Payments />} />
               <Route path="/employee/admin" element={<EmployeeAdmin />} />
               
               {/* 我们 */}

@@ -837,12 +837,30 @@
 
 /* 客户表按钮 */
 .nav-customers {
-  background: #8e44ad;
+  background: #e74c3c;
   color: white;
 }
 
 .nav-customers:hover {
-  background: #732d91;
+  background: #c0392b;
+}
+
+.nav-vendors {
+  background: #27ae60;
+  color: white;
+}
+
+.nav-vendors:hover {
+  background: #1e8449;
+}
+
+.nav-payments {
+  background: #3498db;
+  color: white;
+}
+
+.nav-payments:hover {
+  background: #2980b9;
 }
 
 /* 给3PL状态样式（黄色） */
