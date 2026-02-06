@@ -6,8 +6,8 @@
 const mockUser = {
   id: parseInt(process.env.MOCK_USER_ID) || 1,
   userId: parseInt(process.env.MOCK_USER_ID) || 1,
-  email: process.env.MOCK_USER_EMAIL || 'dev@ewltl.com',
-  username: process.env.MOCK_USER_EMAIL || 'dev@ewltl.com',
+  email: process.env.MOCK_USER_EMAIL || 'dev@welogx.com',
+  username: process.env.MOCK_USER_EMAIL || 'dev@welogx.com',
   userType: 'shipper',
   first_name: '开发',
   last_name: '者',

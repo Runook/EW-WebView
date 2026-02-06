@@ -7,7 +7,7 @@ import CompanyEditableCell from '../components/CompanyEditableCell';
 import ConfirmOrderModal from '../components/ConfirmOrderModal';
 import DocumentGenerator from '../components/DocumentGenerator';
 import QuoteGenerator from '../components/QuoteGenerator';
-import { parseWeightList, parseDimensionsList, calculateTotalVolume } from '../utils/pasteParser';
+import CargoItemsList from '../components/CargoItemsList';
 import { loadGoogleMapsScript, diagnoseGoogleMapsIssues } from '../config/googleMaps';
 import './BrokerOrdersNew.css';
 
@@ -19,8 +19,6 @@ const BrokerOrdersNew = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedRow, setExpandedRow] = useState(null);
-  const [editingList, setEditingList] = useState({ orderId: null, type: null }); // 'weight' or 'dimensions'
-  const [listInput, setListInput] = useState('');
   const [stats, setStats] = useState({
     waiting_driver: 0,
     driver_found: 0,
@@ -117,6 +115,18 @@ const BrokerOrdersNew = () => {
     }, 100);
   };
 
+  // 获取纽约时间的 YYYY-MM-DD 格式日期
+  const getNYDate = () => {
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    return formatter.format(now); // 返回 YYYY-MM-DD 格式
+  };
+
   // 创建空白订单
   const handleCreateOrder = async () => {
     try {
@@ -130,7 +140,7 @@ const BrokerOrdersNew = () => {
         cargo_description_detailed: '待填写',
         order_type: 'land_freight',
         status: 'quote',
-        quote_date: new Date().toISOString().split('T')[0]
+        quote_date: getNYDate()
       });
       
       if (response.success) {
@@ -169,8 +179,9 @@ const BrokerOrdersNew = () => {
       const response = await orderApi.confirmOrder(selectedOrder.id, 'waiting_driver');
       
       if (response.success) {
-        // 然后更新卡车和备用司机信息
+        // 然后更新卡车和备用司机信息，同时更新日期为当天（下单日期）
         await orderApi.updateOrder(selectedOrder.id, {
+          quote_date: getNYDate(), // 下单时更新为当天日期
           truck_payment: parseFloat(formData.truck_payment),
           mc_number: formData.mc_number,
           truck_company_name: formData.truck_company_name,
@@ -203,63 +214,6 @@ const BrokerOrdersNew = () => {
 
   const toggleRow = (orderId) => {
     setExpandedRow(expandedRow === orderId ? null : orderId);
-  };
-
-  // 编辑重量/尺寸列表
-  const handleEditList = (orderId, type, currentData) => {
-    setEditingList({ orderId, type });
-    if (type === 'weight') {
-      const weights = currentData ? JSON.parse(currentData) : [];
-      setListInput(weights.join('\n'));
-    } else if (type === 'dimensions') {
-      const dims = currentData ? JSON.parse(currentData) : [];
-      setListInput(dims.map(d => {
-        const pieces = d.pieces > 1 ? ` ${d.pieces}p` : '';
-        return `${d.length}*${d.width}*${d.height}${pieces}`;
-      }).join('\n'));
-    }
-  };
-
-  const handleSaveList = async () => {
-    try {
-      const { orderId, type } = editingList;
-      let updates = {};
-
-      if (type === 'weight') {
-        const result = parseWeightList(listInput);
-        updates.weight_list = JSON.stringify(result.weights);
-        updates.total_weight_lbs = result.total;
-      } else if (type === 'dimensions') {
-        const result = parseDimensionsList(listInput);
-        const totalVol = calculateTotalVolume(result);
-        const totalPallets = result.reduce((sum, d) => sum + (d.pieces || 1), 0);
-        
-        updates.dimensions_list = JSON.stringify(result);
-        updates.total_volume = totalVol;
-        updates.actual_pallets = totalPallets; // 总件数 = 所有p的总和
-      }
-
-      await orderApi.updateOrder(orderId, updates);
-      
-      // 更新本地state
-      setOrders(prevOrders =>
-        prevOrders.map(order =>
-          order.id === orderId ? { ...order, ...updates } : order
-        )
-      );
-
-      setEditingList({ orderId: null, type: null });
-      setListInput('');
-      alert('✅ 列表更新成功！');
-      loadOrders(); // 刷新列表
-    } catch (error) {
-      alert('❌ 保存失败: ' + error.message);
-    }
-  };
-
-  const handleCancelList = () => {
-    setEditingList({ orderId: null, type: null });
-    setListInput('');
   };
 
   // 计算报价参考及相关字段
@@ -737,26 +691,34 @@ const BrokerOrdersNew = () => {
 
         {/* 客户表 */}
         <button
-          className="nav-item nav-customers"
+          className="nav-item"
           onClick={() => navigate('/employee/customers')}
         >
-          👥 客户表
+          客户表
         </button>
 
         {/* 供应商管理 */}
         <button
-          className="nav-item nav-vendors"
+          className="nav-item"
           onClick={() => navigate('/employee/vendors')}
         >
-          🚚 供应商
+          供应商
         </button>
 
         {/* 付款管理 */}
         <button
-          className="nav-item nav-payments"
+          className="nav-item"
           onClick={() => navigate('/employee/payments')}
         >
-          💰 付款管理
+          付款管理
+        </button>
+
+        {/* 地图查单 */}
+        <button
+          className="nav-item"
+          onClick={() => navigate('/employee/map-view')}
+        >
+          地图查单
         </button>
 
         {/* 已下单的子状态统计 */}
@@ -837,17 +799,17 @@ const BrokerOrdersNew = () => {
               <thead>
                 <tr>
                   <th width="30"></th>
-                  <th>报价日期</th>
+                  <th>日期</th>
                   <th>询价公司</th>
                   <th>发货单号</th>
-                  <th>EW单号</th>
-                  <th>货物类型</th>
+                  <th>WE单号</th>
+                  <th>货物备注</th>
                   <th>发货地</th>
                   <th>收货地</th>
                   <th className="text-right">总重(lbs)</th>
                   <th className="text-right">总体积(ft³)</th>
                   <th className="text-right">总件数</th>
-                  <th className="text-right">EW报价</th>
+                  <th className="text-right">WE报价</th>
                   <th className="text-right">运输距离</th>
                   {currentStatus === 'ordered' && <th>状态</th>}
                   {currentStatus === 'ordered' && <th>卡车信息</th>}
@@ -922,8 +884,9 @@ const BrokerOrdersNew = () => {
                           onSave={handleCellUpdate}
                           formatDisplay={(v) => {
                             if (!v) return '-';
+                            // 使用UTC时间避免时区转换问题
                             const date = new Date(v);
-                            return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+                            return `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
                           }}
                         />
                       </td>
@@ -943,14 +906,10 @@ const BrokerOrdersNew = () => {
                           onSave={handleCellUpdate}
                         />
                       </td>
-                      <td className="order-number">
-                        <EditableCell
-                          value={order.ew_quote_number || order.order_number}
-                          orderId={order.id}
-                          field="ew_quote_number"
-                          type="text"
-                          onSave={handleCellUpdate}
-                        />
+                      <td className="order-number we-number">
+                        <span className="we-number-display">
+                          {order.ew_quote_number || order.order_number || '-'}
+                        </span>
                       </td>
                       <td>
                         <EditableCell
@@ -1026,15 +985,29 @@ const BrokerOrdersNew = () => {
                       </td>
                       <td>
                         {order.status === 'quote' ? (
-                          <button
-                            className="btn-confirm-order"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleConfirmOrder(order.id);
-                            }}
-                          >
-                            下单
-                          </button>
+                          <div className="quote-actions">
+                            <button
+                              className="btn-confirm-order"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleConfirmOrder(order.id);
+                              }}
+                            >
+                              下单
+                            </button>
+                            <button
+                              className="btn-navigate-small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const origin = order.origin_address || `${order.origin_city}, ${order.origin_state} ${order.origin_zipcode}`;
+                                const dest = order.destination_address || `${order.destination_city}, ${order.destination_state} ${order.destination_zipcode}`;
+                                window.open(`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=driving`, '_blank');
+                              }}
+                              title="打开Google Maps导航"
+                            >
+                              🗺️
+                            </button>
+                          </div>
                         ) : order.status === 'ordered' ? (
                           <div className="ordered-actions">
                             <div 
@@ -1145,106 +1118,25 @@ const BrokerOrdersNew = () => {
                       <tr className="expanded-row">
                         <td colSpan="100%">
                           <div className="expanded-content">
-                            {/* 重量和尺寸列表（支持粘贴编辑）*/}
-                            <div className="lists-section">
-                              <div className="list-column">
-                                <div className="list-header">
-                                  <h4>重量列表 (lbs)</h4>
-                                  <button 
-                                    className="btn-edit-list"
-                                    onClick={() => handleEditList(order.id, 'weight', order.weight_list)}
-                                  >
-                                    ✏️ 编辑
-                                  </button>
-                                </div>
-                                
-                                {editingList.orderId === order.id && editingList.type === 'weight' ? (
-                                  <div className="list-edit-mode">
-                                    <textarea
-                                      className="list-textarea"
-                                      rows="8"
-                                      value={listInput}
-                                      onChange={(e) => setListInput(e.target.value)}
-                                      placeholder="每行一个重量&#10;4260&#10;2820&#10;677&#10;...&#10;total: 7757"
-                                      autoFocus
-                                    />
-                                    <div className="list-edit-actions">
-                                      <button className="btn-save" onClick={handleSaveList}>保存</button>
-                                      <button className="btn-cancel" onClick={handleCancelList}>取消</button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="list-content">
-                                    {order.weight_list ? (
-                                      <>
-                                        {JSON.parse(order.weight_list).map((weight, idx) => (
-                                          <div key={idx} className="list-item">
-                                            {idx + 1}. {formatNumber(weight)} lbs
-                                          </div>
-                                        ))}
-                                        <div className="list-total">
-                                          总计: {formatNumber(order.total_weight_lbs)} lbs
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <div className="list-empty">未填写（点击编辑）</div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="list-column">
-                                <div className="list-header">
-                                  <h4>尺寸列表</h4>
-                                  <button 
-                                    className="btn-edit-list"
-                                    onClick={() => handleEditList(order.id, 'dimensions', order.dimensions_list)}
-                                  >
-                                    ✏️ 编辑
-                                  </button>
-                                </div>
-                                
-                                {editingList.orderId === order.id && editingList.type === 'dimensions' ? (
-                                  <div className="list-edit-mode">
-                                    <textarea
-                                      className="list-textarea"
-                                      rows="8"
-                                      value={listInput}
-                                      onChange={(e) => setListInput(e.target.value)}
-                                      placeholder="每行一个尺寸&#10;16*97*15 1p&#10;9*41*19 1p&#10;8*73*6 1p&#10;..."
-                                      autoFocus
-                                    />
-                                    <div className="list-edit-actions">
-                                      <button className="btn-save" onClick={handleSaveList}>保存</button>
-                                      <button className="btn-cancel" onClick={handleCancelList}>取消</button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="list-content">
-                                    {order.dimensions_list ? (
-                                      <>
-                                        {JSON.parse(order.dimensions_list).map((dim, idx) => (
-                                          <div key={idx} className="list-item">
-                                            {idx + 1}. {dim.length}×{dim.width}×{dim.height} 
-                                            {dim.pieces > 1 && ` (${dim.pieces}p)`}
-                                            <span className="dim-volume">
-                                              = {dim.volume?.toFixed(2)} ft³
-                                            </span>
-                                          </div>
-                                        ))}
-                                        <div className="list-total">
-                                          总件数: {JSON.parse(order.dimensions_list).reduce((sum, d) => sum + (d.pieces || 1), 0)}p
-                                          <br />
-                                          总体积: {order.total_volume ? `${parseFloat(order.total_volume).toFixed(2)} ft³` : '-'}
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <div className="list-empty">未填写（点击编辑）</div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                            {/* 货物明细列表（板数、重量、尺寸）*/}
+                            <CargoItemsList
+                              orderId={order.id}
+                              weightList={order.weight_list}
+                              dimensionsList={order.dimensions_list}
+                              totalWeightLbs={order.total_weight_lbs}
+                              totalVolume={order.total_volume}
+                              actualPallets={order.actual_pallets}
+                              onSave={async (orderId, updates) => {
+                                await orderApi.updateOrder(orderId, updates);
+                                setOrders(prevOrders =>
+                                  prevOrders.map(o =>
+                                    o.id === orderId ? { ...o, ...updates } : o
+                                  )
+                                );
+                                loadOrders();
+                              }}
+                              readOnly={currentStatus === 'completed' || currentStatus === 'cancelled'}
+                            />
 
                             {/* 详细地址（可编辑） */}
                             <div className="address-detail-section">

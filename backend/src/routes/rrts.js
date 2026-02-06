@@ -17,8 +17,8 @@ const RRTS_WSDL_URL = 'https://webservices.rrts.com/rating/ratequote.asmx?WSDL';
 const RRTS_ENDPOINT = 'https://webservices.rrts.com/rating/ratequote.asmx';
 
 // RRTS 认证信息
-const RRTS_APP_ID = process.env.RRTS_APP_ID || 'f850d178-35e2-4c8a-9a92-7a688b37d032';
-const RRTS_API_KEY = process.env.RRTS_API_KEY || 'xe0Bo+JC3Ez7AzFci9i5yA==';
+const RRTS_APP_ID = process.env.RRTS_APP_ID;
+const RRTS_API_KEY = process.env.RRTS_API_KEY;
 
 // 用户名和密码 - 可能使用 API Key 或单独的凭证
 const RRTS_USERNAME = process.env.RRTS_USERNAME || RRTS_APP_ID;

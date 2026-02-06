@@ -439,12 +439,12 @@
   }
 }
 
-/* Custom Google Maps styles */
-.gm-style-iw {
+/* Custom Google Maps styles - for address input autocomplete only */
+.address-input-container .gm-style-iw {
   max-width: 300px !important;
 }
 
-.gm-style .gm-style-iw-c {
+.address-input-container .gm-style .gm-style-iw-c {
   padding: 12px !important;
 }
 

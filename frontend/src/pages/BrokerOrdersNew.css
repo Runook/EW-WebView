@@ -246,6 +246,22 @@
   color: #3498db;
 }
 
+/* WE单号样式 - 只读 */
+.we-number {
+  background: transparent !important;
+}
+
+.we-number-display {
+  font-weight: 700;
+  color: #2563eb;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  display: inline-block;
+  letter-spacing: 0.5px;
+}
+
 .price {
   font-weight: 600;
   color: #27ae60;
@@ -836,32 +852,6 @@
 }
 
 /* 客户表按钮 */
-.nav-customers {
-  background: #e74c3c;
-  color: white;
-}
-
-.nav-customers:hover {
-  background: #c0392b;
-}
-
-.nav-vendors {
-  background: #27ae60;
-  color: white;
-}
-
-.nav-vendors:hover {
-  background: #1e8449;
-}
-
-.nav-payments {
-  background: #3498db;
-  color: white;
-}
-
-.nav-payments:hover {
-  background: #2980b9;
-}
 
 /* 给3PL状态样式（黄色） */
 .order-row.sub-status-sent_to_3pl {
@@ -890,4 +880,27 @@
   background: #8e44ad;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 报价单操作区 - 下单和导航按钮 */
+.quote-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-navigate-small {
+  padding: 4px 8px;
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.btn-navigate-small:hover {
+  background: #229954;
+  transform: scale(1.1);
 }

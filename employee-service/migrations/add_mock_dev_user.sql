@@ -15,7 +15,7 @@ INSERT INTO users (
   updated_at
 ) 
 SELECT 
-  'dev@ewltl.com',
+  'dev@welogx.com',
   'mock-user-sub-123',
   '开发',
   '者',
@@ -26,7 +26,7 @@ SELECT
   NOW(),
   NOW()
 WHERE NOT EXISTS (
-  SELECT 1 FROM users WHERE email = 'dev@ewltl.com'
+  SELECT 1 FROM users WHERE email = 'dev@welogx.com'
 );
 
 -- 验证Mock用户是否存在
@@ -39,5 +39,5 @@ SELECT
   employee_id,
   is_employee
 FROM users 
-WHERE email = 'dev@ewltl.com';
+WHERE email = 'dev@welogx.com';
 

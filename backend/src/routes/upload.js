@@ -48,7 +48,7 @@ router.post('/single', auth, upload.single('image'), (req, res) => {
     }
 
     // 返回完整的API URL而不是相对路径
-    const fileUrl = `${process.env.FRONTEND_URL || 'https://www.ewltl.com'}/api/uploads/${req.file.filename}`;
+    const fileUrl = `${process.env.FRONTEND_URL || 'https://welogx.com'}/api/uploads/${req.file.filename}`;
     
     res.json({
       success: true,
@@ -81,7 +81,7 @@ router.post('/multiple', auth, upload.array('images', 10), (req, res) => {
     }
 
     const fileUrls = req.files.map(file => ({
-      url: `${process.env.FRONTEND_URL || 'https://www.ewltl.com'}/api/uploads/${file.filename}`,
+      url: `${process.env.FRONTEND_URL || 'https://welogx.com'}/api/uploads/${file.filename}`,
       filename: file.filename,
       originalname: file.originalname,
       size: file.size,

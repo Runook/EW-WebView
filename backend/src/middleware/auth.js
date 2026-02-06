@@ -82,12 +82,12 @@ const syncCognitoUser = async (cognitoPayload) => {
     // 检查email是否为UUID格式（错误的数据），如果是则生成临时email
     if (email && email.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
       console.warn('⚠️ Email为UUID格式，使用cognito_sub生成临时email');
-      email = `user_${cognitoSub.substring(0, 8)}@ewltl.com`;
+      email = `user_${cognitoSub.substring(0, 8)}@welogx.com`;
     }
     
     if (!email) {
       console.error('❌ 无法从Cognito payload中获取email，使用cognito_sub生成临时email');
-      email = `user_${cognitoSub.substring(0, 8)}@ewltl.com`;
+      email = `user_${cognitoSub.substring(0, 8)}@welogx.com`;
     }
     
     // 查找现有用户（先尝试cognito_sub，再尝试email）
@@ -96,19 +96,17 @@ const syncCognitoUser = async (cognitoPayload) => {
       .first();
     
     if (!user && email) {
-      // 如果没找到，尝试通过email查找
+      // 如果没找到，尝试通过email查找（忽略大小写）
       user = await db('users')
-        .where('email', email)
+        .whereRaw('LOWER(email) = LOWER(?)', [email])
         .first();
     }
     
     if (!user) {
-      // 创建新用户
+      // 创建新用户 - 使用固定默认值，避免额外的数据库查询导致失败
       console.log(`📝 创建新的Cognito用户: ${email}`);
       
-      // 获取注册奖励积分
-      const registrationBonus = await require('../models/UserManagement').getSystemConfig('user_registration_bonus');
-      const bonusCredits = parseInt(registrationBonus) || 500;
+      const bonusCredits = 500; // 固定默认值
       
       const insertData = {
         email: email,
@@ -116,28 +114,45 @@ const syncCognitoUser = async (cognitoPayload) => {
         first_name: cognitoPayload.given_name || cognitoPayload.name?.split(' ')[0] || '',
         last_name: cognitoPayload.family_name || cognitoPayload.name?.split(' ')[1] || '',
         phone: cognitoPayload.phone_number || '',
-        user_type: 'shipper', // 统一使用shipper
+        user_type: 'shipper',
         is_active: true,
         is_verified: cognitoPayload.email_verified || false,
-        credits: bonusCredits, // 使用系统配置的注册奖励
+        is_employee: false,
+        credits: bonusCredits,
         total_credits_earned: bonusCredits,
         total_credits_spent: 0,
         last_login_at: new Date()
       };
       
-      console.log('📝 插入用户数据:', insertData);
+      console.log('📝 插入用户数据:', JSON.stringify(insertData, null, 2));
       
-      const [newUser] = await db('users')
-        .insert(insertData)
-        .returning('*');
-      user = newUser;
+      try {
+        const [newUser] = await db('users')
+          .insert(insertData)
+          .returning('*');
+        user = newUser;
+        console.log('✅ 用户创建成功:', user.id, user.email);
+      } catch (insertError) {
+        console.error('❌ 插入用户失败:', insertError.message);
+        console.error('❌ 插入数据:', insertData);
+        // 可能是并发插入导致的唯一约束冲突，再次尝试查询
+        user = await db('users')
+          .whereRaw('LOWER(email) = LOWER(?)', [email])
+          .orWhere('cognito_sub', cognitoSub)
+          .first();
+        if (user) {
+          console.log('✅ 找到已存在的用户:', user.id);
+        } else {
+          throw insertError;
+        }
+      }
     } else {
       // 更新现有用户
-      console.log(`🔄 更新Cognito用户: ${email}`);
+      console.log(`🔄 更新Cognito用户: ${email} (ID: ${user.id})`);
       await db('users')
         .where('id', user.id)
         .update({
-          cognito_sub: cognitoSub, // 确保cognito_sub被设置
+          cognito_sub: cognitoSub,
           first_name: cognitoPayload.given_name || user.first_name,
           last_name: cognitoPayload.family_name || user.last_name,
           phone: cognitoPayload.phone_number || user.phone,
@@ -151,7 +166,8 @@ const syncCognitoUser = async (cognitoPayload) => {
     
     return user;
   } catch (error) {
-    console.error('❌ 同步Cognito用户失败:', error);
+    console.error('❌ 同步Cognito用户失败:', error.message);
+    console.error('❌ 错误堆栈:', error.stack);
     throw error;
   }
 };
@@ -179,7 +195,7 @@ const auth = async (req, res, next) => {
       try {
         // 从数据库获取Mock用户
         const mockUser = await db('users')
-          .where('email', 'dev@ewltl.com')
+          .where('email', 'dev@welogx.com')
           .first();
         
         if (mockUser) {
@@ -224,25 +240,38 @@ const auth = async (req, res, next) => {
       
       console.log('✅ Token验证成功:', payload.email);
       
-      // 同步用户到数据库
+      // 同步用户到数据库 - 重试机制
       let dbUser;
-      try {
-        dbUser = await syncCognitoUser(payload);
-      } catch (syncError) {
-        console.error('❌ 同步用户失败，但继续使用token信息:', syncError.message);
-        // 即使同步失败，我们仍然可以使用token中的信息
-        req.user = {
-          id: payload.sub, // 使用Cognito sub作为临时ID
-          userId: payload.sub,
-          email: payload.email || payload.username || 'unknown@example.com',
-          username: payload.email || payload.username,
-          userType: 'shipper',
-          phone_number: payload.phone_number || '',
-          credits: 0, // 默认积分
-          first_name: payload.given_name || '',
-          last_name: payload.family_name || ''
-        };
-        return next();
+      let syncAttempts = 0;
+      const maxAttempts = 2;
+      
+      while (syncAttempts < maxAttempts) {
+        try {
+          syncAttempts++;
+          dbUser = await syncCognitoUser(payload);
+          break; // 成功则退出循环
+        } catch (syncError) {
+          console.error(`❌ 同步用户失败 (尝试 ${syncAttempts}/${maxAttempts}):`, syncError.message);
+          if (syncAttempts >= maxAttempts) {
+            console.error('❌ 所有同步尝试均失败，使用临时用户信息');
+            // 同步失败时使用临时信息，但记录详细日志
+            req.user = {
+              id: payload.sub,
+              userId: payload.sub,
+              email: payload.email || payload.username || 'unknown@example.com',
+              username: payload.email || payload.username,
+              userType: 'shipper',
+              phone_number: payload.phone_number || '',
+              credits: 0,
+              first_name: payload.given_name || '',
+              last_name: payload.family_name || '',
+              _syncFailed: true // 标记同步失败
+            };
+            return next();
+          }
+          // 等待100ms后重试
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
       
       // 设置用户信息（使用数据库中的信息）
@@ -313,7 +342,7 @@ const optionalAuth = async (req, res, next) => {
       
       try {
         const mockUser = await db('users')
-          .where('email', 'dev@ewltl.com')
+          .where('email', 'dev@welogx.com')
           .first();
         
         if (mockUser) {

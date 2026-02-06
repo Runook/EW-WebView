@@ -5,7 +5,7 @@ const GATest = () => {
     gtagExists: false,
     dataLayerExists: false,
     dataLayerLength: 0,
-    measurementId: 'G-MTZCJ79H05',
+    measurementId: 'G-HFZWKT7TVE',
     testEventSent: false
   });
 
@@ -16,7 +16,7 @@ const GATest = () => {
         gtagExists: typeof window.gtag === 'function',
         dataLayerExists: Array.isArray(window.dataLayer),
         dataLayerLength: window.dataLayer ? window.dataLayer.length : 0,
-        measurementId: 'G-MTZCJ79H05',
+        measurementId: 'G-HFZWKT7TVE',
         testEventSent: false
       };
       setGaStatus(status);

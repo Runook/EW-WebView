@@ -5,6 +5,7 @@ import './ConfirmOrderModal.css';
 const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
   const [formData, setFormData] = useState({
     truck_payment: '',
+    truck_reference_price: '', // 卡车参考价（选填）
     mc_number: '',
     truck_company_name: '',
     truck_contact: '',
@@ -205,7 +206,7 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
             <h3>订单信息</h3>
             <div className="summary-grid">
               <div className="summary-item">
-                <span className="label">EW单号:</span>
+                <span className="label">WE单号:</span>
                 <span className="value">{order.ew_quote_number || '-'}</span>
               </div>
               <div className="summary-item">
@@ -213,11 +214,11 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
                 <span className="value">{order.inquiry_company || '-'}</span>
               </div>
               <div className="summary-item">
-                <span className="label">报价日期:</span>
-                <span className="value">{order.quote_date || '-'}</span>
+                <span className="label">日期:</span>
+                <span className="value">{order.quote_date ? new Date(order.quote_date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }) : '-'}</span>
               </div>
               <div className="summary-item">
-                <span className="label">EW报价:</span>
+                <span className="label">WE报价:</span>
                 <span className="value">${order.ew_quote_price ? parseFloat(order.ew_quote_price).toLocaleString() : '-'}</span>
               </div>
               <div className="summary-item full-width">
@@ -311,6 +312,19 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
                   {errors.truck_payment && <span className="error-message">{errors.truck_payment}</span>}
                 </div>
 
+                <div className="form-group">
+                  <label>卡车参考价 <span className="optional">(选填)</span></label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.truck_reference_price}
+                    onChange={(e) => handleChange('truck_reference_price', e.target.value)}
+                    placeholder="参考报价"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
                 <div className="form-group autocomplete-wrapper">
                   <label>MC Number <span className="required">*</span></label>
                   <input

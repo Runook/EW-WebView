@@ -46,7 +46,7 @@ services:
       - RRTS_USERNAME=HomeBay
       - RRTS_PASSWORD=@Homebay1234
       - MOCK_USER_ID=${MOCK_USER_ID:-1}
-      - MOCK_USER_EMAIL=${MOCK_USER_EMAIL:-dev@ewltl.com}
+      - MOCK_USER_EMAIL=${MOCK_USER_EMAIL:-dev@welogx.com}
       - MOCK_USER_CREDITS=${MOCK_USER_CREDITS:-9999}
     volumes:
       - ./backend:/app

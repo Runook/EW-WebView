@@ -34,6 +34,7 @@ import BrokerOrderForm from './pages/BrokerOrderForm';
 import Customers from './pages/Customers';
 import Vendors from './pages/Vendors';
 import Payments from './pages/Payments';
+import MapView from './pages/MapView';
 import './App.css';
 import './config/amplify'; 
 
@@ -59,9 +60,9 @@ function App() {
       if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
         console.log('🟢 GA4 Loaded Successfully');
         console.log('📊 Tracking Page:', location.pathname + location.search);
-        console.log('🏷️  Using GA ID: G-MTZCJ79H05');
+        console.log('🏷️  Using GA ID: G-HFZWKT7TVE');
         
-        window.gtag('config', 'G-MTZCJ79H05', {
+        window.gtag('config', 'G-HFZWKT7TVE', {
           page_path: location.pathname + location.search,
           debug_mode: process.env.NODE_ENV === 'development' // 开发环境启用调试
         });
@@ -164,6 +165,7 @@ function App() {
               <Route path="/employee/customers" element={<Customers />} />
               <Route path="/employee/vendors" element={<Vendors />} />
               <Route path="/employee/payments" element={<Payments />} />
+              <Route path="/employee/map-view" element={<MapView />} />
               <Route path="/employee/admin" element={<EmployeeAdmin />} />
               
               {/* 我们 */}

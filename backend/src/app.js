@@ -238,6 +238,21 @@ app.use('/api/warp', require('./routes/warp'));
 // RRTS (Roadrunner) Freight API 代理路由
 app.use('/api/rrts', require('./routes/rrts'));
 
+// R+L Carriers API 代理路由
+app.use('/api/rlc', require('./routes/rlc'));
+
+// Saia LTL Freight API 代理路由
+app.use('/api/saia', require('./routes/saia'));
+
+// TForce Freight API 代理路由 (OAuth 2.0)
+app.use('/api/tforce', require('./routes/tforce'));
+
+// EDI Express API 代理路由
+app.use('/api/ediexpress', require('./routes/ediexpress'));
+
+// STG Logistics API 代理路由
+app.use('/api/stg', require('./routes/stg'));
+
 // 临时测试路由
 app.get('/api/fba/test', (req, res) => {
   res.json({ message: 'FBA test route working!' });

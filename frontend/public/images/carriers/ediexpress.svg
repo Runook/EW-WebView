@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 70">
+  <defs>
+    <linearGradient id="lightningGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#B71C1C"/>
+      <stop offset="50%" style="stop-color:#BDBDBD"/>
+      <stop offset="100%" style="stop-color:#B71C1C"/>
+    </linearGradient>
+  </defs>
+  <!-- EDI 文字 (红色斜体) -->
+  <text x="10" y="38" font-family="Arial Black, sans-serif" font-size="32" font-weight="900" font-style="italic" fill="#C62828">EDI</text>
+  <!-- 闪电图案 -->
+  <polygon points="85,5 75,30 90,30 70,55 100,25 85,25 95,5" fill="url(#lightningGrad)" stroke="#616161" stroke-width="1"/>
+  <!-- EXPRESS 文字 (红色斜体) -->
+  <text x="105" y="38" font-family="Arial Black, sans-serif" font-size="32" font-weight="900" font-style="italic" fill="#C62828">EXPRESS</text>
+  <!-- 标语 -->
+  <text x="105" y="58" font-family="Times New Roman, serif" font-size="14" font-style="italic" fill="#757575">Lightning Fast Service</text>
+</svg>

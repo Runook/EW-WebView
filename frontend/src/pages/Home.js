@@ -50,15 +50,15 @@ const Home = () => {
   return (
     <div className="home">
       <Helmet>
-        <title>EW物流平台（EW Logistics）- 美国陆运/海运/空运一站式物流服务 | ewltl.com</title>
-        <meta name="description" content="EW物流平台（ewltl.com）- 专业的美国物流运输服务平台，提供陆运、海运、空运及多式联运的一站式数字化物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等服务。" />
-        <link rel="canonical" href="https://www.ewltl.com/" />
-        <meta name="keywords" content="EW物流, 东西方物流, EW Logistics, ewltl, ewltl.com, 美国物流, 陆运, 海运, 空运, 物流平台" />
+        <title>EW物流平台（EW Logistics）- 美国陆运/海运/空运一站式物流服务 | welogx.com</title>
+        <meta name="description" content="EW物流平台（welogx.com）- 专业的美国物流运输服务平台，提供陆运、海运、空运及多式联运的一站式数字化物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等服务。" />
+        <link rel="canonical" href="https://welogx.com/" />
+        <meta name="keywords" content="EW物流, 东西方物流, EW Logistics, ewltl, welogx.com, 美国物流, 陆运, 海运, 空运, 物流平台" />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://www.ewltl.com/" />
+        <meta property="og:url" content="https://welogx.com/" />
         <meta property="og:title" content="EW物流平台 - 专业的美国物流运输服务平台" />
         <meta property="og:description" content="专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。" />
-        <meta property="og:image" content="https://www.ewltl.com/logo.png" />
+        <meta property="og:image" content="https://welogx.com/logo.png" />
       </Helmet>
       {/* Video Hero Section - 首屏视频背景 */}
       <section className="video-hero">

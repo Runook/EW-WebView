@@ -27,7 +27,7 @@ const Customers = () => {
     billing_state: '',
     billing_zipcode: '',
     billing_country: 'USA',
-    payment_terms: 'Net 30',
+    payment_terms: 'Net 7',
     tax_id: '',
     is_active: true
   });
@@ -62,7 +62,7 @@ const Customers = () => {
       billing_state: '',
       billing_zipcode: '',
       billing_country: 'USA',
-      payment_terms: 'Net 30',
+      payment_terms: 'Net 7',
       tax_id: '',
       is_active: true
     });
@@ -84,7 +84,7 @@ const Customers = () => {
       billing_state: customer.billing_state || '',
       billing_zipcode: customer.billing_zipcode || '',
       billing_country: customer.billing_country || 'USA',
-      payment_terms: customer.payment_terms || 'Net 30',
+      payment_terms: customer.payment_terms || 'Net 7',
       tax_id: customer.tax_id || '',
       is_active: customer.is_active !== false
     });
@@ -205,7 +205,7 @@ const Customers = () => {
                   </td>
                   <td>
                     <span className="terms-badge">
-                      {customer.payment_terms || 'Net 30'}
+                      {customer.payment_terms || 'Net 7'}
                     </span>
                   </td>
                   <td>
@@ -412,6 +412,7 @@ const Customers = () => {
                         onChange={handleInputChange}
                       >
                         <option value="Due on Receipt">Due on Receipt (收到即付)</option>
+                        <option value="Net 7">Net 7 (7天内付款)</option>
                         <option value="Net 15">Net 15 (15天内付款)</option>
                         <option value="Net 30">Net 30 (30天内付款)</option>
                         <option value="Net 45">Net 45 (45天内付款)</option>

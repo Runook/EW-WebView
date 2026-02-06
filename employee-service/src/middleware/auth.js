@@ -101,7 +101,7 @@ const auth = async (req, res, next) => {
       try {
         // 从数据库获取Mock用户
         const mockUser = await db('users')
-          .where('email', 'dev@ewltl.com')
+          .where('email', 'dev@welogx.com')
           .first();
         
         if (mockUser) {

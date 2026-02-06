@@ -5,7 +5,7 @@
   "scripts": {
     "generate-sitemap": "node scripts/generate-sitemap.js",
     "prerender": "node scripts/prerender.js",
-    "seo-audit": "lighthouse --chrome-flags=\"--headless\" --output html --output-path ./seo-audit.html https://www.ewltl.com"
+    "seo-audit": "lighthouse --chrome-flags=\"--headless\" --output html --output-path ./seo-audit.html https://welogx.com"
   },
   "devDependencies": {
     "lighthouse": "^11.0.0",

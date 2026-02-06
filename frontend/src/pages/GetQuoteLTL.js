@@ -29,15 +29,16 @@ import { geocodeAddress as geocodeUtil } from '../config/googleMaps';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../components/common/Notification';
 import { apiServices } from '../utils/apiClient';
+import { orderApi } from '../config/employeeApi';
 import { apiLogger } from '../utils/logger';
 import ProgressSteps from '../components/ltl/ProgressSteps';
 import ShipmentSummary from '../components/ltl/ShipmentSummary';
 import ShipmentDetailsForm from '../components/ltl/ShipmentDetailsForm';
-import { warpApi } from '../config/warpApi';
+import { freightApi } from '../config/freightApi';
 
 const GetQuoteLTL = ({ fbaDestination }) => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { success, error: showError } = useNotification();
   
   // 表单初始数据 - LTL专用
@@ -505,19 +506,40 @@ const GetQuoteLTL = ({ fbaDestination }) => {
 
   // 计算总重量、托盘数等
   const calculateTotals = () => {
-    const totalWeight = formData.cargoItems.reduce((sum, item) => sum + parseFloat(item.weight || 0), 0);
+    // 总重量 = 每个货物的 (单托盘重量 × 托盘数) 之和
+    const totalWeight = formData.cargoItems.reduce((sum, item) => {
+      const pallets = parseInt(item.pallets || 0);
+      const weightPerPallet = parseFloat(item.weight || 0);
+      return sum + (weightPerPallet * pallets);
+    }, 0);
+    
+    // 总托盘数
     const totalPallets = formData.cargoItems.reduce((sum, item) => sum + parseInt(item.pallets || 0), 0);
+    
+    // 总线性英尺 = 每个货物的 (长度/12 × 托盘数) 之和
     const totalLinearFeet = formData.cargoItems.reduce((sum, item) => {
       const length = parseFloat(item.length || 0) / 12; // 转换为英尺
       const pallets = parseInt(item.pallets || 0);
       return sum + (length * pallets);
     }, 0);
+    
+    // 总体积 (立方英尺)
+    const totalCubicFeet = formData.cargoItems.reduce((sum, item) => {
+      const length = parseFloat(item.length || 0);
+      const width = parseFloat(item.width || 0);
+      const height = parseFloat(item.height || 0);
+      const pallets = parseInt(item.pallets || 0);
+      return sum + ((length * width * height / 1728) * pallets); // 1728 = 12^3
+    }, 0);
+    
+    // 最高的货运分类
     const highestClass = Math.max(...formData.cargoItems.map(item => parseFloat(item.freightClass || 0)));
     
     return {
       totalWeight: totalWeight.toFixed(2),
       totalPallets,
       totalLinearFeet: totalLinearFeet.toFixed(2),
+      totalCubicFeet: totalCubicFeet.toFixed(2),
       freightClass: highestClass
     };
   };
@@ -582,8 +604,8 @@ const GetQuoteLTL = ({ fbaDestination }) => {
         ? extractAddressComponents(selectedPlaces.destination.addressComponents)
         : { city: '', state: '', zip: '' };
 
-      // 准备Warp API请求数据
-      const warpQuoteData = {
+      // 准备多承运商 API 请求数据
+      const quoteRequestData = {
         originCity: originComponents.city,
         originState: originComponents.state,
         originZip: originComponents.zip,
@@ -601,26 +623,121 @@ const GetQuoteLTL = ({ fbaDestination }) => {
         deliveryServices: formData.deliveryServices
       };
 
-      console.log('🚚 准备调用Warp API获取LTL报价...', warpQuoteData);
+      console.log('🚚 准备调用 5 家运输商API获取LTL报价...', quoteRequestData);
+      console.log('📋 运输商列表: Warp, Roadrunner, R+L Carriers, Saia, TForce');
 
-      // 调用Warp API获取真实报价
-      const quotes = await warpApi.getLTLQuote(warpQuoteData);
+      // 调用统一接口获取所有运输商报价
+      const quotes = await freightApi.getAllLTLQuotes(quoteRequestData);
       
       if (quotes && quotes.length > 0) {
         setQuoteResults(quotes);
         setShowQuoteResults(true);
         setCurrentStep(2);
-        success(`成功获取 ${quotes.length} 个承运商报价！`);
+        success(`成功获取 ${quotes.length} 个报价（来自多家运输商）！`);
+        
+        // ====== 自动在员工系统创建报价单 ======
+        try {
+          // 准备重量列表 (单托盘重量)
+          const weights = formData.cargoItems.map(item => 
+            Math.round(parseFloat(item.weight || 0))
+          );
+          
+          // 准备尺寸列表 (包含 freightClass)
+          const dimensions = formData.cargoItems.map(item => ({
+            length: Math.round(parseFloat(item.length || 0)),
+            width: Math.round(parseFloat(item.width || 0)),
+            height: Math.round(parseFloat(item.height || 0)),
+            pieces: parseInt(item.pallets || 1),
+            volume: (parseFloat(item.length || 0) * parseFloat(item.width || 0) * parseFloat(item.height || 0) / 1728),
+            freightClass: item.freightClass || ''  // 货物等级 Class
+          }));
+          
+          // 计算总计
+          const totals = calculateTotals();
+          
+          // 获取用户邮箱
+          const userEmail = user?.email || user?.attributes?.email || '未知用户';
+          
+          // 获取当前纽约时间日期
+          const getNYDate = () => {
+            const formatter = new Intl.DateTimeFormat('en-CA', {
+              timeZone: 'America/New_York',
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            });
+            return formatter.format(new Date());
+          };
+          
+          // 创建报价单
+          // 解析距离数值 (从 "1,234 mi" 或 "1234 miles" 格式中提取数字)
+          let transportDistance = null;
+          if (distanceInfo?.distance) {
+            const distanceStr = distanceInfo.distance.replace(/,/g, ''); // 移除千位分隔符
+            const distanceMatch = distanceStr.match(/[\d.]+/);
+            if (distanceMatch) {
+              transportDistance = Math.round(parseFloat(distanceMatch[0]));
+            }
+          }
+          
+          const orderData = {
+            customer_name: userEmail,
+            inquiry_company: userEmail,
+            cargo_description: formData.cargoItems[0]?.description || 'LTL货物',
+            cargo_description_detailed: formData.cargoItems.map((item, idx) => 
+              `货物${idx + 1}: ${item.pallets || 1}托盘, ${item.weight || 0}lbs, ${item.length}×${item.width}×${item.height}in`
+            ).join('; '),
+            order_type: 'land_freight',
+            status: 'quote',
+            quote_date: getNYDate(),
+            // 地址信息
+            origin_city: originComponents.city,
+            origin_state: originComponents.state,
+            origin_zipcode: originComponents.zip,
+            destination_city: destinationComponents.city,
+            destination_state: destinationComponents.state,
+            destination_zipcode: destinationComponents.zip,
+            // 地址类型
+            address_type: formData.destinationLocationType || 'commercial',
+            // 重量和尺寸
+            weight_list: JSON.stringify(weights),
+            dimensions_list: JSON.stringify(dimensions),
+            total_weight_lbs: parseFloat(totals.totalWeight),
+            total_volume: parseFloat(totals.totalCubicFeet),
+            actual_pallets: totals.totalPallets,
+            // 运输距离 (英里)
+            transport_distance: transportDistance,
+            // 报价信息 (取最低价)
+            ew_quote_price: quotes[0]?.price || 0,
+            // 备注
+            cargo_type: `LTL报价 - ${quotes.length}家运输商`,
+            // 取货日期
+            pickup_date: formData.pickupDate,
+            delivery_date: formData.deliveryDate
+          };
+          
+          console.log('📋 创建报价单到员工系统:', orderData);
+          
+          const createResponse = await orderApi.createOrder(orderData);
+          if (createResponse.success) {
+            console.log('✅ 报价单已同步到员工系统:', createResponse.data);
+          }
+        } catch (syncError) {
+          console.error('⚠️ 同步报价单到员工系统失败:', syncError);
+          // 不阻塞用户操作，只记录日志
+        }
+        // ====== 同步结束 ======
+        
       } else {
         showError('未找到可用的报价，请检查运输信息或稍后重试');
       }
       
     } catch (error) {
-      console.error('❌ Warp API调用失败:', error);
+      console.error('❌ 多承运商API调用失败:', error);
       showError('获取报价失败: ' + error.message);
       
       // 如果API失败，降级使用Mock数据进行测试
-      console.log('⚠️ 降级使用Mock数据...');
+      console.log('⚠️ 降级使用Mock数据（仅用于演示）...');
       const mockQuotes = [
         {
           id: 1,
@@ -893,13 +1010,13 @@ const GetQuoteLTL = ({ fbaDestination }) => {
 
                 <div className="form-grid dimensions-grid">
                   <div className="form-group">
-                    <label>重量 (磅) <span className="required">*</span></label>
+                    <label>单个托盘重量 (磅) <span className="required">*</span></label>
                     <div className="dimension-input-group">
                       <input
                         type="number"
                         value={item.weight}
                         onChange={(e) => updateCargoItem(item.id, 'weight', e.target.value)}
-                        placeholder="重量lbs"
+                        placeholder="每个托盘的重量"
                         min="1"
                         step="0.1"
                         required
@@ -909,13 +1026,22 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                           type="number"
                           value={item.weightKg}
                           onChange={(e) => updateCargoItem(item.id, 'weightKg', e.target.value)}
-                          placeholder="输入kg自动转换为lbs"
+                          placeholder="输入kg自动转换"
                           step="0.1"
                           className="unit-converter"
                         />
                         <span className="unit-label">kg</span>
                       </div>
                     </div>
+                    {/* 自动计算总重量显示 */}
+                    {parseInt(item.pallets) > 1 && item.weight && (
+                      <div className="calculated-total-weight">
+                        <span className="total-label">总重量:</span>
+                        <span className="total-value">
+                          {(parseFloat(item.weight) * parseInt(item.pallets)).toFixed(1)} lbs
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -1165,23 +1291,35 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                           </div>
                         </div>
 
-                        {/* 第二列：价格和有效期 */}
+                        {/* 第二列：服务等级和价格 */}
                         <div className="col-price">
-                          <div className="service-level-badge">{quote.serviceLevel}</div>
-                          <div className="price-big">${quote.price.toFixed(2)}</div>
-                          <div className="exp-date-small">EXP Date: {quote.expDate}</div>
+                          <div 
+                            className={`service-level-badge ${quote.serviceBadge || 'standard'}`}
+                            style={{ backgroundColor: quote.serviceColor || '#4CAF50' }}
+                          >
+                            {quote.isGuaranteed && <span className="guarantee-icon">✓</span>}
+                            {quote.serviceLevel || 'Standard LTL'}
+                          </div>
+                          <div className="price-big">${(quote.price || 0).toFixed(2)}</div>
+                          <div className="exp-date-small">有效期: {quote.expDate || 'N/A'}</div>
                         </div>
 
                         {/* 第三列：服务类型和运输时间 */}
                         <div className="col-service">
-                          <div className="service-type-text">{quote.serviceType}</div>
-                          <div className="transit-time">{quote.transitDays}</div>
+                          <div className="service-type-text">{quote.serviceType || 'LTL Service'}</div>
+                          <div className="transit-time">
+                            <Clock size={14} className="inline-icon" />
+                            {quote.transitDays || 'TBD'}
+                          </div>
+                          {quote.fuelSurcharge && (
+                            <div className="fuel-surcharge">燃油附加: ${quote.fuelSurcharge}</div>
+                          )}
                         </div>
 
-                        {/* 第四列：运输方式 */}
+                        {/* 第四列：运输方式和Quote ID */}
                         <div className="col-transit">
-                          <div className="transit-label">Direct</div>
-                          <div className="transit-value">{quote.transitType}</div>
+                          <div className="transit-label">{quote.isGuaranteed ? '保证送达' : '标准运输'}</div>
+                          <div className="quote-id-small">#{quote.quoteId?.slice(-8) || 'N/A'}</div>
                         </div>
 
                         {/* 第五列：最大责任险 */}
@@ -1191,10 +1329,10 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                             <HelpCircle size={12} className="help-icon" />
                           </div>
                           <div className="liability-amount">
-                            ${quote.maxLiability.new.toFixed(2)} /
+                            ${quote.maxLiability?.new?.toFixed(2) || 'N/A'} /
                           </div>
                           <div className="liability-amount">
-                            ${quote.maxLiability.used.toFixed(2)}
+                            ${quote.maxLiability?.used?.toFixed(2) || 'N/A'}
                           </div>
                         </div>
 
@@ -1217,94 +1355,118 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                         <div className="quote-card-expanded">
                           <div className="terminals-container">
                             {/* 取货终端 */}
-                            <div className="terminal-card">
-                              <div className="terminal-header">
-                                <MapPin size={14} />
-                                <h4>取货终端</h4>
+                            {quote.pickupTerminal && Object.keys(quote.pickupTerminal).length > 0 ? (
+                              <div className="terminal-card">
+                                <div className="terminal-header">
+                                  <MapPin size={14} />
+                                  <h4>取货终端</h4>
+                                </div>
+                                <div className="terminal-body">
+                                  <div className="terminal-item">
+                                    <span className="label">名称：</span>
+                                    <span className="value">{quote.pickupTerminal.name || 'N/A'}</span>
+                                  </div>
+                                  <div className="terminal-item">
+                                    <span className="label">地址：</span>
+                                    <span className="value">
+                                      {quote.pickupTerminal.address1 || 'N/A'}
+                                      {quote.pickupTerminal.address2 && `, ${quote.pickupTerminal.address2}`}
+                                    </span>
+                                  </div>
+                                  <div className="terminal-item">
+                                    <span className="label">城市：</span>
+                                    <span className="value">
+                                      {quote.pickupTerminal.city || ''}, {quote.pickupTerminal.state || ''} {quote.pickupTerminal.zip || ''}
+                                    </span>
+                                  </div>
+                                  <div className="terminal-item">
+                                    <span className="label">国家：</span>
+                                    <span className="value">{quote.pickupTerminal.country || 'USA'}</span>
+                                  </div>
+                                  <div className="terminal-item">
+                                    <span className="label">
+                                      <Phone size={12} className="inline-icon" />
+                                      电话：
+                                    </span>
+                                    <span className="value">{quote.pickupTerminal.phone || 'N/A'}</span>
+                                  </div>
+                                  <div className="terminal-item">
+                                    <span className="label">
+                                      <Phone size={12} className="inline-icon" />
+                                      免费：
+                                    </span>
+                                    <span className="value">{quote.pickupTerminal.tollFree || 'N/A'}</span>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="terminal-body">
-                                <div className="terminal-item">
-                                  <span className="label">名称：</span>
-                                  <span className="value">{quote.pickupTerminal.name}</span>
+                            ) : (
+                              <div className="terminal-card terminal-na">
+                                <div className="terminal-header">
+                                  <MapPin size={14} />
+                                  <h4>取货终端</h4>
                                 </div>
-                                <div className="terminal-item">
-                                  <span className="label">地址：</span>
-                                  <span className="value">
-                                    {quote.pickupTerminal.address1}
-                                    {quote.pickupTerminal.address2 && `, ${quote.pickupTerminal.address2}`}
-                                  </span>
-                                </div>
-                                <div className="terminal-item">
-                                  <span className="label">城市：</span>
-                                  <span className="value">
-                                    {quote.pickupTerminal.city}, {quote.pickupTerminal.state} {quote.pickupTerminal.zip}
-                                  </span>
-                                </div>
-                                <div className="terminal-item">
-                                  <span className="label">国家：</span>
-                                  <span className="value">{quote.pickupTerminal.country}</span>
-                                </div>
-                                <div className="terminal-item">
-                                  <span className="label">
-                                    <Phone size={12} className="inline-icon" />
-                                    电话：
-                                  </span>
-                                  <span className="value">{quote.pickupTerminal.phone}</span>
-                                </div>
-                                <div className="terminal-item">
-                                  <span className="label">
-                                    <Phone size={12} className="inline-icon" />
-                                    免费：
-                                  </span>
-                                  <span className="value">{quote.pickupTerminal.tollFree}</span>
+                                <div className="terminal-body">
+                                  <p className="no-terminal-info">终端信息暂不可用</p>
                                 </div>
                               </div>
-                            </div>
+                            )}
 
                             {/* 送货终端 */}
-                            <div className="terminal-card">
-                              <div className="terminal-header">
-                                <MapPin size={14} />
-                                <h4>送货终端</h4>
+                            {quote.dropTerminal && Object.keys(quote.dropTerminal).length > 0 ? (
+                              <div className="terminal-card">
+                                <div className="terminal-header">
+                                  <MapPin size={14} />
+                                  <h4>送货终端</h4>
+                                </div>
+                                <div className="terminal-body">
+                                  <div className="terminal-item">
+                                    <span className="label">名称：</span>
+                                    <span className="value">{quote.dropTerminal.name || 'N/A'}</span>
+                                  </div>
+                                  <div className="terminal-item">
+                                    <span className="label">地址：</span>
+                                    <span className="value">
+                                      {quote.dropTerminal.address1 || 'N/A'}
+                                      {quote.dropTerminal.address2 && `, ${quote.dropTerminal.address2}`}
+                                    </span>
+                                  </div>
+                                  <div className="terminal-item">
+                                    <span className="label">城市：</span>
+                                    <span className="value">
+                                      {quote.dropTerminal.city || ''}, {quote.dropTerminal.state || ''} {quote.dropTerminal.zip || ''}
+                                    </span>
+                                  </div>
+                                  <div className="terminal-item">
+                                    <span className="label">国家：</span>
+                                    <span className="value">{quote.dropTerminal.country || 'USA'}</span>
+                                  </div>
+                                  <div className="terminal-item">
+                                    <span className="label">
+                                      <Phone size={12} className="inline-icon" />
+                                      电话：
+                                    </span>
+                                    <span className="value">{quote.dropTerminal.phone || 'N/A'}</span>
+                                  </div>
+                                  <div className="terminal-item">
+                                    <span className="label">
+                                      <Phone size={12} className="inline-icon" />
+                                      免费：
+                                    </span>
+                                    <span className="value">{quote.dropTerminal.tollFree || 'N/A'}</span>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="terminal-body">
-                                <div className="terminal-item">
-                                  <span className="label">名称：</span>
-                                  <span className="value">{quote.dropTerminal.name}</span>
+                            ) : (
+                              <div className="terminal-card terminal-na">
+                                <div className="terminal-header">
+                                  <MapPin size={14} />
+                                  <h4>送货终端</h4>
                                 </div>
-                                <div className="terminal-item">
-                                  <span className="label">地址：</span>
-                                  <span className="value">
-                                    {quote.dropTerminal.address1}
-                                    {quote.dropTerminal.address2 && `, ${quote.dropTerminal.address2}`}
-                                  </span>
-                                </div>
-                                <div className="terminal-item">
-                                  <span className="label">城市：</span>
-                                  <span className="value">
-                                    {quote.dropTerminal.city}, {quote.dropTerminal.state} {quote.dropTerminal.zip}
-                                  </span>
-                                </div>
-                                <div className="terminal-item">
-                                  <span className="label">国家：</span>
-                                  <span className="value">{quote.dropTerminal.country}</span>
-                                </div>
-                                <div className="terminal-item">
-                                  <span className="label">
-                                    <Phone size={12} className="inline-icon" />
-                                    电话：
-                                  </span>
-                                  <span className="value">{quote.dropTerminal.phone}</span>
-                                </div>
-                                <div className="terminal-item">
-                                  <span className="label">
-                                    <Phone size={12} className="inline-icon" />
-                                    免费：
-                                  </span>
-                                  <span className="value">{quote.dropTerminal.tollFree}</span>
+                                <div className="terminal-body">
+                                  <p className="no-terminal-info">终端信息暂不可用</p>
                                 </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                         </div>
                       )}

@@ -16,10 +16,10 @@ export const COGNITO_CONFIG = {
   // 用户完成注册后会被重定向到这里
   redirectSignIn: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000'
-    : 'https://www.ewltl.com',
+    : 'https://welogx.com',
   redirectSignOut: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000'
-    : 'https://www.ewltl.com',
+    : 'https://welogx.com',
   
   // OAuth配置
   responseType: 'code',
