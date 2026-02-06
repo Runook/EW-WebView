@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://www.ewltl.com/sitemap.xml
+Sitemap: https://welogx.com/sitemap.xml
 
 # Crawl delay (optional, prevents overwhelming your server)
 Crawl-delay: 1

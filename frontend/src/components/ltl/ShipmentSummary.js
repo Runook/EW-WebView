@@ -1,6 +1,9 @@
 import React from 'react';
 
 const ShipmentSummary = ({ formData, totals, currentStep, onBackClick }) => {
+  // 货物数量
+  const itemCount = formData.cargoItems?.length || 0;
+  
   return (
     <div className="shipment-summary">
       <h2>SHIPMENT SUMMARY</h2>
@@ -11,28 +14,38 @@ const ShipmentSummary = ({ formData, totals, currentStep, onBackClick }) => {
             <div>LTL-{Date.now().toString().slice(-6)}</div>
           </div>
           <div className="summary-item">
-            <label>Pickup</label>
-            <div>{formData.origin}</div>
+            <label>起点</label>
+            <div>{formData.origin || '-'}</div>
           </div>
           <div className="summary-item">
-            <label>Delivery</label>
-            <div>{formData.destination}</div>
+            <label>终点</label>
+            <div>{formData.destination || '-'}</div>
+          </div>
+          <div className="summary-item highlight">
+            <label>总重量</label>
+            <div>{parseFloat(totals.totalWeight).toLocaleString()} lbs</div>
           </div>
           <div className="summary-item">
-            <label>Total Weight</label>
-            <div>{totals.totalWeight} lbs</div>
+            <label>货运分类</label>
+            <div>Class {totals.freightClass || '-'}</div>
+          </div>
+          <div className="summary-item highlight">
+            <label>托盘总数</label>
+            <div>{totals.totalPallets} 托盘</div>
           </div>
           <div className="summary-item">
-            <label>Class</label>
-            <div>{totals.freightClass}</div>
+            <label>线性英尺</label>
+            <div>{totals.totalLinearFeet} ft</div>
           </div>
+          {totals.totalCubicFeet && (
+            <div className="summary-item">
+              <label>体积</label>
+              <div>{totals.totalCubicFeet} cu.ft</div>
+            </div>
+          )}
           <div className="summary-item">
-            <label>Total Qty</label>
-            <div>{totals.totalPallets}</div>
-          </div>
-          <div className="summary-item">
-            <label>Total Linear Feet</label>
-            <div>{totals.totalLinearFeet}</div>
+            <label>货物种类</label>
+            <div>{itemCount} 种</div>
           </div>
         </div>
       </div>

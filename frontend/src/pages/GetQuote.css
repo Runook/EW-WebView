@@ -244,6 +244,30 @@
   font-size: 0.9rem;
 }
 
+/* 自动计算的总重量显示 */
+.calculated-total-weight {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  border-radius: 6px;
+  border-left: 3px solid #4caf50;
+}
+
+.calculated-total-weight .total-label {
+  font-size: 0.85rem;
+  color: #2e7d32;
+  font-weight: 500;
+}
+
+.calculated-total-weight .total-value {
+  font-size: 0.95rem;
+  color: #1b5e20;
+  font-weight: 600;
+}
+
 .unit-label {
   font-size: 0.85rem;
   color: #666;
@@ -931,11 +955,45 @@
 .service-level-badge {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #34C759;
-  background: #e8f5e8;
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
   align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
+.service-level-badge.standard {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.service-level-badge.guaranteed {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+.service-level-badge.expedited {
+  background: linear-gradient(135deg, #FF9800, #F57C00);
+}
+
+.service-level-badge.accelerated {
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+.service-level-badge.economy {
+  background: linear-gradient(135deg, #607D8B, #546E7A);
+}
+
+.service-level-badge.premium {
+  background: linear-gradient(135deg, #E91E63, #C2185B);
+}
+
+.guarantee-icon {
+  font-size: 0.65rem;
+  font-weight: bold;
 }
 
 .price-big {
@@ -955,18 +1013,35 @@
 .col-service {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.3rem;
 }
 
 .service-type-text {
   font-size: 0.85rem;
   font-weight: 600;
   color: #1d1d1f;
+  line-height: 1.2;
 }
 
 .transit-time {
   font-size: 0.75rem;
   color: #666;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.transit-time .inline-icon {
+  color: #999;
+}
+
+.fuel-surcharge {
+  font-size: 0.65rem;
+  color: #888;
+  background: #f5f5f5;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  display: inline-block;
 }
 
 /* 第四列：运输方式 */
@@ -982,10 +1057,21 @@
   color: #666;
 }
 
+.transit-label.guaranteed {
+  color: #2196F3;
+  font-weight: 600;
+}
+
 .transit-value {
   font-size: 0.85rem;
   font-weight: 600;
   color: #1d1d1f;
+}
+
+.quote-id-small {
+  font-size: 0.65rem;
+  color: #999;
+  font-family: 'Monaco', 'Consolas', monospace;
 }
 
 /* 第五列：责任险 */
@@ -1515,6 +1601,24 @@
   word-break: break-word;
   width: 100%;
   text-align: left;
+}
+
+/* 高亮显示的摘要项目 (总重量、托盘数等) */
+.summary-item.highlight {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border-left: 3px solid #2196f3;
+}
+
+.summary-item.highlight label {
+  color: #1565c0;
+}
+
+.summary-item.highlight div {
+  font-weight: 600;
+  color: #0d47a1;
+  font-size: 1.05rem;
 }
 
 .summary-actions {

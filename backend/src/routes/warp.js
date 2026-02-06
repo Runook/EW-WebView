@@ -11,7 +11,7 @@ const router = express.Router();
 
 // Warp API 配置
 const WARP_API_BASE_URL = 'https://gw.wearewarp.com/api/v1';
-const WARP_API_KEY = process.env.WARP_API_KEY || 'Fy1ur8h8psNFIkfNBqEdIPR4edGsYcsv/3p6yqGLFQbx7jp89j5lZ38Zg8Zm9gsWLfKrhWiwWBjBY9pcGS/FNc9KuwIDijYbGtWK4jmJJGQ=';
+const WARP_API_KEY = process.env.WARP_API_KEY;
 
 /**
  * POST /api/warp/quote

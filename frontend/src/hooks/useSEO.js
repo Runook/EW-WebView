@@ -62,13 +62,13 @@ export const useSEO = ({
     // 更新Open Graph标签
     updateOrCreateOGMeta('og:title', title);
     updateOrCreateOGMeta('og:description', description);
-    updateOrCreateOGMeta('og:image', image || 'https://www.ewltl.com/logo.png');
+    updateOrCreateOGMeta('og:image', image || 'https://welogx.com/logo.png');
     updateOrCreateOGMeta('og:url', url || window.location.href);
 
     // 更新Twitter标签
     updateOrCreateMeta('twitter:title', title);
     updateOrCreateMeta('twitter:description', description);
-    updateOrCreateMeta('twitter:image', image || 'https://www.ewltl.com/logo.png');
+    updateOrCreateMeta('twitter:image', image || 'https://welogx.com/logo.png');
 
     // 4. 添加结构化数据
     let structuredDataScript;
@@ -108,19 +108,19 @@ export const useSEO = ({
  */
 export const SEO_CONFIGS = {
   HOME: {
-    title: "EW物流平台 - 专业的美国物流运输服务平台 | ewltl.com",
-    description: "EW物流平台(ewltl.com)是专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等全方位物流服务。",
+    title: "EW物流平台 - 专业的美国物流运输服务平台 | welogx.com",
+    description: "EW物流平台(welogx.com)是专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等全方位物流服务。",
     keywords: "美国物流,货运平台,陆运服务,海运集装箱,空运物流,物流计算器,货运招聘,物流设备租赁,物流黄页,美国货运,国际物流,ewltl,EW Logistics",
     structuredData: {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "EW Logistics Services Inc",
       "alternateName": "EW物流平台",
-      "url": "https://www.ewltl.com",
-      "logo": "https://www.ewltl.com/logo.png",
+      "url": "https://welogx.com",
+      "logo": "https://welogx.com/logo.png",
       "description": "专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案",
       "sameAs": [
-        "https://www.ewltl.com"
+        "https://welogx.com"
       ]
     }
   },
@@ -137,7 +137,7 @@ export const SEO_CONFIGS = {
       "provider": {
         "@type": "Organization",
         "name": "EW Logistics Services Inc",
-        "url": "https://www.ewltl.com"
+        "url": "https://welogx.com"
       },
       "areaServed": "United States",
       "serviceType": "陆运物流服务"
@@ -156,7 +156,7 @@ export const SEO_CONFIGS = {
       "provider": {
         "@type": "Organization",
         "name": "EW Logistics Services Inc",
-        "url": "https://www.ewltl.com"
+        "url": "https://welogx.com"
       },
       "areaServed": "Worldwide",
       "serviceType": "海运物流服务"
@@ -175,7 +175,7 @@ export const SEO_CONFIGS = {
       "provider": {
         "@type": "Organization",
         "name": "EW Logistics Services Inc",
-        "url": "https://www.ewltl.com"
+        "url": "https://welogx.com"
       },
       "areaServed": "Worldwide",
       "serviceType": "空运物流服务"
@@ -184,7 +184,7 @@ export const SEO_CONFIGS = {
 
   YELLOW_PAGES: {
     title: "物流企业服务商黄页 - EW物流 | 货运卡车租赁公司查询平台",
-    description: "EW物流黄页平台提供全美物流企业信息查询，货运公司目录，卡车租赁服务商，物流设备供应商。找物流服务商就上ewltl.com！",
+    description: "EW物流黄页平台提供全美物流企业信息查询，货运公司目录，卡车租赁服务商，物流设备供应商。找物流服务商就上welogx.com！",
     keywords: "物流黄页,物流企业,货运公司,卡车租赁,物流设备,服务商目录,物流供应商,ewltl黄页",
     structuredData: {
       "@context": "https://schema.org",
@@ -194,14 +194,14 @@ export const SEO_CONFIGS = {
       "provider": {
         "@type": "Organization",
         "name": "EW Logistics Services Inc",
-        "url": "https://www.ewltl.com"
+        "url": "https://welogx.com"
       }
     }
   },
 
   JOBS: {
     title: "物流司机招聘求职平台 - EW物流 | 货运卡车运输人才匹配系统",
-    description: "EW物流招聘平台提供物流司机求职招聘，货运工作机会，卡车司机职位发布。专业的物流行业人才匹配平台，找工作就上ewltl.com！",
+    description: "EW物流招聘平台提供物流司机求职招聘，货运工作机会，卡车司机职位发布。专业的物流行业人才匹配平台，找工作就上welogx.com！",
     keywords: "物流招聘,司机求职,货运工作,卡车司机,物流人才,运输招聘,物流职位,ewltl招聘",
     structuredData: {
       "@context": "https://schema.org",
@@ -209,7 +209,7 @@ export const SEO_CONFIGS = {
       "hiringOrganization": {
         "@type": "Organization",
         "name": "EW Logistics Services Inc",
-        "url": "https://www.ewltl.com"
+        "url": "https://welogx.com"
       },
       "description": "物流行业招聘求职平台",
       "industry": "物流运输"

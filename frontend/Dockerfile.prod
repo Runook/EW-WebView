@@ -13,8 +13,8 @@ RUN npm ci
 COPY . .
 
 # 设置构建时环境变量（ARG 在构建时可用）
-ARG REACT_APP_API_URL=https://www.ewltl.com/api
-ARG REACT_APP_EMPLOYEE_API_URL=https://www.ewltl.com/api
+ARG REACT_APP_API_URL=https://welogx.com/api
+ARG REACT_APP_EMPLOYEE_API_URL=https://welogx.com/api
 ARG REACT_APP_GOOGLE_MAPS_API_KEY=AIzaSyB-uQvzsiFeJOr37qYg2EenJbaKUG7-KfE
 
 # 构建应用（直接在 RUN 命令中设置环境变量）

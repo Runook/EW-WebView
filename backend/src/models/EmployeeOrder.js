@@ -15,6 +15,9 @@ class Order {
       // 生成订单编号
       const orderNumber = await this.generateOrderNumber();
       
+      // 获取美东时间的今日日期 (YYYY-MM-DD格式) 作为默认报价日期
+      const nyDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      
       const insertData = {
         order_number: orderNumber,
         customer_id: orderData.customer_id || null,
@@ -29,8 +32,8 @@ class Order {
         // 货物描述（必填字段）
         cargo_description: orderData.cargo_description || orderData.cargo_description_detailed || orderData.inquiry_company || '',
         
-        // Broker专用字段
-        quote_date: orderData.quote_date || null,
+        // Broker专用字段 - 使用美东时间作为默认日期
+        quote_date: orderData.quote_date || nyDate,
         inquiry_company: orderData.inquiry_company || null,
         ew_quote_number: orderData.ew_quote_number || null,
         shipment_number: orderData.shipment_number || null,
@@ -600,24 +603,27 @@ class Order {
   }
   
   /**
-   * 生成订单编号（EW单号格式：EW000001）
+   * 生成订单编号（WE单号格式：WE1, WE2, WE3...）
    * @returns {Promise<string>} 订单编号
    */
   static async generateOrderNumber() {
     try {
-      // 格式: EW + 数字（不补零，十进制递增：EW1, EW2, EW3...）
-      const prefix = 'EW';
+      // 格式: WE + 数字（不补零，十进制递增：WE1, WE2, WE3...）
+      const prefix = 'WE';
       
-      // 获取所有EW开头的订单号，提取数字部分找到最大值
+      // 获取所有订单号（包括旧的EW和新的WE），提取数字部分找到最大值
       const results = await db('employee_orders')
-        .where('order_number', 'like', `${prefix}%`)
+        .where(function() {
+          this.where('order_number', 'like', 'WE%')
+              .orWhere('order_number', 'like', 'EW%');
+        })
         .select('order_number');
       
       let maxNumber = 0;
       
-      // 遍历所有订单号，找到最大的数字
+      // 遍历所有订单号，找到最大的数字（支持旧的EW和新的WE）
       results.forEach(row => {
-        const match = row.order_number.match(/^EW(\d+)$/);
+        const match = row.order_number.match(/^(?:WE|EW)(\d+)$/);
         if (match) {
           const num = parseInt(match[1]);
           if (num > maxNumber) {
@@ -629,16 +635,16 @@ class Order {
       // 下一个编号
       const nextNumber = maxNumber + 1;
       
-      // 生成新订单号：EW + 数字（不补零）
+      // 生成新订单号：WE + 数字（不补零）
       const orderNumber = `${prefix}${nextNumber}`;
       
-      console.log('✅ 生成EW单号:', orderNumber);
+      console.log('✅ 生成WE单号:', orderNumber);
       return orderNumber;
     } catch (error) {
       console.error('生成订单编号失败:', error);
       // 如果失败，使用时间戳
       const timestamp = Date.now().toString().slice(-6);
-      return `EW${timestamp}`;
+      return `WE${timestamp}`;
     }
   }
   
@@ -718,6 +724,9 @@ class Order {
     const trx = await db.transaction();
     
     try {
+      // 获取美东时间的今日日期 (YYYY-MM-DD格式)
+      const nyDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      
       const [order] = await trx('employee_orders')
         .where('id', orderId)
         .where('status', 'quote')
@@ -726,7 +735,8 @@ class Order {
           status: 'ordered',
           sub_status: subStatus,
           confirmed_by: confirmedBy,
-          confirmed_at: new Date()
+          confirmed_at: new Date(),
+          quote_date: nyDate  // 下单时更新为当天美东日期
         })
         .returning('*');
       

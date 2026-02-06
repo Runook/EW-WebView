@@ -78,3 +78,11 @@ ehthumbs.db
 
 # 监控和日志
 monitoring/logs/
+
+# AWS ECS 任务定义临时文件
+backend-td-*.json
+frontend-td-*.json
+
+# 部署脚本（包含敏感信息，不要提交到 Git）
+DEPLOY_*.sh
+deploy-fix.sh

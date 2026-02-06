@@ -4,7 +4,7 @@
  */
 
 const MOCK_USER = {
-  email: 'dev@ewltl.com',
+  email: 'dev@welogx.com',
   sub: 'mock-user-sub-123',
   given_name: '开发',
   family_name: '者',

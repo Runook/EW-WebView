@@ -4,6 +4,18 @@ import { orderApi } from '../config/employeeApi';
 import { parseWeightList, parseDimensionsList, calculateTotalVolume, validateWeightDimensionMatch } from '../utils/pasteParser';
 import './BrokerOrderForm.css';
 
+// 获取纽约时间的 YYYY-MM-DD 格式日期
+const getNYDate = () => {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  return formatter.format(now);
+};
+
 const BrokerOrderForm = () => {
   const navigate = useNavigate();
   const { orderId } = useParams();
@@ -11,7 +23,7 @@ const BrokerOrderForm = () => {
 
   const [formData, setFormData] = useState({
     // 基础信息
-    quote_date: new Date().toISOString().split('T')[0],
+    quote_date: getNYDate(),
     inquiry_company: '',
     ew_quote_number: '',
     shipment_number: '',
@@ -457,7 +469,7 @@ const BrokerOrderForm = () => {
           <h3 className="section-title">基础信息</h3>
           <div className="form-grid">
             <div className="form-group">
-              <label>报价日期 *</label>
+              <label>日期 *</label>
               <input
                 type="date"
                 required
@@ -478,7 +490,7 @@ const BrokerOrderForm = () => {
             </div>
 
             <div className="form-group">
-              <label>EW报价单号</label>
+              <label>WE报价单号 (自动生成)</label>
               <input
                 type="text"
                 placeholder="自动生成或手动输入"
@@ -498,7 +510,7 @@ const BrokerOrderForm = () => {
             </div>
 
             <div className="form-group">
-              <label>货物类型</label>
+              <label>货物备注</label>
               <input
                 type="text"
                 placeholder="例如: Electronics, Furniture"
@@ -722,7 +734,7 @@ const BrokerOrderForm = () => {
             </div>
 
             <div className="form-group">
-              <label>EW报价</label>
+              <label>WE报价</label>
               <input
                 type="number"
                 step="0.01"
