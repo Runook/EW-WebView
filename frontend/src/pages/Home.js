@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -8,10 +8,8 @@ import {
 } from 'lucide-react';
 
 import './Home.css';
-import RewardModal from '../components/RewardModal';
 
 const Home = () => {
-  const [showRewardModal, setShowRewardModal] = useState(false);
   const navigate = useNavigate();
   
   const videoRef = useRef(null);
@@ -38,13 +36,6 @@ const Home = () => {
       videoRef.current.muted = true;
       videoRef.current.play().catch(console.error);
     }
-    
-    // 每次刷新首页时显示悬赏弹窗
-    const timer = setTimeout(() => {
-      setShowRewardModal(true);
-    }, 1500); // 延迟1.5秒显示，让用户先看到页面加载
-    
-    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -190,12 +181,6 @@ const Home = () => {
           </div>
         </section>
       </div>
-      
-      {/* 悬赏广告弹窗 */}
-      <RewardModal 
-        isOpen={showRewardModal} 
-        onClose={() => setShowRewardModal(false)} 
-      />
     </div>
   );
 };
