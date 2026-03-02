@@ -168,8 +168,8 @@ const EmployeeOrders = () => {
       {/* 订单列表 */}
       {loading ? (
         <div className="loading-container">
-          <div className="spinner"></div>
-          <p>加载中...</p>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#34C759' }}>Welogx</div>
+          <div className="loading-bar"></div>
         </div>
       ) : error ? (
         <div className="error-container">

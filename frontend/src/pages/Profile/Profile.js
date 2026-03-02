@@ -368,8 +368,8 @@ const Profile = () => {
     return (
       <div className="profile-page">
         <div className="loading-container">
-          <RefreshCw className="loading-spinner" size={32} />
-          <p>加载中...</p>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#34C759' }}>Welogx</div>
+          <div className="loading-bar"></div>
         </div>
       </div>
     );

@@ -50,17 +50,18 @@ router.get('/search-users', auth, requirePermission('employee.manage'), async (r
     
     const { db } = require('../config/database');
     
-    // 搜索非员工用户
+    // 搜索非员工用户（优先最近登录的记录，避免重复密码重置产生的重复用户）
     const users = await db('users')
-      .select('id', 'email', 'first_name', 'last_name', 'phone', 'created_at')
+      .select('id', 'email', 'first_name', 'last_name', 'phone', 'created_at', 'last_login_at')
       .where('is_employee', false)
+      .whereNotNull('cognito_sub')
       .where(function() {
         this.where('email', 'ilike', `%${query}%`)
           .orWhere('first_name', 'ilike', `%${query}%`)
           .orWhere('last_name', 'ilike', `%${query}%`);
       })
       .limit(10)
-      .orderBy('created_at', 'desc');
+      .orderBy('last_login_at', 'desc');
     
     res.json({
       success: true,
@@ -77,8 +78,29 @@ router.get('/search-users', auth, requirePermission('employee.manage'), async (r
 });
 
 /**
+ * GET /api/employees/:id/stats
+ * Get employee stats with optional date filtering
+ */
+router.get('/:id/stats', auth, requirePermission('employee.view'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date_from, date_to, period } = req.query;
+
+    const stats = await Employee.getEmployeeStats(parseInt(id), date_from || null, date_to || null);
+    let periodData = [];
+    if (period) {
+      periodData = await Employee.getStatsByPeriod(parseInt(id), period, date_from || null, date_to || null);
+    }
+
+    res.json({ success: true, data: { summary: stats, periods: periodData } });
+  } catch (error) {
+    console.error('Failed to get employee stats:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
  * GET /api/employees/:id
- * 获取员工详细信息
  */
 router.get('/:id', auth, requirePermission('employee.view'), async (req, res) => {
   try {

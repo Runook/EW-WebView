@@ -91,8 +91,8 @@ const FreightBoard = () => {
       <div className="freight-board">
         <div className="container">
           <div className="loading-container">
-            <Loader2 size={48} className="loading-spinner" />
-            <p>正在加载货运信息...</p>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#34C759' }}>Welogx</div>
+            <div className="loading-bar"></div>
           </div>
         </div>
       </div>

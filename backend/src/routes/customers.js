@@ -53,8 +53,24 @@ router.get('/search', auth, requireEmployee, async (req, res) => {
 });
 
 /**
+ * GET /api/customers/by-name/:name
+ * Get full customer details by company name (for Invoice/Quote generation)
+ */
+router.get('/by-name/:name', auth, requireEmployee, async (req, res) => {
+  try {
+    const customer = await Customer.getByName(decodeURIComponent(req.params.name));
+    if (!customer) {
+      return res.json({ success: true, data: null });
+    }
+    res.json({ success: true, data: customer });
+  } catch (error) {
+    console.error('Get customer by name failed:', error);
+    res.status(500).json({ success: false, message: 'Failed to get customer' });
+  }
+});
+
+/**
  * POST /api/customers
- * 创建客户
  */
 router.post('/', auth, requireEmployee, async (req, res) => {
   try {

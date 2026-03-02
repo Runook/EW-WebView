@@ -71,9 +71,8 @@ const Register = () => {
           </div>
           
           <div className="auth-loading" style={{ textAlign: 'center', padding: '40px 0' }}>
-            <div className="spinner-wrapper">
-              <div className="spinner"></div>
-            </div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#34C759' }}>Welogx</div>
+            <div className="loading-bar"></div>
             <p style={{ marginTop: '20px', color: '#666' }}>
               正在加载中，请稍候...
             </p>

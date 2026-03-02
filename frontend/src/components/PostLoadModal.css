@@ -579,14 +579,7 @@
   font-size: 0.9rem;
 }
 
-.loading-spinner-small {
-  width: 16px;
-  height: 16px;
-  border: 2px solid #bbdefb;
-  border-top: 2px solid #1976d2;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
+/* spinner styles inherited from App.css */
 
 .modal-content .distance-info {
   margin-top: 1rem;
@@ -617,11 +610,7 @@
   margin-bottom: 0.25rem;
 }
 
-/* ====== 动画 ====== */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+/* animations inherited from App.css */
 
 /* ====== 响应式设计 ====== */
 @media (max-width: 768px) {

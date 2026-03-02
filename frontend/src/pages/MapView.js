@@ -479,7 +479,7 @@ const MapView = () => {
       <div className="map-wrapper">
         {(loading || geocoding) && (
           <div className="map-loading">
-            <div className="loading-spinner"></div>
+            <div className="loading-bar"></div>
             <span>{loading ? '加载订单...' : '获取坐标...'}</span>
           </div>
         )}

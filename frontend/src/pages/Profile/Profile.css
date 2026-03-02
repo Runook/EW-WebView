@@ -739,15 +739,7 @@
   color: #666;
 }
 
-.loading-spinner {
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+/* spinner styles inherited from App.css */
 
 /* ===== 响应式设计 ===== */
 @media (max-width: 1024px) {

@@ -39,8 +39,10 @@ const getAuthHeaders = (additionalHeaders = {}) => {
   return headers;
 };
 
-// 统一的API请求函数
-const apiRequest = async (endpoint, options = {}) => {
+// 统一的API请求函数（带自动 token 刷新重试）
+let isRefreshing = false;
+
+const apiRequest = async (endpoint, options = {}, isRetry = false) => {
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
   
   const config = {
@@ -54,6 +56,22 @@ const apiRequest = async (endpoint, options = {}) => {
   
   try {
     const response = await fetch(url, config);
+    
+    // 如果 401 且不是重试，尝试刷新 token 后重试一次
+    if (response.status === 401 && !isRetry && !isMockMode() && !isRefreshing) {
+      isRefreshing = true;
+      try {
+        const { refreshTokens } = await import('./cognitoAuth');
+        const refreshed = await refreshTokens();
+        isRefreshing = false;
+        if (refreshed) {
+          console.log('🔄 Token 刷新成功，重试请求...');
+          return apiRequest(endpoint, options, true);
+        }
+      } catch (e) {
+        isRefreshing = false;
+      }
+    }
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -157,6 +175,36 @@ export const apiServices = {
     create: (data) => apiClient.post('/resumes', data),
     update: (id, data) => apiClient.put(`/resumes/${id}`, data),
     delete: (id) => apiClient.delete(`/resumes/${id}`)
+  },
+
+  // 文章/论坛服务
+  articles: {
+    getAll: (params = {}) => apiClient.get('/articles', params),
+    getBySlug: (slug) => apiClient.get(`/articles/${slug}`),
+    getCategories: () => apiClient.get('/articles/categories'),
+    getHotTags: () => apiClient.get('/articles/hot-tags'),
+    create: (data) => apiClient.post('/articles', data),
+    update: (id, data) => apiClient.put(`/articles/${id}`, data),
+    delete: (id) => apiClient.delete(`/articles/${id}`),
+    like: (id) => apiClient.post(`/articles/${id}/like`),
+    bookmark: (id) => apiClient.post(`/articles/${id}/bookmark`),
+    share: (id, platform) => apiClient.post(`/articles/${id}/share`, { platform }),
+    addComment: (id, content, parentId) => apiClient.post(`/articles/${id}/comments`, { content, parent_id: parentId }),
+    deleteComment: (articleId, commentId) => apiClient.delete(`/articles/${articleId}/comments/${commentId}`),
+    likeComment: (commentId) => apiClient.post(`/articles/comments/${commentId}/like`),
+    getMyProfile: () => apiClient.get('/articles/profile/me'),
+    updateProfile: (data) => apiClient.put('/articles/profile', data),
+    getUserProfile: (userId) => apiClient.get(`/articles/user/${userId}/profile`),
+  },
+
+  // 广告位服务
+  ads: {
+    getByPosition: (position) => apiClient.get('/ads', { position }),
+    click: (id) => apiClient.post(`/ads/${id}/click`),
+    getAll: () => apiClient.get('/ads/manage'),
+    create: (data) => apiClient.post('/ads/manage', data),
+    update: (id, data) => apiClient.put(`/ads/manage/${id}`, data),
+    delete: (id) => apiClient.delete(`/ads/manage/${id}`),
   },
 
   // 用户管理服务

@@ -15,10 +15,10 @@
     <meta name="google-site-verification" content="GYzmJQa__yuaJYS0Tk8j4bPAmb_DQ0AqvGEDH4709oc" />
 
     <!-- Primary SEO Tags -->
-    <title>EW物流平台（EW Logistics）- 美国陆运/海运/空运一站式物流服务 | welogx.com</title>
-    <meta name="description" content="EW物流平台（welogx.com）- 专业的美国物流运输服务平台，提供陆运、海运、空运及多式联运的一站式数字化物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等服务。" />
-    <meta name="keywords" content="EW物流, 东西方物流, EW Logistics, ewltl, welogx.com, 美国物流, 陆运, 海运, 空运, 物流平台, 货运计算器, 物流黄页, 物流招聘, 设备租赁" />
-    <meta name="author" content="EW Logistics" />
+    <title>Welogx物流平台 - 美国陆运/海运/空运一站式物流服务 | welogx.com</title>
+    <meta name="description" content="Welogx物流平台（welogx.com）- 专业的美国物流运输服务平台，提供陆运、海运、空运及多式联运的一站式数字化物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等服务。" />
+    <meta name="keywords" content="welogx, WeLOGX, welogx.com, Welogx物流, 美国物流, 陆运, 海运, 空运, LTL物流, 物流平台, 货运计算器, 物流黄页, 物流招聘, 设备租赁, freight logistics, trucking" />
+    <meta name="author" content="Welogx" />
     <meta name="robots" content="index, follow" />
 
     <!-- Page-level canonical/hreflang will be injected per-route via react-helmet-async -->
@@ -26,17 +26,17 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://welogx.com/" />
-    <meta property="og:title" content="EW物流平台 - 专业的美国物流运输服务平台" />
+    <meta property="og:title" content="Welogx物流平台 - 专业的美国物流运输服务平台" />
     <meta property="og:description" content="专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。" />
     <meta property="og:image" content="https://welogx.com/logo.png" />
-    <meta property="og:site_name" content="EW物流平台" />
+    <meta property="og:site_name" content="Welogx物流平台" />
     <meta property="og:locale" content="zh_CN" />
     <meta property="og:locale:alternate" content="en_US" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://welogx.com/" />
-    <meta property="twitter:title" content="EW物流平台 - 专业的美国物流运输服务平台" />
+    <meta property="twitter:title" content="Welogx物流平台 - 专业的美国物流运输服务平台" />
     <meta property="twitter:description" content="专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。" />
     <meta property="twitter:image" content="https://welogx.com/logo.png" />
 
@@ -51,8 +51,8 @@
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "EW Logistics Services Inc",
-      "alternateName": ["EW物流平台", "东西方物流", "EW Logistics"],
+      "name": "WELOGX TECHNOLOGY INC",
+      "alternateName": ["WeLOGX", "welogx", "Welogx物流平台"],
       "url": "https://welogx.com",
       "logo": "https://welogx.com/logo.png",
       "description": "专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案",
@@ -77,7 +77,7 @@
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "name": "EW物流平台",
+      "name": "Welogx物流平台",
       "url": "https://welogx.com/",
       "potentialAction": {
         "@type": "SearchAction",
@@ -103,6 +103,15 @@
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Initial loading screen - disappears when React mounts -->
+      <div id="initial-loader" style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fff;flex-direction:column;gap:16px;">
+        <div style="font-size:28px;font-weight:700;color:#34C759;letter-spacing:1px;">Welogx</div>
+        <div style="width:120px;height:3px;background:#f0f0f0;border-radius:3px;overflow:hidden;">
+          <div style="width:40%;height:100%;background:#34C759;border-radius:3px;animation:loadbar 1.2s ease-in-out infinite;"></div>
+        </div>
+        <style>@keyframes loadbar{0%{width:20%;margin-left:0}50%{width:60%;margin-left:20%}100%{width:20%;margin-left:80%}}</style>
+      </div>
+    </div>
   </body>
 </html>

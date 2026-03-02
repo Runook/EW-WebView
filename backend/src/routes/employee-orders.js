@@ -28,10 +28,14 @@ router.get('/', auth, requireEmployee, async (req, res) => {
     // 检查是否有查看所有订单的权限
     const canViewAll = await Employee.hasPermission(req.user.id, 'order.view.all');
     
+    // "我的订单" 筛选：即使有查看所有权限，也只看自己的
+    const employeeFilter = req.query.employee;
+    const effectiveViewAll = employeeFilter === 'mine' ? false : canViewAll;
+    
     const result = await Order.getOrders(
       filters,
       req.user.id,
-      canViewAll
+      effectiveViewAll
     );
     
     res.json({
@@ -537,5 +541,158 @@ router.post('/:id/cancel', auth, requireEmployee, async (req, res) => {
   }
 });
 
-module.exports = router;
+/**
+ * POST /api/orders/:id/invoice-number
+ * 生成或返回 Invoice 编号（从1开始递增）
+ */
+router.post('/:id/invoice-number', auth, requireEmployee, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { db } = require('../config/database');
 
+    // 检查是否已有 invoice_number
+    const order = await db('employee_orders').where('id', id).first();
+    if (!order) return res.status(404).json({ success: false, message: '订单不存在' });
+
+    if (order.invoice_number) {
+      return res.json({ success: true, data: { invoice_number: order.invoice_number } });
+    }
+
+    // 生成新的 invoice number
+    const [result] = await db.raw("SELECT nextval('invoice_number_seq') as num");
+    const num = parseInt(result.num);
+    const invoiceNumber = `INV-${String(num).padStart(4, '0')}`;
+
+    // 保存到订单
+    await db('employee_orders').where('id', id).update({
+      invoice_number: invoiceNumber,
+      invoice_date: new Date()
+    });
+
+    res.json({ success: true, data: { invoice_number: invoiceNumber } });
+  } catch (error) {
+    console.error('生成发票编号失败:', error);
+    res.status(500).json({ success: false, message: '生成发票编号失败', error: error.message });
+  }
+});
+
+/**
+ * POST /api/orders/:id/mark-paid
+ * 快速标记订单付款状态
+ */
+router.post('/:id/mark-paid', auth, requireEmployee, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { payment_status, paid_amount, payment_method, reference_number } = req.body;
+    const { db } = require('../config/database');
+
+    const order = await db('employee_orders').where('id', id).first();
+    if (!order) return res.status(404).json({ success: false, message: '订单不存在' });
+
+    const total = parseFloat(order.ew_quote_price || order.final_price || 0);
+    const newPaid = paid_amount !== undefined ? parseFloat(paid_amount) : total;
+
+    let status = payment_status || 'paid';
+    if (newPaid >= total) status = 'paid';
+    else if (newPaid > 0) status = 'partial';
+
+    await db('employee_orders').where('id', id).update({
+      payment_status: status,
+      paid_amount: newPaid,
+      customer_payment_date: new Date(),
+      customer_payment_method: payment_method || null,
+      customer_payment_reference: reference_number || null,
+      updated_by: req.user.id
+    });
+
+    res.json({ success: true, message: `付款状态已更新为: ${status}` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: '更新付款失败', error: error.message });
+  }
+});
+
+/**
+ * GET /api/orders/overdue-check
+ * 检查逾期订单
+ */
+router.get('/overdue-check', auth, requireEmployee, async (req, res) => {
+  try {
+    const { db } = require('../config/database');
+
+    // Find completed orders with invoices that are past due
+    const overdueOrders = await db('employee_orders as eo')
+      .leftJoin('customers as c', db.raw("LOWER(eo.inquiry_company) = LOWER(c.company_name)"))
+      .where('eo.status', 'completed')
+      .where('eo.is_deleted', false)
+      .whereNotNull('eo.invoice_date')
+      .whereNot('eo.payment_status', 'paid')
+      .whereRaw("eo.invoice_date + CAST(COALESCE(REGEXP_REPLACE(c.payment_terms, '[^0-9]', '', 'g'), '7') || ' days' AS INTERVAL) < NOW()")
+      .select(
+        'eo.id', 'eo.order_number', 'eo.ew_quote_number', 'eo.inquiry_company',
+        'eo.ew_quote_price', 'eo.paid_amount', 'eo.payment_status',
+        'eo.invoice_number', 'eo.invoice_date',
+        'c.payment_terms', 'c.late_fee_rate', 'c.late_fee_fixed'
+      )
+      .orderBy('eo.invoice_date', 'asc');
+
+    const results = overdueOrders.map(o => {
+      const outstanding = parseFloat(o.ew_quote_price || 0) - parseFloat(o.paid_amount || 0);
+      const rate = parseFloat(o.late_fee_rate || 0);
+      const fixed = parseFloat(o.late_fee_fixed || 0);
+      let lateFee = 0;
+      if (rate > 0) lateFee = outstanding * (rate / 100);
+      else if (fixed > 0) lateFee = fixed;
+
+      const dueDate = new Date(o.invoice_date);
+      const termDays = parseInt((o.payment_terms || 'Net 7').replace(/[^0-9]/g, '')) || 7;
+      dueDate.setDate(dueDate.getDate() + termDays);
+      const daysOverdue = Math.floor((Date.now() - dueDate.getTime()) / 86400000);
+
+      return {
+        ...o,
+        outstanding,
+        late_fee: Math.round(lateFee * 100) / 100,
+        due_date: dueDate.toISOString().split('T')[0],
+        days_overdue: daysOverdue
+      };
+    });
+
+    res.json({ success: true, data: results, total_overdue: results.length });
+  } catch (error) {
+    console.error('逾期检查失败:', error);
+    res.status(500).json({ success: false, message: '逾期检查失败', error: error.message });
+  }
+});
+
+/**
+ * GET /api/orders/customer-balance/:companyName
+ * 获取客户余额
+ */
+router.get('/customer-balance/:companyName', auth, requireEmployee, async (req, res) => {
+  try {
+    const { db } = require('../config/database');
+    const companyName = decodeURIComponent(req.params.companyName);
+
+    const [result] = await db('employee_orders')
+      .where('status', 'completed')
+      .where('is_deleted', false)
+      .whereRaw('LOWER(inquiry_company) = LOWER(?)', [companyName])
+      .whereNot('payment_status', 'paid')
+      .select(
+        db.raw('COALESCE(SUM(COALESCE(ew_quote_price,0) - COALESCE(paid_amount,0)), 0) as balance'),
+        db.raw('COUNT(*) as unpaid_orders')
+      );
+
+    res.json({
+      success: true,
+      data: {
+        balance: parseFloat(result.balance) || 0,
+        unpaid_orders: parseInt(result.unpaid_orders) || 0
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: '获取余额失败', error: error.message });
+  }
+});
+
+module.exports = router;

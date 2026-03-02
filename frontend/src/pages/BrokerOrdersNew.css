@@ -904,3 +904,176 @@
   background: #229954;
   transform: scale(1.1);
 }
+
+/* ===== Invoice 按钮 ===== */
+.btn-invoice-header {
+  background: #1565C0;
+  color: white;
+}
+
+.btn-invoice-header:hover {
+  background: #0D47A1;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* ===== POD 单元格 ===== */
+.pod-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-pod-upload {
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.btn-pod-upload:hover {
+  background: #e3f2fd;
+}
+
+.btn-pod-view {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.btn-pod-view:hover {
+  background: #e3f2fd;
+}
+
+.pod-count {
+  background: #1565C0;
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ===== POD 展开区域 ===== */
+.pod-section {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.pod-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  color: #1565C0;
+}
+
+.pod-empty {
+  color: #999;
+  font-size: 13px;
+  text-align: center;
+  padding: 12px;
+}
+
+.pod-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.pod-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  transition: box-shadow 0.2s;
+}
+
+.pod-item:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.pod-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pod-filename {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.pod-meta {
+  font-size: 11px;
+  color: #888;
+}
+
+.pod-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-pod-download {
+  background: #1565C0;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.btn-pod-download:hover {
+  background: #0D47A1;
+  transform: translateY(-1px);
+}
+
+.btn-pod-delete {
+  background: #e53935;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.btn-pod-delete:hover {
+  background: #c62828;
+  transform: translateY(-1px);
+}
+
+.btn-pod-upload-large {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #e3f2fd;
+  color: #1565C0;
+  border: 1px dashed #1565C0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-pod-upload-large:hover {
+  background: #bbdefb;
+}

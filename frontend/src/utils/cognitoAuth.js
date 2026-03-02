@@ -290,8 +290,65 @@ export async function fetchUserProfile() {
   }
 }
 
-// 获取当前用户（从token）- 仅用于快速检查
-export function getCurrentUser() {
+// 用 refreshToken 刷新 accessToken 和 idToken
+export async function refreshTokens() {
+  const refreshToken = localStorage.getItem('refreshToken');
+  if (!refreshToken) {
+    console.log('⚠️ 无 refreshToken，无法刷新');
+    return false;
+  }
+
+  try {
+    console.log('🔄 尝试用 refreshToken 刷新...');
+
+    // Cognito REFRESH_TOKEN_AUTH 不需要 SECRET_HASH（看 pool 配置）
+    // 但有些 pool 需要，我们都试试
+    const params = {
+      ClientId: CLIENT_ID,
+      AuthFlow: 'REFRESH_TOKEN_AUTH',
+      AuthParameters: {
+        REFRESH_TOKEN: refreshToken
+      }
+    };
+
+    // 如果有 CLIENT_SECRET，需要用 refreshToken 对应的 username 算 hash
+    // 从现有 idToken 里取 username
+    const oldIdToken = localStorage.getItem('idToken');
+    if (oldIdToken && CLIENT_SECRET) {
+      try {
+        const oldPayload = JSON.parse(atob(oldIdToken.split('.')[1]));
+        const username = oldPayload.email || oldPayload.sub || oldPayload['cognito:username'];
+        if (username) {
+          const secretHash = await calculateSecretHash(username);
+          params.AuthParameters.SECRET_HASH = secretHash;
+        }
+      } catch (e) {
+        // 忽略，试试不带 hash
+      }
+    }
+
+    const result = await cognitoRequest('InitiateAuth', params);
+
+    if (result.AuthenticationResult) {
+      localStorage.setItem('accessToken', result.AuthenticationResult.AccessToken);
+      localStorage.setItem('idToken', result.AuthenticationResult.IdToken);
+      // refreshToken 不一定会返回新的，保留旧的
+      if (result.AuthenticationResult.RefreshToken) {
+        localStorage.setItem('refreshToken', result.AuthenticationResult.RefreshToken);
+      }
+      console.log('✅ Token 刷新成功!');
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('❌ Token 刷新失败:', error);
+    return false;
+  }
+}
+
+// 获取当前用户（从token）- 如果过期自动尝试刷新
+export async function getCurrentUser() {
   const idToken = localStorage.getItem('idToken');
   
   if (!idToken) {
@@ -304,9 +361,36 @@ export function getCurrentUser() {
     // 检查token是否过期
     const now = Math.floor(Date.now() / 1000);
     if (payload.exp && payload.exp < now) {
-      console.log('⚠️ Token已过期');
-      signOut();
-      return null;
+      console.log('⚠️ Token 已过期，尝试刷新...');
+      
+      // 尝试刷新 token
+      const refreshed = await refreshTokens();
+      if (refreshed) {
+        // 刷新成功，用新 token 重新解析
+        const newIdToken = localStorage.getItem('idToken');
+        const newPayload = JSON.parse(atob(newIdToken.split('.')[1]));
+        return {
+          username: newPayload.email,
+          attributes: {
+            email: newPayload.email,
+            given_name: newPayload.given_name,
+            family_name: newPayload.family_name,
+            phone_number: newPayload.phone_number,
+            sub: newPayload.sub
+          }
+        };
+      } else {
+        // 刷新失败，才登出
+        console.log('❌ 刷新失败，需重新登录');
+        await signOut();
+        return null;
+      }
+    }
+    
+    // Token 未过期，但快过期了（5分钟内），后台静默刷新
+    if (payload.exp && payload.exp - now < 300) {
+      console.log('⏰ Token 即将过期，后台刷新...');
+      refreshTokens().catch(() => {}); // 静默刷新，不阻塞
     }
     
     return {

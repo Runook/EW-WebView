@@ -110,10 +110,10 @@ const Login = () => {
           {/* Header */}
           <div className="auth-header">
             <div className="auth-logo">
-              <img src="/logo.png" alt="EW Logistics" className="auth-logo-image" />
+              <img src="/logo.png" alt="Welogx" className="auth-logo-image" />
             </div>
             <h1 className="auth-title">欢迎回来</h1>
-            <p className="auth-subtitle">登录您的EW物流账户</p>
+            <p className="auth-subtitle">登录您的Welogx账户</p>
           </div>
 
           {/* Form */}
@@ -192,7 +192,7 @@ const Login = () => {
               disabled={isLoading}
             >
               {isLoading ? (
-                <div className="loading-spinner"></div>
+                <div className="loading-spinner-small" style={{ margin: '0 auto' }}></div>
               ) : (
                 <>
                   <span>登录</span>

@@ -34,9 +34,9 @@ const EmployeeSystem = () => {
   if (loading) {
     return (
       <div className="employee-system-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>加载中...</p>
+        <div className="loading">
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#34C759' }}>Welogx</div>
+          <div className="loading-bar"></div>
         </div>
       </div>
     );

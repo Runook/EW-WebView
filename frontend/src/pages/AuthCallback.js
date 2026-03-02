@@ -93,9 +93,8 @@ const AuthCallback = () => {
           </div>
           
           <div className="auth-loading">
-            <div className="spinner-wrapper">
-              <div className="spinner"></div>
-            </div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#34C759' }}>Welogx</div>
+            <div className="loading-bar"></div>
           </div>
         </div>
       </div>

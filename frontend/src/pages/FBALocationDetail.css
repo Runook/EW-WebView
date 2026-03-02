@@ -16,20 +16,7 @@
   color: #4a5568;
 }
 
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #e2e8f0;
-  border-top: 3px solid var(--royal-blue);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+/* spinner styles inherited from App.css */
 
 /* Not Found State */
 .fba-detail-not-found {

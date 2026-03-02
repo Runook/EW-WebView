@@ -28,8 +28,8 @@ const FBALocationDetail = () => {
   if (loading) {
     return (
       <div className="fba-detail-loading">
-        <div className="loading-spinner"></div>
-        <p>加载位置信息中...</p>
+        <div style={{ fontSize: 20, fontWeight: 700, color: '#34C759' }}>Welogx</div>
+        <div className="loading-bar"></div>
       </div>
     );
   }

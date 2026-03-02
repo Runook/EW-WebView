@@ -1,51 +1,51 @@
 const { db } = require('../config/database');
 
 class Customer {
-  /**
-   * 获取所有客户
-   */
   static async getCustomers(search = '') {
     try {
       let query = db('customers').select('*').orderBy('created_at', 'desc');
-      
       if (search) {
         query = query.where(function() {
           this.where('company_name', 'ilike', `%${search}%`)
-            .orWhere('wechat_group_name', 'ilike', `%${search}%`);
+            .orWhere('wechat_group_name', 'ilike', `%${search}%`)
+            .orWhere('contact_email', 'ilike', `%${search}%`)
+            .orWhere('contact_phone', 'ilike', `%${search}%`);
         });
       }
-      
-      const customers = await query;
-      return customers;
+      return await query;
     } catch (error) {
-      console.error('获取客户列表失败:', error);
+      console.error('Failed to get customers:', error);
       throw error;
     }
   }
 
-  /**
-   * 搜索客户（用于自动补全）
-   */
   static async searchCustomers(keyword) {
     try {
-      const customers = await db('customers')
+      return await db('customers')
         .where(function() {
           this.where('company_name', 'ilike', `%${keyword}%`)
             .orWhere('wechat_group_name', 'ilike', `%${keyword}%`);
         })
-        .select('id', 'company_name', 'wechat_group_name')
+        .select('id', 'company_name', 'wechat_group_name', 'contact_phone', 'contact_email',
+                'billing_address', 'billing_address2', 'billing_city', 'billing_state')
         .limit(10);
-      
-      return customers;
     } catch (error) {
-      console.error('搜索客户失败:', error);
+      console.error('Failed to search customers:', error);
       throw error;
     }
   }
 
-  /**
-   * 创建客户
-   */
+  static async getByName(companyName) {
+    try {
+      return await db('customers')
+        .whereRaw('LOWER(company_name) = LOWER(?)', [companyName])
+        .first();
+    } catch (error) {
+      console.error('Failed to get customer by name:', error);
+      throw error;
+    }
+  }
+
   static async createCustomer(customerData, createdBy) {
     try {
       const [customer] = await db('customers')
@@ -55,54 +55,52 @@ class Customer {
           contact_person: customerData.contact_person || null,
           contact_phone: customerData.contact_phone || null,
           contact_email: customerData.contact_email || null,
+          billing_address: customerData.billing_address || null,
+          billing_address2: customerData.billing_address2 || null,
+          billing_city: customerData.billing_city || null,
+          billing_state: customerData.billing_state || null,
+          billing_zipcode: customerData.billing_zipcode || null,
+          billing_country: customerData.billing_country || 'USA',
+          payment_terms: customerData.payment_terms || 'Net 7',
+          tax_id: customerData.tax_id || null,
+          late_fee_rate: customerData.late_fee_rate || null,
+          late_fee_fixed: customerData.late_fee_fixed || null,
           notes: customerData.notes || null,
+          is_active: customerData.is_active !== false,
           created_by: createdBy,
           created_at: new Date(),
           updated_at: new Date()
         })
         .returning('*');
-      
-      console.log('✅ 客户创建成功:', customer);
       return customer;
     } catch (error) {
-      console.error('创建客户失败:', error);
+      console.error('Failed to create customer:', error);
       throw error;
     }
   }
 
-  /**
-   * 更新客户
-   */
   static async updateCustomer(id, customerData) {
     try {
       const [customer] = await db('customers')
         .where({ id })
-        .update({
-          ...customerData,
-          updated_at: new Date()
-        })
+        .update({ ...customerData, updated_at: new Date() })
         .returning('*');
-      
       return customer;
     } catch (error) {
-      console.error('更新客户失败:', error);
+      console.error('Failed to update customer:', error);
       throw error;
     }
   }
 
-  /**
-   * 删除客户
-   */
   static async deleteCustomer(id) {
     try {
       await db('customers').where({ id }).delete();
       return { success: true };
     } catch (error) {
-      console.error('删除客户失败:', error);
+      console.error('Failed to delete customer:', error);
       throw error;
     }
   }
 }
 
 module.exports = Customer;
-

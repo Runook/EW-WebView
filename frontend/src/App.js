@@ -20,6 +20,8 @@ import YellowPages from './pages/YellowPages';
 import Jobs from './pages/Jobs';
 import LogisticsRental from './pages/LogisticsRental';
 import Forum from './pages/Forum';
+import ArticleDetail from './pages/ArticleDetail';
+import UserProfile from './pages/UserProfile';
 import FreightCalculator from './pages/FreightCalculator';
 import Profile from './pages/Profile/Profile';
 import KgcmConverter from './pages/KgcmConverter';
@@ -35,6 +37,10 @@ import Customers from './pages/Customers';
 import Vendors from './pages/Vendors';
 import Payments from './pages/Payments';
 import MapView from './pages/MapView';
+import AdManager from './pages/AdManager';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import AccountingGuide from './pages/AccountingGuide';
 import './App.css';
 import './config/amplify'; 
 
@@ -89,11 +95,10 @@ function App() {
               {/* 首页 */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<CognitoAuth type="login" />} />
-              <Route path="/register" element={<Register />} />
+              <Route path="/register" element={<CognitoAuth type="register" />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               
               {/* 陆运服务 */}
-              <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<FreightBoard />} />
               <Route path="/get-quote-ltl" element={<GetQuoteLTL />} />
                            
               {/* FBA 仓库查询 */}
@@ -148,14 +153,17 @@ function App() {
               <Route path="/jobs-driver-freight-logistics-recruitment-platform-物流司机招聘求职平台-货运卡车运输人才匹配系统" element={<Jobs />} />
               <Route path="/logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台" element={<LogisticsRental />} />
               <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<Forum />} />
+              <Route path="/forum" element={<Forum />} />
+              <Route path="/article/:slug" element={<ArticleDetail />} />
               
               {/* 物流工具 */}
               <Route path="/freight-calculator-logistics-shipping-estimator-tool-物流计算工具-美国物流等级class计算与换算平台" element={<FreightCalculator />} />
               <Route path="/kgcm-converter-logistics-unit-conversion-tool-公斤厘米换算工具-国际货运尺寸重量单位转换平台" element={<KgcmConverter />} />
               
               {/* 用户管理 */}
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/profile/:section" element={<Profile />} />
+              <Route path="/profile" element={<UserProfile />} />
+              <Route path="/profile/:section" element={<UserProfile />} />
+              <Route path="/user/:userId" element={<UserProfile />} />
               
               {/* 员工系统 - Broker订单系统（简化导航）*/}
               <Route path="/employee" element={<BrokerOrders />} />
@@ -166,6 +174,7 @@ function App() {
               <Route path="/employee/vendors" element={<Vendors />} />
               <Route path="/employee/payments" element={<Payments />} />
               <Route path="/employee/map-view" element={<MapView />} />
+              <Route path="/employee/ads" element={<AdManager />} />
               <Route path="/employee/admin" element={<EmployeeAdmin />} />
               
               {/* 我们 */}
@@ -240,6 +249,9 @@ function App() {
                 />
               } />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/accounting-guide" element={<AccountingGuide />} />
               <Route path="/business" element={
                 <ComingSoonPlatform 
                   icon={<Briefcase size={48} />}

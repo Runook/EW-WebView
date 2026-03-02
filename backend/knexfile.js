@@ -56,7 +56,10 @@ module.exports = {
       database: process.env.NODE_ENV === 'production' ? process.env.RDS_DATABASE || process.env.RDS_DB_NAME : process.env.DB_NAME,
       user: process.env.NODE_ENV === 'production' ? process.env.RDS_USERNAME : process.env.DB_USER,
       password: process.env.NODE_ENV === 'production' ? process.env.RDS_PASSWORD : process.env.DB_PASSWORD,
-      ssl: { rejectUnauthorized: false }
+      ssl: { rejectUnauthorized: false },
+      // 保持 TCP 连接活跃，防止被 AWS NAT/安全组断开
+      keepAlive: true,
+      keepAliveInitialDelayMillis: 10000
     },
     migrations: {
       directory: './migrations',
@@ -66,15 +69,24 @@ module.exports = {
       directory: './seeds'
     },
     pool: {
-      min: 2,
-      max: 20,  // 增加最大连接数
-      createTimeoutMillis: 3000,
-      acquireTimeoutMillis: 10000,  // 减少超时时间到10秒
-      idleTimeoutMillis: 10000,  // 减少空闲超时，更快释放连接
-      reapIntervalMillis: 1000,
-      createRetryIntervalMillis: 100,
-      propagateCreateError: false
+      min: 0,   // 允许连接池缩到0，避免持有死连接
+      max: 20,
+      createTimeoutMillis: 5000,
+      acquireTimeoutMillis: 15000,
+      idleTimeoutMillis: 30000,     // 30秒空闲后释放连接
+      reapIntervalMillis: 5000,     // 每5秒检查并回收空闲连接
+      createRetryIntervalMillis: 200,
+      propagateCreateError: false,
+      // 每次从池中取出连接前，先验证连接是否还活着
+      afterCreate: (conn, done) => {
+        conn.query('SELECT 1', (err) => {
+          if (err) {
+            console.error('❌ 新建数据库连接验证失败:', err.message);
+          }
+          done(err, conn);
+        });
+      }
     },
-    acquireConnectionTimeout: 10000  // 减少到10秒
+    acquireConnectionTimeout: 15000
   }
 }; 

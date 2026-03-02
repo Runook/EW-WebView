@@ -140,10 +140,9 @@ const Header = () => {
       label: '我的',
       type: 'dropdown',
       items: [
-        { path: '/profile', label: '账户概览' },
-        { path: '/profile/posts', label: '我的发布' },
-        { path: '/profile/credits', label: '积分管理' },
-        { path: '/profile/recharge', label: '我要充值' },
+        { path: '/profile', label: '个人中心' },
+        { path: '/profile/articles', label: '我的文章' },
+        { path: '/profile/bookmarks', label: '我的收藏' },
         { path: '/profile/settings', label: '账户设置' },
         { path: '/contact', label: '联系我们' }
       ]
@@ -249,7 +248,7 @@ const Header = () => {
               <img src="/logo.png" alt="EWLogistics Logo" className="logo-image" />
             </div>
             <div className="logo-text">
-              <span className="logo-main">EW物流</span>
+              <span className="logo-main">Welogx</span>
               <span className="logo-sub">专业物流服务</span>
             </div>
           </Link>

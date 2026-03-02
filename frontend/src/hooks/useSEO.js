@@ -108,14 +108,14 @@ export const useSEO = ({
  */
 export const SEO_CONFIGS = {
   HOME: {
-    title: "EW物流平台 - 专业的美国物流运输服务平台 | welogx.com",
-    description: "EW物流平台(welogx.com)是专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等全方位物流服务。",
-    keywords: "美国物流,货运平台,陆运服务,海运集装箱,空运物流,物流计算器,货运招聘,物流设备租赁,物流黄页,美国货运,国际物流,ewltl,EW Logistics",
+    title: "Welogx物流平台 - 专业的美国物流运输服务平台 | welogx.com",
+    description: "Welogx物流平台(welogx.com)是专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等全方位物流服务。",
+    keywords: "美国物流,货运平台,陆运服务,海运集装箱,空运物流,物流计算器,货运招聘,物流设备租赁,物流黄页,美国货运,国际物流,welogx,Welogx",
     structuredData: {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "EW Logistics Services Inc",
-      "alternateName": "EW物流平台",
+      "name": "WELOGX TECHNOLOGY INC",
+      "alternateName": "Welogx物流平台",
       "url": "https://welogx.com",
       "logo": "https://welogx.com/logo.png",
       "description": "专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案",
@@ -126,17 +126,17 @@ export const SEO_CONFIGS = {
   },
 
   FREIGHT_BOARD: {
-    title: "美国陆运货源车源平台 - EW物流 | 专业货运信息匹配服务",
-    description: "EW物流陆运平台提供全美货源车源信息，FTL整车运输，LTL零担物流，实时货运匹配，专业物流解决方案。立即发布您的货源或车源信息！",
+    title: "美国陆运货源车源平台 - Welogx | 专业货运信息匹配服务",
+    description: "Welogx陆运平台提供全美货源车源信息，FTL整车运输，LTL零担物流，实时货运匹配，专业物流解决方案。立即发布您的货源或车源信息！",
     keywords: "美国陆运,货源信息,车源平台,FTL运输,LTL物流,货运匹配,物流司机,货车运输,ewltl陆运",
     structuredData: {
       "@context": "https://schema.org",
       "@type": "Service",
-      "name": "EW物流陆运服务",
+      "name": "Welogx陆运服务",
       "description": "专业的美国陆运物流服务，提供货源车源匹配",
       "provider": {
         "@type": "Organization",
-        "name": "EW Logistics Services Inc",
+        "name": "WELOGX TECHNOLOGY INC",
         "url": "https://welogx.com"
       },
       "areaServed": "United States",
@@ -145,17 +145,17 @@ export const SEO_CONFIGS = {
   },
 
   SEA_FREIGHT: {
-    title: "国际海运集装箱物流平台 - EW物流 | 船期运费查询服务",
-    description: "EW物流海运平台提供国际海运集装箱服务，船期查询，运费报价，货代服务。专业的海运物流解决方案，覆盖全球主要港口。",
+    title: "国际海运集装箱物流平台 - Welogx | 船期运费查询服务",
+    description: "Welogx海运平台提供国际海运集装箱服务，船期查询，运费报价，货代服务。专业的海运物流解决方案，覆盖全球主要港口。",
     keywords: "国际海运,集装箱运输,船期查询,海运运费,货代服务,国际物流,海运平台,ewltl海运",
     structuredData: {
       "@context": "https://schema.org",
       "@type": "Service",
-      "name": "EW物流海运服务",
+      "name": "Welogx海运服务",
       "description": "专业的国际海运集装箱物流服务",
       "provider": {
         "@type": "Organization",
-        "name": "EW Logistics Services Inc",
+        "name": "WELOGX TECHNOLOGY INC",
         "url": "https://welogx.com"
       },
       "areaServed": "Worldwide",
@@ -164,17 +164,17 @@ export const SEO_CONFIGS = {
   },
 
   AIR_FREIGHT: {
-    title: "国际空运物流平台 - EW物流 | 货运报价与航班信息查询",
-    description: "EW物流空运平台提供国际空运服务，航班信息查询，空运报价，紧急货运。专业的空运物流解决方案，快速可靠的国际运输服务。",
+    title: "国际空运物流平台 - Welogx | 货运报价与航班信息查询",
+    description: "Welogx空运平台提供国际空运服务，航班信息查询，空运报价，紧急货运。专业的空运物流解决方案，快速可靠的国际运输服务。",
     keywords: "国际空运,航空运输,空运报价,航班信息,紧急货运,国际快递,空运物流,ewltl空运",
     structuredData: {
       "@context": "https://schema.org",
       "@type": "Service",
-      "name": "EW物流空运服务",
+      "name": "Welogx空运服务",
       "description": "专业的国际空运物流服务",
       "provider": {
         "@type": "Organization",
-        "name": "EW Logistics Services Inc",
+        "name": "WELOGX TECHNOLOGY INC",
         "url": "https://welogx.com"
       },
       "areaServed": "Worldwide",
@@ -183,8 +183,8 @@ export const SEO_CONFIGS = {
   },
 
   YELLOW_PAGES: {
-    title: "物流企业服务商黄页 - EW物流 | 货运卡车租赁公司查询平台",
-    description: "EW物流黄页平台提供全美物流企业信息查询，货运公司目录，卡车租赁服务商，物流设备供应商。找物流服务商就上welogx.com！",
+    title: "物流企业服务商黄页 - Welogx | 货运卡车租赁公司查询平台",
+    description: "Welogx黄页平台提供全美物流企业信息查询，货运公司目录，卡车租赁服务商，物流设备供应商。找物流服务商就上welogx.com！",
     keywords: "物流黄页,物流企业,货运公司,卡车租赁,物流设备,服务商目录,物流供应商,ewltl黄页",
     structuredData: {
       "@context": "https://schema.org",
@@ -193,22 +193,22 @@ export const SEO_CONFIGS = {
       "description": "全美物流企业和服务商信息目录",
       "provider": {
         "@type": "Organization",
-        "name": "EW Logistics Services Inc",
+        "name": "WELOGX TECHNOLOGY INC",
         "url": "https://welogx.com"
       }
     }
   },
 
   JOBS: {
-    title: "物流司机招聘求职平台 - EW物流 | 货运卡车运输人才匹配系统",
-    description: "EW物流招聘平台提供物流司机求职招聘，货运工作机会，卡车司机职位发布。专业的物流行业人才匹配平台，找工作就上welogx.com！",
+    title: "物流司机招聘求职平台 - Welogx | 货运卡车运输人才匹配系统",
+    description: "Welogx招聘平台提供物流司机求职招聘，货运工作机会，卡车司机职位发布。专业的物流行业人才匹配平台，找工作就上welogx.com！",
     keywords: "物流招聘,司机求职,货运工作,卡车司机,物流人才,运输招聘,物流职位,ewltl招聘",
     structuredData: {
       "@context": "https://schema.org",
       "@type": "JobPosting",
       "hiringOrganization": {
         "@type": "Organization",
-        "name": "EW Logistics Services Inc",
+        "name": "WELOGX TECHNOLOGY INC",
         "url": "https://welogx.com"
       },
       "description": "物流行业招聘求职平台",

@@ -12,23 +12,25 @@ const Customers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
-  const [activeTab, setActiveTab] = useState('basic');
+  const [showBilling, setShowBilling] = useState(false);
+  const [customerBalances, setCustomerBalances] = useState({});
   const [formData, setFormData] = useState({
-    // 基本信息
     company_name: '',
-    wechat_group_name: '',
-    contact_person: '',
-    contact_phone: '',
-    contact_email: '',
-    notes: '',
-    // 账单信息 (新增)
     billing_address: '',
+    billing_address2: '',
     billing_city: '',
     billing_state: '',
     billing_zipcode: '',
     billing_country: 'USA',
+    contact_person: '',
+    contact_phone: '',
+    contact_email: '',
+    wechat_group_name: '',
+    notes: '',
     payment_terms: 'Net 7',
     tax_id: '',
+    late_fee_rate: 0,
+    late_fee_fixed: 0,
     is_active: true
   });
 
@@ -40,9 +42,19 @@ const Customers = () => {
     try {
       setLoading(true);
       const response = await customerApi.getCustomers(searchTerm);
-      setCustomers(response.data || []);
+      const custs = response.data || [];
+      setCustomers(custs);
+      custs.forEach(async (c) => {
+        try {
+          const { orderApi } = require('../config/employeeApi');
+          const balRes = await orderApi.getCustomerBalance(c.company_name);
+          if (balRes.success) {
+            setCustomerBalances(prev => ({ ...prev, [c.company_name]: balRes.data }));
+          }
+        } catch (e) { /* ignore */ }
+      });
     } catch (error) {
-      console.error('加载客户失败:', error);
+      console.error('Failed to load customers:', error);
     } finally {
       setLoading(false);
     }
@@ -51,22 +63,13 @@ const Customers = () => {
   const handleCreate = () => {
     setEditingCustomer(null);
     setFormData({
-      company_name: '',
-      wechat_group_name: '',
-      contact_person: '',
-      contact_phone: '',
-      contact_email: '',
-      notes: '',
-      billing_address: '',
-      billing_city: '',
-      billing_state: '',
-      billing_zipcode: '',
-      billing_country: 'USA',
-      payment_terms: 'Net 7',
-      tax_id: '',
-      is_active: true
+      company_name: '', billing_address: '', billing_address2: '',
+      billing_city: '', billing_state: '', billing_zipcode: '', billing_country: 'USA',
+      contact_person: '', contact_phone: '', contact_email: '',
+      wechat_group_name: '', notes: '',
+      payment_terms: 'Net 7', tax_id: '', late_fee_rate: 0, late_fee_fixed: 0, is_active: true
     });
-    setActiveTab('basic');
+    setShowBilling(false);
     setShowModal(true);
   };
 
@@ -74,122 +77,106 @@ const Customers = () => {
     setEditingCustomer(customer);
     setFormData({
       company_name: customer.company_name || '',
-      wechat_group_name: customer.wechat_group_name || '',
-      contact_person: customer.contact_person || '',
-      contact_phone: customer.contact_phone || '',
-      contact_email: customer.contact_email || '',
-      notes: customer.notes || '',
       billing_address: customer.billing_address || '',
+      billing_address2: customer.billing_address2 || '',
       billing_city: customer.billing_city || '',
       billing_state: customer.billing_state || '',
       billing_zipcode: customer.billing_zipcode || '',
       billing_country: customer.billing_country || 'USA',
+      contact_person: customer.contact_person || '',
+      contact_phone: customer.contact_phone || '',
+      contact_email: customer.contact_email || '',
+      wechat_group_name: customer.wechat_group_name || '',
+      notes: customer.notes || '',
       payment_terms: customer.payment_terms || 'Net 7',
       tax_id: customer.tax_id || '',
+      late_fee_rate: customer.late_fee_rate || 0,
+      late_fee_fixed: customer.late_fee_fixed || 0,
       is_active: customer.is_active !== false
     });
-    setActiveTab('basic');
+    setShowBilling(!!customer.tax_id || !!customer.late_fee_rate || !!customer.late_fee_fixed);
     setShowModal(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     try {
       if (editingCustomer) {
         await customerApi.updateCustomer(editingCustomer.id, formData);
-        alert('客户更新成功！');
+        alert('Customer updated successfully');
       } else {
         await customerApi.createCustomer(formData);
-        alert('客户创建成功！');
+        alert('Customer created successfully');
       }
-      
       setShowModal(false);
       loadCustomers();
     } catch (error) {
-      alert('操作失败: ' + error.message);
+      alert('Failed: ' + error.message);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('确定要删除此客户吗？')) {
+    if (window.confirm('Delete this customer?')) {
       try {
         await customerApi.deleteCustomer(id);
-        alert('客户删除成功！');
         loadCustomers();
       } catch (error) {
-        alert('删除失败: ' + error.message);
+        alert('Delete failed: ' + error.message);
       }
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  // 美国各州列表
   const usStates = [
-    'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
-    'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
-    'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
-    'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
-    'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+    'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
+    'MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC',
+    'SD','TN','TX','UT','VT','VA','WA','WV','WI','WY'
   ];
 
   return (
     <div className="customers-container">
       <div className="customers-header">
         <div className="header-left">
-          <h1>👥 客户管理</h1>
-          <p>管理客户信息和账单地址</p>
+          <h1>Customer List</h1>
+          <p>Manage customer info, addresses, and billing</p>
         </div>
         <div className="header-actions">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="搜索公司名称或微信群..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <button className="btn-create" onClick={handleCreate}>
-            + 新建客户
-          </button>
+          <input type="text" className="search-input" placeholder="Search company name..."
+            value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <button className="btn-create" onClick={handleCreate}>+ New Customer</button>
         </div>
       </div>
 
       {loading ? (
-        <div className="loading">加载中...</div>
+        <div className="loading">Loading...</div>
       ) : customers.length === 0 ? (
         <div className="empty-state">
-          <p>暂无客户信息</p>
-          <button className="btn-create" onClick={handleCreate}>
-            创建第一个客户
-          </button>
+          <p>No customers yet</p>
+          <button className="btn-create" onClick={handleCreate}>Create First Customer</button>
         </div>
       ) : (
         <div className="customers-table-container">
           <table className="customers-table">
             <thead>
               <tr>
-                <th>询价公司</th>
-                <th>微信群名称</th>
-                <th>联系人</th>
-                <th>联系方式</th>
-                <th>所在地</th>
-                <th>付款条款</th>
-                <th>状态</th>
-                <th>操作</th>
+                <th>Company</th>
+                <th>Contact</th>
+                <th>Phone / Email</th>
+                <th>Address</th>
+                <th>Terms</th>
+                <th>Balance</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {customers.map((customer) => (
                 <tr key={customer.id} className={!customer.is_active ? 'inactive' : ''}>
                   <td className="company-name">{customer.company_name}</td>
-                  <td>{customer.wechat_group_name || '-'}</td>
                   <td>{customer.contact_person || '-'}</td>
                   <td>
                     <div className="contact-info">
@@ -198,29 +185,34 @@ const Customers = () => {
                       {!customer.contact_phone && !customer.contact_email && '-'}
                     </div>
                   </td>
-                  <td>
-                    {customer.billing_city && customer.billing_state 
-                      ? `${customer.billing_city}, ${customer.billing_state}`
+                  <td style={{ fontSize: 12, maxWidth: 180, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {customer.billing_address
+                      ? `${customer.billing_address}${customer.billing_city ? ', ' + customer.billing_city : ''}${customer.billing_state ? ', ' + customer.billing_state : ''}`
                       : '-'}
                   </td>
+                  <td><span className="terms-badge">{customer.payment_terms || 'Net 7'}</span></td>
                   <td>
-                    <span className="terms-badge">
-                      {customer.payment_terms || 'Net 7'}
-                    </span>
+                    {(() => {
+                      const bal = customerBalances[customer.company_name];
+                      if (!bal) return <span style={{ color: '#9ca3af', fontSize: 12 }}>-</span>;
+                      const amount = bal.balance || 0;
+                      return (
+                        <span style={{ color: amount > 0 ? '#ef4444' : '#16a34a', fontWeight: 600, fontSize: 12 }}>
+                          {amount > 0 ? `$${amount.toLocaleString()}` : '$0'}
+                          {bal.unpaid_orders > 0 && <span style={{ color: '#9ca3af', fontWeight: 400, marginLeft: 4 }}>({bal.unpaid_orders})</span>}
+                        </span>
+                      );
+                    })()}
                   </td>
                   <td>
                     <span className={`status-badge ${customer.is_active !== false ? 'active' : 'inactive'}`}>
-                      {customer.is_active !== false ? '启用' : '禁用'}
+                      {customer.is_active !== false ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td>
                     <div className="action-buttons">
-                      <button className="btn-edit" onClick={() => handleEdit(customer)}>
-                        编辑
-                      </button>
-                      <button className="btn-delete" onClick={() => handleDelete(customer.id)}>
-                        删除
-                      </button>
+                      <button className="btn-edit" onClick={() => handleEdit(customer)}>Edit</button>
+                      <button className="btn-delete" onClick={() => handleDelete(customer.id)}>Delete</button>
                     </div>
                   </td>
                 </tr>
@@ -230,219 +222,145 @@ const Customers = () => {
         </div>
       )}
 
-      {/* 创建/编辑客户模态框 */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content customer-modal">
             <div className="modal-header">
-              <h2>{editingCustomer ? '编辑客户' : '新建客户'}</h2>
-              <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
-            </div>
-
-            <div className="modal-tabs">
-              <button 
-                className={`tab-btn ${activeTab === 'basic' ? 'active' : ''}`}
-                onClick={() => setActiveTab('basic')}
-              >
-                基本信息
-              </button>
-              <button 
-                className={`tab-btn ${activeTab === 'billing' ? 'active' : ''}`}
-                onClick={() => setActiveTab('billing')}
-              >
-                账单信息
-              </button>
+              <h2>{editingCustomer ? 'Edit Customer' : 'New Customer'}</h2>
+              <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
             </div>
 
             <form onSubmit={handleSubmit}>
-              {/* 基本信息 */}
-              {activeTab === 'basic' && (
-                <div className="modal-body">
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>询价公司 *</label>
-                      <input
-                        type="text"
-                        name="company_name"
-                        required
-                        value={formData.company_name}
-                        onChange={handleInputChange}
-                        placeholder="输入公司名称"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>微信群名称</label>
-                      <input
-                        type="text"
-                        name="wechat_group_name"
-                        value={formData.wechat_group_name}
-                        onChange={handleInputChange}
-                        placeholder="输入微信群名称"
-                      />
-                    </div>
-                  </div>
+              <div className="modal-body">
+                <div className="form-group full-width">
+                  <label>Company Name *</label>
+                  <input type="text" name="company_name" required value={formData.company_name}
+                    onChange={handleInputChange} placeholder="Formal legal company name" />
+                </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>联系人</label>
-                      <input
-                        type="text"
-                        name="contact_person"
-                        value={formData.contact_person}
-                        onChange={handleInputChange}
-                        placeholder="输入联系人姓名"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>联系电话</label>
-                      <input
-                        type="text"
-                        name="contact_phone"
-                        value={formData.contact_phone}
-                        onChange={handleInputChange}
-                        placeholder="输入联系电话"
-                      />
-                    </div>
-                  </div>
+                <div className="form-group full-width">
+                  <label>Address Line 1 *</label>
+                  <input type="text" name="billing_address" required value={formData.billing_address}
+                    onChange={handleInputChange} placeholder="Street address" />
+                </div>
 
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>联系邮箱</label>
-                      <input
-                        type="email"
-                        name="contact_email"
-                        value={formData.contact_email}
-                        onChange={handleInputChange}
-                        placeholder="输入联系邮箱"
-                      />
-                    </div>
-                    <div className="form-group checkbox-group">
-                      <label>
-                        <input
-                          type="checkbox"
-                          name="is_active"
-                          checked={formData.is_active}
-                          onChange={handleInputChange}
-                        />
-                        启用此客户
-                      </label>
-                    </div>
-                  </div>
+                <div className="form-group full-width">
+                  <label>Address Line 2</label>
+                  <input type="text" name="billing_address2" value={formData.billing_address2}
+                    onChange={handleInputChange} placeholder="Suite, district, etc." />
+                </div>
 
-                  <div className="form-group full-width">
-                    <label>备注</label>
-                    <textarea
-                      name="notes"
-                      value={formData.notes}
-                      onChange={handleInputChange}
-                      placeholder="输入备注信息"
-                      rows="3"
-                    />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>City</label>
+                    <input type="text" name="billing_city" value={formData.billing_city} onChange={handleInputChange} />
+                  </div>
+                  <div className="form-group">
+                    <label>State</label>
+                    <select name="billing_state" value={formData.billing_state} onChange={handleInputChange}>
+                      <option value="">Select</option>
+                      {usStates.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Zip</label>
+                    <input type="text" name="billing_zipcode" value={formData.billing_zipcode}
+                      onChange={handleInputChange} placeholder="12345" />
                   </div>
                 </div>
-              )}
 
-              {/* 账单信息 */}
-              {activeTab === 'billing' && (
-                <div className="modal-body">
-                  <div className="form-group full-width">
-                    <label>账单地址</label>
-                    <input
-                      type="text"
-                      name="billing_address"
-                      value={formData.billing_address}
-                      onChange={handleInputChange}
-                      placeholder="街道地址"
-                    />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Phone *</label>
+                    <input type="text" name="contact_phone" required value={formData.contact_phone}
+                      onChange={handleInputChange} placeholder="Phone number" />
                   </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>城市</label>
-                      <input
-                        type="text"
-                        name="billing_city"
-                        value={formData.billing_city}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>州</label>
-                      <select
-                        name="billing_state"
-                        value={formData.billing_state}
-                        onChange={handleInputChange}
-                      >
-                        <option value="">选择州</option>
-                        {usStates.map(state => (
-                          <option key={state} value={state}>{state}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>邮编</label>
-                      <input
-                        type="text"
-                        name="billing_zipcode"
-                        value={formData.billing_zipcode}
-                        onChange={handleInputChange}
-                        placeholder="12345"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>国家</label>
-                      <input
-                        type="text"
-                        name="billing_country"
-                        value={formData.billing_country}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>付款条款</label>
-                      <select
-                        name="payment_terms"
-                        value={formData.payment_terms}
-                        onChange={handleInputChange}
-                      >
-                        <option value="Due on Receipt">Due on Receipt (收到即付)</option>
-                        <option value="Net 7">Net 7 (7天内付款)</option>
-                        <option value="Net 15">Net 15 (15天内付款)</option>
-                        <option value="Net 30">Net 30 (30天内付款)</option>
-                        <option value="Net 45">Net 45 (45天内付款)</option>
-                        <option value="Net 60">Net 60 (60天内付款)</option>
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>税号 (Tax ID)</label>
-                      <input
-                        type="text"
-                        name="tax_id"
-                        value={formData.tax_id}
-                        onChange={handleInputChange}
-                        placeholder="可选"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="info-note">
-                    💡 账单信息将用于生成发票，连接 QuickBooks Online 后会自动同步。
+                  <div className="form-group">
+                    <label>Email *</label>
+                    <input type="email" name="contact_email" required value={formData.contact_email}
+                      onChange={handleInputChange} placeholder="Email address" />
                   </div>
                 </div>
-              )}
 
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={() => setShowModal(false)}>
-                  取消
-                </button>
-                <button type="submit" className="btn-primary">
-                  {editingCustomer ? '更新' : '创建'}
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Contact Person</label>
+                    <input type="text" name="contact_person" value={formData.contact_person}
+                      onChange={handleInputChange} placeholder="Name" />
+                  </div>
+                  <div className="form-group">
+                    <label>WeChat Group</label>
+                    <input type="text" name="wechat_group_name" value={formData.wechat_group_name}
+                      onChange={handleInputChange} />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Payment Terms</label>
+                    <select name="payment_terms" value={formData.payment_terms} onChange={handleInputChange}>
+                      <option value="Due on Receipt">Due on Receipt</option>
+                      <option value="Net 7">Net 7</option>
+                      <option value="Net 15">Net 15</option>
+                      <option value="Net 30">Net 30</option>
+                      <option value="Net 45">Net 45</option>
+                      <option value="Net 60">Net 60</option>
+                    </select>
+                  </div>
+                  <div className="form-group checkbox-group">
+                    <label>
+                      <input type="checkbox" name="is_active" checked={formData.is_active} onChange={handleInputChange} />
+                      Active
+                    </label>
+                  </div>
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Notes</label>
+                  <textarea name="notes" value={formData.notes} onChange={handleInputChange} rows="2" />
+                </div>
+
+                {/* Collapsible billing settings */}
+                <div style={{ marginTop: 8 }}>
+                  <button type="button" onClick={() => setShowBilling(!showBilling)}
+                    style={{ background: 'none', border: 'none', color: '#1565C0', cursor: 'pointer', fontSize: 13, padding: 0 }}>
+                    {showBilling ? '▼' : '▶'} Billing Settings (Tax ID, Late Fees)
+                  </button>
+                  {showBilling && (
+                    <div style={{ marginTop: 10 }}>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Tax ID</label>
+                          <input type="text" name="tax_id" value={formData.tax_id} onChange={handleInputChange} />
+                        </div>
+                        <div className="form-group">
+                          <label>Country</label>
+                          <input type="text" name="billing_country" value={formData.billing_country} onChange={handleInputChange} />
+                        </div>
+                      </div>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Late Fee Rate (%/mo)</label>
+                          <input type="number" name="late_fee_rate" value={formData.late_fee_rate}
+                            onChange={handleInputChange} step="0.1" />
+                        </div>
+                        <div className="form-group">
+                          <label>Late Fee Fixed ($)</label>
+                          <input type="number" name="late_fee_fixed" value={formData.late_fee_fixed}
+                            onChange={handleInputChange} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, padding: '16px 24px', borderTop: '1px solid #e0e0e0', background: '#f8f9fa', flexShrink: 0, position: 'sticky', bottom: 0, zIndex: 10 }}>
+                <button type="button" onClick={() => setShowModal(false)}
+                  style={{ padding: '10px 20px', background: '#fff', border: '1px solid #ddd', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>Cancel</button>
+                <button type="submit"
+                  style={{ padding: '10px 24px', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                  {editingCustomer ? 'Save' : 'Create'}
                 </button>
               </div>
             </form>

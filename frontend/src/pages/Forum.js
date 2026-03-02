@@ -1,321 +1,294 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  Search, 
-  MessageCircle, 
-  ThumbsUp, 
-  Eye, 
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Search,
+  MessageCircle,
+  ThumbsUp,
+  Eye,
   Clock,
   User,
   Star,
   Plus,
-  Send,
   Bookmark,
   Share2,
   TrendingUp,
   Hash,
-  Award
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Image as ImageIcon
 } from 'lucide-react';
+import { apiServices } from '../utils/apiClient';
+import { useAuth } from '../contexts/AuthContext';
+import { useSEO } from '../hooks/useSEO';
 
+import AdSlot from '../components/AdSlot';
 import './Forum.css';
 
-const Forum = () => {
+const CATEGORIES = [
+  { id: 'all', name: '全部话题', icon: Hash, color: '#666' },
+  { id: 'fba-warehouse', name: 'FBA仓库介绍', icon: Star, color: '#ff6b35' },
+  { id: 'anti-scam', name: '司机防骗', icon: Star, color: '#e53935' },
+  { id: 'industry-news', name: '行业资讯', icon: TrendingUp, color: '#1890ff' },
+  { id: 'experience', name: '经验分享', icon: Award, color: '#52c41a' },
+  { id: 'qa', name: '问题解答', icon: MessageCircle, color: '#fa8c16' },
+  { id: 'policy', name: '政策法规', icon: Star, color: '#722ed1' },
+  { id: 'technology', name: '技术交流', icon: Star, color: '#13c2c2' },
+  { id: 'career', name: '职场发展', icon: User, color: '#eb2f96' }
+];
 
-  const [activeTab, setActiveTab] = useState('hot'); // hot, latest, following
+const CATEGORY_NAME_MAP = CATEGORIES.reduce((acc, cat) => {
+  acc[cat.id] = cat.name;
+  return acc;
+}, {});
+
+const Forum = () => {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+
+  // SEO
+  useSEO({
+    title: '物流论坛 - Welogx物流平台 | 行业资讯与经验分享社区',
+    description: 'Welogx物流论坛汇聚物流行业资讯、经验分享、问题解答、政策法规、技术交流等内容。加入物流从业者社区，获取最新行业动态。',
+    keywords: '物流论坛,行业资讯,经验分享,物流社区,货运讨论,物流政策,技术交流,物流行业'
+  });
+
+  const [activeTab, setActiveTab] = useState('hot');
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedPost, setSelectedPost] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [showPublishModal, setShowPublishModal] = useState(false);
-  const [newReply, setNewReply] = useState('');
+  const [hotTags, setHotTags] = useState([]);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const [publishing, setPublishing] = useState(false);
 
-  // 论坛分类
-  const forumCategories = [
-    { id: 'all', name: '全部话题', icon: Hash, color: '#666' },
-    { id: 'industry-news', name: '行业资讯', icon: TrendingUp, color: '#1890ff' },
-    { id: 'experience', name: '经验分享', icon: Award, color: '#52c41a' },
-    { id: 'qa', name: '问题解答', icon: MessageCircle, color: '#fa8c16' },
-    { id: 'policy', name: '政策法规', icon: Star, color: '#722ed1' },
-    { id: 'technology', name: '技术交流', icon: Star, color: '#13c2c2' },
-    { id: 'career', name: '职场发展', icon: User, color: '#eb2f96' }
-  ];
+  // Publish form state
+  const [publishForm, setPublishForm] = useState({
+    title: '',
+    category: 'industry-news',
+    content: '',
+    tags: '',
+    cover_image: '',
+    summary: ''
+  });
 
-  // 模拟论坛数据
-  const mockPosts = useMemo(() => [
-    {
-      id: 1,
-      title: '2024年物流行业发展趋势分析',
-      content: '随着数字化转型的深入，物流行业正迎来新的发展机遇。本文从供应链智能化、绿色物流、跨境电商等方面分析了2024年的发展趋势...',
-      category: 'industry-news',
-      categoryName: '行业资讯',
-      author: {
-        id: 1,
-        name: '物流观察员',
-        avatar: '/api/placeholder/40/40',
-        title: '行业分析师',
-        level: 'VIP',
-        reputation: 2580
-      },
-      publishTime: '2024-01-01 10:30',
-      views: 1250,
-      likes: 89,
-      replies: 23,
-      isHot: true,
-      isTop: false,
-      tags: ['行业趋势', '数字化', '供应链'],
-      images: ['/api/placeholder/600/300'],
-      summary: '深度分析2024年物流行业发展趋势，涵盖技术创新、政策影响、市场机遇等多个维度。'
-    },
-    {
-      id: 2,
-      title: '仓库管理系统WMS选型经验分享',
-      content: '最近公司要上WMS系统，经过半年的调研和试用，最终选定了xxx系统。整个选型过程中踩了不少坑，在这里分享一下经验...',
-      category: 'experience',
-      categoryName: '经验分享',
-      author: {
-        id: 2,
-        name: '仓储达人',
-        avatar: '/api/placeholder/40/40',
-        title: '仓储经理',
-        level: '专家',
-        reputation: 1890
-      },
-      publishTime: '2024-01-02 14:20',
-      views: 856,
-      likes: 67,
-      replies: 45,
-      isHot: true,
-      isTop: false,
-      tags: ['WMS', '系统选型', '仓储管理'],
-      images: [],
-      summary: '详细分享WMS系统选型的全过程，包括需求分析、产品对比、试用体验等。'
-    },
-    {
-      id: 3,
-      title: '货运司机如何应对油价上涨？',
-      content: '最近油价又涨了，运营成本压力很大。大家都是怎么应对的？有什么节油技巧吗？',
-      category: 'qa',
-      categoryName: '问题解答',
-      author: {
-        id: 3,
-        name: '老司机王师傅',
-        avatar: '/api/placeholder/40/40',
-        title: '货运司机',
-        level: '新手',
-        reputation: 320
-      },
-      publishTime: '2024-01-03 09:15',
-      views: 423,
-      likes: 34,
-      replies: 18,
-      isHot: false,
-      isTop: false,
-      tags: ['货运', '成本控制', '节油'],
-      images: [],
-      summary: '讨论油价上涨对货运成本的影响，寻求节约成本的方法和建议。'
-    },
-    {
-      id: 4,
-      title: '跨境电商物流新政策解读',
-      content: '海关总署最新发布的跨境电商政策对我们有什么影响？哪位大神能详细解读一下？',
-      category: 'policy',
-      categoryName: '政策法规',
-      author: {
-        id: 4,
-        name: '跨境小白',
-        avatar: '/api/placeholder/40/40',
-        title: '电商运营',
-        level: '新手',
-        reputation: 180
-      },
-      publishTime: '2024-01-03 16:45',
-      views: 567,
-      likes: 28,
-      replies: 12,
-      isHot: false,
-      isTop: true,
-      tags: ['跨境电商', '政策解读', '海关'],
-      images: [],
-      summary: '求助解读最新跨境电商物流政策，了解对行业的影响。'
-    }
-  ], []);
+  const isEmployee = user?.isEmployee || user?.employeeRole;
+  const LIMIT = 10;
 
-  // 获取帖子列表 - API接口
+  // Fetch posts from API
   const fetchPosts = useCallback(async () => {
     setLoading(true);
     try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch(`/api/forum/posts?tab=${activeTab}&category=${selectedCategory}`, {
-      //   method: 'GET',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   }
-      // });
-      // const data = await response.json();
-      
-      let sortedPosts = [...mockPosts];
-      
-      if (activeTab === 'hot') {
-        sortedPosts.sort((a, b) => (b.likes + b.replies * 2) - (a.likes + a.replies * 2));
-      } else if (activeTab === 'latest') {
-        sortedPosts.sort((a, b) => new Date(b.publishTime) - new Date(a.publishTime));
+      const params = {
+        tab: activeTab,
+        page,
+        limit: LIMIT
+      };
+      if (selectedCategory && selectedCategory !== 'all') {
+        params.category = selectedCategory;
       }
-      
-      setTimeout(() => {
-        setPosts(sortedPosts);
-        setLoading(false);
-      }, 1000);
+      if (searchQuery.trim()) {
+        params.search = searchQuery.trim();
+      }
+
+      const response = await apiServices.articles.getAll(params);
+      if (response.success) {
+        setPosts(response.data || []);
+        if (response.pagination) {
+          setPagination({
+            total: response.pagination.total || 0,
+            totalPages: response.pagination.totalPages || 1
+          });
+        }
+      }
     } catch (error) {
-      console.error('获取帖子列表失败:', error);
+      console.error('获取文章列表失败:', error);
+      setPosts([]);
+    } finally {
       setLoading(false);
     }
-  }, [activeTab, mockPosts]);
+  }, [activeTab, selectedCategory, searchQuery, page]);
 
-  // 页面加载时获取数据
+  // Fetch hot tags
+  const fetchHotTags = useCallback(async () => {
+    try {
+      const response = await apiServices.articles.getHotTags();
+      if (response.success) {
+        setHotTags(response.data || []);
+      }
+    } catch (error) {
+      console.error('获取热门标签失败:', error);
+    }
+  }, []);
+
+  // Load data on mount and when filters change
   useEffect(() => {
     fetchPosts();
   }, [fetchPosts]);
 
-  // 搜索帖子 - API接口
-  const searchPosts = async () => {
-    setLoading(true);
-    try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch('/api/forum/search', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     query: searchQuery,
-      //     category: selectedCategory
-      //   })
-      // });
-      // const data = await response.json();
-      
-      let filteredPosts = mockPosts;
-      
-      if (searchQuery) {
-        filteredPosts = filteredPosts.filter(post =>
-          post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          post.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-        );
-      }
-      
-      if (selectedCategory && selectedCategory !== 'all') {
-        filteredPosts = filteredPosts.filter(post => post.category === selectedCategory);
-      }
-      
-      setTimeout(() => {
-        setPosts(filteredPosts);
-        setLoading(false);
-      }, 500);
-    } catch (error) {
-      console.error('搜索失败:', error);
-      setLoading(false);
-    }
+  useEffect(() => {
+    fetchHotTags();
+  }, [fetchHotTags]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, selectedCategory]);
+
+  // Search handler
+  const handleSearch = () => {
+    setPage(1);
+    fetchPosts();
   };
 
-  // 点赞帖子 - API接口
-  const likePost = async (postId) => {
+  // Tab change
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
+
+  // Category change
+  const handleCategoryChange = (categoryId) => {
+    setSelectedCategory(categoryId);
+  };
+
+  // Navigate to article detail (new tab for SEO + UX)
+  const handlePostClick = (slug) => {
+    window.open(`/article/${slug}`, '_blank', 'noopener,noreferrer');
+  };
+
+  // Like
+  const handleLike = async (e, articleId) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      alert('请先登录后再点赞');
+      return;
+    }
     try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch(`/api/forum/posts/${postId}/like`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   }
-      // });
-      
-      setPosts(posts.map(post => 
-        post.id === postId 
-          ? { ...post, likes: post.likes + 1 }
-          : post
-      ));
+      const response = await apiServices.articles.like(articleId);
+      if (response.success) {
+        setPosts(prev =>
+          prev.map(post =>
+            post.id === articleId
+              ? {
+                  ...post,
+                  is_liked: response.liked,
+                  like_count: response.liked ? post.like_count + 1 : post.like_count - 1
+                }
+              : post
+          )
+        );
+      }
     } catch (error) {
       console.error('点赞失败:', error);
     }
   };
 
-  // 收藏帖子 - API接口
-  const bookmarkPost = async (postId) => {
+  // Bookmark
+  const handleBookmark = async (e, articleId) => {
+    e.stopPropagation();
+    if (!isAuthenticated) {
+      alert('请先登录后再收藏');
+      return;
+    }
     try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch(`/api/forum/posts/${postId}/bookmark`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   }
-      // });
-      
-      console.log('收藏帖子:', postId);
+      const response = await apiServices.articles.bookmark(articleId);
+      if (response.success) {
+        setPosts(prev =>
+          prev.map(post =>
+            post.id === articleId
+              ? { ...post, is_bookmarked: !post.is_bookmarked }
+              : post
+          )
+        );
+      }
     } catch (error) {
       console.error('收藏失败:', error);
     }
   };
 
-  // 发布帖子 - API接口
-  const publishPost = async (postData) => {
+  // Share
+  const handleShare = async (e, articleId) => {
+    e.stopPropagation();
     try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch('/api/forum/posts', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(postData)
-      // });
-      
-      console.log('发布帖子:', postData);
-      setShowPublishModal(false);
-      fetchPosts();
+      await apiServices.articles.share(articleId, 'link');
+      // Copy link to clipboard
+      const url = `${window.location.origin}/article/${posts.find(p => p.id === articleId)?.slug || articleId}`;
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        alert('链接已复制到剪贴板');
+      }
     } catch (error) {
-      console.error('发布失败:', error);
+      console.error('分享失败:', error);
     }
   };
 
-  // 回复帖子 - API接口
-  const replyPost = async (postId, content) => {
+  // Publish article
+  const handlePublish = async () => {
+    if (!publishForm.title.trim() || !publishForm.content.trim()) {
+      alert('请填写标题和内容');
+      return;
+    }
+
+    setPublishing(true);
     try {
-      // TODO: 替换为真实API调用
-      // const response = await fetch(`/api/forum/posts/${postId}/replies`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ content })
-      // });
-      
-      console.log('回复帖子:', postId, content);
-      setNewReply('');
-      
-      // 更新回复数
-      setPosts(posts.map(post => 
-        post.id === postId 
-          ? { ...post, replies: post.replies + 1 }
-          : post
-      ));
+      const data = {
+        title: publishForm.title.trim(),
+        category: publishForm.category,
+        content: publishForm.content.trim(),
+        tags: publishForm.tags
+          .split(/[,，]/)
+          .map(t => t.trim())
+          .filter(Boolean),
+        cover_image: publishForm.cover_image.trim() || null,
+        summary: publishForm.summary.trim() || null
+      };
+
+      const response = await apiServices.articles.create(data);
+      if (response.success) {
+        setShowPublishModal(false);
+        setPublishForm({
+          title: '',
+          category: 'industry-news',
+          content: '',
+          tags: '',
+          cover_image: '',
+          summary: ''
+        });
+        setPage(1);
+        fetchPosts();
+      }
     } catch (error) {
-      console.error('回复失败:', error);
+      console.error('发布文章失败:', error);
+      alert('发布失败，请重试');
+    } finally {
+      setPublishing(false);
     }
   };
 
-  const handleSearch = () => {
-    searchPosts();
+  // Format date
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHour = Math.floor(diffMs / 3600000);
+    const diffDay = Math.floor(diffMs / 86400000);
+
+    if (diffMin < 1) return '刚刚';
+    if (diffMin < 60) return `${diffMin}分钟前`;
+    if (diffHour < 24) return `${diffHour}小时前`;
+    if (diffDay < 30) return `${diffDay}天前`;
+    return date.toLocaleDateString('zh-CN');
   };
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
-
-  const getAuthorLevelColor = (level) => {
-    switch (level) {
-      case 'VIP': return '#f50';
-      case '专家': return '#1890ff';
-      case '新手': return '#52c41a';
-      default: return '#666';
-    }
+  // Tag click to search
+  const handleTagClick = (tag) => {
+    setSearchQuery(tag);
+    setPage(1);
   };
 
   return (
@@ -335,13 +308,13 @@ const Forum = () => {
             <div className="categories">
               <h3>论坛分类</h3>
               <div className="category-list">
-                {forumCategories.map(category => {
+                {CATEGORIES.map(category => {
                   const IconComponent = category.icon;
                   return (
-                    <div 
+                    <div
                       key={category.id}
                       className={`category-item ${selectedCategory === category.id ? 'active' : ''}`}
-                      onClick={() => setSelectedCategory(category.id)}
+                      onClick={() => handleCategoryChange(category.id)}
                     >
                       <IconComponent size={16} style={{ color: category.color }} />
                       <span>{category.name}</span>
@@ -351,25 +324,33 @@ const Forum = () => {
               </div>
             </div>
 
+            {/* 侧边栏广告位 */}
+            <AdSlot position="forum-sidebar" />
+
             <div className="hot-topics">
               <h3>热门话题</h3>
               <div className="topic-list">
-                <div className="topic-item">
-                  <Hash size={14} />
-                  <span>2024物流趋势</span>
-                </div>
-                <div className="topic-item">
-                  <Hash size={14} />
-                  <span>WMS系统</span>
-                </div>
-                <div className="topic-item">
-                  <Hash size={14} />
-                  <span>成本控制</span>
-                </div>
-                <div className="topic-item">
-                  <Hash size={14} />
-                  <span>跨境电商</span>
-                </div>
+                {hotTags.length > 0 ? (
+                  hotTags.map((item, index) => (
+                    <div
+                      key={index}
+                      className="topic-item"
+                      onClick={() => handleTagClick(item.tag)}
+                    >
+                      <Hash size={14} />
+                      <span>{item.tag}</span>
+                      {item.count > 0 && (
+                        <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#999' }}>
+                          {item.count}
+                        </span>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '12px 24px', color: '#999', fontSize: '14px' }}>
+                    暂无热门话题
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -394,32 +375,34 @@ const Forum = () => {
                 </div>
               </div>
 
-              <button 
-                className="publish-btn"
-                onClick={() => setShowPublishModal(true)}
-              >
-                <Plus size={20} />
-                发布话题
-              </button>
+              {isEmployee && (
+                <button
+                  className="publish-btn"
+                  onClick={() => setShowPublishModal(true)}
+                >
+                  <Plus size={20} />
+                  发布文章
+                </button>
+              )}
             </div>
 
             {/* 标签切换 */}
             <div className="tab-navigation">
-              <button 
+              <button
                 className={`tab-btn ${activeTab === 'hot' ? 'active' : ''}`}
                 onClick={() => handleTabChange('hot')}
               >
                 <TrendingUp size={18} />
                 热门
               </button>
-              <button 
+              <button
                 className={`tab-btn ${activeTab === 'latest' ? 'active' : ''}`}
                 onClick={() => handleTabChange('latest')}
               >
                 <Clock size={18} />
                 最新
               </button>
-              <button 
+              <button
                 className={`tab-btn ${activeTab === 'following' ? 'active' : ''}`}
                 onClick={() => handleTabChange('following')}
               >
@@ -428,290 +411,194 @@ const Forum = () => {
               </button>
             </div>
 
+            {/* 顶部广告位 */}
+            <AdSlot position="forum-top" layout="horizontal" />
+
             {/* 帖子列表 */}
             <div className="posts-list">
               {loading ? (
                 <div className="loading">
-                  <div className="spinner"></div>
-                  <p>加载中...</p>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: '#34C759' }}>Welogx</div>
+                  <div className="loading-bar"></div>
                 </div>
-              ) : (
+              ) : posts.length > 0 ? (
                 posts.map(post => (
-                  <div key={post.id} className="post-card">
-                    {post.isTop && <div className="top-tag">置顶</div>}
-                    {post.isHot && <div className="hot-tag">热门</div>}
-                    
-                    <div className="post-header">
-                      <div className="author-info">
-                        <img src={post.author.avatar} alt={post.author.name} className="avatar" />
-                        <div className="author-details">
-                          <div className="author-name">
-                            <span>{post.author.name}</span>
-                            <span 
-                              className="level-badge"
-                              style={{ color: getAuthorLevelColor(post.author.level) }}
-                            >
-                              {post.author.level}
-                            </span>
-                          </div>
-                          <div className="author-title">{post.author.title}</div>
-                        </div>
-                      </div>
-                      
-                      <div className="post-meta">
-                        <span className="category-badge">{post.categoryName}</span>
-                        <span className="publish-time">
-                          <Clock size={12} />
-                          {post.publishTime}
-                        </span>
-                      </div>
+                  <div key={post.id} className="post-row" onClick={() => handlePostClick(post.slug)}>
+                    <div className="post-row-left">
+                      <span className="category-badge-sm">
+                        {CATEGORY_NAME_MAP[post.category] || post.category}
+                      </span>
+                      {post.is_pinned && <span className="pin-badge">📌</span>}
+                      <span className="post-row-title">{post.title}</span>
                     </div>
-
-                    <div className="post-content">
-                      <h3 className="post-title" onClick={() => setSelectedPost(post)}>
-                        {post.title}
-                      </h3>
-                      
-                      <p className="post-summary">{post.summary}</p>
-                      
-                      {post.images.length > 0 && (
-                        <div className="post-images">
-                          <img src={post.images[0]} alt="post" />
-                        </div>
-                      )}
-
-                      <div className="post-tags">
-                        {post.tags.map(tag => (
-                          <span key={tag} className="tag">#{tag}</span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="post-footer">
-                      <div className="post-stats">
-                        <span><Eye size={14} /> {post.views}</span>
-                        <span><ThumbsUp size={14} /> {post.likes}</span>
-                        <span><MessageCircle size={14} /> {post.replies}</span>
-                      </div>
-                      
-                      <div className="post-actions">
-                        <button 
-                          className="action-btn"
-                          onClick={() => likePost(post.id)}
-                        >
-                          <ThumbsUp size={16} />
-                          点赞
-                        </button>
-                        <button 
-                          className="action-btn"
-                          onClick={() => setSelectedPost(post)}
-                        >
-                          <MessageCircle size={16} />
-                          回复
-                        </button>
-                        <button 
-                          className="action-btn"
-                          onClick={() => bookmarkPost(post.id)}
-                        >
-                          <Bookmark size={16} />
-                          收藏
-                        </button>
-                        <button className="action-btn">
-                          <Share2 size={16} />
-                          分享
-                        </button>
-                      </div>
+                    <div className="post-row-right">
+                      <span className="post-row-meta">{post.author?.name || '匿名'}</span>
+                      <span className="post-row-meta">{formatDate(post.published_at)}</span>
+                      <span className="post-row-stat"><Eye size={12} />{post.view_count || 0}</span>
+                      <span className="post-row-stat"><ThumbsUp size={12} />{post.like_count || 0}</span>
+                      <span className="post-row-stat"><MessageCircle size={12} />{post.comment_count || 0}</span>
+                      <button
+                        className={`action-btn-sm ${post.is_liked ? 'active' : ''}`}
+                        onClick={(e) => handleLike(e, post.id)}
+                        title="点赞"
+                      >
+                        <ThumbsUp size={13} />
+                      </button>
+                      <button
+                        className={`action-btn-sm ${post.is_bookmarked ? 'active' : ''}`}
+                        onClick={(e) => handleBookmark(e, post.id)}
+                        title="收藏"
+                      >
+                        <Bookmark size={13} />
+                      </button>
+                      <button
+                        className="action-btn-sm"
+                        onClick={(e) => handleShare(e, post.id)}
+                        title="分享"
+                      >
+                        <Share2 size={13} />
+                      </button>
                     </div>
                   </div>
                 ))
+              ) : (
+                <div className="no-results">
+                  <MessageCircle size={64} />
+                  <h3>暂无相关话题</h3>
+                  <p>试试调整搜索条件或发布新话题</p>
+                </div>
               )}
             </div>
 
-            {posts.length === 0 && !loading && (
-              <div className="no-results">
-                <MessageCircle size={64} />
-                <h3>暂无相关话题</h3>
-                <p>试试调整搜索条件或发布新话题</p>
+            {/* 分页 */}
+            {!loading && pagination.totalPages > 1 && (
+              <div className="pagination" style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '24px 0',
+                marginTop: '16px'
+              }}>
+                <button
+                  className="action-btn"
+                  disabled={page <= 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  style={{ opacity: page <= 1 ? 0.5 : 1 }}
+                >
+                  <ChevronLeft size={16} />
+                  上一页
+                </button>
+                <span style={{ color: '#666', fontSize: '14px' }}>
+                  第 {page} / {pagination.totalPages} 页 (共 {pagination.total} 条)
+                </span>
+                <button
+                  className="action-btn"
+                  disabled={page >= pagination.totalPages}
+                  onClick={() => setPage(p => Math.min(pagination.totalPages, p + 1))}
+                  style={{ opacity: page >= pagination.totalPages ? 0.5 : 1 }}
+                >
+                  下一页
+                  <ChevronRight size={16} />
+                </button>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* 帖子详情模态框 */}
-      {selectedPost && (
-        <div className="modal-overlay" onClick={() => setSelectedPost(null)}>
-          <div className="modal-content post-detail-modal" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{selectedPost.title}</h2>
-              <button onClick={() => setSelectedPost(null)}>×</button>
-            </div>
-            
-            <div className="modal-body">
-              <div className="post-detail-content">
-                <div className="post-detail-header">
-                  <div className="author-info">
-                    <img src={selectedPost.author.avatar} alt={selectedPost.author.name} />
-                    <div className="author-details">
-                      <div className="author-name">
-                        <span>{selectedPost.author.name}</span>
-                        <span 
-                          className="level-badge"
-                          style={{ color: getAuthorLevelColor(selectedPost.author.level) }}
-                        >
-                          {selectedPost.author.level}
-                        </span>
-                      </div>
-                      <div className="author-stats">
-                        <span>{selectedPost.author.title}</span>
-                        <span>声望: {selectedPost.author.reputation}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="post-detail-meta">
-                    <span className="category-badge">{selectedPost.categoryName}</span>
-                    <span className="publish-time">{selectedPost.publishTime}</span>
-                  </div>
-                </div>
-
-                <div className="post-detail-body">
-                  <div className="post-content-full">
-                    {selectedPost.content}
-                  </div>
-
-                  {selectedPost.images.length > 0 && (
-                    <div className="post-images">
-                      {selectedPost.images.map((img, index) => (
-                        <img key={index} src={img} alt={`post-${index}`} />
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="post-tags">
-                    {selectedPost.tags.map(tag => (
-                      <span key={tag} className="tag">#{tag}</span>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="post-actions-bar">
-                  <button 
-                    className="action-btn primary"
-                    onClick={() => likePost(selectedPost.id)}
-                  >
-                    <ThumbsUp size={16} />
-                    点赞 ({selectedPost.likes})
-                  </button>
-                  <button 
-                    className="action-btn"
-                    onClick={() => bookmarkPost(selectedPost.id)}
-                  >
-                    <Bookmark size={16} />
-                    收藏
-                  </button>
-                  <button className="action-btn">
-                    <Share2 size={16} />
-                    分享
-                  </button>
-                </div>
-
-                {/* 回复区域 */}
-                <div className="replies-section">
-                  <h4>回复 ({selectedPost.replies})</h4>
-                  
-                  <div className="reply-form">
-                    <textarea
-                      value={newReply}
-                      onChange={(e) => setNewReply(e.target.value)}
-                      placeholder="写下你的回复..."
-                      rows="3"
-                    />
-                    <div className="reply-actions">
-                      <button 
-                        className="btn-primary"
-                        onClick={() => replyPost(selectedPost.id, newReply)}
-                        disabled={!newReply.trim()}
-                      >
-                        <Send size={16} />
-                        发布回复
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="replies-list">
-                    {/* 这里可以加载真实的回复数据 */}
-                    <div className="reply-item">
-                      <img src="/api/placeholder/32/32" alt="reply-author" className="reply-avatar" />
-                      <div className="reply-content">
-                        <div className="reply-author">
-                          <span>用户名</span>
-                          <span className="reply-time">2024-01-01 12:00</span>
-                        </div>
-                        <p>这是一条示例回复内容...</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 发布话题模态框 */}
+      {/* 发布文章模态框 */}
       {showPublishModal && (
         <div className="modal-overlay" onClick={() => setShowPublishModal(false)}>
           <div className="modal-content publish-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>发布话题</h2>
-              <button onClick={() => setShowPublishModal(false)}>×</button>
+              <h2>发布文章</h2>
+              <button onClick={() => setShowPublishModal(false)}>
+                <X size={20} />
+              </button>
             </div>
-            
+
             <div className="modal-body">
               <div className="publish-form">
                 <div className="form-group">
-                  <label>话题标题</label>
-                  <input type="text" placeholder="请输入话题标题" />
+                  <label>文章标题</label>
+                  <input
+                    type="text"
+                    placeholder="请输入文章标题"
+                    value={publishForm.title}
+                    onChange={(e) => setPublishForm(prev => ({ ...prev, title: e.target.value }))}
+                  />
                 </div>
-                
+
                 <div className="form-group">
                   <label>选择分类</label>
-                  <select>
-                    {forumCategories.slice(1).map(category => (
+                  <select
+                    value={publishForm.category}
+                    onChange={(e) => setPublishForm(prev => ({ ...prev, category: e.target.value }))}
+                  >
+                    {CATEGORIES.slice(1).map(category => (
                       <option key={category.id} value={category.id}>{category.name}</option>
                     ))}
                   </select>
                 </div>
 
                 <div className="form-group">
-                  <label>话题内容</label>
-                  <textarea 
-                    placeholder="请详细描述您要讨论的话题..." 
-                    rows="8"
+                  <label>文章摘要</label>
+                  <textarea
+                    placeholder="请输入文章摘要（选填，不超过200字）"
+                    rows="2"
+                    value={publishForm.summary}
+                    onChange={(e) => setPublishForm(prev => ({ ...prev, summary: e.target.value }))}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>话题标签</label>
-                  <input 
-                    type="text" 
-                    placeholder="请输入相关标签，用逗号分隔" 
+                  <label>文章内容</label>
+                  <textarea
+                    placeholder="请详细描述您的文章内容..."
+                    rows="8"
+                    value={publishForm.content}
+                    onChange={(e) => setPublishForm(prev => ({ ...prev, content: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>文章标签</label>
+                  <input
+                    type="text"
+                    placeholder="请输入相关标签，用逗号分隔"
+                    value={publishForm.tags}
+                    onChange={(e) => setPublishForm(prev => ({ ...prev, tags: e.target.value }))}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>
+                    <ImageIcon size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+                    封面图片URL
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="请输入封面图片链接（选填）"
+                    value={publishForm.cover_image}
+                    onChange={(e) => setPublishForm(prev => ({ ...prev, cover_image: e.target.value }))}
                   />
                 </div>
 
                 <div className="form-actions">
-                  <button 
-                    className="btn-secondary" 
+                  <button
+                    className="btn-secondary"
                     onClick={() => setShowPublishModal(false)}
                   >
                     取消
                   </button>
-                  <button 
+                  <button
                     className="btn-primary"
-                    onClick={() => publishPost({})}
+                    onClick={handlePublish}
+                    disabled={publishing || !publishForm.title.trim() || !publishForm.content.trim()}
                   >
-                    发布话题
+                    <Plus size={16} />
+                    {publishing ? '发布中...' : '发布文章'}
                   </button>
                 </div>
               </div>
@@ -723,4 +610,4 @@ const Forum = () => {
   );
 };
 
-export default Forum; 
+export default Forum;

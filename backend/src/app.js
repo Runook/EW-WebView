@@ -6,6 +6,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const { testConnection } = require('./config/database');
+const { getRedisStatus, getRedisClient } = require('./config/redis');
 const config = require('./config/app');
 const logger = require('./utils/logger');
 require('dotenv').config();
@@ -47,42 +48,50 @@ app.use(helmet({
 // CORS 配置
 app.use(cors(config.cors));
 
-// 请求限制 - 临时禁用用于测试
-/*
-const limiter = rateLimit({
-  windowMs: config.security.rateLimitWindow * 60 * 1000,
-  max: config.security.rateLimitMax,
-  message: {
-    error: 'Too many requests',
-    message: 'Too many requests from this IP, please try again later.',
-    retryAfter: Math.ceil(config.security.rateLimitWindow * 60)
-  },
-  standardHeaders: true, // 返回 `RateLimit-*` 头部
-  legacyHeaders: false, // 禁用 `X-RateLimit-*` 头部
+// 请求限制 (Redis-backed if available, fallback to in-memory)
+const rateLimitConfig = {
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 120, // 120 requests per minute per IP
+  standardHeaders: true,
+  legacyHeaders: false,
   handler: (req, res) => {
     logger.warn('Rate limit exceeded', { ip: req.ip, path: req.path });
     res.status(429).json({
       error: 'Too many requests',
-      message: 'Too many requests from this IP, please try again later.',
-      retryAfter: Math.ceil(config.security.rateLimitWindow * 60)
+      message: '请求过于频繁，请稍后再试',
+      retryAfter: 60
     });
   }
-});
+};
 
-// 严格的认证路由限制
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15分钟
-  max: 10, // 认证相关只允许10次
-  message: {
-    error: 'Too many authentication attempts',
-    message: 'Too many authentication attempts, please try again later.',
-    retryAfter: 900 // 15分钟
+// 如果 Redis 可用，用 Redis 做分布式限流
+const redisClient = getRedisClient();
+if (redisClient) {
+  try {
+    const { RedisStore } = require('rate-limit-redis');
+    rateLimitConfig.store = new RedisStore({
+      sendCommand: (...args) => redisClient.call(...args)
+    });
+    console.log('✅ Rate limiting: 使用 Redis 存储');
+  } catch (e) {
+    console.log('⚠️ Rate limiting: Redis store 加载失败，使用内存存储');
   }
-});
+} else {
+  console.log('ℹ️ Rate limiting: 使用内存存储');
+}
 
+const limiter = rateLimit(rateLimitConfig);
 app.use('/api/', limiter);
+
+// 认证路由严格限流
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 15,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts', message: '认证请求过于频繁，请15分钟后再试' }
+});
 app.use('/api/auth/', authLimiter);
-*/
 
 // 中间件
 app.use(compression());
@@ -117,12 +126,13 @@ app.use((req, res, next) => {
 // 健康检查端点
 app.get('/health', async (req, res) => {
   try {
-    // 快速健康检查，不等待数据库连接
+    // 快速健康检查
     res.status(200).json({
       status: 'OK',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       environment: process.env.NODE_ENV || 'development',
+      redis: getRedisStatus(),
       memory: {
         used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
         total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
@@ -220,10 +230,15 @@ app.use('/api/user-management', require('./routes/user-management'));
 // 员工系统路由
 app.use('/api/employees', require('./routes/employees'));
 app.use('/api/orders', require('./routes/employee-orders'));
+app.use('/api/orders', require('./routes/order-pods'));
+app.use('/api/orders', require('./routes/order-documents'));
 app.use('/api/customers', require('./routes/customers'));
 app.use('/api/vendors', require('./routes/vendors'));
+app.use('/api/articles', require('./routes/articles'));
+app.use('/api/ads', require('./routes/ad-slots'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/service-items', require('./routes/service-items'));
+app.use('/api/qbo', require('./routes/quickbooks'));
 
 // 物流租售路由
 app.use('/api/rentals', require('./routes/rental'));

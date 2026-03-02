@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { orderApi } from '../config/employeeApi';
+import employeeApiExports from '../config/employeeApi';
 import { parseWeightList, parseDimensionsList, calculateTotalVolume, validateWeightDimensionMatch } from '../utils/pasteParser';
 import './BrokerOrderForm.css';
+
+const { customerApi } = employeeApiExports;
 
 // 获取纽约时间的 YYYY-MM-DD 格式日期
 const getNYDate = () => {
@@ -96,6 +99,48 @@ const BrokerOrderForm = () => {
 
   const [loading, setLoading] = useState(false);
   const [validationError, setValidationError] = useState('');
+
+  // Company autocomplete
+  const [companySuggestions, setCompanySuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
+  const [newCustData, setNewCustData] = useState({ company_name: '', billing_address: '', contact_phone: '', contact_email: '' });
+
+  const searchCompany = useCallback(async (keyword) => {
+    if (!keyword || keyword.length < 2) { setCompanySuggestions([]); return; }
+    try {
+      const res = await customerApi.searchCustomers(keyword);
+      setCompanySuggestions(res.data || []);
+      setShowSuggestions(true);
+    } catch (e) { setCompanySuggestions([]); }
+  }, []);
+
+  const handleCompanyInput = (value) => {
+    handleChange('inquiry_company', value);
+    searchCompany(value);
+  };
+
+  const selectCompany = (cust) => {
+    handleChange('inquiry_company', cust.company_name);
+    setShowSuggestions(false);
+    setCompanySuggestions([]);
+  };
+
+  const handleCreateNewCustomer = async () => {
+    if (!newCustData.company_name) { alert('Company name is required'); return; }
+    try {
+      await customerApi.createCustomer({
+        ...newCustData,
+        billing_address: newCustData.billing_address,
+        contact_phone: newCustData.contact_phone,
+        contact_email: newCustData.contact_email,
+      });
+      handleChange('inquiry_company', newCustData.company_name);
+      setShowNewCustomerForm(false);
+      setNewCustData({ company_name: '', billing_address: '', contact_phone: '', contact_email: '' });
+      alert('Customer created');
+    } catch (e) { alert('Failed: ' + e.message); }
+  };
 
   useEffect(() => {
     if (isEditMode) {
@@ -478,15 +523,61 @@ const BrokerOrderForm = () => {
               />
             </div>
 
-            <div className="form-group">
-              <label>询价公司 *</label>
+            <div className="form-group" style={{ position: 'relative' }}>
+              <label>Company *</label>
               <input
                 type="text"
                 required
-                placeholder="输入公司名称"
+                placeholder="Type company name..."
                 value={formData.inquiry_company}
-                onChange={(e) => handleChange('inquiry_company', e.target.value)}
+                onChange={(e) => handleCompanyInput(e.target.value)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                onFocus={() => { if (companySuggestions.length > 0) setShowSuggestions(true); }}
               />
+              {showSuggestions && companySuggestions.length > 0 && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 100, maxHeight: 200, overflowY: 'auto' }}>
+                  {companySuggestions.map(c => (
+                    <div key={c.id} onClick={() => selectCompany(c)}
+                      style={{ padding: '8px 12px', cursor: 'pointer', fontSize: 13, borderBottom: '1px solid #f3f4f6' }}
+                      onMouseEnter={(e) => e.target.style.background = '#f0f5ff'}
+                      onMouseLeave={(e) => e.target.style.background = '#fff'}>
+                      <strong>{c.company_name}</strong>
+                      {c.contact_phone && <span style={{ color: '#6b7280', marginLeft: 8, fontSize: 11 }}>{c.contact_phone}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {formData.inquiry_company && companySuggestions.length === 0 && formData.inquiry_company.length >= 2 && !showNewCustomerForm && (
+                <button type="button" onClick={() => { setNewCustData({ ...newCustData, company_name: formData.inquiry_company }); setShowNewCustomerForm(true); }}
+                  style={{ marginTop: 4, padding: '4px 10px', fontSize: 11, border: '1px dashed #1565C0', borderRadius: 4, background: 'none', color: '#1565C0', cursor: 'pointer' }}>
+                  + Create "{formData.inquiry_company}" as new customer
+                </button>
+              )}
+              {showNewCustomerForm && (
+                <div style={{ marginTop: 8, padding: 12, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>New Customer Quick Form</div>
+                  <input type="text" placeholder="Company Name *" value={newCustData.company_name}
+                    onChange={(e) => setNewCustData({ ...newCustData, company_name: e.target.value })}
+                    style={{ width: '100%', padding: '6px 8px', marginBottom: 6, border: '1px solid #ddd', borderRadius: 4, fontSize: 12 }} />
+                  <input type="text" placeholder="Address" value={newCustData.billing_address}
+                    onChange={(e) => setNewCustData({ ...newCustData, billing_address: e.target.value })}
+                    style={{ width: '100%', padding: '6px 8px', marginBottom: 6, border: '1px solid #ddd', borderRadius: 4, fontSize: 12 }} />
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input type="text" placeholder="Phone" value={newCustData.contact_phone}
+                      onChange={(e) => setNewCustData({ ...newCustData, contact_phone: e.target.value })}
+                      style={{ flex: 1, padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 12 }} />
+                    <input type="email" placeholder="Email" value={newCustData.contact_email}
+                      onChange={(e) => setNewCustData({ ...newCustData, contact_email: e.target.value })}
+                      style={{ flex: 1, padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, fontSize: 12 }} />
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <button type="button" onClick={handleCreateNewCustomer}
+                      style={{ padding: '4px 12px', background: '#1565C0', color: '#fff', border: 'none', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Create</button>
+                    <button type="button" onClick={() => setShowNewCustomerForm(false)}
+                      style={{ padding: '4px 12px', background: '#f3f4f6', border: '1px solid #ddd', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="form-group">

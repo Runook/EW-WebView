@@ -250,7 +250,7 @@ const CognitoAuth = ({ type = 'login' }) => {
           <div className="auth-card">
             <div className="auth-header">
               <div className="auth-logo">
-                <img src="/logo.png" alt="EW Logistics" className="auth-logo-image" />
+                <img src="/logo.png" alt="Welogx" className="auth-logo-image" />
               </div>
               <h1 className="auth-title">邮箱验证</h1>
               <p className="auth-subtitle">
@@ -309,7 +309,7 @@ const CognitoAuth = ({ type = 'login' }) => {
           <div className="auth-card">
             <div className="auth-header">
               <div className="auth-logo">
-                <img src="/logo.png" alt="EW Logistics" className="auth-logo-image" />
+                <img src="/logo.png" alt="Welogx" className="auth-logo-image" />
               </div>
               <h1 className="auth-title">
                 {forgotPasswordStep === 1 ? '重置密码' : '设置新密码'}
@@ -488,7 +488,7 @@ const CognitoAuth = ({ type = 'login' }) => {
         <div className="auth-card">
           <div className="auth-header">
             <div className="auth-logo">
-              <img src="/logo.png" alt="EW Logistics" className="auth-logo-image" />
+              <img src="/logo.png" alt="Welogx" className="auth-logo-image" />
             </div>
             <h1 className="auth-title">
               {type === 'login' ? '用户登录' : '用户注册'}
@@ -675,7 +675,7 @@ const CognitoAuth = ({ type = 'login' }) => {
               disabled={isLoading}
             >
               {isLoading ? (
-                <div className="loading-spinner"></div>
+                <div className="loading-spinner-small" style={{ margin: '0 auto' }}></div>
               ) : (
                 <>
                   <span>{type === 'login' ? '登录' : '注册'}</span>

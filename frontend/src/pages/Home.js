@@ -7,6 +7,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 
+import AdSlot from '../components/AdSlot';
 import './Home.css';
 
 const Home = () => {
@@ -41,13 +42,13 @@ const Home = () => {
   return (
     <div className="home">
       <Helmet>
-        <title>EW物流平台（EW Logistics）- 美国陆运/海运/空运一站式物流服务 | welogx.com</title>
-        <meta name="description" content="EW物流平台（welogx.com）- 专业的美国物流运输服务平台，提供陆运、海运、空运及多式联运的一站式数字化物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等服务。" />
+        <title>Welogx物流平台 - 美国陆运/海运/空运一站式物流服务 | welogx.com</title>
+        <meta name="description" content="Welogx物流平台（welogx.com）- 专业的美国物流运输服务平台，提供陆运、海运、空运及多式联运的一站式数字化物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等服务。" />
         <link rel="canonical" href="https://welogx.com/" />
-        <meta name="keywords" content="EW物流, 东西方物流, EW Logistics, ewltl, welogx.com, 美国物流, 陆运, 海运, 空运, 物流平台" />
+        <meta name="keywords" content="welogx, WeLOGX, welogx.com, Welogx物流, 美国物流, 陆运, 海运, 空运, 物流平台" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://welogx.com/" />
-        <meta property="og:title" content="EW物流平台 - 专业的美国物流运输服务平台" />
+        <meta property="og:title" content="Welogx物流平台 - 专业的美国物流运输服务平台" />
         <meta property="og:description" content="专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。" />
         <meta property="og:image" content="https://welogx.com/logo.png" />
       </Helmet>
@@ -88,7 +89,7 @@ const Home = () => {
           <div className="container">
             <div className="video-text">
               <h1 className="video-title">
-                东西方物流
+                Welogx
                 <span className="text-highlight">连接世界</span>
               </h1>
               <p className="video-description">
@@ -163,11 +164,16 @@ const Home = () => {
 
 
 
+        {/* 首页广告位 */}
+        <section style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px 0' }}>
+          <AdSlot position="home-banner" layout="horizontal" />
+        </section>
+
         {/* CTA Section */}
         <section className="cta">
           <div className="container">
             <div className="cta-content">
-              <h2 className="cta-title">立即加入东西方物流平台</h2>
+              <h2 className="cta-title">立即加入Welogx物流平台</h2>
               <p className="cta-description">
                 无论您是货主、承运商还是物流服务商，我们都为您提供最合适的平台服务
               </p>

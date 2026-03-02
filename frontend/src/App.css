@@ -39,26 +39,89 @@ main {
   animation: slideIn 0.6s ease-out;
 }
 
-/* Loading states */
-.loading {
-  display: inline-flex;
+/* Loading states - clean progress bar style */
+.loading,
+.page-loading {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  padding: 60px 20px;
+  gap: 12px;
+  color: #9ca3af;
+  font-size: 13px;
 }
 
-.loading::after {
+.loading-bar {
+  width: 100px;
+  height: 3px;
+  background: #f0f0f0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.loading-bar::after {
   content: '';
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--primary-green-alpha);
-  border-top: 2px solid var(--primary-green);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: #34C759;
+  border-radius: 3px;
+  animation: loadbar 1.2s ease-in-out infinite;
 }
 
+@keyframes loadbar {
+  0% { width: 20%; margin-left: 0; }
+  50% { width: 60%; margin-left: 20%; }
+  100% { width: 20%; margin-left: 80%; }
+}
+
+/* Spinner classes - redirect to progress bar style */
+.spinner,
+.loading-spinner {
+  width: 60px;
+  height: 3px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.spinner::after,
+.loading-spinner::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: #34C759;
+  border-radius: 3px;
+  animation: loadbar 1.2s ease-in-out infinite;
+}
+
+/* Small spinner for buttons */
+.loading-spinner-small,
+.btn-spinner {
+  width: 30px;
+  height: 2px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.loading-spinner-small::after,
+.btn-spinner::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: currentColor;
+  border-radius: 2px;
+  animation: loadbar 1.2s ease-in-out infinite;
+}
+
+/* Legacy spin keyframe kept for any remaining icon spinners */
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 } 

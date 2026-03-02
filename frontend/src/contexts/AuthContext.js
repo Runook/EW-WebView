@@ -45,8 +45,8 @@ export const AuthProvider = ({ children }) => {
         setUser(mockUser);
       } else {
         // 生产模式：使用Cognito认证
-        // 首先快速检查token是否存在
-        const currentUser = getCurrentUser();
+        // 检查token是否存在（现在是异步的，会自动刷新过期token）
+        const currentUser = await getCurrentUser();
         
         if (currentUser) {
           console.log('✅ AuthContext: 找到token，获取完整用户信息...');

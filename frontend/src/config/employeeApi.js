@@ -106,9 +106,13 @@ export const employeeApi = {
     return request(`/employees/${id}/stats`);
   },
 
-  // 获取员工权限
   getEmployeePermissions: (id) => {
     return request(`/employees/${id}/permissions`);
+  },
+
+  getEmployeeDetailedStats: (id, params = {}) => {
+    const qp = new URLSearchParams(params).toString();
+    return request(`/employees/${id}/stats?${qp}`);
   },
 
   // 搜索非员工用户
@@ -193,6 +197,111 @@ export const orderApi = {
   // 解决索赔
   resolveClaim: (id, resolution) => {
     return request(`/orders/${id}/resolve-claim`, 'POST', { resolution });
+  },
+
+  // ========== 付款 ==========
+  markPaid: (orderId, data) => {
+    return request(`/orders/${orderId}/mark-paid`, 'POST', data);
+  },
+
+  // ========== 逾期检查 ==========
+  checkOverdue: () => {
+    return request('/orders/overdue-check');
+  },
+
+  getCustomerBalance: (companyName) => {
+    return request(`/orders/customer-balance/${encodeURIComponent(companyName)}`);
+  },
+
+  // ========== 文档管理 ==========
+  getDocuments: (orderId) => {
+    return request(`/orders/${orderId}/documents`);
+  },
+
+  uploadDocument: async (orderId, file, docType) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('doc_type', docType);
+    const token = localStorage.getItem('idToken') || localStorage.getItem('authToken') || localStorage.getItem('accessToken');
+    const url = `${EMPLOYEE_API_BASE_URL}/orders/${orderId}/documents`;
+    const response = await fetch(url, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: formData });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || '上传失败');
+    return data;
+  },
+
+  downloadDocument: async (orderId, docId, filename) => {
+    const token = localStorage.getItem('idToken') || localStorage.getItem('authToken') || localStorage.getItem('accessToken');
+    const url = `${EMPLOYEE_API_BASE_URL}/orders/${orderId}/documents/${docId}/download`;
+    const response = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!response.ok) throw new Error('下载失败');
+    const blob = await response.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename || 'document';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  },
+
+  deleteDocument: (orderId, docId) => {
+    return request(`/orders/${orderId}/documents/${docId}`, 'DELETE');
+  },
+
+  // ========== POD 相关 ==========
+  
+  // 获取订单的 POD 列表
+  getPods: (orderId) => {
+    return request(`/orders/${orderId}/pods`);
+  },
+
+  // 上传 POD（需要 FormData，不走 JSON request）
+  uploadPod: async (orderId, file) => {
+    const formData = new FormData();
+    formData.append('pod', file);
+
+    const token = localStorage.getItem('idToken') || 
+                  localStorage.getItem('authToken') || 
+                  localStorage.getItem('accessToken');
+    
+    const url = `${EMPLOYEE_API_BASE_URL}/orders/${orderId}/pods`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || '上传失败');
+    }
+    return data;
+  },
+
+  // 下载 POD
+  downloadPod: async (orderId, podId, filename) => {
+    const token = localStorage.getItem('idToken') || 
+                  localStorage.getItem('authToken') || 
+                  localStorage.getItem('accessToken');
+    
+    const url = `${EMPLOYEE_API_BASE_URL}/orders/${orderId}/pods/${podId}/download`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    if (!response.ok) throw new Error('下载失败');
+    const blob = await response.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename || 'POD';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  },
+
+  // 删除 POD
+  deletePod: (orderId, podId) => {
+    return request(`/orders/${orderId}/pods/${podId}`, 'DELETE');
   },
 };
 
@@ -313,12 +422,14 @@ const customerApi = {
     return request(`/customers?search=${encodeURIComponent(search)}`);
   },
 
-  // 搜索客户（自动补全）
   searchCustomers: (keyword) => {
     return request(`/customers/search?keyword=${encodeURIComponent(keyword)}`);
   },
 
-  // 创建客户
+  getByName: (companyName) => {
+    return request(`/customers/by-name/${encodeURIComponent(companyName)}`);
+  },
+
   createCustomer: (customerData) => {
     return request('/customers', 'POST', customerData);
   },
@@ -530,6 +641,41 @@ employeeUtils.getPaymentTermsLabel = (terms) => {
   return labels[terms] || terms;
 };
 
+// ==========================================
+// QuickBooks Online API
+// ==========================================
+
+export const qboApi = {
+  getStatus: () => {
+    return request('/qbo/status');
+  },
+
+  disconnect: () => {
+    return request('/qbo/disconnect', 'POST');
+  },
+
+  syncInvoice: (data) => {
+    return request('/qbo/sync-invoice', 'POST', data);
+  },
+
+  syncCustomer: (companyName) => {
+    return request('/qbo/sync-customer', 'POST', { companyName });
+  },
+
+  getSyncStatus: (orderId) => {
+    return request(`/qbo/sync-status/${orderId}`);
+  },
+
+  syncPayments: () => {
+    return request('/qbo/sync-payments', 'POST');
+  },
+
+  getAuthUrl: () => {
+    const base = EMPLOYEE_API_BASE_URL.replace(/\/api$/, '');
+    return `${base}/api/qbo/auth`;
+  },
+};
+
 export default {
   employeeApi,
   orderApi,
@@ -539,5 +685,6 @@ export default {
   vendorApi,
   paymentApi,
   serviceItemApi,
+  qboApi,
 };
 

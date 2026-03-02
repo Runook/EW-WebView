@@ -126,9 +126,14 @@ class Employee {
       
       console.log(`📋 找到用户: ${existingUser.email}`);
       
-      // 检查是否已经是员工
+      // 如果已经是员工，更新角色而不是报错
       if (existingUser.is_employee) {
-        throw new Error(`用户 ${existingUser.email} 已经是员工了`);
+        console.log(`⚠️ 用户 ${existingUser.email} 已经是员工，更新角色`);
+        await db('users').where('id', userId).update({
+          employee_role: role || existingUser.employee_role || 'employee',
+        });
+        const updated = await db('users').where('id', userId).first();
+        return { success: true, employee: updated };
       }
       
       // 如果没有提供employeeId，自动生成
@@ -235,7 +240,9 @@ class Employee {
         .where({ id: employeeId, is_employee: true })
         .update({
           is_employee: false,
-          employee_role: null
+          employee_role: null,
+          employee_id: null,
+          employee_since: null
         })
         .returning('*');
       
@@ -260,39 +267,97 @@ class Employee {
    * @param {number} employeeId - 员工ID
    * @returns {Promise<Object>} 统计信息
    */
-  static async getEmployeeStats(employeeId) {
+  static async getEmployeeStats(employeeId, dateFrom = null, dateTo = null) {
     try {
-      const stats = await db('employee_orders')
+      let query = db('employee_orders')
         .select(
           db.raw('COUNT(*) as total_orders'),
           db.raw("COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_orders"),
-          db.raw("COUNT(CASE WHEN status = 'in_progress' THEN 1 END) as in_progress_orders"),
+          db.raw("COUNT(CASE WHEN status = 'ordered' THEN 1 END) as ordered_orders"),
           db.raw("COUNT(CASE WHEN status = 'cancelled' THEN 1 END) as cancelled_orders"),
-          db.raw('COALESCE(SUM(final_price), 0) as total_revenue')
+          db.raw("COUNT(CASE WHEN status = 'quote' THEN 1 END) as quote_orders"),
+          db.raw('COALESCE(SUM(COALESCE(ew_final_price, ew_quote_price, final_price, 0)), 0) as total_revenue'),
+          db.raw('COALESCE(SUM(profit), 0) as total_profit'),
+          db.raw("COUNT(CASE WHEN payment_status = 'paid' THEN 1 END) as paid_count"),
+          db.raw("COUNT(CASE WHEN payment_status = 'unpaid' OR payment_status IS NULL THEN 1 END) as unpaid_count"),
+          db.raw("COUNT(CASE WHEN payment_status = 'partial' THEN 1 END) as partial_count")
+        )
+        .where(function() {
+          this.where('created_by', employeeId)
+            .orWhere('assigned_to', employeeId);
+        })
+        .where('is_deleted', false);
+
+      if (dateFrom) query = query.where('created_at', '>=', dateFrom);
+      if (dateTo) query = query.where('created_at', '<=', dateTo + ' 23:59:59');
+
+      const stats = await query.first();
+
+      return {
+        totalOrders: parseInt(stats.total_orders) || 0,
+        completedOrders: parseInt(stats.completed_orders) || 0,
+        orderedOrders: parseInt(stats.ordered_orders) || 0,
+        cancelledOrders: parseInt(stats.cancelled_orders) || 0,
+        quoteOrders: parseInt(stats.quote_orders) || 0,
+        totalRevenue: parseFloat(stats.total_revenue) || 0,
+        totalProfit: parseFloat(stats.total_profit) || 0,
+        paidCount: parseInt(stats.paid_count) || 0,
+        unpaidCount: parseInt(stats.unpaid_count) || 0,
+        partialCount: parseInt(stats.partial_count) || 0
+      };
+    } catch (error) {
+      console.error('Failed to get employee stats:', error);
+      return {
+        totalOrders: 0, completedOrders: 0, orderedOrders: 0, cancelledOrders: 0, quoteOrders: 0,
+        totalRevenue: 0, totalProfit: 0, paidCount: 0, unpaidCount: 0, partialCount: 0
+      };
+    }
+  }
+
+  static async getStatsByPeriod(employeeId, period = 'monthly', dateFrom = null, dateTo = null) {
+    try {
+      let dateTrunc;
+      switch (period) {
+        case 'daily': dateTrunc = 'day'; break;
+        case 'weekly': dateTrunc = 'week'; break;
+        case 'yearly': dateTrunc = 'year'; break;
+        default: dateTrunc = 'month';
+      }
+
+      let query = db('employee_orders')
+        .select(
+          db.raw(`DATE_TRUNC('${dateTrunc}', created_at) as period`),
+          db.raw('COUNT(*) as total_orders'),
+          db.raw("COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed"),
+          db.raw('COALESCE(SUM(COALESCE(ew_final_price, ew_quote_price, final_price, 0)), 0) as revenue'),
+          db.raw('COALESCE(SUM(profit), 0) as profit'),
+          db.raw("COUNT(CASE WHEN payment_status = 'paid' THEN 1 END) as paid"),
+          db.raw("COUNT(CASE WHEN payment_status = 'unpaid' OR payment_status IS NULL THEN 1 END) as unpaid")
         )
         .where(function() {
           this.where('created_by', employeeId)
             .orWhere('assigned_to', employeeId);
         })
         .where('is_deleted', false)
-        .first();
-      
-      return {
-        totalOrders: parseInt(stats.total_orders) || 0,
-        completedOrders: parseInt(stats.completed_orders) || 0,
-        inProgressOrders: parseInt(stats.in_progress_orders) || 0,
-        cancelledOrders: parseInt(stats.cancelled_orders) || 0,
-        totalRevenue: parseFloat(stats.total_revenue) || 0
-      };
+        .groupByRaw(`DATE_TRUNC('${dateTrunc}', created_at)`)
+        .orderBy('period', 'desc');
+
+      if (dateFrom) query = query.where('created_at', '>=', dateFrom);
+      if (dateTo) query = query.where('created_at', '<=', dateTo + ' 23:59:59');
+
+      const rows = await query.limit(50);
+      return rows.map(r => ({
+        period: r.period,
+        totalOrders: parseInt(r.total_orders) || 0,
+        completed: parseInt(r.completed) || 0,
+        revenue: parseFloat(r.revenue) || 0,
+        profit: parseFloat(r.profit) || 0,
+        paid: parseInt(r.paid) || 0,
+        unpaid: parseInt(r.unpaid) || 0
+      }));
     } catch (error) {
-      console.error('获取员工统计失败:', error);
-      return {
-        totalOrders: 0,
-        completedOrders: 0,
-        inProgressOrders: 0,
-        cancelledOrders: 0,
-        totalRevenue: 0
-      };
+      console.error('Failed to get stats by period:', error);
+      return [];
     }
   }
   
@@ -323,20 +388,24 @@ class Employee {
    */
   static async generateEmployeeId() {
     try {
-      // 获取当前最大的员工编号
-      const result = await db('users')
-        .where('is_employee', true)
-        .whereNotNull('employee_id')
-        .count('* as count')
-        .first();
-      
-      const count = parseInt(result.count) || 0;
-      const newNumber = count + 1;
-      
-      // 格式: EW + 年份后两位 + 4位数字
       const year = new Date().getFullYear().toString().slice(-2);
-      const employeeId = `EW${year}${newNumber.toString().padStart(4, '0')}`;
-      
+      const prefix = `EW${year}`;
+
+      // Find the highest existing number across ALL users (not just active employees)
+      const result = await db('users')
+        .whereNotNull('employee_id')
+        .where('employee_id', 'like', `${prefix}%`)
+        .orderByRaw("CAST(SUBSTRING(employee_id FROM 5) AS INTEGER) DESC")
+        .select('employee_id')
+        .first();
+
+      let newNumber = 1;
+      if (result?.employee_id) {
+        const numPart = parseInt(result.employee_id.substring(4)) || 0;
+        newNumber = numPart + 1;
+      }
+
+      const employeeId = `${prefix}${newNumber.toString().padStart(4, '0')}`;
       return employeeId;
     } catch (error) {
       console.error('生成员工ID失败:', error);

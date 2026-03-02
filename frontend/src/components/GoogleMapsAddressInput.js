@@ -550,7 +550,7 @@ const GoogleMapsRoute = ({ origin, destination, onClose }) => {
         <div className="route-modal-body">
           {loading && (
             <div className="route-loading">
-              <div className="loading-spinner"></div>
+              <div className="loading-bar"></div>
               <p>正在计算路线...</p>
             </div>
           )}

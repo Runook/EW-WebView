@@ -6,7 +6,9 @@ import EditableCell from '../components/EditableCell';
 import CompanyEditableCell from '../components/CompanyEditableCell';
 import ConfirmOrderModal from '../components/ConfirmOrderModal';
 import DocumentGenerator from '../components/DocumentGenerator';
+import InvoiceGenerator from '../components/InvoiceGenerator';
 import QuoteGenerator from '../components/QuoteGenerator';
+import QBOSettings from '../components/QBOSettings';
 import CargoItemsList from '../components/CargoItemsList';
 import { loadGoogleMapsScript, diagnoseGoogleMapsIssues } from '../config/googleMaps';
 import './BrokerOrdersNew.css';
@@ -34,12 +36,43 @@ const BrokerOrdersNew = () => {
   // 报价生成器状态
   const [showQuoteGenerator, setShowQuoteGenerator] = useState(false);
   
+  // Invoice 生成器状态
+  const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
+  
+  // QBO 设置状态
+  const [showQBOSettings, setShowQBOSettings] = useState(false);
+  
+  // POD 状态
+  const [podData, setPodData] = useState({}); // { orderId: [pods] }
+  const [podUploading, setPodUploading] = useState({});
+  
+  // 文档管理状态
+  const [orderDocs, setOrderDocs] = useState({}); // { orderId: { byType: {...} } }
+  const [docUploading, setDocUploading] = useState({});
+  
   const currentStatus = searchParams.get('status') || 'quote';
   
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
     employee: searchParams.get('employee') || 'all'
   });
+
+  // Handle QBO callback redirect
+  useEffect(() => {
+    const qboStatus = searchParams.get('qbo');
+    if (qboStatus === 'connected') {
+      const company = searchParams.get('company');
+      alert(`QuickBooks 已连接${company ? ': ' + company : ''}`);
+      const params = new URLSearchParams(searchParams);
+      params.delete('qbo'); params.delete('company'); params.delete('msg');
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    } else if (qboStatus === 'error') {
+      alert('QuickBooks 连接失败: ' + (searchParams.get('msg') || '未知错误'));
+      const params = new URLSearchParams(searchParams);
+      params.delete('qbo'); params.delete('msg');
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    }
+  }, [searchParams]);
 
   // 加载Google Maps API
   useEffect(() => {
@@ -75,6 +108,10 @@ const BrokerOrdersNew = () => {
       
       if (response.success) {
         setOrders(response.data || []);
+        // 已完成订单自动加载文档状态
+        if (currentStatus === 'completed' && response.data) {
+          response.data.forEach(o => loadDocs(o.id));
+        }
       }
     } catch (error) {
       console.error('加载订单失败:', error);
@@ -213,7 +250,13 @@ const BrokerOrdersNew = () => {
   };
 
   const toggleRow = (orderId) => {
-    setExpandedRow(expandedRow === orderId ? null : orderId);
+    const newExpanded = expandedRow === orderId ? null : orderId;
+    setExpandedRow(newExpanded);
+    // 展开完成订单时自动加载 POD 和文档
+    if (newExpanded && currentStatus === 'completed') {
+      loadPods(orderId);
+      loadDocs(orderId);
+    }
   };
 
   // 计算报价参考及相关字段
@@ -613,6 +656,100 @@ const BrokerOrdersNew = () => {
     }
   };
 
+  // ========== 文档管理 ==========
+  const DOC_TYPES = [
+    { key: 'quote', label: '报价' },
+    { key: 'bol', label: 'BOL' },
+    { key: 'rc', label: 'RC' },
+    { key: 'pod', label: 'POD' },
+    { key: 'customer_invoice', label: '发票' },
+    { key: 'vendor_invoice', label: '司机发票' },
+  ];
+
+  const loadDocs = async (orderId) => {
+    try {
+      const res = await orderApi.getDocuments(orderId);
+      if (res.success) setOrderDocs(prev => ({ ...prev, [orderId]: res.data.byType }));
+    } catch (e) { console.error('加载文档失败:', e); }
+  };
+
+  const handleDocUpload = async (orderId, file, docType) => {
+    const uploadKey = `${orderId}-${docType}`;
+    setDocUploading(prev => ({ ...prev, [uploadKey]: true }));
+    try {
+      await orderApi.uploadDocument(orderId, file, docType);
+      await loadDocs(orderId);
+    } catch (e) { alert('上传失败: ' + e.message); }
+    finally { setDocUploading(prev => ({ ...prev, [uploadKey]: false })); }
+  };
+
+  const handleDocDownload = async (orderId, docId, filename) => {
+    try { await orderApi.downloadDocument(orderId, docId, filename); }
+    catch (e) { alert('下载失败: ' + e.message); }
+  };
+
+  const handleDocDelete = async (orderId, docId, docType) => {
+    if (!window.confirm('确定删除此文档？')) return;
+    try { await orderApi.deleteDocument(orderId, docId); await loadDocs(orderId); }
+    catch (e) { alert('删除失败: ' + e.message); }
+  };
+
+  // 快速标记付款
+  const handleMarkPaid = async (orderId, status) => {
+    try {
+      await orderApi.markPaid(orderId, { payment_status: status });
+      await loadOrders();
+    } catch (e) { alert('操作失败: ' + e.message); }
+  };
+
+  // ========== POD 相关 ==========
+  const loadPods = async (orderId) => {
+    try {
+      const response = await orderApi.getPods(orderId);
+      if (response.success) {
+        setPodData(prev => ({ ...prev, [orderId]: response.data }));
+      }
+    } catch (error) {
+      console.error('加载POD失败:', error);
+    }
+  };
+
+  const handlePodUpload = async (orderId, file) => {
+    if (!file) return;
+    setPodUploading(prev => ({ ...prev, [orderId]: true }));
+    try {
+      await orderApi.uploadPod(orderId, file);
+      alert('✅ POD 上传成功');
+      await loadPods(orderId);
+    } catch (error) {
+      console.error('POD 上传失败:', error);
+      alert('上传失败: ' + error.message);
+    } finally {
+      setPodUploading(prev => ({ ...prev, [orderId]: false }));
+    }
+  };
+
+  const handlePodDownload = async (orderId, podId, filename) => {
+    try {
+      await orderApi.downloadPod(orderId, podId, filename);
+    } catch (error) {
+      console.error('POD 下载失败:', error);
+      alert('下载失败: ' + error.message);
+    }
+  };
+
+  const handlePodDelete = async (orderId, podId) => {
+    if (!window.confirm('确定要删除此 POD 文件吗？')) return;
+    try {
+      await orderApi.deletePod(orderId, podId);
+      alert('✅ POD 已删除');
+      await loadPods(orderId);
+    } catch (error) {
+      console.error('POD 删除失败:', error);
+      alert('删除失败: ' + error.message);
+    }
+  };
+
   const handleBackToQuote = async (orderId) => {
     if (!window.confirm('确定要回到报价状态吗？这将清除所有卡车信息（付卡车价格、MC Number、卡车公司、联络方式），如需重新下单需重新填写。')) {
       return;
@@ -689,20 +826,20 @@ const BrokerOrdersNew = () => {
         {/* 分割线 */}
         <div className="nav-divider"></div>
 
-        {/* 客户表 */}
+        {/* Customers */}
         <button
           className="nav-item"
           onClick={() => navigate('/employee/customers')}
         >
-          客户表
+          Customers
         </button>
 
-        {/* 供应商管理 */}
+        {/* Vendors */}
         <button
           className="nav-item"
           onClick={() => navigate('/employee/vendors')}
         >
-          供应商
+          Vendors
         </button>
 
         {/* 付款管理 */}
@@ -719,6 +856,40 @@ const BrokerOrdersNew = () => {
           onClick={() => navigate('/employee/map-view')}
         >
           地图查单
+        </button>
+
+        {/* 广告管理 */}
+        <button
+          className="nav-item"
+          onClick={() => navigate('/employee/ads')}
+        >
+          广告管理
+        </button>
+
+        {/* QuickBooks 设置 */}
+        <button
+          className="nav-item"
+          onClick={() => setShowQBOSettings(true)}
+        >
+          QuickBooks
+        </button>
+
+        {/* 检查逾期 */}
+        <button
+          className="nav-item"
+          onClick={async () => {
+            try {
+              const res = await orderApi.checkOverdue();
+              if (res.success && res.data.length > 0) {
+                const list = res.data.map(o => `${o.ew_quote_number || o.order_number}: ${o.inquiry_company} - 逾期${o.days_overdue}天, 欠款$${o.outstanding}, Late Fee$${o.late_fee}`).join('\n');
+                alert(`发现 ${res.data.length} 个逾期订单:\n\n${list}`);
+              } else {
+                alert('没有逾期订单');
+              }
+            } catch (e) { alert('检查失败: ' + e.message); }
+          }}
+        >
+          检查逾期
         </button>
 
         {/* 已下单的子状态统计 */}
@@ -800,7 +971,7 @@ const BrokerOrdersNew = () => {
                 <tr>
                   <th width="30"></th>
                   <th>日期</th>
-                  <th>询价公司</th>
+                  <th>Company</th>
                   <th>发货单号</th>
                   <th>WE单号</th>
                   <th>货物备注</th>
@@ -857,6 +1028,24 @@ const BrokerOrdersNew = () => {
                           RC
                         </button>
                       </th>
+                    </>
+                  )}
+                  {currentStatus === 'completed' && (
+                    <>
+                      <th>
+                        <button 
+                          className="btn-header btn-invoice-header"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowInvoiceGenerator(true);
+                          }}
+                          title="批量生成Invoice"
+                        >
+                          Invoice
+                        </button>
+                      </th>
+                      <th>付款</th>
+                      <th>文档</th>
                     </>
                   )}
                 </tr>
@@ -1111,6 +1300,61 @@ const BrokerOrdersNew = () => {
                           <td></td>
                         </>
                       )}
+                      {currentStatus === 'completed' && (
+                        <>
+                          <td></td>
+                          {/* 付款状态 */}
+                          <td onClick={(e) => e.stopPropagation()}>
+                            <select
+                              value={order.payment_status || 'unpaid'}
+                              onChange={(e) => handleMarkPaid(order.id, e.target.value)}
+                              className="payment-status-select"
+                              style={{
+                                fontSize: 11, padding: '2px 4px', borderRadius: 4, border: '1px solid #e5e7eb', cursor: 'pointer',
+                                color: order.payment_status === 'paid' ? '#16a34a' : order.payment_status === 'partial' ? '#f59e0b' : '#ef4444',
+                                fontWeight: 600, background: 'white'
+                              }}
+                            >
+                              <option value="unpaid">未付</option>
+                              <option value="partial">部分</option>
+                              <option value="paid">已付</option>
+                            </select>
+                          </td>
+                          {/* 文档 - 6个紧凑文字链接 */}
+                          <td onClick={(e) => e.stopPropagation()}>
+                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', fontSize: 11 }}>
+                              {DOC_TYPES.map(dt => {
+                                const doc = orderDocs[order.id]?.[dt.key];
+                                const uploading = docUploading[`${order.id}-${dt.key}`];
+                                if (uploading) return <span key={dt.key} style={{ color: '#9ca3af' }}>...</span>;
+                                if (doc) {
+                                  return (
+                                    <span key={dt.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                                      <span
+                                        style={{ color: '#1565C0', cursor: 'pointer', textDecoration: 'underline' }}
+                                        onClick={() => handleDocDownload(order.id, doc.id, doc.original_filename)}
+                                      >{dt.label}</span>
+                                      <span
+                                        style={{ color: '#ccc', cursor: 'pointer', fontSize: 10 }}
+                                        onClick={() => handleDocDelete(order.id, doc.id, dt.key)}
+                                      >x</span>
+                                    </span>
+                                  );
+                                }
+                                return (
+                                  <label key={dt.key} style={{ color: '#ccc', cursor: 'pointer' }}>
+                                    {dt.label}
+                                    <input type="file" style={{ display: 'none' }}
+                                      accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.tiff,.tif"
+                                      onChange={(e) => { if (e.target.files[0]) { handleDocUpload(order.id, e.target.files[0], dt.key); e.target.value = ''; } }}
+                                    />
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </td>
+                        </>
+                      )}
                     </tr>
 
                     {/* 展开行（隐藏字段） */}
@@ -1357,6 +1601,62 @@ const BrokerOrdersNew = () => {
                               </div>
                             </div>
 
+                            {/* POD 文件列表（已完成订单） */}
+                            {currentStatus === 'completed' && podData[order.id] && (
+                              <div className="pod-section">
+                                <h4>📄 POD (Proof of Delivery) 文件</h4>
+                                {podData[order.id].length === 0 ? (
+                                  <p className="pod-empty">暂无 POD 文件，点击 📤 上传</p>
+                                ) : (
+                                  <div className="pod-list">
+                                    {podData[order.id].map(pod => (
+                                      <div key={pod.id} className="pod-item">
+                                        <div className="pod-info">
+                                          <span className="pod-filename">{pod.original_filename}</span>
+                                          <span className="pod-meta">
+                                            {(pod.file_size / 1024).toFixed(1)} KB
+                                            {pod.uploaded_by_name && ` · ${pod.uploaded_by_name}`}
+                                            {pod.created_at && ` · ${new Date(pod.created_at).toLocaleDateString('zh-CN')}`}
+                                          </span>
+                                        </div>
+                                        <div className="pod-actions">
+                                          <button
+                                            className="btn-pod-download"
+                                            onClick={() => handlePodDownload(order.id, pod.id, pod.original_filename)}
+                                            title="下载"
+                                          >
+                                            ⬇️ 下载
+                                          </button>
+                                          <button
+                                            className="btn-pod-delete"
+                                            onClick={() => handlePodDelete(order.id, pod.id)}
+                                            title="删除"
+                                          >
+                                            🗑️ 删除
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                <label className="btn-pod-upload-large">
+                                  {podUploading[order.id] ? '⏳ 上传中...' : '📤 上传 POD 文件'}
+                                  <input
+                                    type="file"
+                                    style={{ display: 'none' }}
+                                    accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.tiff,.tif"
+                                    onChange={(e) => {
+                                      if (e.target.files[0]) {
+                                        handlePodUpload(order.id, e.target.files[0]);
+                                        e.target.value = '';
+                                      }
+                                    }}
+                                    disabled={podUploading[order.id]}
+                                  />
+                                </label>
+                              </div>
+                            )}
+
                             {/* 下单后的卡车信息 */}
                             {currentStatus !== 'quote' && (
                               <div className="truck-details">
@@ -1527,11 +1827,24 @@ const BrokerOrdersNew = () => {
         orders={orders}
       />
 
+      {/* Invoice 生成器对话框 */}
+      <InvoiceGenerator
+        isOpen={showInvoiceGenerator}
+        onClose={() => setShowInvoiceGenerator(false)}
+        orders={orders}
+      />
+
       {/* 报价生成器对话框 */}
       <QuoteGenerator
         isOpen={showQuoteGenerator}
         onClose={() => setShowQuoteGenerator(false)}
         orders={orders}
+      />
+
+      {/* QBO 设置对话框 */}
+      <QBOSettings
+        isOpen={showQBOSettings}
+        onClose={() => setShowQBOSettings(false)}
       />
     </div>
   );

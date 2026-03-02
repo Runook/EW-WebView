@@ -4,7 +4,7 @@ require('dotenv').config();
 const config = {
   // 应用配置
   app: {
-    name: 'EW Logistics Platform',
+    name: 'Welogx Platform',
     version: '1.0.0',
     port: process.env.PORT || 5001,
     env: process.env.NODE_ENV || 'development'

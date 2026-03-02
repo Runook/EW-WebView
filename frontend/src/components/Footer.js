@@ -40,7 +40,7 @@ const Footer = () => {
                 <img src="/logo.png" alt="EWLogistics Logo" className="footer-logo-image" />
               </div>
               <div className="footer-logo-text">
-                <span className="footer-logo-main">EW物流</span>
+                <span className="footer-logo-main">Welogx</span>
                 <span className="footer-logo-sub">专业物流服务</span>
               </div>
             </Link>
@@ -109,7 +109,7 @@ const Footer = () => {
         <div className="footer-bottom">
           <div className="footer-bottom-content">
             <p className="copyright">
-              © {currentYear} EW物流平台. 保留所有权利.
+              © {currentYear} Welogx. All Rights Reserved.
             </p>
             <div className="social-links">
               <button className="social-link" aria-label="Facebook" type="button">

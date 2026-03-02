@@ -773,6 +773,8 @@ class Order {
     const trx = await db.transaction();
     
     try {
+      const nyDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      
       const [order] = await trx('employee_orders')
         .where('id', orderId)
         .where('status', 'ordered')
@@ -781,7 +783,8 @@ class Order {
           status: 'completed',
           sub_status: null,
           completed_by: completedBy,
-          completed_at: new Date()
+          completed_at: new Date(),
+          quote_date: nyDate
         })
         .returning('*');
       
@@ -866,6 +869,8 @@ class Order {
     const trx = await db.transaction();
     
     try {
+      const nyDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      
       const existingOrder = await trx('employee_orders')
         .where('id', orderId)
         .where('status', 'ordered')
@@ -882,7 +887,8 @@ class Order {
           claim_reason: claimReason,
           claim_requested_at: new Date(),
           claim_requested_by: requestedBy,
-          updated_by: requestedBy
+          updated_by: requestedBy,
+          quote_date: nyDate
         })
         .returning('*');
       
@@ -965,6 +971,8 @@ class Order {
     const trx = await db.transaction();
     
     try {
+      const nyDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      
       const existingOrder = await trx('employee_orders')
         .where('id', orderId)
         .whereIn('status', ['quote', 'ordered'])
@@ -980,7 +988,8 @@ class Order {
           status: 'cancelled',
           cancelled_by: cancelledBy,
           cancelled_at: new Date(),
-          updated_by: cancelledBy
+          updated_by: cancelledBy,
+          quote_date: nyDate
         })
         .returning('*');
       
