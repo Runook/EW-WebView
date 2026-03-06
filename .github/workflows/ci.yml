@@ -129,3 +129,4 @@ jobs:
           " > /tmp/td.json
           NEW_REV=$(aws ecs register-task-definition --cli-input-json file:///tmp/td.json --query 'taskDefinition.revision' --output text)
           aws ecs update-service --cluster $ECS_CLUSTER --service ew-logistics-frontend --task-definition ew-logistics-frontend:$NEW_REV --force-new-deployment
+# CI/CD test trigger - Fri Mar  6 13:02:32 EST 2026
