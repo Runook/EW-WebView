@@ -148,7 +148,7 @@ function densityToClass(density) {
 /**
  * Calculate total density and auto-class from a list of cargo items.
  * Each item: { weight, length, width, height, pallets, freightClass }
- * weight = per-pallet weight in lbs, dimensions in inches
+ * weight = total weight for this line item (all pallets combined), dimensions = per pallet
  */
 function calculateDensityAndClass(items) {
   let totalWeight = 0;
@@ -156,16 +156,15 @@ function calculateDensityAndClass(items) {
 
   for (const item of items) {
     const pallets = parseInt(item.pallets) || 1;
-    const weightPerPallet = parseFloat(item.weight) || 0;
+    const itemWeight = parseFloat(item.weight) || 0;
     const l = parseFloat(item.length) || 48;
     const w = parseFloat(item.width) || 40;
     const h = parseFloat(item.height) || 48;
 
-    const itemTotalWeight = weightPerPallet * pallets;
     const cuFtPerUnit = (l * w * h) / 1728;
     const itemTotalCuFt = cuFtPerUnit * pallets;
 
-    totalWeight += itemTotalWeight;
+    totalWeight += itemWeight;
     totalCuFt += itemTotalCuFt;
   }
 

@@ -203,7 +203,7 @@ const GetQuoteLTL = ({ fbaDestination }) => {
 
   // 计算货物分类
   const calculateFreightClass = React.useCallback((data) => {
-    const { weight, length, width, height, hazmat, fragile } = data;
+    const { weight, length, width, height, pallets, hazmat, fragile } = data;
     
     if (!weight || !length || !width || !height) return data;
     
@@ -211,12 +211,14 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     const lengthNum = parseFloat(length);
     const widthNum = parseFloat(width);
     const heightNum = parseFloat(height);
+    const palletCount = parseInt(pallets) || 1;
     
     if (weightNum <= 0 || lengthNum <= 0 || widthNum <= 0 || heightNum <= 0) return data;
     
     const cubicInches = lengthNum * widthNum * heightNum;
     const cubicFeet = cubicInches / 1728;
-    const density = weightNum / cubicFeet;
+    const weightPerPallet = weightNum / palletCount;
+    const density = weightPerPallet / cubicFeet;
     
     let selectedClass = freightClassMap[freightClassMap.length - 1];
     for (const classEntry of freightClassMap) {
@@ -506,11 +508,8 @@ const GetQuoteLTL = ({ fbaDestination }) => {
 
   // 计算总重量、托盘数等
   const calculateTotals = () => {
-    // 总重量 = 每个货物的 (单托盘重量 × 托盘数) 之和
     const totalWeight = formData.cargoItems.reduce((sum, item) => {
-      const pallets = parseInt(item.pallets || 0);
-      const weightPerPallet = parseFloat(item.weight || 0);
-      return sum + (weightPerPallet * pallets);
+      return sum + (parseFloat(item.weight || 0));
     }, 0);
     
     // 总托盘数
@@ -1019,13 +1018,13 @@ const GetQuoteLTL = ({ fbaDestination }) => {
 
                 <div className="form-grid dimensions-grid">
                   <div className="form-group">
-                    <label>单个托盘重量 (磅) <span className="required">*</span></label>
+                    <label>总重量 (磅) <span className="required">*</span></label>
                     <div className="dimension-input-group">
                       <input
                         type="number"
                         value={item.weight}
                         onChange={(e) => updateCargoItem(item.id, 'weight', e.target.value)}
-                        placeholder="每个托盘的重量"
+                        placeholder="该项货物的总重量"
                         min="1"
                         step="0.1"
                         required
@@ -1042,12 +1041,11 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                         <span className="unit-label">kg</span>
                       </div>
                     </div>
-                    {/* 自动计算总重量显示 */}
                     {parseInt(item.pallets) > 1 && item.weight && (
                       <div className="calculated-total-weight">
-                        <span className="total-label">总重量:</span>
+                        <span className="total-label">每托盘:</span>
                         <span className="total-value">
-                          {(parseFloat(item.weight) * parseInt(item.pallets)).toFixed(1)} lbs
+                          {(parseFloat(item.weight) / parseInt(item.pallets)).toFixed(1)} lbs
                         </span>
                       </div>
                     )}

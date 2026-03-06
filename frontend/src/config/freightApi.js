@@ -78,7 +78,7 @@ export const getWarpQuote = async (quoteData) => {
       deliveryInfo: { zipcode: quoteData.destinationZip },
       listItems: quoteData.items.map(item => {
         const pallets = parseInt(item.pallets) || 1;
-        const weightPerPallet = parseFloat(item.weight) || 500;
+        const totalWeight = parseFloat(item.weight) || 500;
         return {
           name: item.description || 'Freight Item',
           height: parseFloat(item.height) || 48,
@@ -86,7 +86,7 @@ export const getWarpQuote = async (quoteData) => {
           width: parseFloat(item.width) || 40,
           sizeUnit: 'IN',
           quantity: pallets,
-          totalWeight: weightPerPallet * pallets, // Warp 需要总重量
+          totalWeight: totalWeight,
           weightUnit: 'lbs',
           stackable: item.stackable || false
         };
@@ -221,11 +221,10 @@ export const getRRTSQuote = async (quoteData) => {
       originType: 'O', // O=Shipper
       paymentType: 'P', // P=Prepaid
       shipmentDetails: quoteData.items.map(item => {
-        const pallets = parseInt(item.pallets) || 1;
-        const weightPerPallet = parseInt(item.weight) || 500;
+        const totalWeight = parseInt(item.weight) || 500;
         return {
           actualClass: calculateFreightClass(item),
-          weight: weightPerPallet * pallets // RRTS 需要该项目的总重量
+          weight: totalWeight
         };
       }),
       // 添加托盘数和体积信息，提高报价准确性
@@ -333,10 +332,10 @@ export const getRLCQuote = async (quoteData) => {
       shipDate: quoteData.pickupDate || new Date().toISOString().split('T')[0],
       items: quoteData.items.map(item => {
         const pallets = parseInt(item.pallets) || 1;
-        const weightPerPallet = parseInt(item.weight) || 500;
+        const totalWeight = parseInt(item.weight) || 500;
         return {
           class: item.freightClass || '70',
-          weight: weightPerPallet * pallets, // RLC 需要该项目的总重量
+          weight: totalWeight,
           pieces: pallets,
           length: parseInt(item.length) || 48,
           width: parseInt(item.width) || 40,
@@ -432,10 +431,10 @@ export const getSaiaQuote = async (quoteData) => {
       shipDate: quoteData.pickupDate || new Date().toISOString().split('T')[0],
       items: quoteData.items.map(item => {
         const pallets = parseInt(item.pallets) || 1;
-        const weightPerPallet = parseInt(item.weight) || 500;
+        const totalWeight = parseInt(item.weight) || 500;
         return {
           class: item.freightClass || '70',
-          weight: weightPerPallet * pallets, // Saia 需要该项目的总重量
+          weight: totalWeight,
           pieces: pallets,
           length: parseInt(item.length) || 48,
           width: parseInt(item.width) || 40,
@@ -545,10 +544,10 @@ export const getTForceQuote = async (quoteData) => {
       shipDate: quoteData.pickupDate || new Date().toISOString().split('T')[0],
       items: quoteData.items.map(item => {
         const pallets = parseInt(item.pallets) || 1;
-        const weightPerPallet = parseInt(item.weight) || 500;
+        const totalWeight = parseInt(item.weight) || 500;
         return {
           class: item.freightClass || '70',
-          weight: weightPerPallet * pallets, // TForce 需要该项目的总重量
+          weight: totalWeight,
           pieces: pallets,
           length: parseInt(item.length) || 48,
           width: parseInt(item.width) || 40,
@@ -623,9 +622,9 @@ export const getEDIExpressQuote = async (quoteData) => {
       destinationZip: quoteData.destinationZip,
       items: quoteData.items.map(item => {
         const pallets = parseInt(item.pallets) || 1;
-        const weightPerPallet = parseInt(item.weight) || 500;
+        const totalWeight = parseInt(item.weight) || 500;
         return {
-          weight: weightPerPallet * pallets,
+          weight: totalWeight,
           freightClass: parseInt(item.freightClass || '70'),
           pieces: pallets,
           length: Math.round(parseFloat(item.length) || 48),
@@ -682,11 +681,11 @@ export const getSTGQuote = async (quoteData) => {
       shipDate: quoteData.pickupDate,
       items: quoteData.items.map(item => {
         const pallets = parseInt(item.pallets) || 1;
-        const weightPerPallet = parseInt(item.weight) || 500;
+        const totalWeight = parseInt(item.weight) || 500;
         return {
           pieces: pallets,
           pallets: pallets,
-          weight: weightPerPallet * pallets,
+          weight: totalWeight,
           class: item.freightClass || '70',
           length: Math.round(parseFloat(item.length) || 48),
           width: Math.round(parseFloat(item.width) || 40),
@@ -744,9 +743,9 @@ export const getWelogxQuote = async (quoteData) => {
       distanceMiles: quoteData.distanceMiles || null,
       items: quoteData.items.map(item => {
         const pallets = parseInt(item.pallets) || 1;
-        const weightPerPallet = parseFloat(item.weight) || 500;
+        const totalWeight = parseFloat(item.weight) || 500;
         return {
-          weight: weightPerPallet,
+          weight: totalWeight,
           length: parseFloat(item.length) || 48,
           width: parseFloat(item.width) || 40,
           height: parseFloat(item.height) || 48,
@@ -1019,7 +1018,7 @@ export const bookWarpShipment = async (bookingData) => {
       },
       listItems: bookingData.items.map(item => {
         const pallets = parseInt(item.pallets) || 1;
-        const weightPerPallet = parseFloat(item.weight) || 500;
+        const totalWeight = parseFloat(item.weight) || 500;
         return {
           name: item.description || 'Freight Item',
           height: parseFloat(item.height) || 48,
@@ -1027,7 +1026,7 @@ export const bookWarpShipment = async (bookingData) => {
           width: parseFloat(item.width) || 40,
           sizeUnit: 'IN',
           quantity: pallets,
-          totalWeight: weightPerPallet * pallets, // Warp 需要总重量
+          totalWeight: totalWeight,
           weightUnit: 'lbs',
           stackable: item.stackable || false
         };
