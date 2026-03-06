@@ -16,57 +16,59 @@ const AACT_CUSTOMER_NUMBER = process.env.AACT_CUSTOMER_NUMBER || '';
 
 function buildSoapRequest(quoteData) {
   const linesXml = quoteData.items.map(item => `
-      <tns:RateEstimateRequestLine>
-        <tns:Weight>${Math.round(parseFloat(item.weight) || 500)}</tns:Weight>
-        <tns:Class>${parseFloat(item.class || item.freightClass) || 70}</tns:Class>
-        <tns:HandlingUnits>${parseInt(item.pieces || item.pallets) || 1}</tns:HandlingUnits>
-        <tns:HandlingUnitType>SK</tns:HandlingUnitType>
-        <tns:Hazmat>N</tns:Hazmat>
-        <tns:CubeU>0</tns:CubeU>
-        <tns:Length>${Math.round(parseFloat(item.length) || 0)}</tns:Length>
-        <tns:Height>${Math.round(parseFloat(item.height) || 0)}</tns:Height>
-        <tns:Width>${Math.round(parseFloat(item.width) || 0)}</tns:Width>
-        <tns:NMFC></tns:NMFC>
-        <tns:NMFCSub></tns:NMFCSub>
-      </tns:RateEstimateRequestLine>`).join('');
+      <RateEstimateRequestLine>
+        <Weight>${Math.round(parseFloat(item.weight) || 500)}</Weight>
+        <Class>${parseFloat(item.class || item.freightClass) || 70}</Class>
+        <HandlingUnits>${parseInt(item.pieces || item.pallets) || 1}</HandlingUnits>
+        <HandlingUnitType>SK</HandlingUnitType>
+        <Hazmat>N</Hazmat>
+        <CubeU>0</CubeU>
+        <Length>${Math.round(parseFloat(item.length) || 48)}</Length>
+        <Height>${Math.round(parseFloat(item.height) || 48)}</Height>
+        <Width>${Math.round(parseFloat(item.width) || 40)}</Width>
+        <NMFC>0</NMFC>
+        <NMFCSub>0</NMFCSub>
+      </RateEstimateRequestLine>`).join('');
 
   let accXml = '';
   if (quoteData.accessorials && quoteData.accessorials.length > 0) {
     accXml = quoteData.accessorials.map(code =>
-      `\n      <tns:AccLine><tns:AccCode>${code}</tns:AccCode></tns:AccLine>`
+      `\n      <AccLine><AccCode>${code}</AccCode></AccLine>`
     ).join('');
   }
 
   const now = new Date();
-  const billDate = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}/${now.getFullYear()}`;
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const yyyy = now.getFullYear();
+  const billDate = `${mm}${dd}${yyyy}`;
 
   return `<?xml version="1.0" encoding="utf-8"?>
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
-                  xmlns:tns="${AACT_NS}">
-  <soapenv:Body>
-    <tns:RateEstimateRequestVO>
-      <tns:Token>${AACT_TOKEN}</tns:Token>
-      <tns:CustomerNumber>${AACT_CUSTOMER_NUMBER}</tns:CustomerNumber>
-      <tns:OriginCity>${quoteData.originCity || ''}</tns:OriginCity>
-      <tns:OriginState>${quoteData.originState || ''}</tns:OriginState>
-      <tns:OriginZip>${quoteData.originZip}</tns:OriginZip>
-      <tns:OriginCountryCode>US</tns:OriginCountryCode>
-      <tns:DestinationCity>${quoteData.destinationCity || ''}</tns:DestinationCity>
-      <tns:DestinationState>${quoteData.destinationState || ''}</tns:DestinationState>
-      <tns:DestinationZip>${quoteData.destinationZip}</tns:DestinationZip>
-      <tns:DestinCountryCode>US</tns:DestinCountryCode>
-      <tns:WhoAmI>S</tns:WhoAmI>
-      <tns:BillDate>${billDate}</tns:BillDate>
-      <tns:CODAmount>0</tns:CODAmount>
-      <tns:CODPayType></tns:CODPayType>
-      <tns:CODFeePaidBy></tns:CODFeePaidBy>
-      <tns:FullCoverage>N</tns:FullCoverage>
-      <tns:FullCoverageAmount>0</tns:FullCoverageAmount>
-      <tns:PrePaidCollect>P</tns:PrePaidCollect>
-      <tns:TotalPalletCount>${quoteData.totalPallets || 0}</tns:TotalPalletCount>${accXml}${linesXml}
-    </tns:RateEstimateRequestVO>
-  </soapenv:Body>
-</soapenv:Envelope>`;
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <RateEstimateRequestVO>
+      <Token>${AACT_TOKEN}</Token>
+      <CustomerNumber>${AACT_CUSTOMER_NUMBER}</CustomerNumber>
+      <OriginCity>${quoteData.originCity || 'Unknown'}</OriginCity>
+      <OriginState>${quoteData.originState || 'XX'}</OriginState>
+      <OriginZip>${quoteData.originZip}</OriginZip>
+      <OriginCountryCode>US</OriginCountryCode>
+      <DestinationCity>${quoteData.destinationCity || 'Unknown'}</DestinationCity>
+      <DestinationState>${quoteData.destinationState || 'XX'}</DestinationState>
+      <DestinationZip>${quoteData.destinationZip}</DestinationZip>
+      <DestinCountryCode>US</DestinCountryCode>
+      <WhoAmI>S</WhoAmI>
+      <BillDate>${billDate}</BillDate>
+      <CODAmount>0</CODAmount>
+      <CODPayType>N</CODPayType>
+      <CODFeePaidBy>S</CODFeePaidBy>
+      <FullCoverage>N</FullCoverage>
+      <FullCoverageAmount>0</FullCoverageAmount>
+      <PrePaidCollect>P</PrePaidCollect>
+      <TotalPalletCount>${quoteData.totalPallets || 1}</TotalPalletCount>${accXml}${linesXml}
+    </RateEstimateRequestVO>
+  </soap:Body>
+</soap:Envelope>`;
 }
 
 function parseSoapResponse(xml) {
@@ -151,7 +153,6 @@ router.post('/quote', async (req, res) => {
     const response = await axios.post(AACT_ENDPOINT, soapXml, {
       headers: {
         'Content-Type': 'text/xml; charset=utf-8',
-        'SOAPAction': `"${AACT_NS}NewOperation"`
       },
       timeout: 30000
     });
