@@ -265,6 +265,7 @@ app.use('/api/tforce', carrierQuoteLimiter, require('./routes/tforce'));
 app.use('/api/ediexpress', carrierQuoteLimiter, require('./routes/ediexpress'));
 app.use('/api/stg', carrierQuoteLimiter, require('./routes/stg'));
 app.use('/api/welogx', carrierQuoteLimiter, require('./routes/welogx'));
+app.use('/api/aact', carrierQuoteLimiter, require('./routes/aact'));
 
 // AI Agent 报价自动化路由
 app.use('/api/wecom', require('./routes/wecom'));

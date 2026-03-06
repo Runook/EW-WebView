@@ -45,6 +45,7 @@ services:
       - RRTS_API_KEY=xe0Bo+JC3Ez7AzFci9i5yA==
       - RRTS_USERNAME=HomeBay
       - RRTS_PASSWORD=@Homebay1234
+      - AACT_API_TOKEN=becc1be0-4b8d-441f-b10f-d7389e5cd6d4
       - COGNITO_REGION=us-east-1
       - COGNITO_USER_POOL_ID=us-east-1_HU9W7uLQA
       - MOCK_USER_ID=${MOCK_USER_ID:-1}

@@ -31,7 +31,8 @@ const CARRIER_LOGOS = {
   'TFORCE': '/images/carriers/tforce.svg',
   'EDIEXPRESS': '/images/carriers/ediexpress.svg',
   'STG': '/images/carriers/stg.svg',
-  'WELOGX': '/images/carriers/welogx.png'
+  'WELOGX': '/images/carriers/welogx.png',
+  'AACT': '/images/carriers/aact.png'
 };
 
 /**
@@ -730,6 +731,72 @@ export const getSTGQuote = async (quoteData) => {
   }
 };
 
+// ==================== AAA Cooper (AACT) API ====================
+
+/**
+ * 获取 AAA Cooper Transportation LTL 报价
+ */
+export const getAACTQuote = async (quoteData) => {
+  try {
+    const requestBody = {
+      originZip: quoteData.originZip,
+      originCity: quoteData.originCity || '',
+      originState: quoteData.originState || '',
+      destinationZip: quoteData.destinationZip,
+      destinationCity: quoteData.destinationCity || '',
+      destinationState: quoteData.destinationState || '',
+      shipDate: quoteData.pickupDate || new Date().toISOString().split('T')[0],
+      items: quoteData.items.map(item => {
+        const pallets = parseInt(item.pallets) || 1;
+        const totalWeight = parseInt(item.weight) || 500;
+        return {
+          class: item.freightClass || '70',
+          weight: totalWeight,
+          pieces: pallets,
+        };
+      }),
+      accessorials: [],
+      originType: quoteData.originLocationType === 'residential' ? 'residential' : 'commercial',
+      destinationType: quoteData.destinationLocationType === 'residential' ? 'residential' : 'commercial'
+    };
+
+    if (quoteData.pickupServices?.includes('lift_gate')) requestBody.accessorials.push('LFTP');
+    if (quoteData.deliveryServices?.includes('lift_gate')) requestBody.accessorials.push('LFTD');
+    if (quoteData.deliveryServices?.includes('inside_delivery')) requestBody.accessorials.push('INSD');
+    if (quoteData.deliveryServices?.includes('appointment_delivery')) requestBody.accessorials.push('APPT');
+
+    console.log('📤 AACT Quote Request:', requestBody);
+
+    const response = await apiRequest('/aact/quote', {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('📦 AACT Quote Response:', response);
+
+    if (response && response.success && response.netCharge > 0) {
+      return {
+        carrier: 'AAA Cooper Transportation',
+        carrierCode: 'AACT',
+        logo: CARRIER_LOGOS['AACT'],
+        quoteId: response.quoteId || `AACT-${Date.now()}`,
+        price: response.netCharge,
+        currency: 'USD',
+        transitDays: response.transitDays ? `${response.transitDays} Days` : 'TBD',
+        serviceType: response.serviceType || 'Standard LTL',
+        expDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
+        status: 'ACCEPT',
+        fuelSurcharge: response.fuelSurcharge,
+        routingInfo: {}
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ AACT Quote Error:', error);
+    return null;
+  }
+};
+
 // ==================== Welogx API ====================
 
 /**
@@ -826,9 +893,9 @@ const getServiceLevel = (serviceType) => {
  * @returns {Promise<Array>} - 所有承运商的报价列表（含多服务选项）
  */
 export const getAllLTLQuotes = async (quoteData) => {
-  console.log('📤 Getting quotes from ALL 8 carriers...', quoteData);
+  console.log('📤 Getting quotes from ALL 9 carriers...', quoteData);
   
-  // 并行请求所有 8 个承运商 (含 Welogx 自有报价)
+  // 并行请求所有 9 个承运商
   const results = await Promise.allSettled([
     getWarpQuote(quoteData),
     getRRTSQuote(quoteData),
@@ -837,14 +904,15 @@ export const getAllLTLQuotes = async (quoteData) => {
     getTForceQuote(quoteData),
     getEDIExpressQuote(quoteData),
     getSTGQuote(quoteData),
-    getWelogxQuote(quoteData)
+    getWelogxQuote(quoteData),
+    getAACTQuote(quoteData)
   ]);
 
   const quotes = [];
   let id = 1;
 
   // 处理所有结果
-  const carrierNames = ['Warp', 'RRTS', 'RLC', 'Saia', 'TForce', 'EDI Express', 'STG', 'Welogx'];
+  const carrierNames = ['Warp', 'RRTS', 'RLC', 'Saia', 'TForce', 'EDI Express', 'STG', 'Welogx', 'AAA Cooper'];
   
   results.forEach((result, index) => {
     if (result.status === 'fulfilled' && result.value) {
@@ -1087,7 +1155,10 @@ export const freightApi = {
   getTForceQuote,
   
   // Welogx 自有报价
-  getWelogxQuote
+  getWelogxQuote,
+  
+  // AAA Cooper
+  getAACTQuote
 };
 
 export default freightApi;
