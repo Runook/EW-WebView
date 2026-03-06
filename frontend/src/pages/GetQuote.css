@@ -1553,6 +1553,97 @@
   border-bottom: 2px solid #e5e5e7;
 }
 
+/* Compact summary strip */
+.shipment-summary-compact {
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid #2196f3;
+}
+
+.shipment-summary-compact h2 { display: none; }
+
+.summary-compact-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.summary-route {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.route-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #999;
+  letter-spacing: 0.5px;
+}
+
+.route-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1d1d1f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.route-arrow {
+  font-size: 1rem;
+  color: #2196f3;
+  font-weight: 700;
+  margin: 0 0.15rem;
+}
+
+.summary-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.summary-stats .stat {
+  font-size: 0.82rem;
+  color: #333;
+  white-space: nowrap;
+}
+
+.summary-stats .stat strong {
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.summary-stats .stat-sep {
+  color: #ccc;
+  font-size: 0.8rem;
+}
+
+.summary-back-btn {
+  margin-left: auto;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #2196f3;
+  background: transparent;
+  border: 1.5px solid #2196f3;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.summary-back-btn:hover {
+  background: #2196f3;
+  color: white;
+}
+
 .summary-content {
   margin-bottom: 1.5rem;
 }
@@ -2442,13 +2533,25 @@
     font-size: 0.75rem;
   }
   
-  .shipment-summary {
-    padding: 1.5rem;
+  .shipment-summary-compact {
+    padding: 0.6rem 1rem;
   }
-  
-  .summary-row {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+
+  .summary-compact-row {
+    gap: 0.75rem;
+  }
+
+  .route-value {
+    max-width: 120px;
+    font-size: 0.8rem;
+  }
+
+  .summary-stats {
+    gap: 0.35rem;
+  }
+
+  .summary-stats .stat {
+    font-size: 0.75rem;
   }
   
   .details-form .form-grid {

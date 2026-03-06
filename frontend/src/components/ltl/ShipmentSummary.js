@@ -1,62 +1,34 @@
 import React from 'react';
 
 const ShipmentSummary = ({ formData, totals, currentStep, onBackClick }) => {
-  // 货物数量
-  const itemCount = formData.cargoItems?.length || 0;
-  
+  const originShort = (formData.origin || '-').split(',').slice(0, 2).join(',').trim();
+  const destShort = (formData.destination || '-').split(',').slice(0, 2).join(',').trim();
+
   return (
-    <div className="shipment-summary">
-      <h2>SHIPMENT SUMMARY</h2>
-      <div className="summary-content">
-        <div className="summary-row">
-          <div className="summary-item">
-            <label>Quote ID</label>
-            <div>LTL-{Date.now().toString().slice(-6)}</div>
-          </div>
-          <div className="summary-item">
-            <label>起点</label>
-            <div>{formData.origin || '-'}</div>
-          </div>
-          <div className="summary-item">
-            <label>终点</label>
-            <div>{formData.destination || '-'}</div>
-          </div>
-          <div className="summary-item highlight">
-            <label>总重量</label>
-            <div>{parseFloat(totals.totalWeight).toLocaleString()} lbs</div>
-          </div>
-          <div className="summary-item">
-            <label>货运分类</label>
-            <div>Class {totals.freightClass || '-'}</div>
-          </div>
-          <div className="summary-item highlight">
-            <label>托盘总数</label>
-            <div>{totals.totalPallets} 托盘</div>
-          </div>
-          <div className="summary-item">
-            <label>线性英尺</label>
-            <div>{totals.totalLinearFeet} ft</div>
-          </div>
-          {totals.totalCubicFeet && (
-            <div className="summary-item">
-              <label>体积</label>
-              <div>{totals.totalCubicFeet} cu.ft</div>
-            </div>
-          )}
-          <div className="summary-item">
-            <label>货物种类</label>
-            <div>{itemCount} 种</div>
-          </div>
+    <div className="shipment-summary shipment-summary-compact">
+      <div className="summary-compact-row">
+        <div className="summary-route">
+          <span className="route-label">FROM</span>
+          <span className="route-value">{originShort}</span>
+          <span className="route-arrow">→</span>
+          <span className="route-label">TO</span>
+          <span className="route-value">{destShort}</span>
         </div>
+
+        <div className="summary-stats">
+          <span className="stat"><strong>{totals.totalPallets}</strong> PLT</span>
+          <span className="stat-sep">|</span>
+          <span className="stat"><strong>{parseFloat(totals.totalWeight).toLocaleString()}</strong> lbs</span>
+          <span className="stat-sep">|</span>
+          <span className="stat">Class <strong>{totals.freightClass || '-'}</strong></span>
+          <span className="stat-sep">|</span>
+          <span className="stat"><strong>{totals.totalCubicFeet}</strong> cu.ft</span>
+        </div>
+
+        {currentStep === 2 && onBackClick && (
+          <button className="summary-back-btn" onClick={onBackClick}>← 修改</button>
+        )}
       </div>
-      
-      {currentStep === 2 && onBackClick && (
-        <div className="summary-actions">
-          <button className="btn-secondary" onClick={onBackClick}>
-            ← 返回修改
-          </button>
-        </div>
-      )}
     </div>
   );
 };
