@@ -10,7 +10,7 @@ import {
   Calendar
 } from 'lucide-react';
 import './PlatformPage.css';
-import './FreightBoard.css';
+import './PlatformPage.css';
 
 const SeaFreightPlatform = () => {
   return (
