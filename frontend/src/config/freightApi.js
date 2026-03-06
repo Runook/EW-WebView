@@ -30,7 +30,8 @@ const CARRIER_LOGOS = {
   'SAIA': '/images/carriers/saia.svg',
   'TFORCE': '/images/carriers/tforce.svg',
   'EDIEXPRESS': '/images/carriers/ediexpress.svg',
-  'STG': '/images/carriers/stg.svg'
+  'STG': '/images/carriers/stg.svg',
+  'WELOGX': '/images/carriers/welogx.png'
 };
 
 /**
@@ -730,6 +731,69 @@ export const getSTGQuote = async (quoteData) => {
   }
 };
 
+// ==================== Welogx API ====================
+
+/**
+ * 获取 Welogx 自有 LTL 报价
+ */
+export const getWelogxQuote = async (quoteData) => {
+  try {
+    const requestBody = {
+      originZip: quoteData.originZip,
+      destinationZip: quoteData.destinationZip,
+      distanceMiles: quoteData.distanceMiles || null,
+      items: quoteData.items.map(item => {
+        const pallets = parseInt(item.pallets) || 1;
+        const weightPerPallet = parseFloat(item.weight) || 500;
+        return {
+          weight: weightPerPallet,
+          length: parseFloat(item.length) || 48,
+          width: parseFloat(item.width) || 40,
+          height: parseFloat(item.height) || 48,
+          freightClass: item.freightClass || '70',
+          pallets: pallets
+        };
+      }),
+      pickupServices: quoteData.pickupServices || [],
+      deliveryServices: quoteData.deliveryServices || [],
+      originType: quoteData.originLocationType === 'residential' ? 'residential' : 'commercial',
+      destinationType: quoteData.destinationLocationType === 'residential' ? 'residential' : 'commercial'
+    };
+
+    console.log('📤 Welogx Quote Request:', requestBody);
+
+    const response = await apiRequest('/welogx/quote', {
+      method: 'POST',
+      body: JSON.stringify(requestBody)
+    });
+
+    console.log('📦 Welogx Quote Response:', response);
+
+    if (response && response.success && response.netCharge > 0) {
+      return {
+        carrier: 'Welogx Freight',
+        carrierCode: 'WELOGX',
+        logo: CARRIER_LOGOS['WELOGX'],
+        quoteId: response.quoteId || `WLX-${Date.now()}`,
+        price: response.netCharge,
+        currency: 'USD',
+        transitDays: response.transitDays ? `${response.transitDays} Days` : 'TBD',
+        serviceType: response.serviceType || 'Welogx Standard LTL',
+        expDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
+        status: 'ACCEPT',
+        fuelSurcharge: response.fuelSurcharge,
+        distanceMiles: response.distanceMiles,
+        breakdown: response.breakdown,
+        routingInfo: {}
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('❌ Welogx Quote Error:', error);
+    return null;
+  }
+};
+
 // ==================== 统一报价接口 ====================
 
 /**
@@ -763,9 +827,9 @@ const getServiceLevel = (serviceType) => {
  * @returns {Promise<Array>} - 所有承运商的报价列表（含多服务选项）
  */
 export const getAllLTLQuotes = async (quoteData) => {
-  console.log('📤 Getting quotes from ALL 7 carriers...', quoteData);
+  console.log('📤 Getting quotes from ALL 8 carriers...', quoteData);
   
-  // 并行请求所有 7 个承运商
+  // 并行请求所有 8 个承运商 (含 Welogx 自有报价)
   const results = await Promise.allSettled([
     getWarpQuote(quoteData),
     getRRTSQuote(quoteData),
@@ -773,14 +837,15 @@ export const getAllLTLQuotes = async (quoteData) => {
     getSaiaQuote(quoteData),
     getTForceQuote(quoteData),
     getEDIExpressQuote(quoteData),
-    getSTGQuote(quoteData)
+    getSTGQuote(quoteData),
+    getWelogxQuote(quoteData)
   ]);
 
   const quotes = [];
   let id = 1;
 
   // 处理所有结果
-  const carrierNames = ['Warp', 'RRTS', 'RLC', 'Saia', 'TForce', 'EDI Express', 'STG'];
+  const carrierNames = ['Warp', 'RRTS', 'RLC', 'Saia', 'TForce', 'EDI Express', 'STG', 'Welogx'];
   
   results.forEach((result, index) => {
     if (result.status === 'fulfilled' && result.value) {
@@ -1020,7 +1085,10 @@ export const freightApi = {
   getSaiaQuote,
   
   // TForce 专用
-  getTForceQuote
+  getTForceQuote,
+  
+  // Welogx 自有报价
+  getWelogxQuote
 };
 
 export default freightApi;

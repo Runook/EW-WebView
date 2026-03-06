@@ -604,6 +604,14 @@ const GetQuoteLTL = ({ fbaDestination }) => {
         ? extractAddressComponents(selectedPlaces.destination.addressComponents)
         : { city: '', state: '', zip: '' };
 
+      // 解析前端已计算的距离 (Google Maps Distance Matrix)
+      let distanceMiles = null;
+      if (distanceInfo?.distance) {
+        const distStr = distanceInfo.distance.replace(/,/g, '');
+        const distMatch = distStr.match(/[\d.]+/);
+        if (distMatch) distanceMiles = Math.round(parseFloat(distMatch[0]));
+      }
+
       // 准备多承运商 API 请求数据
       const quoteRequestData = {
         originCity: originComponents.city,
@@ -620,7 +628,8 @@ const GetQuoteLTL = ({ fbaDestination }) => {
         deliveryDate: formData.deliveryDate,
         items: formData.cargoItems,
         pickupServices: formData.pickupServices,
-        deliveryServices: formData.deliveryServices
+        deliveryServices: formData.deliveryServices,
+        distanceMiles
       };
 
       console.log('🚚 准备调用 5 家运输商API获取LTL报价...', quoteRequestData);

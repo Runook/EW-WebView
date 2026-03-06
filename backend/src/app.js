@@ -268,6 +268,14 @@ app.use('/api/ediexpress', require('./routes/ediexpress'));
 // STG Logistics API 代理路由
 app.use('/api/stg', require('./routes/stg'));
 
+// Welogx 自有 LTL 报价路由
+app.use('/api/welogx', require('./routes/welogx'));
+
+// AI Agent 报价自动化路由
+app.use('/api/wecom', require('./routes/wecom'));
+app.use('/api/dat', require('./routes/dat'));
+app.use('/api/agent', require('./routes/agent'));
+
 // 临时测试路由
 app.get('/api/fba/test', (req, res) => {
   res.json({ message: 'FBA test route working!' });
