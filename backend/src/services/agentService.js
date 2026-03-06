@@ -1,0 +1,284 @@
+const { db } = require('../config/database');
+const { v4: uuidv4 } = require('uuid');
+const datService = require('./datService');
+
+/**
+ * Parse raw shipment items from an AI-extracted document into order-ready data.
+ * Handles the "main row + sub-row" dimension pattern seen in customer Excel files.
+ */
+function normalizeShipmentItems(rawItems) {
+  return rawItems.map(item => {
+    const dimensions = (item.dimensions || []).map(d => ({
+      length_cm: parseFloat(d.length) || 0,
+      width_cm: parseFloat(d.width) || 0,
+      height_cm: parseFloat(d.height) || 0,
+      pieces: parseInt(d.pieces) || 1,
+      weight_kg: parseFloat(d.weight) || 0,
+      volume_cbm: parseFloat(d.volume) || 0
+    }));
+
+    const totalWeightKg = dimensions.reduce((sum, d) => sum + d.weight_kg * d.pieces, 0);
+    const totalWeightLbs = Math.round(totalWeightKg * 2.20462 * 100) / 100;
+    const totalVolumeCbm = dimensions.reduce((sum, d) => sum + d.volume_cbm * d.pieces, 0);
+
+    const addressTypeRaw = (item.address_type || '').toLowerCase();
+    let addressType = 'Commercial';
+    if (addressTypeRaw.includes('住宅') || addressTypeRaw.includes('residential')) {
+      addressType = 'Residential';
+    }
+
+    let deliveryNotes = '';
+    if (addressTypeRaw.includes('尾板') || addressTypeRaw.includes('liftgate')) {
+      deliveryNotes = 'Liftgate required';
+    }
+    if (addressTypeRaw.includes('没有卸货平台') || addressTypeRaw.includes('no dock')) {
+      deliveryNotes = deliveryNotes ? `${deliveryNotes}; No loading dock` : 'No loading dock';
+    }
+
+    return {
+      tracking_number: item.tracking_number || null,
+      packaging_type: item.packaging_type || null,
+      product_name_cn: item.product_name_cn || null,
+      product_name_en: item.product_name_en || null,
+      cargo_value: parseFloat(item.cargo_value) || null,
+      destination_country: item.destination_country || 'US',
+      destination_zip: String(item.destination_zip || '').padStart(5, '0'),
+      destination_city: item.destination_city || null,
+      company_name: item.company_name || null,
+      recipient_name: item.recipient_name || null,
+      phone: item.phone || null,
+      email: item.email || null,
+      address: item.address || null,
+      address_type: addressType,
+      delivery_notes: deliveryNotes,
+      total_pieces: parseInt(item.total_pieces) || 1,
+      dimensions,
+      total_weight_kg: totalWeightKg,
+      total_weight_lbs: totalWeightLbs,
+      total_volume_cbm: totalVolumeCbm,
+      delivery_method: item.delivery_method || null,
+      notes: item.notes || null,
+      origin_zip: item.origin_zip || null,
+      origin_city: item.origin_city || null,
+      origin_state: item.origin_state || null,
+      confidence: item.confidence || null
+    };
+  });
+}
+
+/**
+ * Create employee_orders in batch from parsed shipment data.
+ * Returns created order records.
+ */
+async function batchCreateOrders(items, createdBy) {
+  const trx = await db.transaction();
+
+  try {
+    const nyDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    const orders = [];
+
+    for (const item of items) {
+      const orderNumber = await generateOrderNumber(trx);
+
+      const dimensionsList = item.dimensions.map(d =>
+        `${d.length_cm}x${d.width_cm}x${d.height_cm}cm (${d.pieces}pcs, ${d.weight_kg}kg)`
+      ).join('; ');
+
+      const weightList = item.dimensions.map(d =>
+        `${d.weight_kg}kg x${d.pieces}`
+      ).join('; ');
+
+      const insertData = {
+        order_number: orderNumber,
+        customer_name: item.company_name || item.recipient_name || 'AI Import',
+        customer_email: item.email || null,
+        customer_phone: item.phone || null,
+        order_type: 'broker',
+        status: 'quote',
+        priority: 'normal',
+        cargo_description: item.product_name_en || item.product_name_cn || '',
+        quote_date: nyDate,
+        inquiry_company: item.company_name || null,
+        ew_quote_number: item.tracking_number || null,
+        shipment_number: item.tracking_number || null,
+        cargo_description_detailed: [
+          item.product_name_cn,
+          item.product_name_en,
+          item.packaging_type ? `包装: ${item.packaging_type}` : null
+        ].filter(Boolean).join(' | '),
+        weight_list: weightList || null,
+        total_weight_lbs: item.total_weight_lbs || null,
+        dimensions_list: dimensionsList || null,
+        total_volume: item.total_volume_cbm || null,
+        cargo_value: item.cargo_value || null,
+        address_type: item.address_type,
+        actual_pallets: item.total_pieces || null,
+        destination_address: item.address || null,
+        destination_city: item.destination_city || null,
+        destination_state: null,
+        destination_country: item.destination_country || 'US',
+        destination_zipcode: item.destination_zip || null,
+        origin_address: null,
+        origin_city: item.origin_city || null,
+        origin_state: item.origin_state || null,
+        origin_country: null,
+        origin_zipcode: item.origin_zip || null,
+        notes: [
+          item.notes,
+          item.delivery_notes,
+          item.delivery_method ? `派送方式: ${item.delivery_method}` : null,
+          item.confidence ? `AI confidence: ${item.confidence}` : null
+        ].filter(Boolean).join(' | '),
+        internal_notes: 'Created by AI Agent',
+        currency: 'USD',
+        created_by: createdBy,
+        assigned_to: createdBy
+      };
+
+      const [order] = await trx('employee_orders')
+        .insert(insertData)
+        .returning('*');
+
+      await trx('employee_order_logs').insert({
+        order_id: order.id,
+        user_id: createdBy,
+        action_type: 'created',
+        description: `AI Agent 自动创建订单: ${orderNumber}`
+      });
+
+      orders.push(order);
+    }
+
+    await trx.commit();
+    return orders;
+  } catch (error) {
+    await trx.rollback();
+    throw error;
+  }
+}
+
+/**
+ * Generate a unique order number within a transaction.
+ */
+async function generateOrderNumber(trx) {
+  const prefix = 'EW';
+  const date = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }).replace(/-/g, '');
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `${prefix}${date}-${random}`;
+}
+
+/**
+ * Fetch DAT rates for a batch of orders and update them.
+ */
+async function enrichOrdersWithDATRates(orderIds) {
+  const orders = await db('employee_orders')
+    .whereIn('id', orderIds)
+    .select('id', 'origin_zipcode', 'destination_zipcode', 'total_weight_lbs');
+
+  const results = [];
+
+  for (const order of orders) {
+    if (!order.origin_zipcode || !order.destination_zipcode) {
+      results.push({ orderId: order.id, status: 'skipped', reason: 'Missing origin or destination zip' });
+      continue;
+    }
+
+    const rate = await datService.rateLookup({
+      originZip: order.origin_zipcode,
+      destinationZip: order.destination_zipcode,
+      weight: order.total_weight_lbs
+    });
+
+    if (rate.available) {
+      await db('employee_orders').where('id', order.id).update({
+        total_dat: rate.spotRate || rate.average,
+        dat_sales_1: rate.low,
+        dat_sales_2: rate.average,
+        dat_sales_3: rate.high
+      });
+      results.push({ orderId: order.id, status: 'updated', rate });
+    } else {
+      results.push({ orderId: order.id, status: 'unavailable', message: rate.message });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Create an AI quote review task for human verification.
+ */
+async function createReviewTask({ sourceFile, parsedItems, orderIds, wecomChatId, createdBy }) {
+  const [task] = await db('ai_quote_reviews').insert({
+    id: uuidv4(),
+    source_filename: sourceFile,
+    parsed_data: JSON.stringify(parsedItems),
+    order_ids: JSON.stringify(orderIds),
+    wecom_chat_id: wecomChatId || null,
+    status: 'pending_review',
+    created_by: createdBy,
+    created_at: new Date()
+  }).returning('*');
+
+  return task;
+}
+
+/**
+ * Get all pending review tasks.
+ */
+async function getReviewTasks(filters = {}) {
+  let query = db('ai_quote_reviews').orderBy('created_at', 'desc');
+
+  if (filters.status) {
+    query = query.where('status', filters.status);
+  }
+
+  if (filters.limit) {
+    query = query.limit(filters.limit);
+  }
+
+  return query;
+}
+
+/**
+ * Approve a review task, triggering quote distribution.
+ */
+async function approveReviewTask(taskId, reviewedBy) {
+  const [task] = await db('ai_quote_reviews')
+    .where('id', taskId)
+    .update({
+      status: 'approved',
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date()
+    })
+    .returning('*');
+
+  return task;
+}
+
+/**
+ * Reject a review task.
+ */
+async function rejectReviewTask(taskId, reviewedBy, reason) {
+  const [task] = await db('ai_quote_reviews')
+    .where('id', taskId)
+    .update({
+      status: 'rejected',
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date(),
+      review_notes: reason
+    })
+    .returning('*');
+
+  return task;
+}
+
+module.exports = {
+  normalizeShipmentItems,
+  batchCreateOrders,
+  enrichOrdersWithDATRates,
+  createReviewTask,
+  getReviewTasks,
+  approveReviewTask,
+  rejectReviewTask
+};

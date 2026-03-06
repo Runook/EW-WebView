@@ -8,7 +8,7 @@ module.exports = {
       port: process.env.DB_PORT || 5432,
       database: process.env.DB_NAME || 'ew_logistics',
       user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || 'password',
+      password: process.env.DB_PASSWORD || '',
       // 只在连接 AWS RDS 时使用 SSL，本地和 Docker 不使用
       ssl: process.env.DB_HOST && process.env.DB_HOST.includes('rds.amazonaws.com') ? { rejectUnauthorized: false } : false
     },

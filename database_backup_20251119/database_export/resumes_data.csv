@@ -1,4 +1,0 @@
-id,user_id,name,position,experience,location,phone,email,skills,summary,expected_salary,work_type_preference,views,is_active,is_featured,created_at,updated_at,status,is_premium,views_count,last_refreshed
-1,1,测试人员,测试职位,3-5年,圣安东尼奥,2323232323,ltl.ftl@ewftl.com,"[""阿斯顿，稍等，萨的，大""]",生产大队,1800,全职,0,t,f,2025-08-12 19:49:19.181+00,2025-08-12 19:49:19.181+00,active,t,0,
-3,28,111,Class A司机,1年以内,纽约,1,1@gmail.com,"[""1，1，1""]",111,11111,全职,0,f,f,2025-11-18 19:46:57.262+00,2025-11-18 19:46:57.262+00,active,t,0,
-2,28,111,Class A司机,1年以内,纽约,1,1@gmail.com,"[""1，1，1""]",1,11111,全职,0,f,f,2025-11-18 19:46:34.634+00,2025-11-18 19:46:34.634+00,active,t,0,

@@ -1,0 +1,131 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 470489279883.dkr.ecr.us-east-1.amazonaws.com
+  ECS_CLUSTER: ew-logistics-cluster
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      - run: npm test
+
+  deploy-backend:
+    name: Deploy Backend
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push backend image
+        id: build-backend
+        run: |
+          TAG=$(date +%Y%m%d-%H%M%S)
+          docker build --platform linux/amd64 \
+            -t $ECR_REGISTRY/ew-logistics-backend:$TAG \
+            -t $ECR_REGISTRY/ew-logistics-backend:latest \
+            -f backend/Dockerfile backend/
+          docker push $ECR_REGISTRY/ew-logistics-backend:$TAG
+          docker push $ECR_REGISTRY/ew-logistics-backend:latest
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Deploy to ECS
+        run: |
+          TAG=${{ steps.build-backend.outputs.tag }}
+          CURRENT_TD=$(aws ecs describe-services --cluster $ECS_CLUSTER --services ew-logistics-backend --query 'services[0].taskDefinition' --output text)
+          REV=$(echo $CURRENT_TD | grep -o '[0-9]*$')
+          aws ecs describe-task-definition --task-definition ew-logistics-backend:$REV --query 'taskDefinition' | \
+            python3 -c "
+          import json, sys
+          td = json.load(sys.stdin)
+          td['containerDefinitions'][0]['image'] = '${{ env.ECR_REGISTRY }}/ew-logistics-backend:$TAG'
+          for k in ['taskDefinitionArn','revision','status','requiresAttributes','compatibilities','registeredAt','registeredBy','deregisteredAt']:
+              td.pop(k, None)
+          print(json.dumps(td))
+          " > /tmp/td.json
+          NEW_REV=$(aws ecs register-task-definition --cli-input-json file:///tmp/td.json --query 'taskDefinition.revision' --output text)
+          aws ecs update-service --cluster $ECS_CLUSTER --service ew-logistics-backend --task-definition ew-logistics-backend:$NEW_REV --force-new-deployment
+
+  deploy-frontend:
+    name: Deploy Frontend
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push frontend image
+        id: build-frontend
+        run: |
+          TAG=$(date +%Y%m%d-%H%M%S)
+          docker build --platform linux/amd64 \
+            -t $ECR_REGISTRY/ew-logistics-frontend:$TAG \
+            -t $ECR_REGISTRY/ew-logistics-frontend:latest \
+            -f frontend/Dockerfile.prod frontend/
+          docker push $ECR_REGISTRY/ew-logistics-frontend:$TAG
+          docker push $ECR_REGISTRY/ew-logistics-frontend:latest
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Deploy to ECS
+        run: |
+          TAG=${{ steps.build-frontend.outputs.tag }}
+          CURRENT_TD=$(aws ecs describe-services --cluster $ECS_CLUSTER --services ew-logistics-frontend --query 'services[0].taskDefinition' --output text)
+          REV=$(echo $CURRENT_TD | grep -o '[0-9]*$')
+          aws ecs describe-task-definition --task-definition ew-logistics-frontend:$REV --query 'taskDefinition' | \
+            python3 -c "
+          import json, sys
+          td = json.load(sys.stdin)
+          td['containerDefinitions'][0]['image'] = '${{ env.ECR_REGISTRY }}/ew-logistics-frontend:$TAG'
+          for k in ['taskDefinitionArn','revision','status','requiresAttributes','compatibilities','registeredAt','registeredBy','deregisteredAt']:
+              td.pop(k, None)
+          print(json.dumps(td))
+          " > /tmp/td.json
+          NEW_REV=$(aws ecs register-task-definition --cli-input-json file:///tmp/td.json --query 'taskDefinition.revision' --output text)
+          aws ecs update-service --cluster $ECS_CLUSTER --service ew-logistics-frontend --task-definition ew-logistics-frontend:$NEW_REV --force-new-deployment

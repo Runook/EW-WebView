@@ -45,6 +45,8 @@ services:
       - RRTS_API_KEY=xe0Bo+JC3Ez7AzFci9i5yA==
       - RRTS_USERNAME=HomeBay
       - RRTS_PASSWORD=@Homebay1234
+      - COGNITO_REGION=us-east-1
+      - COGNITO_USER_POOL_ID=us-east-1_HU9W7uLQA
       - MOCK_USER_ID=${MOCK_USER_ID:-1}
       - MOCK_USER_EMAIL=${MOCK_USER_EMAIL:-dev@welogx.com}
       - MOCK_USER_CREDITS=${MOCK_USER_CREDITS:-9999}

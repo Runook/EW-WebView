@@ -4,9 +4,12 @@ const jwkToPem = require('jwk-to-pem');
 const axios = require('axios');
 const { db } = require('../config/database');
 
-// Cognito配置
-const COGNITO_REGION = 'us-east-1';
-const USER_POOL_ID = 'us-east-1_HU9W7uLQA';
+// Cognito配置 — from environment
+const COGNITO_REGION = process.env.COGNITO_REGION || 'us-east-1';
+const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID || process.env.USER_POOL_ID;
+if (!USER_POOL_ID) {
+  console.warn('⚠️ COGNITO_USER_POOL_ID not set in environment');
+}
 const COGNITO_ISS = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/${USER_POOL_ID}`;
 
 // 缓存JWKs
@@ -299,7 +302,8 @@ const auth = async (req, res, next) => {
       
       // 兼容旧的JWT token格式
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-jwt-secret-key');
+        if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET not configured');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
         req.user = {
           id: decoded.userId || decoded.id,
           userId: decoded.userId || decoded.id,

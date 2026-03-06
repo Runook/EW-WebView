@@ -1,7 +1,8 @@
 // 员工服务API配置
 
 // 员工服务基础URL
-const EMPLOYEE_API_BASE_URL = process.env.REACT_APP_EMPLOYEE_API_URL || 'http://localhost:3001/api';
+// Employee API uses the same backend; the separate employee-service is deprecated
+const EMPLOYEE_API_BASE_URL = process.env.REACT_APP_EMPLOYEE_API_URL || process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 // 获取认证Token
 const getAuthToken = () => {
@@ -676,6 +677,61 @@ export const qboApi = {
   },
 };
 
+// ==========================================
+// AI Agent API
+// ==========================================
+
+export const agentApi = {
+  getReviews: (filters = {}) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    return request(`/agent/reviews?${queryParams}`);
+  },
+
+  getReviewById: (id) => {
+    return request(`/agent/reviews/${id}`);
+  },
+
+  approveReview: (id, options = {}) => {
+    return request(`/agent/reviews/${id}/approve`, 'POST', options);
+  },
+
+  rejectReview: (id, reason) => {
+    return request(`/agent/reviews/${id}/reject`, 'POST', { reason });
+  },
+
+  distributeQuote: (reviewTaskId) => {
+    return request('/agent/distribute-quote', 'POST', { reviewTaskId });
+  },
+
+  parseAndCreate: (data) => {
+    return request('/agent/parse-and-create', 'POST', data);
+  },
+
+  enrichQuotes: (orderIds) => {
+    return request('/agent/enrich-quotes', 'POST', { orderIds });
+  },
+
+  getStatus: () => {
+    return request('/agent/status');
+  },
+
+  getDATRate: (data) => {
+    return request('/dat/rate-lookup', 'POST', data);
+  },
+
+  getDATBatchRate: (lanes) => {
+    return request('/dat/batch-rate-lookup', 'POST', { lanes });
+  },
+
+  getDATStatus: () => {
+    return request('/dat/status');
+  },
+
+  getWecomStatus: () => {
+    return request('/wecom/status');
+  },
+};
+
 export default {
   employeeApi,
   orderApi,
@@ -686,5 +742,6 @@ export default {
   paymentApi,
   serviceItemApi,
   qboApi,
+  agentApi,
 };
 

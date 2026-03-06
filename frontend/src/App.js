@@ -6,11 +6,9 @@ import { Package, BookOpen, Briefcase, ShoppingBag } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-import FreightBoard from './pages/FreightBoard';
 import GetQuoteLTL from './pages/GetQuoteLTL';
 import Contact from './pages/Contact';
 import CognitoAuth from './components/CognitoAuth';
-import Register from './pages/Register';
 import AuthCallback from './pages/AuthCallback';
 import SeaFreightPlatform from './pages/SeaFreightPlatform';
 import AirFreightPlatform from './pages/AirFreightPlatform';
@@ -23,12 +21,10 @@ import Forum from './pages/Forum';
 import ArticleDetail from './pages/ArticleDetail';
 import UserProfile from './pages/UserProfile';
 import FreightCalculator from './pages/FreightCalculator';
-import Profile from './pages/Profile/Profile';
 import KgcmConverter from './pages/KgcmConverter';
 import FBALocations from './pages/FBALocations';
 import FBALocationDetail from './pages/FBALocationDetail';
 import GATest from './pages/GATest';
-import EmployeeSystem from './pages/EmployeeSystem';
 import EmployeeOrders from './pages/EmployeeOrders';
 import EmployeeAdmin from './pages/EmployeeAdmin';
 import BrokerOrders from './pages/BrokerOrdersNew';
@@ -38,6 +34,7 @@ import Vendors from './pages/Vendors';
 import Payments from './pages/Payments';
 import MapView from './pages/MapView';
 import AdManager from './pages/AdManager';
+import AIQuoteReview from './pages/AIQuoteReview';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import AccountingGuide from './pages/AccountingGuide';
@@ -176,6 +173,7 @@ function App() {
               <Route path="/employee/map-view" element={<MapView />} />
               <Route path="/employee/ads" element={<AdManager />} />
               <Route path="/employee/admin" element={<EmployeeAdmin />} />
+              <Route path="/employee/ai-review" element={<AIQuoteReview />} />
               
               {/* 我们 */}
               <Route path="/my-points" element={

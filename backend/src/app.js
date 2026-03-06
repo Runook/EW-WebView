@@ -247,29 +247,24 @@ app.use('/api/sales', require('./routes/sale'));
 // 文件上传路由
 app.use('/api/upload', require('./routes/upload'));
 
-// Warp Freight API 代理路由 (解决 CORS 问题)
-app.use('/api/warp', require('./routes/warp'));
+// Carrier proxy rate limiter — stricter than global (20 quotes/min per IP)
+const carrierQuoteLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many quote requests, please try again later' }
+});
 
-// RRTS (Roadrunner) Freight API 代理路由
-app.use('/api/rrts', require('./routes/rrts'));
-
-// R+L Carriers API 代理路由
-app.use('/api/rlc', require('./routes/rlc'));
-
-// Saia LTL Freight API 代理路由
-app.use('/api/saia', require('./routes/saia'));
-
-// TForce Freight API 代理路由 (OAuth 2.0)
-app.use('/api/tforce', require('./routes/tforce'));
-
-// EDI Express API 代理路由
-app.use('/api/ediexpress', require('./routes/ediexpress'));
-
-// STG Logistics API 代理路由
-app.use('/api/stg', require('./routes/stg'));
-
-// Welogx 自有 LTL 报价路由
-app.use('/api/welogx', require('./routes/welogx'));
+// LTL carrier proxy routes
+app.use('/api/warp', carrierQuoteLimiter, require('./routes/warp'));
+app.use('/api/rrts', carrierQuoteLimiter, require('./routes/rrts'));
+app.use('/api/rlc', carrierQuoteLimiter, require('./routes/rlc'));
+app.use('/api/saia', carrierQuoteLimiter, require('./routes/saia'));
+app.use('/api/tforce', carrierQuoteLimiter, require('./routes/tforce'));
+app.use('/api/ediexpress', carrierQuoteLimiter, require('./routes/ediexpress'));
+app.use('/api/stg', carrierQuoteLimiter, require('./routes/stg'));
+app.use('/api/welogx', carrierQuoteLimiter, require('./routes/welogx'));
 
 // AI Agent 报价自动化路由
 app.use('/api/wecom', require('./routes/wecom'));

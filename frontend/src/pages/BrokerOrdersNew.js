@@ -858,6 +858,14 @@ const BrokerOrdersNew = () => {
           地图查单
         </button>
 
+        {/* AI 报价审核 */}
+        <button
+          className="nav-item"
+          onClick={() => navigate('/employee/ai-review')}
+        >
+          AI 报价审核
+        </button>
+
         {/* 广告管理 */}
         <button
           className="nav-item"
