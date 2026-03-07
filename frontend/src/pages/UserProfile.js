@@ -21,7 +21,10 @@ import {
   Plus,
   Settings,
   BarChart2,
-  X
+  X,
+  Truck,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiServices } from '../utils/apiClient';
@@ -30,6 +33,7 @@ import './UserProfile.css';
 
 const TABS = [
   { key: 'overview', label: '概览', icon: BarChart2 },
+  { key: 'quotes', label: '我的报价', icon: Truck },
   { key: 'articles', label: '我的文章', icon: FileText },
   { key: 'bookmarks', label: '收藏', icon: Bookmark },
   { key: 'settings', label: '设置', icon: Settings },
@@ -47,6 +51,10 @@ const UserProfile = () => {
   // Articles fetched separately for "My Articles" tab
   const [articles, setArticles] = useState([]);
   const [articlesLoading, setArticlesLoading] = useState(false);
+
+  // LTL Quote sessions
+  const [quoteSessions, setQuoteSessions] = useState([]);
+  const [quotesLoading, setQuotesLoading] = useState(false);
 
   // Settings form state
   const [formData, setFormData] = useState({});
@@ -109,11 +117,35 @@ const UserProfile = () => {
     else setLoading(false);
   }, [user, fetchProfile]);
 
+  const fetchQuoteSessions = useCallback(async () => {
+    const email = user?.email || user?.attributes?.email;
+    if (!email) return;
+    try {
+      setQuotesLoading(true);
+      const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const res = await fetch(`${apiBase}/ltl-quotes/sessions?email=${encodeURIComponent(email)}&includeExpired=true`);
+      if (res.ok) {
+        const data = await res.json();
+        setQuoteSessions(data.sessions || []);
+      }
+    } catch (err) {
+      console.error('获取报价历史失败:', err);
+    } finally {
+      setQuotesLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (activeTab === 'articles' && profile?.id && articles.length === 0) {
       fetchArticles();
     }
   }, [activeTab, profile?.id, articles.length, fetchArticles]);
+
+  useEffect(() => {
+    if ((activeTab === 'quotes' || activeTab === 'overview') && quoteSessions.length === 0 && user) {
+      fetchQuoteSessions();
+    }
+  }, [activeTab, quoteSessions.length, fetchQuoteSessions, user]);
 
   // --------------- Form helpers ---------------
   const handleFormChange = (field, value) => {
@@ -310,6 +342,7 @@ const UserProfile = () => {
           let count = null;
           if (tab.key === 'articles') count = profile.article_count ?? 0;
           if (tab.key === 'bookmarks') count = bookmarks.length;
+          if (tab.key === 'quotes') count = quoteSessions.length || null;
           return (
             <button
               key={tab.key}
@@ -327,6 +360,7 @@ const UserProfile = () => {
       {/* ---------- TAB CONTENT ---------- */}
       <div className="profile-tab-content">
         {activeTab === 'overview' && renderOverview()}
+        {activeTab === 'quotes' && renderQuotes()}
         {activeTab === 'articles' && renderArticles()}
         {activeTab === 'bookmarks' && renderBookmarks()}
         {activeTab === 'settings' && renderSettings()}
@@ -366,6 +400,40 @@ const UserProfile = () => {
               <p>点击进入员工管理系统</p>
             </div>
             <ChevronRight size={20} className="badge-arrow" />
+          </div>
+        )}
+
+        {/* Recent quotes */}
+        {quoteSessions.length > 0 && (
+          <div className="profile-section-card">
+            <div className="section-header">
+              <h3><Truck size={18} /> 最近报价</h3>
+              <button className="section-view-all" onClick={() => setActiveTab('quotes')}>
+                查看全部 &rarr;
+              </button>
+            </div>
+            <div className="article-list">
+              {quoteSessions.slice(0, 3).map(session => {
+                const isExpired = session.is_expired || new Date(session.expires_at) < new Date();
+                return (
+                  <div key={session.id} className="article-list-item" style={{ cursor: 'default' }}>
+                    <div className="article-item-content">
+                      <div className="article-item-title">
+                        {session.origin_city || session.origin_zip} &rarr; {session.destination_city || session.destination_zip}
+                        {isExpired && <span style={{ color: '#ef4444', fontSize: '0.75rem', marginLeft: 8 }}>(已过期)</span>}
+                      </div>
+                      <div className="article-item-meta">
+                        <span className="article-item-category">{session.quote_count} 个报价</span>
+                        <span className="meta-item" style={{ fontWeight: 600, color: '#16a34a' }}>
+                          ${session.lowest_price ? parseFloat(session.lowest_price).toFixed(2) : 'N/A'}
+                        </span>
+                        <span className="meta-item"><Calendar size={12} /> {new Date(session.created_at).toLocaleDateString('zh-CN')}</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -442,6 +510,107 @@ const UserProfile = () => {
             <div className="empty-state">
               <div className="empty-icon"><Bookmark size={28} /></div>
               <p>暂无收藏</p>
+            </div>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  // ===== MY QUOTES TAB =====
+  function renderQuotes() {
+    return (
+      <>
+        <div className="articles-tab-header">
+          <h3>我的报价</h3>
+          <button className="new-article-btn" onClick={() => navigate('/get-quote-ltl')}>
+            <Plus size={16} /> 获取新报价
+          </button>
+        </div>
+
+        <div className="profile-section-card">
+          {quotesLoading ? (
+            <div className="profile-loading" style={{ minHeight: '200px' }}>
+              <div className="loading-bar"></div>
+            </div>
+          ) : quoteSessions.length > 0 ? (
+            <div className="quote-sessions-list">
+              {quoteSessions.map(session => {
+                const isExpired = session.is_expired || new Date(session.expires_at) < new Date();
+                return (
+                  <div
+                    key={session.id}
+                    className={`quote-session-card ${isExpired ? 'expired' : ''}`}
+                  >
+                    <div className="quote-session-route">
+                      <div className="route-endpoints">
+                        <span className="route-point">
+                          <MapPin size={14} />
+                          {session.origin_city}{session.origin_state ? `, ${session.origin_state}` : ''} {session.origin_zip}
+                        </span>
+                        <span className="route-arrow">&rarr;</span>
+                        <span className="route-point">
+                          <MapPin size={14} />
+                          {session.destination_city}{session.destination_state ? `, ${session.destination_state}` : ''} {session.destination_zip}
+                        </span>
+                      </div>
+                      {isExpired && (
+                        <span className="quote-expired-badge">
+                          <AlertTriangle size={12} /> 已过期
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="quote-session-meta">
+                      <span className="meta-item">
+                        <Truck size={12} />
+                        {session.quote_count} 家运输商
+                      </span>
+                      <span className="meta-item">
+                        <span style={{ fontWeight: 600, color: '#16a34a' }}>
+                          ${session.lowest_price ? parseFloat(session.lowest_price).toFixed(2) : 'N/A'}
+                        </span>
+                        &nbsp;起
+                      </span>
+                      {session.total_pallets && (
+                        <span className="meta-item">{session.total_pallets} 托盘</span>
+                      )}
+                      {session.distance_miles && (
+                        <span className="meta-item">{session.distance_miles} mi</span>
+                      )}
+                      <span className="meta-item">
+                        <Calendar size={12} />
+                        {new Date(session.created_at).toLocaleDateString('zh-CN')}
+                      </span>
+                      <span className="meta-item">
+                        <Clock size={12} />
+                        有效期至 {new Date(session.expires_at).toLocaleDateString('en-US')}
+                      </span>
+                    </div>
+
+                    {session.quote_results && session.quote_results.length > 0 && !isExpired && (
+                      <div className="quote-session-carriers">
+                        {session.quote_results.slice(0, 5).map((q, idx) => (
+                          <span key={idx} className="carrier-chip">
+                            {q.carrier}: ${parseFloat(q.price || 0).toFixed(0)}
+                          </span>
+                        ))}
+                        {session.quote_results.length > 5 && (
+                          <span className="carrier-chip more">+{session.quote_results.length - 5}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-icon"><Truck size={28} /></div>
+              <p>暂无报价记录</p>
+              <button className="new-article-btn" style={{ marginTop: '1rem' }} onClick={() => navigate('/get-quote-ltl')}>
+                获取第一个LTL报价
+              </button>
             </div>
           )}
         </div>

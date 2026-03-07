@@ -148,7 +148,9 @@ export const getWarpQuote = async (quoteData) => {
         transitDays: response.transit_time || 'TBD',
         serviceType: 'Warp Standard LTL',
         guaranteedPrice: response.guaranteed_price || null,
-        expDate: response.notes || new Date(response.expiration_time_utc * 1000).toLocaleDateString('en-US'),
+        expDate: response.expiration_time_utc
+          ? new Date(response.expiration_time_utc * 1000).toLocaleDateString('en-US')
+          : (response.notes || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US')),
         status: response.status,
         serviceOptions: serviceOptions.length > 1 ? serviceOptions : null,
         charges: response.charges || [],
@@ -409,6 +411,7 @@ export const getRLCQuote = async (quoteData) => {
         expDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
         status: 'ACCEPT',
         serviceOptions: serviceOptions.length > 1 ? serviceOptions : null,
+        charges: response.charges || [],
         routingInfo: response.details?.routingInfo || {}
       };
     }
@@ -518,9 +521,12 @@ export const getSaiaQuote = async (quoteData) => {
         serviceType: 'Saia Standard LTL',
         guaranteedPrice: response.guaranteed || null,
         fuelSurcharge: response.fuelSurcharge || null,
-        expDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
+        expDate: response.expirationDate
+          ? new Date(response.expirationDate).toLocaleDateString('en-US')
+          : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
         status: 'ACCEPT',
         serviceOptions: serviceOptions.length > 1 ? serviceOptions : null,
+        charges: response.charges || [],
         deliveryDate: response.deliveryDate,
         routingInfo: {}
       };
@@ -599,7 +605,8 @@ export const getTForceQuote = async (quoteData) => {
         status: 'ACCEPT',
         deliveryDate: response.deliveryDate,
         fuelSurcharge: response.fuelSurcharge,
-        serviceOptions: response.serviceOptions, // TForce 返回的多个服务选项
+        charges: response.charges || [],
+        serviceOptions: response.serviceOptions,
         routingInfo: {}
       };
     }
@@ -645,6 +652,12 @@ export const getEDIExpressQuote = async (quoteData) => {
     console.log('📥 EDI Express Response:', response);
 
     if (response && response.success && response.netCharge > 0) {
+      const charges = [];
+      if (response.fuelSurcharge) {
+        const base = response.netCharge - parseFloat(response.fuelSurcharge);
+        if (base > 0) charges.push({ description: 'Base Freight', amount: Math.round(base * 100) / 100 });
+        charges.push({ description: 'Fuel Surcharge', amount: parseFloat(response.fuelSurcharge) });
+      }
       return {
         carrier: response.carrier || 'EDI Express',
         carrierCode: 'EDIEXPRESS',
@@ -654,9 +667,10 @@ export const getEDIExpressQuote = async (quoteData) => {
         currency: 'USD',
         transitDays: response.transitDays ? `${response.transitDays} Days` : 'Contact',
         serviceType: response.serviceType || 'Standard LTL',
-        expDate: null,
+        expDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
         status: 'ACCEPT',
         fuelSurcharge: response.fuelSurcharge,
+        charges,
         notice: response.notice,
         routingInfo: {}
       };
@@ -775,6 +789,12 @@ export const getAACTQuote = async (quoteData) => {
     console.log('📦 AACT Quote Response:', response);
 
     if (response && response.success && response.netCharge > 0) {
+      const charges = [];
+      if (response.fuelSurcharge) {
+        const base = response.netCharge - parseFloat(response.fuelSurcharge);
+        if (base > 0) charges.push({ description: 'Base Freight', amount: Math.round(base * 100) / 100 });
+        charges.push({ description: 'Fuel Surcharge', amount: parseFloat(response.fuelSurcharge) });
+      }
       return {
         carrier: 'AAA Cooper Transportation',
         carrierCode: 'AACT',
@@ -787,6 +807,7 @@ export const getAACTQuote = async (quoteData) => {
         expDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
         status: 'ACCEPT',
         fuelSurcharge: response.fuelSurcharge,
+        charges,
         routingInfo: {}
       };
     }
@@ -836,6 +857,18 @@ export const getWelogxQuote = async (quoteData) => {
     console.log('📦 Welogx Quote Response:', response);
 
     if (response && response.success && response.netCharge > 0) {
+      const charges = [];
+      const bd = response.breakdown;
+      if (bd) {
+        if (bd.baseLinehaul) charges.push({ description: 'Base Linehaul', amount: bd.baseLinehaul });
+        if (bd.fuelSurcharge) charges.push({ description: `Fuel Surcharge (${((bd.fscPct || 0) * 100).toFixed(0)}%)`, amount: bd.fuelSurcharge });
+        if (bd.accessorials > 0) charges.push({ description: 'Accessorials', amount: bd.accessorials });
+        if (bd.accessorialDetails) {
+          bd.accessorialDetails.forEach(a => {
+            charges.push({ description: `  ${a.name}`, amount: a.charge });
+          });
+        }
+      }
       return {
         carrier: 'Welogx Freight',
         carrierCode: 'WELOGX',
@@ -850,6 +883,7 @@ export const getWelogxQuote = async (quoteData) => {
         fuelSurcharge: response.fuelSurcharge,
         distanceMiles: response.distanceMiles,
         breakdown: response.breakdown,
+        charges,
         routingInfo: {}
       };
     }
@@ -941,6 +975,8 @@ export const getAllLTLQuotes = async (quoteData) => {
               expDate: quote.expDate,
               status: quote.status || 'ACCEPT',
               fuelSurcharge: quote.fuelSurcharge,
+              charges: quote.charges || [],
+              breakdown: quote.breakdown,
               source: `${carrierCode.toLowerCase()}-${option.serviceCode || optIndex}`,
               pickupTerminal: quote.pickupTerminal,
               dropTerminal: quote.dropTerminal

@@ -253,6 +253,19 @@ router.post('/quote', async (req, res) => {
     // 使用标准 LTL 作为主报价
     const primaryQuote = standardLTL || details[0];
     
+    // Build charges breakdown from rate entries
+    const charges = [];
+    if (primaryQuote?.rate && Array.isArray(primaryQuote.rate)) {
+      primaryQuote.rate.forEach(r => {
+        if (r.value && parseFloat(r.value) !== 0) {
+          charges.push({
+            description: r.description || r.code || 'Charge',
+            amount: parseFloat(r.value)
+          });
+        }
+      });
+    }
+
     // 标准化响应格式
     const standardizedResponse = {
       carrier: 'TForce Freight',
@@ -266,7 +279,7 @@ router.post('/quote', async (req, res) => {
       deliveryDate: null,
       fuelSurcharge: primaryQuote?.rate?.find(r => r.code === 'FUEL_SUR')?.value,
       accessorialCharges: null,
-      // 所有服务选项
+      charges,
       serviceOptions: details.map(d => ({
         serviceCode: d.service?.code,
         serviceName: d.service?.description,

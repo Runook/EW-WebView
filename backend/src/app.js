@@ -256,6 +256,12 @@ const carrierQuoteLimiter = rateLimit({
   message: { error: 'Too many quote requests, please try again later' }
 });
 
+// Zipcode lookup utility
+app.use('/api/zipcode', require('./routes/zipcode'));
+
+// LTL quote sessions (user quote history)
+app.use('/api/ltl-quotes', require('./routes/ltl-quotes'));
+
 // LTL carrier proxy routes
 app.use('/api/warp', carrierQuoteLimiter, require('./routes/warp'));
 app.use('/api/rrts', carrierQuoteLimiter, require('./routes/rrts'));

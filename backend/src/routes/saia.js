@@ -321,6 +321,27 @@ router.post('/quote', async (req, res) => {
       });
     }
 
+    // Build structured charges breakdown
+    const charges = [];
+    if (data.rateDetails?.discountedCharge) {
+      charges.push({ description: 'Discounted Freight', amount: parseFloat(data.rateDetails.discountedCharge) });
+    } else if (data.rateDetails?.totalInvoice) {
+      const fsc = parseFloat(data.surcharge?.fuelSurchargeAmount || 0);
+      const accTotal = (data.rateAccessorials?.accessorials || []).reduce((s, a) => s + parseFloat(a.amount || 0), 0);
+      const baseFreight = parseFloat(data.rateDetails.totalInvoice) - fsc - accTotal;
+      if (baseFreight > 0) charges.push({ description: 'Base Freight', amount: Math.round(baseFreight * 100) / 100 });
+    }
+    if (data.surcharge?.fuelSurchargeAmount) {
+      charges.push({ description: `Fuel Surcharge (${data.surcharge.fuelSurchargePercent || ''}%)`, amount: parseFloat(data.surcharge.fuelSurchargeAmount) });
+    }
+    if (data.rateAccessorials?.accessorials) {
+      data.rateAccessorials.accessorials.forEach(acc => {
+        if (acc.amount && parseFloat(acc.amount) !== 0) {
+          charges.push({ description: acc.description || acc.code || 'Accessorial', amount: parseFloat(acc.amount) });
+        }
+      });
+    }
+
     // 标准化响应格式
     const standardizedResponse = {
       carrier: 'Saia LTL Freight',
@@ -336,6 +357,7 @@ router.post('/quote', async (req, res) => {
       fuelSurcharge: data.surcharge?.fuelSurchargeAmount || null,
       fuelSurchargePercent: data.surcharge?.fuelSurchargePercent || null,
       accessorialCharges: data.rateAccessorials?.accessorials || [],
+      charges,
       terminals: data.terminals || {},
       // 多个服务选项
       serviceOptions: [

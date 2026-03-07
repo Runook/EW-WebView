@@ -159,11 +159,18 @@ const parseSoapResponse = (xmlResponse) => {
     // 提取服务中心信息
     const originCenter = extractValue(xmlResponse, 'Location') || '';
 
+    const charges = [];
+    if (discountedFreight > 0) charges.push({ description: 'Discounted Freight', amount: discountedFreight });
+    if (fuelSurcharge > 0) charges.push({ description: 'Fuel Surcharge', amount: fuelSurcharge });
+    if (otherCharges > 0) charges.push({ description: 'Other Charges', amount: otherCharges });
+
     return {
       quoteNumber,
       netCharge: netCharge ? parseFloat(netCharge.toString().replace(/[$,]/g, '')) : null,
+      fuelSurcharge: fuelSurcharge || null,
       transitDays: serviceDays ? parseInt(serviceDays) : null,
       serviceType: 'Standard LTL',
+      charges,
       originCenter,
       rawResponse: xmlResponse.substring(0, 2000)
     };
@@ -253,9 +260,11 @@ router.post('/quote', async (req, res) => {
       carrierCode: 'RLC',
       quoteId: parsedResponse.quoteNumber || `RLC-${Date.now()}`,
       netCharge: parsedResponse.netCharge,
+      fuelSurcharge: parsedResponse.fuelSurcharge,
       transitDays: parsedResponse.transitDays,
       serviceType: parsedResponse.serviceType,
       guaranteed: null,
+      charges: parsedResponse.charges || [],
       details: parsedResponse
     };
 

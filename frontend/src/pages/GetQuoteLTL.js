@@ -19,7 +19,9 @@ import {
   Shield,
   ChevronDown,
   ChevronUp,
-  HelpCircle
+  HelpCircle,
+  FileText,
+  RefreshCw
 } from 'lucide-react';
 import './GetQuote.css';
 import { GoogleMapsAddressInput, GoogleMapsRoute, calculateDistance } from '../components/GoogleMapsAddressInput';
@@ -102,6 +104,7 @@ const GetQuoteLTL = ({ fbaDestination }) => {
   const [showQuoteResults, setShowQuoteResults] = React.useState(false);
   const [quoteResults, setQuoteResults] = React.useState([]);
   const [expandedQuoteId, setExpandedQuoteId] = React.useState(null);
+  const [breakdownQuoteId, setBreakdownQuoteId] = React.useState(null);
   const [sortBy, setSortBy] = React.useState('price'); // 'price', 'time', 'name'
   
   // 步骤状态管理
@@ -447,6 +450,20 @@ const GetQuoteLTL = ({ fbaDestination }) => {
   };
 
   // 排序报价结果
+  // 开始新报价 - 重置所有状态
+  const handleNewQuote = () => {
+    resetForm();
+    setQuoteResults([]);
+    setShowQuoteResults(false);
+    setCurrentStep(1);
+    setSelectedQuote(null);
+    setDistanceInfo(null);
+    setSelectedPlaces({ origin: null, destination: null });
+    setExpandedQuoteId(null);
+    setBreakdownQuoteId(null);
+    setSortBy('price');
+  };
+
   // 处理选择报价
   const handleSelectQuote = (quote) => {
     setSelectedQuote(quote);
@@ -595,20 +612,69 @@ const GetQuoteLTL = ({ fbaDestination }) => {
         return { city, state, zip };
       };
 
-      const originComponents = selectedPlaces?.origin?.addressComponents 
+      let originComponents = selectedPlaces?.origin?.addressComponents 
         ? extractAddressComponents(selectedPlaces.origin.addressComponents)
         : { city: '', state: '', zip: '' };
 
-      const destinationComponents = selectedPlaces?.destination?.addressComponents
+      let destinationComponents = selectedPlaces?.destination?.addressComponents
         ? extractAddressComponents(selectedPlaces.destination.addressComponents)
         : { city: '', state: '', zip: '' };
 
-      // 解析前端已计算的距离 (Google Maps Distance Matrix)
+      // Fallback: extract zipcode from text input if user didn't select a suggestion
+      const parseZipFromInput = (input) => {
+        const match = (input || '').match(/\b(\d{5})\b/);
+        return match ? match[1] : '';
+      };
+
+      if (!originComponents.zip) {
+        originComponents = { ...originComponents, zip: parseZipFromInput(formData.origin) };
+      }
+      if (!destinationComponents.zip) {
+        destinationComponents = { ...destinationComponents, zip: parseZipFromInput(formData.destination) };
+      }
+
+      // If city/state missing but zip available, try zipcode lookup via backend
+      if (originComponents.zip && (!originComponents.city || !originComponents.state)) {
+        try {
+          const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001/api'}/zipcode/lookup?zip=${originComponents.zip}`);
+          if (res.ok) {
+            const data = await res.json();
+            originComponents = { ...originComponents, city: data.city || originComponents.city, state: data.state || originComponents.state };
+          }
+        } catch (err) { console.warn('Origin zipcode lookup failed:', err); }
+      }
+      if (destinationComponents.zip && (!destinationComponents.city || !destinationComponents.state)) {
+        try {
+          const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001/api'}/zipcode/lookup?zip=${destinationComponents.zip}`);
+          if (res.ok) {
+            const data = await res.json();
+            destinationComponents = { ...destinationComponents, city: data.city || destinationComponents.city, state: data.state || destinationComponents.state };
+          }
+        } catch (err) { console.warn('Destination zipcode lookup failed:', err); }
+      }
+
+      // Always recalculate distance using zipcodes via Google Maps Distance Matrix
       let distanceMiles = null;
-      if (distanceInfo?.distance) {
-        const distStr = distanceInfo.distance.replace(/,/g, '');
-        const distMatch = distStr.match(/[\d.]+/);
-        if (distMatch) distanceMiles = Math.round(parseFloat(distMatch[0]));
+      const originAddr = originComponents.zip || formData.origin;
+      const destAddr = destinationComponents.zip || formData.destination;
+      try {
+        setCalculatingDistance(true);
+        const freshDistance = await calculateDistance(originAddr, destAddr);
+        setDistanceInfo(freshDistance);
+        if (freshDistance?.distance) {
+          const distStr = freshDistance.distance.replace(/,/g, '');
+          const distMatch = distStr.match(/[\d.]+/);
+          if (distMatch) distanceMiles = Math.round(parseFloat(distMatch[0]));
+        }
+      } catch (distError) {
+        console.warn('Distance recalculation failed, using cached value:', distError);
+        if (distanceInfo?.distance) {
+          const distStr = distanceInfo.distance.replace(/,/g, '');
+          const distMatch = distStr.match(/[\d.]+/);
+          if (distMatch) distanceMiles = Math.round(parseFloat(distMatch[0]));
+        }
+      } finally {
+        setCalculatingDistance(false);
       }
 
       // 准备多承运商 API 请求数据
@@ -727,12 +793,47 @@ const GetQuoteLTL = ({ fbaDestination }) => {
           console.log('📋 创建报价单到员工系统:', orderData);
           
           const createResponse = await orderApi.createOrder(orderData);
+          let employeeOrderId = null;
           if (createResponse.success) {
             console.log('✅ 报价单已同步到员工系统:', createResponse.data);
+            employeeOrderId = createResponse.data?.id;
+          }
+
+          // Save full quote session with all carrier results
+          try {
+            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+            await fetch(`${apiBase}/ltl-quotes/sessions`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userEmail,
+                originCity: originComponents.city,
+                originState: originComponents.state,
+                originZip: originComponents.zip,
+                destinationCity: destinationComponents.city,
+                destinationState: destinationComponents.state,
+                destinationZip: destinationComponents.zip,
+                originLocationType: formData.originLocationType,
+                destinationLocationType: formData.destinationLocationType,
+                distanceMiles: transportDistance,
+                pickupDate: formData.pickupDate,
+                deliveryDate: formData.deliveryDate,
+                items: formData.cargoItems,
+                pickupServices: formData.pickupServices,
+                deliveryServices: formData.deliveryServices,
+                totalWeight: parseFloat(totals.totalWeight),
+                totalPallets: totals.totalPallets,
+                quoteResults: quotes,
+                lowestPrice: quotes[0]?.price || 0,
+                employeeOrderId
+              })
+            });
+            console.log('✅ Quote session saved for user history');
+          } catch (sessionError) {
+            console.warn('⚠️ Failed to save quote session:', sessionError);
           }
         } catch (syncError) {
           console.error('⚠️ 同步报价单到员工系统失败:', syncError);
-          // 不阻塞用户操作，只记录日志
         }
         // ====== 同步结束 ======
         
@@ -1307,7 +1408,21 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                             {quote.isGuaranteed && <span className="guarantee-icon">✓</span>}
                             {quote.serviceLevel || 'Standard LTL'}
                           </div>
-                          <div className="price-big">${(quote.price || 0).toFixed(2)}</div>
+                          <div className="price-big">
+                            ${(quote.price || 0).toFixed(2)}
+                            {(quote.charges?.length > 0 || quote.breakdown) && (
+                              <button
+                                className="btn-price-breakdown"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setBreakdownQuoteId(breakdownQuoteId === quote.id ? null : quote.id);
+                                }}
+                                title="查看价格明细"
+                              >
+                                <FileText size={14} />
+                              </button>
+                            )}
+                          </div>
                           <div className="exp-date-small">有效期: {quote.expDate || 'N/A'}</div>
                         </div>
 
@@ -1356,6 +1471,40 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                           </button>
                         </div>
                       </div>
+
+                      {/* 价格明细面板 */}
+                      {breakdownQuoteId === quote.id && (
+                        <div className="quote-price-breakdown">
+                          <h4>价格明细 (Price Breakdown)</h4>
+                          <div className="breakdown-list">
+                            {quote.charges && quote.charges.length > 0 ? (
+                              <>
+                                {quote.charges.map((charge, idx) => (
+                                  <div key={idx} className="breakdown-item">
+                                    <span className="breakdown-desc">{charge.description}</span>
+                                    <span className="breakdown-amount">${parseFloat(charge.amount || 0).toFixed(2)}</span>
+                                  </div>
+                                ))}
+                                <div className="breakdown-item breakdown-total">
+                                  <span className="breakdown-desc">Total</span>
+                                  <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="breakdown-item">
+                                <span className="breakdown-desc">Total Charge</span>
+                                <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
+                              </div>
+                            )}
+                            {quote.fuelSurcharge && !quote.charges?.some(c => c.description?.toLowerCase().includes('fuel')) && (
+                              <div className="breakdown-item breakdown-note">
+                                <span className="breakdown-desc">Fuel Surcharge (included)</span>
+                                <span className="breakdown-amount">${parseFloat(quote.fuelSurcharge).toFixed(2)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       {/* 展开的终端信息 */}
                       {expandedQuoteId === quote.id && (
@@ -1486,8 +1635,15 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                     * 以上报价为估算价格，实际价格可能因货物具体情况、附加服务等因素有所调整。
                   </p>
                   <p className="disclaimer">
-                    * 所有报价将自动保存。选择承运商后，请填写详细的发货和收货信息。
+                    * 所有报价将自动保存至您的个人中心。选择承运商后，请填写详细的发货和收货信息。
                   </p>
+                </div>
+
+                <div className="results-actions">
+                  <button type="button" className="btn-new-quote" onClick={handleNewQuote}>
+                    <RefreshCw size={16} />
+                    获取新报价
+                  </button>
                 </div>
               </div>
             )}
