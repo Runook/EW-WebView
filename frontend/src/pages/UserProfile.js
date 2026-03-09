@@ -24,7 +24,9 @@ import {
   X,
   Truck,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Trash2,
+  ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiServices } from '../utils/apiClient';
@@ -518,14 +520,32 @@ const UserProfile = () => {
   }
 
   // ===== MY QUOTES TAB =====
+  const handleDeleteQuote = async (sessionId) => {
+    if (!window.confirm('确定要删除这个报价记录吗？')) return;
+    try {
+      const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const res = await fetch(`${apiBase}/ltl-quotes/sessions/${sessionId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setQuoteSessions(prev => prev.filter(s => s.session_id !== sessionId));
+      }
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
+  };
+
   function renderQuotes() {
     return (
       <>
         <div className="articles-tab-header">
           <h3>我的报价</h3>
-          <button className="new-article-btn" onClick={() => navigate('/get-quote-ltl')}>
-            <Plus size={16} /> 获取新报价
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="new-article-btn" onClick={() => navigate('/my-quotes')}>
+              <ExternalLink size={16} /> All Quotes
+            </button>
+            <button className="new-article-btn" onClick={() => navigate('/get-quote-ltl')}>
+              <Plus size={16} /> New Quote
+            </button>
+          </div>
         </div>
 
         <div className="profile-section-card">
@@ -541,6 +561,8 @@ const UserProfile = () => {
                   <div
                     key={session.id}
                     className={`quote-session-card ${isExpired ? 'expired' : ''}`}
+                    onClick={() => navigate(`/quote/${session.session_id}`)}
+                    style={{ cursor: 'pointer' }}
                   >
                     <div className="quote-session-route">
                       <div className="route-endpoints">
@@ -554,14 +576,26 @@ const UserProfile = () => {
                           {session.destination_city}{session.destination_state ? `, ${session.destination_state}` : ''} {session.destination_zip}
                         </span>
                       </div>
-                      {isExpired && (
-                        <span className="quote-expired-badge">
-                          <AlertTriangle size={12} /> 已过期
-                        </span>
-                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {isExpired && (
+                          <span className="quote-expired-badge">
+                            <AlertTriangle size={12} /> 已过期
+                          </span>
+                        )}
+                        <button
+                          className="quote-delete-btn"
+                          onClick={(e) => { e.stopPropagation(); handleDeleteQuote(session.session_id); }}
+                          title="删除"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="quote-session-meta">
+                      <span className="meta-item" style={{ fontWeight: 600, color: '#1d4ed8' }}>
+                        {session.session_id}
+                      </span>
                       <span className="meta-item">
                         <Truck size={12} />
                         {session.quote_count} 家运输商
@@ -572,12 +606,6 @@ const UserProfile = () => {
                         </span>
                         &nbsp;起
                       </span>
-                      {session.total_pallets && (
-                        <span className="meta-item">{session.total_pallets} 托盘</span>
-                      )}
-                      {session.distance_miles && (
-                        <span className="meta-item">{session.distance_miles} mi</span>
-                      )}
                       <span className="meta-item">
                         <Calendar size={12} />
                         {new Date(session.created_at).toLocaleDateString('zh-CN')}

@@ -21,10 +21,11 @@ import {
   ChevronUp,
   HelpCircle,
   FileText,
-  RefreshCw
+  RefreshCw,
+  List
 } from 'lucide-react';
 import './GetQuote.css';
-import { GoogleMapsAddressInput, GoogleMapsRoute, calculateDistance } from '../components/GoogleMapsAddressInput';
+import { GoogleMapsAddressInput, calculateDistance } from '../components/GoogleMapsAddressInput';
 import { useForm, useToggle } from '../hooks';
 import { Button } from '../components/common';
 import { geocodeAddress as geocodeUtil } from '../config/googleMaps';
@@ -92,7 +93,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     setIsSubmitting
   } = useForm(initialFormData);
 
-  const [showRouteModal, toggleRouteModal] = useToggle(false);
   const [calculatingDistance, setCalculatingDistance] = React.useState(false);
   const [selectedPlaces, setSelectedPlaces] = React.useState({
     origin: null,
@@ -204,9 +204,9 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     inchesToCm: (inches) => inches ? (parseFloat(inches) * 2.54).toFixed(1) : ''
   }), []);
 
-  // 计算货物分类
+  // 计算货物分类 (skip if user manually overrode)
   const calculateFreightClass = React.useCallback((data) => {
-    const { weight, length, width, height, pallets, hazmat, fragile } = data;
+    const { weight, length, width, height, pallets, hazmat, fragile, freightClassManual } = data;
     
     if (!weight || !length || !width || !height) return data;
     
@@ -222,6 +222,10 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     const cubicFeet = cubicInches / 1728;
     const weightPerPallet = weightNum / palletCount;
     const density = weightPerPallet / cubicFeet;
+    
+    if (freightClassManual) {
+      return { ...data, volume: cubicFeet.toFixed(2), density: density.toFixed(2) };
+    }
     
     let selectedClass = freightClassMap[freightClassMap.length - 1];
     for (const classEntry of freightClassMap) {
@@ -242,6 +246,8 @@ const GetQuoteLTL = ({ fbaDestination }) => {
       freightClass: finalClass.toString()
     };
   }, [freightClassMap]);
+
+  const NMFC_CLASSES = ['50', '55', '60', '65', '70', '77.5', '85', '92.5', '100', '110', '125', '150', '175', '200', '250', '300', '400', '500'];
 
   // 添加货物项目
   const addCargoItem = () => {
@@ -437,19 +443,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     return null;
   };
 
-  // 显示路线
-  const showRoute = () => {
-    const hasOrigin = selectedPlaces.origin || formData.origin;
-    const hasDestination = selectedPlaces.destination || formData.destination;
-    
-    if (hasOrigin && hasDestination) {
-      toggleRouteModal();
-    } else {
-      showError('请先输入起点和终点地址');
-    }
-  };
-
-  // 排序报价结果
   // 开始新报价 - 重置所有状态
   const handleNewQuote = () => {
     resetForm();
@@ -905,9 +898,9 @@ const GetQuoteLTL = ({ fbaDestination }) => {
             </div>
 
         <form onSubmit={handleSubmit} className="quote-form">
-          {/* 基础信息 */}
+          {/* 起点信息 */}
           <div className="form-section">
-            <h3>基础信息</h3>
+            <h3>起点信息 (Origin)</h3>
             <div className="form-grid">
               <GoogleMapsAddressInput
                 label="起点 (Origin)"
@@ -918,17 +911,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                 required={true}
                 icon={MapPin}
               />
-
-              <GoogleMapsAddressInput
-                label="终点 (Destination)"
-                placeholder="输入城市名、街道地址或邮编"
-                value={formData.destination}
-                onChange={(value) => setFormData(prev => ({ ...prev, destination: value }))}
-                onPlaceSelected={handleDestinationPlaceSelected}
-                required={true}
-                icon={MapPin}
-              />
-
               <div className="form-group">
                 <label>
                   <Calendar size={16} />
@@ -943,7 +925,51 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                   required
                 />
               </div>
+            </div>
+            <div className="form-grid" style={{ marginTop: '1rem' }}>
+              <div className="form-group">
+                <label>起点地址类型 <span className="required">*</span></label>
+                <select
+                  value={formData.originLocationType}
+                  onChange={(e) => handleLocationTypeChange('originLocationType', e.target.value)}
+                  required
+                >
+                  {locationTypes.map(type => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>取货服务</label>
+                <div className="service-checkboxes">
+                  {pickupServices.map(service => (
+                    <label key={service.value} className="service-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={formData.pickupServices?.includes(service.value) || false}
+                        onChange={handleServiceChange('pickupServices', service.value)}
+                      />
+                      <span>{service.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
 
+          {/* 终点信息 */}
+          <div className="form-section">
+            <h3>终点信息 (Destination)</h3>
+            <div className="form-grid">
+              <GoogleMapsAddressInput
+                label="终点 (Destination)"
+                placeholder="输入城市名、街道地址或邮编"
+                value={formData.destination}
+                onChange={(value) => setFormData(prev => ({ ...prev, destination: value }))}
+                onPlaceSelected={handleDestinationPlaceSelected}
+                required={true}
+                icon={MapPin}
+              />
               <div className="form-group">
                 <label>
                   <Calendar size={16} />
@@ -958,109 +984,35 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                 />
               </div>
             </div>
-
-            {/* 地址类型和服务选择 */}
-            <div className="location-services-section">
-              <h4>地址类型和服务</h4>
-              
-              {/* 地址类型（下拉菜单 - 必填） */}
-              <div className="address-types-row">
-                <div className="form-group">
-                  <label>
-                    起点地址类型 <span className="required">*</span>
-                  </label>
-                  <select
-                    value={formData.originLocationType}
-                    onChange={(e) => handleLocationTypeChange('originLocationType', e.target.value)}
-                    required
-                  >
-                    {locationTypes.map(type => (
-                      <option key={type.value} value={type.value}>{type.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label>
-                    终点地址类型 <span className="required">*</span>
-                  </label>
-                  <select
-                    value={formData.destinationLocationType}
-                    onChange={(e) => handleLocationTypeChange('destinationLocationType', e.target.value)}
-                    required
-                  >
-                    {locationTypes.map(type => (
-                      <option key={type.value} value={type.value}>{type.label}</option>
-                    ))}
-                  </select>
-                </div>
+            <div className="form-grid" style={{ marginTop: '1rem' }}>
+              <div className="form-group">
+                <label>终点地址类型 <span className="required">*</span></label>
+                <select
+                  value={formData.destinationLocationType}
+                  onChange={(e) => handleLocationTypeChange('destinationLocationType', e.target.value)}
+                  required
+                >
+                  {locationTypes.map(type => (
+                    <option key={type.value} value={type.value}>{type.label}</option>
+                  ))}
+                </select>
               </div>
-
-              {/* 服务选项（勾选框 - 非必填） */}
-              <div className="services-row">
-                <div className="service-group">
-                  <h5>取货服务</h5>
-                  <div className="service-checkboxes">
-                    {pickupServices.map(service => (
-                      <label key={service.value} className="service-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={formData.pickupServices?.includes(service.value) || false}
-                          onChange={handleServiceChange('pickupServices', service.value)}
-                        />
-                        <span>{service.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="service-group">
-                  <h5>收货服务</h5>
-                  <div className="service-checkboxes">
-                    {deliveryServices.map(service => (
-                      <label key={service.value} className="service-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={formData.deliveryServices?.includes(service.value) || false}
-                          onChange={handleServiceChange('deliveryServices', service.value)}
-                        />
-                        <span>{service.label}</span>
-                      </label>
-                    ))}
-                  </div>
+              <div className="form-group">
+                <label>收货服务</label>
+                <div className="service-checkboxes">
+                  {deliveryServices.map(service => (
+                    <label key={service.value} className="service-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={formData.deliveryServices?.includes(service.value) || false}
+                        onChange={handleServiceChange('deliveryServices', service.value)}
+                      />
+                      <span>{service.label}</span>
+                    </label>
+                  ))}
                 </div>
               </div>
             </div>
-
-            {/* 路线查看 */}
-            {formData.origin && formData.destination && (
-              <div className="route-section">
-                <button type="button" className="btn route-btn" onClick={showRoute}>
-                  <Navigation size={16} />
-                  查看导航路线
-                </button>
-                
-                {calculatingDistance && (
-                  <div className="distance-calculating">
-                    <div className="loading-spinner-small"></div>
-                    <span>正在计算距离...</span>
-                  </div>
-                )}
-                
-                {distanceInfo && (
-                  <div className="distance-info">
-                    <div className="distance-summary">
-                      <span className="distance-text">
-                        <strong>距离:</strong> {distanceInfo.distance}
-                      </span>
-                      <span className="duration-text">
-                        <strong>预计时间:</strong> {distanceInfo.duration}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
 
           {/* 货物信息 */}
@@ -1083,10 +1035,9 @@ const GetQuoteLTL = ({ fbaDestination }) => {
 
             <div className="nmfc-info">
               <Info size={16} />
-              <p>LTL零担运输可以包含多个不同规格的货物。每个货物都会根据NMFC标准自动计算分类等级。</p>
+              <p>每个货物会根据NMFC标准自动计算分类等级，您也可以手动修改。</p>
             </div>
 
-            {/* 货物清单 */}
             {formData.cargoItems.map((item, index) => (
               <div key={item.id} className="cargo-item-card">
                 <div className="cargo-item-header">
@@ -1098,14 +1049,14 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                     <label>托盘数量 <span className="required">*</span></label>
                     <input
                       type="number"
+                      className="input-narrow"
                       value={item.pallets}
                       onChange={(e) => updateCargoItem(item.id, 'pallets', e.target.value)}
-                      placeholder="托盘数量"
+                      placeholder="数量"
                       min="1"
                       required
                     />
                   </div>
-
                   <div className="form-group">
                     <label>货物描述</label>
                     <input
@@ -1115,126 +1066,8 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                       placeholder="如：电子设备、机械部件等"
                     />
                   </div>
-                </div>
-
-                <div className="form-grid dimensions-grid">
                   <div className="form-group">
-                    <label>总重量 (磅) <span className="required">*</span></label>
-                    <div className="dimension-input-group">
-                      <input
-                        type="number"
-                        value={item.weight}
-                        onChange={(e) => updateCargoItem(item.id, 'weight', e.target.value)}
-                        placeholder="该项货物的总重量"
-                        min="1"
-                        step="0.1"
-                        required
-                      />
-                      <div className="conversion-input">
-                        <input
-                          type="number"
-                          value={item.weightKg}
-                          onChange={(e) => updateCargoItem(item.id, 'weightKg', e.target.value)}
-                          placeholder="输入kg自动转换"
-                          step="0.1"
-                          className="unit-converter"
-                        />
-                        <span className="unit-label">kg</span>
-                      </div>
-                    </div>
-                    {parseInt(item.pallets) > 1 && item.weight && (
-                      <div className="calculated-total-weight">
-                        <span className="total-label">每托盘:</span>
-                        <span className="total-value">
-                          {(parseFloat(item.weight) / parseInt(item.pallets)).toFixed(1)} lbs
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="form-group">
-                    <label>长度 (英寸) <span className="required">*</span></label>
-                    <div className="dimension-input-group">
-                      <input
-                        type="number"
-                        value={item.length}
-                        onChange={(e) => updateCargoItem(item.id, 'length', e.target.value)}
-                        placeholder="长度inches"
-                        min="1"
-                        step="0.1"
-                        required
-                      />
-                      <div className="conversion-input">
-                        <input
-                          type="number"
-                          value={item.lengthCm}
-                          onChange={(e) => updateCargoItem(item.id, 'lengthCm', e.target.value)}
-                          placeholder="输入cm自动转换为inches"
-                          step="0.1"
-                          className="unit-converter"
-                        />
-                        <span className="unit-label">cm</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>宽度 (英寸) <span className="required">*</span></label>
-                    <div className="dimension-input-group">
-                      <input
-                        type="number"
-                        value={item.width}
-                        onChange={(e) => updateCargoItem(item.id, 'width', e.target.value)}
-                        placeholder="宽度inches"
-                        min="1"
-                        step="0.1"
-                        required
-                      />
-                      <div className="conversion-input">
-                        <input
-                          type="number"
-                          value={item.widthCm}
-                          onChange={(e) => updateCargoItem(item.id, 'widthCm', e.target.value)}
-                          placeholder="输入cm自动转换为inches"
-                          step="0.1"
-                          className="unit-converter"
-                        />
-                        <span className="unit-label">cm</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>高度 (英寸) <span className="required">*</span></label>
-                    <div className="dimension-input-group">
-                      <input
-                        type="number"
-                        value={item.height}
-                        onChange={(e) => updateCargoItem(item.id, 'height', e.target.value)}
-                        placeholder="高度inches"
-                        min="1"
-                        step="0.1"
-                        required
-                      />
-                      <div className="conversion-input">
-                        <input
-                          type="number"
-                          value={item.heightCm}
-                          onChange={(e) => updateCargoItem(item.id, 'heightCm', e.target.value)}
-                          placeholder="输入cm自动转换为inches"
-                          step="0.1"
-                          className="unit-converter"
-                        />
-                        <span className="unit-label">cm</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>
-                      <Hash size={16} />
-                      初始单号
-                    </label>
+                    <label><Hash size={16} /> 初始单号</label>
                     <input
                       type="text"
                       value={item.shippingNumber}
@@ -1244,54 +1077,131 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                   </div>
                 </div>
 
-                {/* 计算结果显示 - 简化版 */}
-                {item.freightClass && (
+                {/* Imperial units row */}
+                <div className="dimensions-unit-row">
+                  <span className="unit-row-label">lbs / inches</span>
+                  <div className="dimension-compact-group">
+                    <div className="dimension-compact-item">
+                      <label>重量(lbs) <span className="required">*</span></label>
+                      <input type="number" className="input-medium" value={item.weight}
+                        onChange={(e) => updateCargoItem(item.id, 'weight', e.target.value)}
+                        placeholder="lbs" min="1" step="0.1" required />
+                    </div>
+                    <div className="dimension-compact-item">
+                      <label>长(in) <span className="required">*</span></label>
+                      <input type="number" className="input-medium" value={item.length}
+                        onChange={(e) => updateCargoItem(item.id, 'length', e.target.value)}
+                        placeholder="in" min="1" step="0.1" required />
+                    </div>
+                    <div className="dimension-compact-item">
+                      <label>宽(in) <span className="required">*</span></label>
+                      <input type="number" className="input-medium" value={item.width}
+                        onChange={(e) => updateCargoItem(item.id, 'width', e.target.value)}
+                        placeholder="in" min="1" step="0.1" required />
+                    </div>
+                    <div className="dimension-compact-item">
+                      <label>高(in) <span className="required">*</span></label>
+                      <input type="number" className="input-medium" value={item.height}
+                        onChange={(e) => updateCargoItem(item.id, 'height', e.target.value)}
+                        placeholder="in" min="1" step="0.1" required />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metric units row */}
+                <div className="dimensions-unit-row metric-row">
+                  <span className="unit-row-label">kg / cm</span>
+                  <div className="dimension-compact-group">
+                    <div className="dimension-compact-item">
+                      <label>重量(kg)</label>
+                      <input type="number" className="input-medium" value={item.weightKg}
+                        onChange={(e) => updateCargoItem(item.id, 'weightKg', e.target.value)}
+                        placeholder="kg" step="0.1" />
+                    </div>
+                    <div className="dimension-compact-item">
+                      <label>长(cm)</label>
+                      <input type="number" className="input-medium" value={item.lengthCm}
+                        onChange={(e) => updateCargoItem(item.id, 'lengthCm', e.target.value)}
+                        placeholder="cm" step="0.1" />
+                    </div>
+                    <div className="dimension-compact-item">
+                      <label>宽(cm)</label>
+                      <input type="number" className="input-medium" value={item.widthCm}
+                        onChange={(e) => updateCargoItem(item.id, 'widthCm', e.target.value)}
+                        placeholder="cm" step="0.1" />
+                    </div>
+                    <div className="dimension-compact-item">
+                      <label>高(cm)</label>
+                      <input type="number" className="input-medium" value={item.heightCm}
+                        onChange={(e) => updateCargoItem(item.id, 'heightCm', e.target.value)}
+                        placeholder="cm" step="0.1" />
+                    </div>
+                  </div>
+                </div>
+
+                {parseInt(item.pallets) > 1 && item.weight && (
+                  <div className="calculated-total-weight">
+                    <span className="total-label">每托盘:</span>
+                    <span className="total-value">
+                      {(parseFloat(item.weight) / parseInt(item.pallets)).toFixed(1)} lbs
+                    </span>
+                  </div>
+                )}
+
+                {/* NMFC result with editable class */}
+                {(item.volume || item.freightClass) && (
                   <div className="calculation-results-compact">
-                    <div className="result-compact">
-                      <span className="label">体积:</span>
-                      <span className="value">{item.volume} ft³</span>
-                    </div>
-                    <div className="result-compact">
-                      <span className="label">密度:</span>
-                      <span className="value">{item.density} lbs/ft³</span>
-                    </div>
+                    {item.volume && (
+                      <div className="result-compact">
+                        <span className="label">体积:</span>
+                        <span className="value">{item.volume} ft³</span>
+                      </div>
+                    )}
+                    {item.density && (
+                      <div className="result-compact">
+                        <span className="label">密度:</span>
+                        <span className="value">{item.density} lbs/ft³</span>
+                      </div>
+                    )}
                     <div className="result-compact primary">
                       <span className="label">NMFC等级:</span>
-                      <span className="value">Class {item.freightClass}</span>
+                      <select
+                        className="nmfc-select"
+                        value={item.freightClass || ''}
+                        onChange={(e) => {
+                          updateCargoItem(item.id, 'freightClass', e.target.value);
+                          updateCargoItem(item.id, 'freightClassManual', true);
+                        }}
+                      >
+                        <option value="">自动</option>
+                        {NMFC_CLASSES.map(c => (
+                          <option key={c} value={c}>Class {c}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 )}
 
-                {/* 特殊属性 - 只保留危险品和可堆叠 */}
                 <div className="special-attributes-compact">
                   <label className="checkbox-item">
-                    <input
-                      type="checkbox"
-                      checked={item.stackable}
-                      onChange={(e) => updateCargoItem(item.id, 'stackable', e.target.checked)}
-                    />
+                    <input type="checkbox" checked={item.stackable}
+                      onChange={(e) => updateCargoItem(item.id, 'stackable', e.target.checked)} />
                     <span>可堆叠</span>
                   </label>
-                  
                   <label className="checkbox-item hazmat">
-                    <input
-                      type="checkbox"
-                      checked={item.hazmat}
-                      onChange={(e) => updateCargoItem(item.id, 'hazmat', e.target.checked)}
-                    />
+                    <input type="checkbox" checked={item.hazmat}
+                      onChange={(e) => updateCargoItem(item.id, 'hazmat', e.target.checked)} />
                     <span>危险品</span>
                   </label>
                 </div>
 
                 <div className="cargo-item-actions">
-                  <button type="button" onClick={addCargoItem} className="btn add-cargo-btn">  
-                    <Plus size={16} />
-                    添加货物
+                  <button type="button" onClick={addCargoItem} className="btn add-cargo-btn">
+                    <Plus size={16} /> 添加货物
                   </button>
                   {formData.cargoItems.length > 1 && (
                     <button type="button" onClick={() => removeCargoItem(item.id)} className="btn remove-cargo-btn">
-                      <Minus size={14} />
-                      删除
+                      <Minus size={14} /> 删除
                     </button>
                   )}
                 </div>
@@ -1300,33 +1210,14 @@ const GetQuoteLTL = ({ fbaDestination }) => {
           </div>
 
           <div className="form-actions">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => navigate('/')}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="secondary" onClick={() => navigate('/')} disabled={isSubmitting}>
               取消
             </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              loading={isSubmitting}
-              disabled={isSubmitting}
-            >
+            <Button type="submit" variant="primary" loading={isSubmitting} disabled={isSubmitting}>
               获取LTL报价
             </Button>
           </div>
         </form>
-
-        {/* Google Maps 路线模态框 */}
-        {showRouteModal && (
-          <GoogleMapsRoute
-            origin={selectedPlaces.origin || { address: formData.origin }}
-            destination={selectedPlaces.destination || { address: formData.destination }}
-            onClose={toggleRouteModal}
-          />
-        )}
           </>
         ) : (
           /* 报价结果展示 */
@@ -1350,9 +1241,18 @@ const GetQuoteLTL = ({ fbaDestination }) => {
             {/* 步骤2: 承运商选择 */}
             {currentStep === 2 && (
               <div className="carrier-rates-section">
-                <h2>CARRIER RATES</h2>
+                <div className="carrier-rates-header">
+                  <h2>CARRIER RATES</h2>
+                  <div className="carrier-rates-nav">
+                    <button type="button" className="btn-new-quote" onClick={handleNewQuote}>
+                      <RefreshCw size={16} /> New Quote
+                    </button>
+                    <button type="button" className="btn-all-quotes" onClick={() => navigate('/my-quotes')}>
+                      <List size={16} /> All Quotes
+                    </button>
+                  </div>
+                </div>
                 
-                {/* 排序选项 */}
                 <div className="sort-controls">
                   <label>排序方式：</label>
                   <div className="sort-buttons">
@@ -1641,8 +1541,10 @@ const GetQuoteLTL = ({ fbaDestination }) => {
 
                 <div className="results-actions">
                   <button type="button" className="btn-new-quote" onClick={handleNewQuote}>
-                    <RefreshCw size={16} />
-                    获取新报价
+                    <RefreshCw size={16} /> New Quote
+                  </button>
+                  <button type="button" className="btn-all-quotes" onClick={() => navigate('/my-quotes')}>
+                    <List size={16} /> All Quotes
                   </button>
                 </div>
               </div>

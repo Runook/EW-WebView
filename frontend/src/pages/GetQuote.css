@@ -130,6 +130,9 @@
 
 .form-group .required {
   color: #dc2626;
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .form-group input,
@@ -1218,6 +1221,135 @@
   background: #f9fafb;
   border-color: #98a2b3;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* All Quotes button */
+.btn-all-quotes {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.5rem 1.2rem;
+  background: #1d4ed8;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-all-quotes:hover {
+  background: #1e40af;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* Carrier rates header with nav buttons */
+.carrier-rates-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.carrier-rates-nav {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Narrow / medium input sizing */
+.input-narrow {
+  max-width: 80px !important;
+  width: 80px;
+}
+
+.input-medium {
+  max-width: 130px !important;
+  width: 130px;
+}
+
+/* Dimension rows (imperial / metric) */
+.dimensions-unit-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: #f8fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.dimensions-unit-row.metric-row {
+  background: #fefce8;
+  border-color: #fde68a;
+}
+
+.unit-row-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  min-width: 70px;
+  white-space: nowrap;
+  padding-bottom: 4px;
+}
+
+.metric-row .unit-row-label {
+  color: #92400e;
+}
+
+.dimension-compact-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.dimension-compact-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dimension-compact-item label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.dimension-compact-item input {
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  width: 110px;
+  max-width: 130px;
+}
+
+.dimension-compact-item input:focus {
+  outline: none;
+  border-color: #34C759;
+  box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.15);
+}
+
+/* NMFC editable select inside results bar */
+.nmfc-select {
+  padding: 0.25rem 0.4rem;
+  border: 1px solid #34C759;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #166534;
+  background: white;
+  cursor: pointer;
+  min-width: 100px;
+}
+
+.nmfc-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.2);
 }
 
 .results-actions {

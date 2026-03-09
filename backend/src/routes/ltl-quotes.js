@@ -114,4 +114,29 @@ router.get('/sessions/:sessionId', async (req, res) => {
   }
 });
 
+/**
+ * DELETE /api/ltl-quotes/sessions/:sessionId
+ * Delete a quote session.
+ */
+router.delete('/sessions/:sessionId', async (req, res) => {
+  try {
+    const deleted = await LTLQuoteSession.delete(req.params.sessionId);
+
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quote session not found'
+      });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to delete quote session:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 module.exports = router;

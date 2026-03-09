@@ -35,6 +35,8 @@ import Payments from './pages/Payments';
 import MapView from './pages/MapView';
 import AdManager from './pages/AdManager';
 import AIQuoteReview from './pages/AIQuoteReview';
+import MyQuotes from './pages/MyQuotes';
+import QuoteDetail from './pages/QuoteDetail';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import AccountingGuide from './pages/AccountingGuide';
@@ -97,7 +99,9 @@ function App() {
               
               {/* 陆运服务 */}
               <Route path="/get-quote-ltl" element={<GetQuoteLTL />} />
-                           
+              <Route path="/my-quotes" element={<MyQuotes />} />
+              <Route path="/quote/:sessionId" element={<QuoteDetail />} />
+
               {/* FBA 仓库查询 */}
               <Route path="/fba-locations" element={<FBALocations />} />
               <Route path="/fba-location/:id" element={<FBALocationDetail />} />

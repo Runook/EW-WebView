@@ -109,6 +109,12 @@ class LTLQuoteSession {
       .where('session_id', sessionId)
       .update({ status, updated_at: new Date() });
   }
+
+  static async delete(sessionId) {
+    return db('ltl_quote_sessions')
+      .where('session_id', sessionId)
+      .del();
+  }
 }
 
 module.exports = LTLQuoteSession;

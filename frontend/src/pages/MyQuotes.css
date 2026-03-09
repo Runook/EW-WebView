@@ -1,0 +1,195 @@
+.myquotes-page {
+  min-height: 100vh;
+  background: #f9fafb;
+  padding: 2rem 1rem;
+}
+
+.myquotes-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.myquotes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.myquotes-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1d2939;
+}
+
+.btn-new-quote-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.6rem 1.4rem;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-new-quote-primary:hover {
+  background: #15803d;
+}
+
+.myquotes-loading {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.myquotes-empty {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #9ca3af;
+}
+
+.myquotes-empty svg {
+  margin-bottom: 1rem;
+}
+
+.myquotes-empty p {
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.myquotes-list {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.myquotes-table-header {
+  display: grid;
+  grid-template-columns: 140px 1fr 100px 70px 90px 120px 80px;
+  gap: 8px;
+  padding: 0.75rem 1rem;
+  background: #f3f4f6;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.myquotes-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 100px 70px 90px 120px 80px;
+  gap: 8px;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #f3f4f6;
+  align-items: center;
+  font-size: 0.88rem;
+  transition: background 0.15s;
+}
+
+.myquotes-row:hover {
+  background: #f9fafb;
+}
+
+.myquotes-row.expired {
+  opacity: 0.55;
+}
+
+.quote-number {
+  font-weight: 600;
+  color: #1d4ed8;
+  font-size: 0.82rem;
+}
+
+.quote-route {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #374151;
+}
+
+.quote-date {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #6b7280;
+  font-size: 0.82rem;
+}
+
+.quote-carriers {
+  text-align: center;
+  font-weight: 600;
+}
+
+.quote-price {
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.quote-expires {
+  font-size: 0.82rem;
+}
+
+.expired-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #6b7280;
+}
+
+.quote-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.btn-view, .btn-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.15s;
+}
+
+.btn-view:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.btn-delete:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+@media (max-width: 768px) {
+  .myquotes-table-header { display: none; }
+  .myquotes-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    padding: 1rem;
+  }
+  .quote-number { grid-column: 1 / -1; }
+  .quote-route { grid-column: 1 / -1; }
+}
