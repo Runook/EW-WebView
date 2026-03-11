@@ -20,6 +20,7 @@ import {
   ChevronDown,
   ChevronUp,
   HelpCircle,
+  FileText,
   RefreshCw,
   List
 } from 'lucide-react';
@@ -103,6 +104,7 @@ const GetQuoteLTL = ({ fbaDestination }) => {
   const [showQuoteResults, setShowQuoteResults] = React.useState(false);
   const [quoteResults, setQuoteResults] = React.useState([]);
   const [expandedQuoteId, setExpandedQuoteId] = React.useState(null);
+  const [breakdownQuoteId, setBreakdownQuoteId] = React.useState(null);
   const [sortBy, setSortBy] = React.useState('price'); // 'price', 'time', 'name'
   
   // 步骤状态管理
@@ -451,6 +453,7 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     setDistanceInfo(null);
     setSelectedPlaces({ origin: null, destination: null });
     setExpandedQuoteId(null);
+    setBreakdownQuoteId(null);
     setSortBy('price');
   };
 
@@ -775,35 +778,75 @@ const GetQuoteLTL = ({ fbaDestination }) => {
         // Always save quote session regardless of employee order sync result
         try {
           const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-          await fetch(`${apiBase}/ltl-quotes/sessions`, {
+          const sessionPayload = {
+            userEmail,
+            originCity: originComponents.city,
+            originState: originComponents.state,
+            originZip: originComponents.zip,
+            destinationCity: destinationComponents.city,
+            destinationState: destinationComponents.state,
+            destinationZip: destinationComponents.zip,
+            originLocationType: formData.originLocationType,
+            destinationLocationType: formData.destinationLocationType,
+            distanceMiles: transportDistance,
+            pickupDate: formData.pickupDate,
+            deliveryDate: formData.deliveryDate,
+            items: formData.cargoItems.map(item => ({
+              id: item.id,
+              description: item.description,
+              weight: item.weight,
+              length: item.length,
+              width: item.width,
+              height: item.height,
+              pallets: item.pallets,
+              freightClass: item.freightClass,
+              stackable: item.stackable,
+              hazmat: item.hazmat
+            })),
+            pickupServices: formData.pickupServices || [],
+            deliveryServices: formData.deliveryServices || [],
+            totalWeight: parseFloat(totals.totalWeight),
+            totalPallets: totals.totalPallets,
+            quoteResults: quotes.map(q => ({
+              id: q.id,
+              carrier: q.carrier,
+              carrierCode: q.carrierCode,
+              logo: q.logo,
+              quoteId: q.quoteId,
+              price: q.price,
+              currency: q.currency,
+              transitDays: q.transitDays,
+              serviceType: q.serviceType,
+              serviceLevel: q.serviceLevel,
+              serviceBadge: q.serviceBadge,
+              serviceColor: q.serviceColor,
+              isGuaranteed: q.isGuaranteed,
+              expDate: q.expDate,
+              fuelSurcharge: q.fuelSurcharge,
+              charges: q.charges,
+              breakdown: q.breakdown,
+              maxLiability: q.maxLiability,
+              pickupTerminal: q.pickupTerminal,
+              dropTerminal: q.dropTerminal,
+              source: q.source
+            })),
+            lowestPrice: quotes[0]?.price || 0,
+            employeeOrderId
+          };
+          console.log('📤 Saving quote session, userEmail:', userEmail);
+          const saveRes = await fetch(`${apiBase}/ltl-quotes/sessions`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userEmail,
-              originCity: originComponents.city,
-              originState: originComponents.state,
-              originZip: originComponents.zip,
-              destinationCity: destinationComponents.city,
-              destinationState: destinationComponents.state,
-              destinationZip: destinationComponents.zip,
-              originLocationType: formData.originLocationType,
-              destinationLocationType: formData.destinationLocationType,
-              distanceMiles: transportDistance,
-              pickupDate: formData.pickupDate,
-              deliveryDate: formData.deliveryDate,
-              items: formData.cargoItems,
-              pickupServices: formData.pickupServices,
-              deliveryServices: formData.deliveryServices,
-              totalWeight: parseFloat(totals.totalWeight),
-              totalPallets: totals.totalPallets,
-              quoteResults: quotes,
-              lowestPrice: quotes[0]?.price || 0,
-              employeeOrderId
-            })
+            body: JSON.stringify(sessionPayload)
           });
-          console.log('✅ Quote session saved for user history');
+          const saveData = await saveRes.json();
+          if (saveRes.ok && saveData.success) {
+            console.log('✅ Quote session saved:', saveData.data?.session_id);
+          } else {
+            console.error('❌ Quote session save failed:', saveRes.status, saveData);
+          }
         } catch (sessionError) {
-          console.warn('⚠️ Failed to save quote session:', sessionError);
+          console.error('❌ Failed to save quote session:', sessionError);
         }
         // ====== 同步结束 ======
         
@@ -1287,6 +1330,16 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                           </div>
                           <div className="price-big">
                             ${(quote.price || 0).toFixed(2)}
+                            <button
+                              className="btn-price-breakdown"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setBreakdownQuoteId(breakdownQuoteId === quote.id ? null : quote.id);
+                              }}
+                              title="查看价格明细"
+                            >
+                              <FileText size={14} />
+                            </button>
                           </div>
                           <div className="exp-date-small">有效期: {quote.expDate || 'N/A'}</div>
                         </div>
@@ -1334,56 +1387,58 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                         </div>
                       </div>
 
-                      {/* 价格明细 - 始终显示 */}
-                      <div className="quote-price-breakdown">
-                        <h4>价格明细 (Price Breakdown)</h4>
-                        <div className="breakdown-list">
-                          {quote.charges && quote.charges.length > 0 ? (
-                            <>
-                              {quote.charges.map((charge, idx) => (
-                                <div key={idx} className="breakdown-item">
-                                  <span className="breakdown-desc">{charge.description}</span>
-                                  <span className="breakdown-amount">${parseFloat(charge.amount || 0).toFixed(2)}</span>
-                                </div>
-                              ))}
-                              {quote.fuelSurcharge && !quote.charges.some(c => (c.description || '').toLowerCase().includes('fuel')) && (
-                                <div className="breakdown-item">
-                                  <span className="breakdown-desc">Fuel Surcharge</span>
-                                  <span className="breakdown-amount">${parseFloat(quote.fuelSurcharge).toFixed(2)}</span>
-                                </div>
-                              )}
-                              <div className="breakdown-item breakdown-total">
-                                <span className="breakdown-desc">Total</span>
-                                <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              {quote.fuelSurcharge ? (
-                                <>
-                                  <div className="breakdown-item">
-                                    <span className="breakdown-desc">Base Freight</span>
-                                    <span className="breakdown-amount">${(Math.round((quote.price - parseFloat(quote.fuelSurcharge)) * 100) / 100).toFixed(2)}</span>
+                      {/* 价格明细 - 点击显示 */}
+                      {breakdownQuoteId === quote.id && (
+                        <div className="quote-price-breakdown">
+                          <h4>价格明细 (Price Breakdown)</h4>
+                          <div className="breakdown-list">
+                            {quote.charges && quote.charges.length > 0 ? (
+                              <>
+                                {quote.charges.map((charge, idx) => (
+                                  <div key={idx} className="breakdown-item">
+                                    <span className="breakdown-desc">{charge.description}</span>
+                                    <span className="breakdown-amount">${parseFloat(charge.amount || 0).toFixed(2)}</span>
                                   </div>
+                                ))}
+                                {quote.fuelSurcharge && !quote.charges.some(c => (c.description || '').toLowerCase().includes('fuel')) && (
                                   <div className="breakdown-item">
                                     <span className="breakdown-desc">Fuel Surcharge</span>
                                     <span className="breakdown-amount">${parseFloat(quote.fuelSurcharge).toFixed(2)}</span>
                                   </div>
-                                  <div className="breakdown-item breakdown-total">
-                                    <span className="breakdown-desc">Total</span>
-                                    <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
-                                  </div>
-                                </>
-                              ) : (
+                                )}
                                 <div className="breakdown-item breakdown-total">
-                                  <span className="breakdown-desc">Total Charge</span>
+                                  <span className="breakdown-desc">Total</span>
                                   <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
                                 </div>
-                              )}
-                            </>
-                          )}
+                              </>
+                            ) : (
+                              <>
+                                {quote.fuelSurcharge ? (
+                                  <>
+                                    <div className="breakdown-item">
+                                      <span className="breakdown-desc">Base Freight</span>
+                                      <span className="breakdown-amount">${(Math.round((quote.price - parseFloat(quote.fuelSurcharge)) * 100) / 100).toFixed(2)}</span>
+                                    </div>
+                                    <div className="breakdown-item">
+                                      <span className="breakdown-desc">Fuel Surcharge</span>
+                                      <span className="breakdown-amount">${parseFloat(quote.fuelSurcharge).toFixed(2)}</span>
+                                    </div>
+                                    <div className="breakdown-item breakdown-total">
+                                      <span className="breakdown-desc">Total</span>
+                                      <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <div className="breakdown-item breakdown-total">
+                                    <span className="breakdown-desc">Total Charge</span>
+                                    <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* 展开的终端信息 */}
                       {expandedQuoteId === quote.id && (
