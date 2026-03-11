@@ -56,8 +56,7 @@ class LTLQuoteSession {
     const offset = (page - 1) * limit;
 
     let query = db('ltl_quote_sessions')
-      .where('user_email', email)
-      .orderBy('created_at', 'desc');
+      .where('user_email', email);
 
     if (!includeExpired) {
       query = query.where(function() {
@@ -69,7 +68,7 @@ class LTLQuoteSession {
     }
 
     const total = await query.clone().count('* as count').first();
-    const rows = await query.offset(offset).limit(limit);
+    const rows = await query.clone().orderBy('created_at', 'desc').offset(offset).limit(limit);
 
     return {
       sessions: rows.map(r => ({
