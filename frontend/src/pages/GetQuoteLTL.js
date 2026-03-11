@@ -20,7 +20,6 @@ import {
   ChevronDown,
   ChevronUp,
   HelpCircle,
-  FileText,
   RefreshCw,
   List
 } from 'lucide-react';
@@ -104,7 +103,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
   const [showQuoteResults, setShowQuoteResults] = React.useState(false);
   const [quoteResults, setQuoteResults] = React.useState([]);
   const [expandedQuoteId, setExpandedQuoteId] = React.useState(null);
-  const [breakdownQuoteId, setBreakdownQuoteId] = React.useState(null);
   const [sortBy, setSortBy] = React.useState('price'); // 'price', 'time', 'name'
   
   // 步骤状态管理
@@ -453,7 +451,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     setDistanceInfo(null);
     setSelectedPlaces({ origin: null, destination: null });
     setExpandedQuoteId(null);
-    setBreakdownQuoteId(null);
     setSortBy('price');
   };
 
@@ -559,15 +556,15 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     const quotes = [...quoteResults];
     switch (sortBy) {
       case 'price':
-        return quotes.sort((a, b) => a.price - b.price);
+        return quotes.sort((a, b) => (a.price || 0) - (b.price || 0));
       case 'time':
         return quotes.sort((a, b) => {
-          const daysA = parseInt(a.transitDays.match(/\d+/)?.[0] || '999');
-          const daysB = parseInt(b.transitDays.match(/\d+/)?.[0] || '999');
+          const daysA = parseInt(String(a.transitDays || '').match(/\d+/)?.[0] || '999');
+          const daysB = parseInt(String(b.transitDays || '').match(/\d+/)?.[0] || '999');
           return daysA - daysB;
         });
       case 'name':
-        return quotes.sort((a, b) => a.carrier.localeCompare(b.carrier));
+        return quotes.sort((a, b) => (a.carrier || '').localeCompare(b.carrier || ''));
       default:
         return quotes;
     }
@@ -702,51 +699,40 @@ const GetQuoteLTL = ({ fbaDestination }) => {
         setCurrentStep(2);
         success(`成功获取 ${quotes.length} 个报价（来自多家运输商）！`);
         
-        // ====== 自动在员工系统创建报价单 ======
-        try {
-          // 准备重量列表 (单托盘重量)
-          const weights = formData.cargoItems.map(item => 
-            Math.round(parseFloat(item.weight || 0))
-          );
-          
-          // 准备尺寸列表 (包含 freightClass)
-          const dimensions = formData.cargoItems.map(item => ({
-            length: Math.round(parseFloat(item.length || 0)),
-            width: Math.round(parseFloat(item.width || 0)),
-            height: Math.round(parseFloat(item.height || 0)),
-            pieces: parseInt(item.pallets || 1),
-            volume: (parseFloat(item.length || 0) * parseFloat(item.width || 0) * parseFloat(item.height || 0) / 1728),
-            freightClass: item.freightClass || ''  // 货物等级 Class
-          }));
-          
-          // 计算总计
-          const totals = calculateTotals();
-          
-          // 获取用户邮箱
-          const userEmail = user?.email || user?.attributes?.email || '未知用户';
-          
-          // 获取当前纽约时间日期
-          const getNYDate = () => {
-            const formatter = new Intl.DateTimeFormat('en-CA', {
-              timeZone: 'America/New_York',
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit'
-            });
-            return formatter.format(new Date());
-          };
-          
-          // 创建报价单
-          // 解析距离数值 (从 "1,234 mi" 或 "1234 miles" 格式中提取数字)
-          let transportDistance = null;
-          if (distanceInfo?.distance) {
-            const distanceStr = distanceInfo.distance.replace(/,/g, ''); // 移除千位分隔符
-            const distanceMatch = distanceStr.match(/[\d.]+/);
-            if (distanceMatch) {
-              transportDistance = Math.round(parseFloat(distanceMatch[0]));
-            }
+        // ====== 自动在员工系统创建报价单 + 保存报价会话 ======
+        const weights = formData.cargoItems.map(item => 
+          Math.round(parseFloat(item.weight || 0))
+        );
+        const dimensions = formData.cargoItems.map(item => ({
+          length: Math.round(parseFloat(item.length || 0)),
+          width: Math.round(parseFloat(item.width || 0)),
+          height: Math.round(parseFloat(item.height || 0)),
+          pieces: parseInt(item.pallets || 1),
+          volume: (parseFloat(item.length || 0) * parseFloat(item.width || 0) * parseFloat(item.height || 0) / 1728),
+          freightClass: item.freightClass || ''
+        }));
+        const totals = calculateTotals();
+        const userEmail = user?.email || user?.attributes?.email || '未知用户';
+        const getNYDate = () => {
+          const formatter = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/New_York',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
+          return formatter.format(new Date());
+        };
+        let transportDistance = null;
+        if (distanceInfo?.distance) {
+          const distanceStr = distanceInfo.distance.replace(/,/g, '');
+          const distanceMatch = distanceStr.match(/[\d.]+/);
+          if (distanceMatch) {
+            transportDistance = Math.round(parseFloat(distanceMatch[0]));
           }
-          
+        }
+
+        let employeeOrderId = null;
+        try {
           const orderData = {
             customer_name: userEmail,
             inquiry_company: userEmail,
@@ -757,76 +743,67 @@ const GetQuoteLTL = ({ fbaDestination }) => {
             order_type: 'land_freight',
             status: 'quote',
             quote_date: getNYDate(),
-            // 地址信息
             origin_city: originComponents.city,
             origin_state: originComponents.state,
             origin_zipcode: originComponents.zip,
             destination_city: destinationComponents.city,
             destination_state: destinationComponents.state,
             destination_zipcode: destinationComponents.zip,
-            // 地址类型
             address_type: formData.destinationLocationType || 'commercial',
-            // 重量和尺寸
             weight_list: JSON.stringify(weights),
             dimensions_list: JSON.stringify(dimensions),
             total_weight_lbs: parseFloat(totals.totalWeight),
             total_volume: parseFloat(totals.totalCubicFeet),
             actual_pallets: totals.totalPallets,
-            // 运输距离 (英里)
             transport_distance: transportDistance,
-            // 报价信息 (取最低价)
             ew_quote_price: quotes[0]?.price || 0,
-            // 备注
             cargo_type: `LTL报价 - ${quotes.length}家运输商`,
-            // 取货日期
             pickup_date: formData.pickupDate,
             delivery_date: formData.deliveryDate
           };
           
           console.log('📋 创建报价单到员工系统:', orderData);
-          
           const createResponse = await orderApi.createOrder(orderData);
-          let employeeOrderId = null;
           if (createResponse.success) {
             console.log('✅ 报价单已同步到员工系统:', createResponse.data);
             employeeOrderId = createResponse.data?.id;
           }
-
-          // Save full quote session with all carrier results
-          try {
-            const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-            await fetch(`${apiBase}/ltl-quotes/sessions`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userEmail,
-                originCity: originComponents.city,
-                originState: originComponents.state,
-                originZip: originComponents.zip,
-                destinationCity: destinationComponents.city,
-                destinationState: destinationComponents.state,
-                destinationZip: destinationComponents.zip,
-                originLocationType: formData.originLocationType,
-                destinationLocationType: formData.destinationLocationType,
-                distanceMiles: transportDistance,
-                pickupDate: formData.pickupDate,
-                deliveryDate: formData.deliveryDate,
-                items: formData.cargoItems,
-                pickupServices: formData.pickupServices,
-                deliveryServices: formData.deliveryServices,
-                totalWeight: parseFloat(totals.totalWeight),
-                totalPallets: totals.totalPallets,
-                quoteResults: quotes,
-                lowestPrice: quotes[0]?.price || 0,
-                employeeOrderId
-              })
-            });
-            console.log('✅ Quote session saved for user history');
-          } catch (sessionError) {
-            console.warn('⚠️ Failed to save quote session:', sessionError);
-          }
         } catch (syncError) {
           console.error('⚠️ 同步报价单到员工系统失败:', syncError);
+        }
+
+        // Always save quote session regardless of employee order sync result
+        try {
+          const apiBase = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+          await fetch(`${apiBase}/ltl-quotes/sessions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userEmail,
+              originCity: originComponents.city,
+              originState: originComponents.state,
+              originZip: originComponents.zip,
+              destinationCity: destinationComponents.city,
+              destinationState: destinationComponents.state,
+              destinationZip: destinationComponents.zip,
+              originLocationType: formData.originLocationType,
+              destinationLocationType: formData.destinationLocationType,
+              distanceMiles: transportDistance,
+              pickupDate: formData.pickupDate,
+              deliveryDate: formData.deliveryDate,
+              items: formData.cargoItems,
+              pickupServices: formData.pickupServices,
+              deliveryServices: formData.deliveryServices,
+              totalWeight: parseFloat(totals.totalWeight),
+              totalPallets: totals.totalPallets,
+              quoteResults: quotes,
+              lowestPrice: quotes[0]?.price || 0,
+              employeeOrderId
+            })
+          });
+          console.log('✅ Quote session saved for user history');
+        } catch (sessionError) {
+          console.warn('⚠️ Failed to save quote session:', sessionError);
         }
         // ====== 同步结束 ======
         
@@ -1310,18 +1287,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                           </div>
                           <div className="price-big">
                             ${(quote.price || 0).toFixed(2)}
-                            {(quote.charges?.length > 0 || quote.breakdown) && (
-                              <button
-                                className="btn-price-breakdown"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setBreakdownQuoteId(breakdownQuoteId === quote.id ? null : quote.id);
-                                }}
-                                title="查看价格明细"
-                              >
-                                <FileText size={14} />
-                              </button>
-                            )}
                           </div>
                           <div className="exp-date-small">有效期: {quote.expDate || 'N/A'}</div>
                         </div>
@@ -1333,9 +1298,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                             <Clock size={14} className="inline-icon" />
                             {quote.transitDays || 'TBD'}
                           </div>
-                          {quote.fuelSurcharge && (
-                            <div className="fuel-surcharge">燃油附加: ${quote.fuelSurcharge}</div>
-                          )}
                         </div>
 
                         {/* 第四列：运输方式和Quote ID */}
@@ -1372,39 +1334,56 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                         </div>
                       </div>
 
-                      {/* 价格明细面板 */}
-                      {breakdownQuoteId === quote.id && (
-                        <div className="quote-price-breakdown">
-                          <h4>价格明细 (Price Breakdown)</h4>
-                          <div className="breakdown-list">
-                            {quote.charges && quote.charges.length > 0 ? (
-                              <>
-                                {quote.charges.map((charge, idx) => (
-                                  <div key={idx} className="breakdown-item">
-                                    <span className="breakdown-desc">{charge.description}</span>
-                                    <span className="breakdown-amount">${parseFloat(charge.amount || 0).toFixed(2)}</span>
-                                  </div>
-                                ))}
-                                <div className="breakdown-item breakdown-total">
-                                  <span className="breakdown-desc">Total</span>
-                                  <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
+                      {/* 价格明细 - 始终显示 */}
+                      <div className="quote-price-breakdown">
+                        <h4>价格明细 (Price Breakdown)</h4>
+                        <div className="breakdown-list">
+                          {quote.charges && quote.charges.length > 0 ? (
+                            <>
+                              {quote.charges.map((charge, idx) => (
+                                <div key={idx} className="breakdown-item">
+                                  <span className="breakdown-desc">{charge.description}</span>
+                                  <span className="breakdown-amount">${parseFloat(charge.amount || 0).toFixed(2)}</span>
                                 </div>
-                              </>
-                            ) : (
-                              <div className="breakdown-item">
-                                <span className="breakdown-desc">Total Charge</span>
+                              ))}
+                              {quote.fuelSurcharge && !quote.charges.some(c => (c.description || '').toLowerCase().includes('fuel')) && (
+                                <div className="breakdown-item">
+                                  <span className="breakdown-desc">Fuel Surcharge</span>
+                                  <span className="breakdown-amount">${parseFloat(quote.fuelSurcharge).toFixed(2)}</span>
+                                </div>
+                              )}
+                              <div className="breakdown-item breakdown-total">
+                                <span className="breakdown-desc">Total</span>
                                 <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
                               </div>
-                            )}
-                            {quote.fuelSurcharge && !quote.charges?.some(c => c.description?.toLowerCase().includes('fuel')) && (
-                              <div className="breakdown-item breakdown-note">
-                                <span className="breakdown-desc">Fuel Surcharge (included)</span>
-                                <span className="breakdown-amount">${parseFloat(quote.fuelSurcharge).toFixed(2)}</span>
-                              </div>
-                            )}
-                          </div>
+                            </>
+                          ) : (
+                            <>
+                              {quote.fuelSurcharge ? (
+                                <>
+                                  <div className="breakdown-item">
+                                    <span className="breakdown-desc">Base Freight</span>
+                                    <span className="breakdown-amount">${(Math.round((quote.price - parseFloat(quote.fuelSurcharge)) * 100) / 100).toFixed(2)}</span>
+                                  </div>
+                                  <div className="breakdown-item">
+                                    <span className="breakdown-desc">Fuel Surcharge</span>
+                                    <span className="breakdown-amount">${parseFloat(quote.fuelSurcharge).toFixed(2)}</span>
+                                  </div>
+                                  <div className="breakdown-item breakdown-total">
+                                    <span className="breakdown-desc">Total</span>
+                                    <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="breakdown-item breakdown-total">
+                                  <span className="breakdown-desc">Total Charge</span>
+                                  <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
+                                </div>
+                              )}
+                            </>
+                          )}
                         </div>
-                      )}
+                      </div>
 
                       {/* 展开的终端信息 */}
                       {expandedQuoteId === quote.id && (

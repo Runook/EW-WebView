@@ -870,14 +870,14 @@ export const getWelogxQuote = async (quoteData) => {
         }
       }
       return {
-        carrier: 'Welogx Freight',
+        carrier: 'EW Logistics',
         carrierCode: 'WELOGX',
         logo: CARRIER_LOGOS['WELOGX'],
         quoteId: response.quoteId || `WLX-${Date.now()}`,
         price: response.netCharge,
         currency: 'USD',
         transitDays: response.transitDays ? `${response.transitDays} Days` : 'TBD',
-        serviceType: response.serviceType || 'Welogx Standard LTL',
+        serviceType: response.serviceType || 'EW Logistics Standard LTL',
         expDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US'),
         status: 'ACCEPT',
         fuelSurcharge: response.fuelSurcharge,
@@ -946,7 +946,7 @@ export const getAllLTLQuotes = async (quoteData) => {
   let id = 1;
 
   // 处理所有结果
-  const carrierNames = ['Warp', 'RRTS', 'RLC', 'Saia', 'TForce', 'EDI Express', 'STG', 'Welogx', 'AAA Cooper'];
+  const carrierNames = ['Warp', 'RRTS', 'RLC', 'Saia', 'TForce', 'EDI Express', 'STG', 'EW Logistics', 'AAA Cooper'];
   
   results.forEach((result, index) => {
     if (result.status === 'fulfilled' && result.value) {

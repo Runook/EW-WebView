@@ -376,12 +376,12 @@ function calculateQuote(quoteData) {
   const adjustedCWTRate = Math.round(baseCWTRate * distFactor * 100) / 100;
 
   return {
-    carrier: 'Welogx Freight',
+    carrier: 'EW Logistics',
     carrierCode: 'WELOGX',
     quoteId: `WLX-${Date.now()}`,
     netCharge: grandTotal,
     transitDays,
-    serviceType: 'Welogx Standard LTL',
+    serviceType: 'EW Logistics Standard LTL',
     fuelSurcharge,
     distanceMiles,
     distanceFactor: distFactor,

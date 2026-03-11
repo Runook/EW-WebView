@@ -42,14 +42,14 @@ const Home = () => {
   return (
     <div className="home">
       <Helmet>
-        <title>Welogx物流平台 - 美国陆运/海运/空运一站式物流服务 | welogx.com</title>
-        <meta name="description" content="Welogx物流平台（welogx.com）- 专业的美国物流运输服务平台，提供陆运、海运、空运及多式联运的一站式数字化物流解决方案。包含货运计算器、物流黄页、司机招聘、设备租赁等服务。" />
+        <title>Welogx物流平台 - 美国陆运/海运/空运一站式物流服务 | 数字AI智慧物流 | welogx.com</title>
+        <meta name="description" content="Welogx物流平台（welogx.com）- 专业的美国物流运输服务平台，提供陆运、海运、空运及多式联运的一站式数字化物流解决方案。DOT全美检查站路检点查询、物流语言、物流执照、物流知识、查车型、查trucking、专线物流、回笼回程车、拳头产品、搭顺风车、load match、求助吐槽、数字AI物流、智慧物流。" />
         <link rel="canonical" href="https://welogx.com/" />
-        <meta name="keywords" content="welogx, WeLOGX, welogx.com, Welogx物流, 美国物流, 陆运, 海运, 空运, 物流平台" />
+        <meta name="keywords" content="welogx, WeLOGX, welogx.com, Welogx物流, 美国物流, 陆运, 海运, 空运, 物流平台, DOT全美检查站, 路检点, 物流语言, 物流执照, 物流知识, 查车型, 查trucking, 专线物流, 回笼回程车, 拳头产品, 搭顺风车, load match, 求助吐槽, 数字AI物流, 智慧物流" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://welogx.com/" />
-        <meta property="og:title" content="Welogx物流平台 - 专业的美国物流运输服务平台" />
-        <meta property="og:description" content="专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。" />
+        <meta property="og:title" content="Welogx物流平台 - 数字AI智慧物流 | 专业美国物流运输服务平台" />
+        <meta property="og:description" content="专业的美国物流运输服务平台，提供陆运、海运、空运、多式联运等一站式物流解决方案。DOT全美检查站、物流知识、专线物流、load match、智慧物流。" />
         <meta property="og:image" content="https://welogx.com/logo.png" />
       </Helmet>
       {/* Video Hero Section - 首屏视频背景 */}
@@ -167,6 +167,51 @@ const Home = () => {
         {/* 首页广告位 */}
         <section style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 20px 0' }}>
           <AdSlot position="home-banner" layout="horizontal" />
+        </section>
+
+        {/* SEO 关键词服务板块 */}
+        <section className="seo-services">
+          <div className="container">
+            <h2 className="seo-services-title">平台核心功能与服务</h2>
+            <div className="seo-services-grid">
+              <div className="seo-service-card">
+                <h3>DOT 全美检查站 · 路检点</h3>
+                <p>实时查询全美DOT检查站位置与路检点信息，帮助卡车司机提前规划路线，确保合规运营。</p>
+              </div>
+              <div className="seo-service-card">
+                <h3>物流语言 · 物流知识</h3>
+                <p>专业物流术语大全与行业知识库，涵盖中英双语物流用语，助力从业者快速入门与提升。</p>
+              </div>
+              <div className="seo-service-card">
+                <h3>物流执照</h3>
+                <p>物流执照申请指南、MC/DOT号码办理流程、保险要求等全套合规资讯，一站式解决开业难题。</p>
+              </div>
+              <div className="seo-service-card">
+                <h3>查车型 · 查 Trucking</h3>
+                <p>卡车车型数据库查询，了解各类运输车辆的规格、载重与适用场景，精准匹配运输需求。</p>
+              </div>
+              <div className="seo-service-card">
+                <h3>专线物流 · 回笼回程车</h3>
+                <p>专线物流资源整合，空车回程配载平台，降低空驶率，优化运力资源，节省运输成本。</p>
+              </div>
+              <div className="seo-service-card">
+                <h3>搭顺风车 · Load Match</h3>
+                <p>智能货源匹配系统，快速对接货主与承运商，搭顺风车节省运费，实现货源与运力的高效对接。</p>
+              </div>
+              <div className="seo-service-card">
+                <h3>拳头产品</h3>
+                <p>平台特色优势产品，包括LTL零担报价比价、FBA物流专线、整车运输及多式联运解决方案。</p>
+              </div>
+              <div className="seo-service-card">
+                <h3>数字AI物流 · 智慧物流</h3>
+                <p>运用AI人工智能技术驱动物流决策，智能报价、智能调度、数据分析，引领物流行业数字化转型。</p>
+              </div>
+              <div className="seo-service-card">
+                <h3>求助吐槽 · 社区交流</h3>
+                <p>物流从业者互助社区，分享行业经验、路况信息、政策变动，共建华人物流信息交流平台。</p>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* CTA Section */}

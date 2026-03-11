@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   MapPin, Clock, Phone, ChevronDown, ChevronUp, HelpCircle,
-  FileText, RefreshCw, List, AlertTriangle, ArrowLeft, Package
+  RefreshCw, List, AlertTriangle, ArrowLeft, Package
 } from 'lucide-react';
 import './GetQuote.css';
 
@@ -12,7 +12,6 @@ const QuoteDetail = () => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedQuoteId, setExpandedQuoteId] = useState(null);
-  const [breakdownQuoteId, setBreakdownQuoteId] = useState(null);
   const [sortBy, setSortBy] = useState('price');
 
   useEffect(() => {
@@ -151,13 +150,6 @@ const QuoteDetail = () => {
                       </div>
                       <div className="price-big">
                         ${(quote.price || 0).toFixed(2)}
-                        {(quote.charges?.length > 0 || quote.breakdown) && (
-                          <button className="btn-price-breakdown"
-                            onClick={(e) => { e.stopPropagation(); setBreakdownQuoteId(breakdownQuoteId === quote.id ? null : quote.id); }}
-                            title="Price breakdown">
-                            <FileText size={14} />
-                          </button>
-                        )}
                       </div>
                       <div className="exp-date-small">Exp: {quote.expDate || 'N/A'}</div>
                     </div>
@@ -165,7 +157,6 @@ const QuoteDetail = () => {
                     <div className="col-service">
                       <div className="service-type-text">{quote.serviceType || 'LTL Service'}</div>
                       <div className="transit-time"><Clock size={14} className="inline-icon" /> {quote.transitDays || 'TBD'}</div>
-                      {quote.fuelSurcharge && <div className="fuel-surcharge">Fuel: ${quote.fuelSurcharge}</div>}
                     </div>
 
                     <div className="col-transit">
@@ -180,32 +171,55 @@ const QuoteDetail = () => {
                     </div>
                   </div>
 
-                  {breakdownQuoteId === quote.id && (
-                    <div className="quote-price-breakdown">
-                      <h4>Price Breakdown</h4>
-                      <div className="breakdown-list">
-                        {quote.charges && quote.charges.length > 0 ? (
-                          <>
-                            {quote.charges.map((c, idx) => (
-                              <div key={idx} className="breakdown-item">
-                                <span className="breakdown-desc">{c.description}</span>
-                                <span className="breakdown-amount">${parseFloat(c.amount || 0).toFixed(2)}</span>
-                              </div>
-                            ))}
-                            <div className="breakdown-item breakdown-total">
-                              <span className="breakdown-desc">Total</span>
-                              <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
+                  <div className="quote-price-breakdown">
+                    <h4>Price Breakdown</h4>
+                    <div className="breakdown-list">
+                      {quote.charges && quote.charges.length > 0 ? (
+                        <>
+                          {quote.charges.map((c, idx) => (
+                            <div key={idx} className="breakdown-item">
+                              <span className="breakdown-desc">{c.description}</span>
+                              <span className="breakdown-amount">${parseFloat(c.amount || 0).toFixed(2)}</span>
                             </div>
-                          </>
-                        ) : (
-                          <div className="breakdown-item">
+                          ))}
+                          {quote.fuelSurcharge && !quote.charges.some(c => (c.description || '').toLowerCase().includes('fuel')) && (
+                            <div className="breakdown-item">
+                              <span className="breakdown-desc">Fuel Surcharge</span>
+                              <span className="breakdown-amount">${parseFloat(quote.fuelSurcharge).toFixed(2)}</span>
+                            </div>
+                          )}
+                          <div className="breakdown-item breakdown-total">
                             <span className="breakdown-desc">Total</span>
                             <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
                           </div>
-                        )}
-                      </div>
+                        </>
+                      ) : (
+                        <>
+                          {quote.fuelSurcharge ? (
+                            <>
+                              <div className="breakdown-item">
+                                <span className="breakdown-desc">Base Freight</span>
+                                <span className="breakdown-amount">${(Math.round((quote.price - parseFloat(quote.fuelSurcharge)) * 100) / 100).toFixed(2)}</span>
+                              </div>
+                              <div className="breakdown-item">
+                                <span className="breakdown-desc">Fuel Surcharge</span>
+                                <span className="breakdown-amount">${parseFloat(quote.fuelSurcharge).toFixed(2)}</span>
+                              </div>
+                              <div className="breakdown-item breakdown-total">
+                                <span className="breakdown-desc">Total</span>
+                                <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="breakdown-item breakdown-total">
+                              <span className="breakdown-desc">Total Charge</span>
+                              <span className="breakdown-amount">${(quote.price || 0).toFixed(2)}</span>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
-                  )}
+                  </div>
 
                   {expandedQuoteId === quote.id && (
                     <div className="quote-card-expanded">
