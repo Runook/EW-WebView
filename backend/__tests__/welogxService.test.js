@@ -124,7 +124,7 @@ describe('welogxService', () => {
       });
 
       expect(result.netCharge).toBeCloseTo(882.82, 0);
-      expect(result.carrier).toBe('Welogx Freight');
+      expect(result.carrier).toBe('EW Logistics');
       expect(result.carrierCode).toBe('WELOGX');
       expect(result.freightClass).toBe(65);
       expect(result.totalWeight).toBe(6000);
