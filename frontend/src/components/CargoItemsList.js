@@ -16,7 +16,7 @@ const CargoItemsList = ({
   onSave,          // 保存回调
   readOnly = false
 }) => {
-  const [useMetric, setUseMetric] = useState(true); // 默认使用公制单位
+  const [useMetric, setUseMetric] = useState(false); // 默认使用英制单位 (lbs/in)
   const [items, setItems] = useState([]);
   const [editText, setEditText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
