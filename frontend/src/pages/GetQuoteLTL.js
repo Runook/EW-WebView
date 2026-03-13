@@ -19,7 +19,6 @@ import {
   Shield,
   ChevronDown,
   ChevronUp,
-  HelpCircle,
   FileText,
   RefreshCw,
   List
@@ -1330,17 +1329,17 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                           </div>
                           <div className="price-big">
                             ${(quote.price || 0).toFixed(2)}
-                            <button
-                              className="btn-price-breakdown"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setBreakdownQuoteId(breakdownQuoteId === quote.id ? null : quote.id);
-                              }}
-                              title="查看价格明细"
-                            >
-                              <FileText size={14} />
-                            </button>
                           </div>
+                          <button
+                            className="btn-price-breakdown"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setBreakdownQuoteId(breakdownQuoteId === quote.id ? null : quote.id);
+                            }}
+                          >
+                            <FileText size={14} />
+                            {breakdownQuoteId === quote.id ? '收起明细' : '价格明细'}
+                          </button>
                           <div className="exp-date-small">有效期: {quote.expDate || 'N/A'}</div>
                         </div>
 
@@ -1357,20 +1356,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                         <div className="col-transit">
                           <div className="transit-label">{quote.isGuaranteed ? '保证送达' : '标准运输'}</div>
                           <div className="quote-id-small">#{quote.quoteId?.slice(-8) || 'N/A'}</div>
-                        </div>
-
-                        {/* 第五列：最大责任险 */}
-                        <div className="col-liability">
-                          <div className="liability-title">
-                            Max Liability
-                            <HelpCircle size={12} className="help-icon" />
-                          </div>
-                          <div className="liability-amount">
-                            ${quote.maxLiability?.new?.toFixed(2) || 'N/A'} /
-                          </div>
-                          <div className="liability-amount">
-                            ${quote.maxLiability?.used?.toFixed(2) || 'N/A'}
-                          </div>
                         </div>
 
                         {/* 预订按钮 */}

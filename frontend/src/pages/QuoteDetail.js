@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  MapPin, Clock, Phone, ChevronDown, ChevronUp, HelpCircle,
+  MapPin, Clock, Phone, ChevronDown, ChevronUp,
   FileText, RefreshCw, List, AlertTriangle, ArrowLeft, Package
 } from 'lucide-react';
 import './GetQuote.css';
@@ -151,12 +151,12 @@ const QuoteDetail = () => {
                       </div>
                       <div className="price-big">
                         ${(quote.price || 0).toFixed(2)}
-                        <button className="btn-price-breakdown"
-                          onClick={(e) => { e.stopPropagation(); setBreakdownQuoteId(breakdownQuoteId === quote.id ? null : quote.id); }}
-                          title="Price breakdown">
-                          <FileText size={14} />
-                        </button>
                       </div>
+                      <button className="btn-price-breakdown"
+                        onClick={(e) => { e.stopPropagation(); setBreakdownQuoteId(breakdownQuoteId === quote.id ? null : quote.id); }}>
+                        <FileText size={14} />
+                        {breakdownQuoteId === quote.id ? 'Hide' : 'Breakdown'}
+                      </button>
                       <div className="exp-date-small">Exp: {quote.expDate || 'N/A'}</div>
                     </div>
 
@@ -168,12 +168,6 @@ const QuoteDetail = () => {
                     <div className="col-transit">
                       <div className="transit-label">{quote.isGuaranteed ? 'Guaranteed' : 'Standard'}</div>
                       <div className="quote-id-small">#{quote.quoteId?.slice(-8) || 'N/A'}</div>
-                    </div>
-
-                    <div className="col-liability">
-                      <div className="liability-title">Max Liability <HelpCircle size={12} className="help-icon" /></div>
-                      <div className="liability-amount">${quote.maxLiability?.new?.toFixed(2) || 'N/A'} /</div>
-                      <div className="liability-amount">${quote.maxLiability?.used?.toFixed(2) || 'N/A'}</div>
                     </div>
                   </div>
 

@@ -1118,27 +1118,28 @@
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
-/* 展开的终端信息 */
 /* 价格明细按钮 */
 .btn-price-breakdown {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: none;
-  border: 1px solid #d0d5dd;
-  border-radius: 4px;
+  gap: 4px;
+  background: #34C759;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
-  padding: 2px 4px;
-  margin-left: 6px;
-  color: #667085;
-  vertical-align: middle;
+  padding: 4px 10px;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
   transition: all 0.15s ease;
+  white-space: nowrap;
+  margin-top: 4px;
 }
 
 .btn-price-breakdown:hover {
-  background: #f2f4f7;
-  color: #344054;
-  border-color: #98a2b3;
+  background: #2db14d;
+  box-shadow: 0 2px 6px rgba(52,199,89,0.3);
 }
 
 /* 价格明细面板 */
