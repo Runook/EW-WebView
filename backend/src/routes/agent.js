@@ -87,7 +87,7 @@ router.post('/parse-and-create', auth, requireEmployee, [
     }
 
     const { items, sourceFile, wecomChatId, autoApprove } = req.body;
-    const createdBy = req.user.employeeId || req.user.id;
+    const createdBy = typeof req.user.id === 'number' ? req.user.id : parseInt(req.user.userId) || 1;
 
     const normalized = agentService.normalizeShipmentItems(items);
     const orders = await agentService.batchCreateOrders(normalized, createdBy);

@@ -44,6 +44,7 @@ function normalizeShipmentItems(rawItems) {
       destination_country: item.destination_country || 'US',
       destination_zip: String(item.destination_zip || '').padStart(5, '0'),
       destination_city: item.destination_city || null,
+      destination_state: item.destination_state || null,
       company_name: item.company_name || null,
       recipient_name: item.recipient_name || null,
       phone: item.phone || null,
@@ -88,12 +89,14 @@ async function batchCreateOrders(items, createdBy) {
         `${d.weight_kg}kg x${d.pieces}`
       ).join('; ');
 
+      const safeCreatedBy = typeof createdBy === 'number' ? createdBy : (parseInt(createdBy) || 1);
+
       const insertData = {
         order_number: orderNumber,
         customer_name: item.company_name || item.recipient_name || 'AI Import',
         customer_email: item.email || null,
         customer_phone: item.phone || null,
-        order_type: 'broker',
+        order_type: 'land_freight',
         status: 'quote',
         priority: 'normal',
         cargo_description: item.product_name_en || item.product_name_cn || '',
@@ -111,17 +114,17 @@ async function batchCreateOrders(items, createdBy) {
         dimensions_list: dimensionsList || null,
         total_volume: item.total_volume_cbm || null,
         cargo_value: item.cargo_value || null,
-        address_type: item.address_type,
+        address_type: item.address_type || 'Commercial',
         actual_pallets: item.total_pieces || null,
         destination_address: item.address || null,
         destination_city: item.destination_city || null,
-        destination_state: null,
+        destination_state: item.destination_state || null,
         destination_country: item.destination_country || 'US',
         destination_zipcode: item.destination_zip || null,
         origin_address: null,
         origin_city: item.origin_city || null,
         origin_state: item.origin_state || null,
-        origin_country: null,
+        origin_country: 'US',
         origin_zipcode: item.origin_zip || null,
         notes: [
           item.notes,
@@ -131,8 +134,8 @@ async function batchCreateOrders(items, createdBy) {
         ].filter(Boolean).join(' | '),
         internal_notes: 'Created by AI Agent',
         currency: 'USD',
-        created_by: createdBy,
-        assigned_to: createdBy
+        created_by: safeCreatedBy,
+        assigned_to: safeCreatedBy
       };
 
       const [order] = await trx('employee_orders')
