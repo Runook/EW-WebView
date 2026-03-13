@@ -1358,6 +1358,19 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                           <div className="quote-id-small">#{quote.quoteId?.slice(-8) || 'N/A'}</div>
                         </div>
 
+                        {/* 第五列：最大责任险 */}
+                        {quote.maxLiability && (
+                          <div className="col-liability">
+                            <div className="liability-title">Max Liability</div>
+                            <div className="liability-amount">
+                              New: ${quote.maxLiability.new?.toLocaleString()}
+                            </div>
+                            <div className="liability-amount used">
+                              Used: ${quote.maxLiability.used?.toLocaleString()}
+                            </div>
+                          </div>
+                        )}
+
                         {/* 预订按钮 */}
                         <div className="col-action">
                           <button 

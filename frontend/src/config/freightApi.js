@@ -894,6 +894,86 @@ export const getWelogxQuote = async (quoteData) => {
   }
 };
 
+// ==================== 承运商最大责任赔偿费率表 ====================
+
+const CARRIER_LIABILITY_RATES = {
+  RRTS: {
+    used: 0.10,
+    byClass: { 50: 1.00, 55: 1.50, 60: 2.00, 65: 4.00, 70: 5.00, 77.5: 7.00, 85: 8.00, 92.5: 9.00, 100: 10.00 },
+    defaultNew: 10.00,
+    maxPerShipment: null
+  },
+  RLC: {
+    used: 0.10,
+    byClass: { 50: 2.00, 55: 2.00, 60: 2.30, 65: 3.95, 70: 6.00, 77.5: 7.75, 85: 12.00, 92.5: 15.75, 100: 19.75, 110: 21.75, 125: 24.75, 150: 25.00 },
+    defaultNew: 25.00,
+    maxPerShipment: null
+  },
+  SAIA: {
+    used: 2.00,
+    byClass: null,
+    defaultNew: 25.00,
+    maxPerShipment: 50000
+  },
+  TFORCE: {
+    used: 0.10,
+    byClass: null,
+    defaultNew: 25.00,
+    maxPerShipment: null
+  },
+  AACT: {
+    used: 2.00,
+    byClass: null,
+    defaultNew: 20.00,
+    maxPerShipment: 50000
+  },
+  WARP: null,
+  EDIEXPRESS: null,
+  STG: null,
+  WELOGX: {
+    used: 2.00,
+    byClass: null,
+    defaultNew: 10.00,
+    maxPerShipment: 25000
+  }
+};
+
+/**
+ * 根据承运商、货运分类和重量计算 Max Liability
+ */
+const calculateMaxLiability = (carrierCode, freightClass, totalWeight) => {
+  const rates = CARRIER_LIABILITY_RATES[carrierCode];
+  if (!rates) return null;
+
+  const cls = parseFloat(freightClass) || 70;
+  const weight = parseFloat(totalWeight) || 0;
+  if (weight <= 0) return null;
+
+  let newRate = rates.defaultNew;
+  if (rates.byClass) {
+    const classKeys = Object.keys(rates.byClass).map(Number).sort((a, b) => a - b);
+    for (const key of classKeys) {
+      if (cls <= key) {
+        newRate = rates.byClass[key];
+        break;
+      }
+    }
+    if (cls > classKeys[classKeys.length - 1]) {
+      newRate = rates.byClass[classKeys[classKeys.length - 1]];
+    }
+  }
+
+  let newLiability = Math.round(newRate * weight * 100) / 100;
+  let usedLiability = Math.round(rates.used * weight * 100) / 100;
+
+  if (rates.maxPerShipment) {
+    newLiability = Math.min(newLiability, rates.maxPerShipment);
+    usedLiability = Math.min(usedLiability, rates.maxPerShipment);
+  }
+
+  return { new: newLiability, used: usedLiability };
+};
+
 // ==================== 统一报价接口 ====================
 
 /**
@@ -1030,6 +1110,14 @@ export const getAllLTLQuotes = async (quoteData) => {
       console.log(`⚠️ ${carrierNames[index]} quote failed or returned null:`, 
         result.status === 'rejected' ? result.reason : 'No quote');
     }
+  });
+
+  // 计算每个报价的 Max Liability
+  const totalWeight = quoteData.items.reduce((sum, item) => sum + (parseFloat(item.weight) || 0), 0);
+  const highestClass = Math.max(...quoteData.items.map(item => parseFloat(item.freightClass) || 70));
+
+  quotes.forEach(q => {
+    q.maxLiability = calculateMaxLiability(q.carrierCode, highestClass, totalWeight);
   });
 
   // 按价格排序（过滤掉 price 为 0 或无效的报价）

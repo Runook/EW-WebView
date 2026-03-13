@@ -169,6 +169,18 @@ const QuoteDetail = () => {
                       <div className="transit-label">{quote.isGuaranteed ? 'Guaranteed' : 'Standard'}</div>
                       <div className="quote-id-small">#{quote.quoteId?.slice(-8) || 'N/A'}</div>
                     </div>
+
+                    {quote.maxLiability && (
+                      <div className="col-liability">
+                        <div className="liability-title">Max Liability</div>
+                        <div className="liability-amount">
+                          New: ${quote.maxLiability.new?.toLocaleString()}
+                        </div>
+                        <div className="liability-amount used">
+                          Used: ${quote.maxLiability.used?.toLocaleString()}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {breakdownQuoteId === quote.id && (
