@@ -249,6 +249,7 @@ async function parseFile(fileBuffer, mimeType, originalName) {
     contents,
     config: {
       responseMimeType: 'application/json',
+      thinkingConfig: { thinkingBudget: 0 },
     }
   });
 

@@ -44,6 +44,8 @@ const upload = multer({
  * Returns parsed shipments for review before creating orders.
  */
 router.post('/parse-file', auth, requireEmployee, upload.single('file'), async (req, res) => {
+  req.setTimeout(180000);
+  res.setTimeout(180000);
   try {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'No file uploaded' });

@@ -41,6 +41,14 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
         body: formData
       });
 
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        if (res.status === 504) {
+          throw new Error('AI 解析超时，请尝试上传更小的文件，或将大文件拆分后重试');
+        }
+        throw new Error(`服务器错误 (${res.status})，请稍后重试`);
+      }
+
       const data = await res.json();
       if (!res.ok || !data.success) {
         throw new Error(data.message || 'Parse failed');
