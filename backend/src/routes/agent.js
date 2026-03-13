@@ -8,12 +8,65 @@
 
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const { body, query, validationResult } = require('express-validator');
 const { auth, requireEmployee, requirePermission } = require('../middleware/auth');
 const agentService = require('../services/agentService');
+const geminiService = require('../services/geminiService');
 const datService = require('../services/datService');
 const wecomService = require('../services/wecomService');
 const { db } = require('../config/database');
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = [
+      'application/pdf',
+      'image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/gif',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv',
+      'text/plain'
+    ];
+    if (allowed.includes(file.mimetype) ||
+        file.originalname.match(/\.(pdf|png|jpg|jpeg|webp|gif|xlsx|xls|csv|txt)$/i)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Unsupported file type: ${file.mimetype}`));
+    }
+  }
+});
+
+/**
+ * POST /api/agent/parse-file
+ * Upload a file (PDF/Excel/image) and parse it with Gemini AI into structured shipment data.
+ * Returns parsed shipments for review before creating orders.
+ */
+router.post('/parse-file', auth, requireEmployee, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const { buffer, mimetype, originalname } = req.file;
+    console.log(`📄 Agent parse-file: ${originalname} (${mimetype}, ${buffer.length} bytes)`);
+
+    const result = await geminiService.parseFile(buffer, mimetype, originalname);
+
+    res.json({
+      success: true,
+      message: `Parsed ${result.shipments.length} shipment(s) from ${originalname}`,
+      data: {
+        filename: originalname,
+        shipments: result.shipments
+      }
+    });
+  } catch (error) {
+    console.error('Agent parse-file error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 /**
  * POST /api/agent/parse-and-create

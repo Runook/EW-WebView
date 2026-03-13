@@ -10,6 +10,7 @@ import InvoiceGenerator from '../components/InvoiceGenerator';
 import QuoteGenerator from '../components/QuoteGenerator';
 import QBOSettings from '../components/QBOSettings';
 import CargoItemsList from '../components/CargoItemsList';
+import AIFileDropZone from '../components/AIFileDropZone';
 import { loadGoogleMapsScript, diagnoseGoogleMapsIssues } from '../config/googleMaps';
 import './BrokerOrdersNew.css';
 
@@ -961,6 +962,11 @@ const BrokerOrdersNew = () => {
             {loading ? '创建中...' : '+ 新建报价单'}
           </button>
         </div>
+
+        {/* AI 文件解析区域 - 仅在 quote tab 显示 */}
+        {currentStatus === 'quote' && (
+          <AIFileDropZone onOrdersCreated={() => loadOrders()} />
+        )}
 
         {/* 订单表格 */}
         {loading ? (
