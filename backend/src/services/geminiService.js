@@ -20,7 +20,21 @@ Structural patterns:
 - MAIN ROW: first row for a tracking number contains all address/product info + first box dimensions
 - SUB-ROWS: subsequent rows with ONLY dimension/weight columns = additional boxes for the SAME shipment
 - PICKUP ADDRESS: often at bottom of file (提货地址/仓库地址) — applies to ALL shipments as origin
-- FILE TITLE may indicate: 整车=FTL, 一提N卸=1 pickup N drops, 散货=loose cargo
+- FILE TITLE/FILENAME often contains the warehouse name (e.g. "LA MOVE入仓清单", "YK仓入仓明细")
+  → Extract warehouse name from filename and use the warehouse lookup table below as origin
+- Container number in filename (e.g. EGSU1196785) = shipping container, not relevant to origin address
+- FILE TITLE may indicate: 整车=FTL, 一提N卸=1 pickup N drops, 散货=loose cargo, 入仓清单=warehouse receiving list
+
+KNOWN US WAREHOUSE ADDRESS TABLE (use as origin when warehouse name appears in filename or document):
+  LA MOVE / LAMOVE → 347 S Stimson Ave, City of Industry, CA 91744
+  YK仓 / YK Warehouse → City of Industry, CA 91745
+  GX仓 / 国兴 → City of Industry, CA 91744
+  美森仓 / Matson → City of Industry, CA 91745
+  宏远仓 → Alhambra, CA 91801
+  新大陆 → El Monte, CA 91731
+  美中快递 / USACN → Hacienda Heights, CA 91745
+  东方仓 → Walnut, CA 91789
+  If warehouse not in table, set originCity="City of Industry", originState="CA", originZip="91744" (most common default for SoCal Chinese freight forwarders)
 
 Chinese logistics terminology:
   托/托盘=pallet, 木箱=wood crate, 卡脚/木卡板=skid base, 纸箱=carton, 编织袋=woven bag
@@ -158,12 +172,29 @@ If total weight > 10000 lbs: note "Near FTL threshold — consider full truckloa
 SECTION 6: ADDRESS RULES
 ══════════════════════════════════════════════════
 - US zip codes: 5-digit strings, zero-padded ("07001", "33032")
-- State: always 2-letter US code. Infer from zip if not given. Common: 330xx=FL, 9xxxx=CA, 1xxxx=NY, 7xxxx=TX.
+- State: ALWAYS infer 2-letter US state code from zip code. Common mappings:
+    100xx-149xx=NY, 150xx-196xx=PA, 200xx-205xx=DC, 206xx-269xx=VA/WV/NC/SC,
+    270xx-289xx=NC, 290xx-299xx=SC, 300xx-319xx=GA, 320xx-349xx=FL,
+    350xx-369xx=AL, 370xx-385xx=TN, 386xx-397xx=MS, 400xx-427xx=KY,
+    430xx-459xx=OH, 460xx-479xx=IN, 480xx-499xx=MI, 500xx-528xx=IA,
+    530xx-549xx=WI, 550xx-567xx=MN, 570xx-577xx=SD, 580xx-588xx=ND,
+    590xx-599xx=MT, 600xx-629xx=IL, 630xx-658xx=MO, 660xx-679xx=KS,
+    680xx-693xx=NE, 700xx-714xx=LA, 716xx-729xx=AR, 730xx-749xx=OK,
+    750xx-799xx=TX, 800xx-816xx=CO, 820xx-831xx=WY, 832xx-838xx=ID,
+    840xx-847xx=UT, 850xx-865xx=AZ, 870xx-884xx=NM, 889xx-898xx=NV,
+    900xx-961xx=CA, 970xx-979xx=OR, 980xx-994xx=WA, 967xx-968xx=HI, 995xx-999xx=AK
 - destinationLocationType:
-    "commercial" — company name present, or address contains: suite, unit, warehouse, inc, corp, llc, ave (commercial area)
-    "residential" — person name only (no company), or contains: apt, 住宅, street/drive in suburban area
-- If doc says 卡派/truck dispatch → usually commercial
+    "commercial" — 商业地址, company name present, suite/unit/warehouse/inc/corp/llc, 带卸货平台
+    "residential" — 住宅地址, person name only, apt, dr/drive, street in suburban area
+    If address type column says "住宅" or "residential" → residential
+    If address type column says "商业" or "commercial" → commercial
+- 地址类型 column may have extra notes like "商业可能没有卸货平台" — extract the type AND add notes
+- 入仓备注 column may contain delivery notes — include in notes field
+- If doc says 卡派/truck dispatch → LTL delivery
 - If doc says 快递/express → may be small parcel, note "Express requested — may not need LTL."
+
+CRITICAL: Every shipment row has destination data in the 邮编/城市/详细地址 columns.
+You MUST extract these for every shipment. Do NOT return null for destination fields when data is present in the row.
 
 ══════════════════════════════════════════════════
 SECTION 7: OUTPUT
@@ -225,19 +256,24 @@ async function parseFile(fileBuffer, mimeType, originalName) {
 
   let contents;
 
+  const filenameContext = `IMPORTANT — Document filename: "${originalName}"
+Extract the warehouse/origin name from this filename if present (e.g. "LA MOVE" from "EGSU1196785-LA MOVE入仓清单.xlsx").
+Use the warehouse lookup table in the prompt to set origin address for ALL shipments.`;
+
   if (mimeType.includes('spreadsheet') || mimeType.includes('excel') ||
       originalName?.endsWith('.xlsx') || originalName?.endsWith('.xls') ||
       originalName?.endsWith('.csv')) {
     const textContent = extractExcelText(fileBuffer, originalName);
     contents = [
       { text: PARSE_PROMPT },
-      { text: `Document filename: ${originalName}\n\nExtracted spreadsheet content:\n${textContent}` }
+      { text: filenameContext },
+      { text: `Extracted spreadsheet content:\n${textContent}` }
     ];
   } else {
     const base64Data = fileBuffer.toString('base64');
     contents = [
       { text: PARSE_PROMPT },
-      { text: `Document filename: ${originalName}` },
+      { text: filenameContext },
       { inlineData: { mimeType, data: base64Data } }
     ];
   }
