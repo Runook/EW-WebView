@@ -1123,18 +1123,19 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   background: #34C759;
   border: none;
-  border-radius: 6px;
+  border-radius: 5px;
   cursor: pointer;
-  padding: 4px 10px;
+  padding: 3px 8px;
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   transition: all 0.15s ease;
   white-space: nowrap;
   margin-top: 4px;
+  width: fit-content;
 }
 
 .btn-price-breakdown:hover {

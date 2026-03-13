@@ -19,7 +19,6 @@ import {
   Shield,
   ChevronDown,
   ChevronUp,
-  FileText,
   RefreshCw,
   List
 } from 'lucide-react';
@@ -1337,7 +1336,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                               setBreakdownQuoteId(breakdownQuoteId === quote.id ? null : quote.id);
                             }}
                           >
-                            <FileText size={14} />
                             {breakdownQuoteId === quote.id ? '收起明细' : '价格明细'}
                           </button>
                           <div className="exp-date-small">有效期: {quote.expDate || 'N/A'}</div>

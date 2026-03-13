@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   MapPin, Clock, Phone, ChevronDown, ChevronUp,
-  FileText, RefreshCw, List, AlertTriangle, ArrowLeft, Package
+  RefreshCw, List, AlertTriangle, ArrowLeft, Package
 } from 'lucide-react';
 import './GetQuote.css';
 
@@ -154,8 +154,7 @@ const QuoteDetail = () => {
                       </div>
                       <button className="btn-price-breakdown"
                         onClick={(e) => { e.stopPropagation(); setBreakdownQuoteId(breakdownQuoteId === quote.id ? null : quote.id); }}>
-                        <FileText size={14} />
-                        {breakdownQuoteId === quote.id ? 'Hide' : 'Breakdown'}
+                        {breakdownQuoteId === quote.id ? '收起明细' : '价格明细'}
                       </button>
                       <div className="exp-date-small">Exp: {quote.expDate || 'N/A'}</div>
                     </div>
