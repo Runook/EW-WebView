@@ -1106,3 +1106,156 @@
     gap: 8px;
   }
 }
+
+/* ==================== Article Edit/Delete Buttons ==================== */
+.article-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.article-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #6b7280;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.article-action-btn.edit:hover {
+  color: #1890ff;
+  border-color: #1890ff;
+  background: rgba(24,144,255,0.05);
+}
+
+.article-action-btn.delete:hover {
+  color: #e53935;
+  border-color: #e53935;
+  background: rgba(229,57,53,0.05);
+}
+
+/* ==================== Article Edit Modal ==================== */
+.article-edit-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.article-edit-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.article-edit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.article-edit-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.article-edit-header button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+}
+
+.article-edit-body {
+  padding: 24px;
+}
+
+.article-edit-body .form-group {
+  margin-bottom: 16px;
+}
+
+.article-edit-body label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.article-edit-body input,
+.article-edit-body select,
+.article-edit-body textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.article-edit-body textarea {
+  resize: vertical;
+}
+
+.article-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.article-edit-actions .btn-cancel {
+  padding: 8px 20px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.article-edit-actions .btn-save {
+  padding: 8px 20px;
+  background: #34C759;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.article-edit-actions .btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .article-item-actions {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+}

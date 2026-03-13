@@ -26,7 +26,9 @@ import {
   Clock,
   AlertTriangle,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  Edit,
+  Image as ImageIcon
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiServices } from '../utils/apiClient';
@@ -61,8 +63,14 @@ const UserProfile = () => {
   // Settings form state
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
-  const [feedback, setFeedback] = useState(null); // { type: 'success'|'error', message }
+  const [feedback, setFeedback] = useState(null);
   const [newTag, setNewTag] = useState('');
+
+  // Article edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingArticle, setEditingArticle] = useState(null);
+  const [editForm, setEditForm] = useState({ title: '', category: '', content: '', tags: '', cover_image: '', summary: '' });
+  const [editSaving, setEditSaving] = useState(false);
 
   // SEO
   useSEO({
@@ -186,6 +194,73 @@ const UserProfile = () => {
     }
   };
 
+  // --------------- Article edit/delete ---------------
+  const handleEditArticle = async (e, article) => {
+    e.stopPropagation();
+    try {
+      const response = await apiServices.articles.getBySlug(article.slug || article.id);
+      const full = response.data || response;
+      setEditingArticle(full);
+      setEditForm({
+        title: full.title || '',
+        category: full.category || 'industry-news',
+        content: full.content || '',
+        tags: Array.isArray(full.tags) ? full.tags.join(', ') : (full.tags || ''),
+        cover_image: full.cover_image || '',
+        summary: full.summary || ''
+      });
+      setShowEditModal(true);
+    } catch (err) {
+      console.error('获取文章详情失败:', err);
+      alert('获取文章详情失败，请重试');
+    }
+  };
+
+  const handleSaveArticle = async () => {
+    if (!editForm.title.trim() || !editForm.content.trim()) {
+      alert('请填写标题和内容');
+      return;
+    }
+    setEditSaving(true);
+    try {
+      const data = {
+        title: editForm.title.trim(),
+        category: editForm.category,
+        content: editForm.content.trim(),
+        tags: editForm.tags.split(/[,，]/).map(t => t.trim()).filter(Boolean),
+        cover_image: editForm.cover_image.trim() || null,
+        summary: editForm.summary.trim() || null
+      };
+      const response = await apiServices.articles.update(editingArticle.id, data);
+      if (response.success) {
+        setShowEditModal(false);
+        setEditingArticle(null);
+        fetchArticles();
+        fetchProfile();
+      }
+    } catch (err) {
+      console.error('更新文章失败:', err);
+      alert('更新失败，请重试');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleDeleteArticle = async (e, articleId) => {
+    e.stopPropagation();
+    if (!window.confirm('确定要删除这篇文章吗？删除后将无法恢复。')) return;
+    try {
+      const response = await apiServices.articles.delete(articleId);
+      if (response.success) {
+        setArticles(prev => prev.filter(a => a.id !== articleId));
+        fetchProfile();
+      }
+    } catch (err) {
+      console.error('删除文章失败:', err);
+      alert('删除失败，请重试');
+    }
+  };
+
   // --------------- Utilities ---------------
   const getInitials = () => {
     if (!profile) return '?';
@@ -258,6 +333,58 @@ const UserProfile = () => {
   // ===================================================================
   return (
     <div className="user-profile-page">
+      {/* 编辑文章模态框 */}
+      {showEditModal && editingArticle && (
+        <div className="article-edit-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="article-edit-modal" onClick={e => e.stopPropagation()}>
+            <div className="article-edit-header">
+              <h2>编辑文章</h2>
+              <button onClick={() => setShowEditModal(false)}><X size={20} /></button>
+            </div>
+            <div className="article-edit-body">
+              <div className="form-group">
+                <label>文章标题</label>
+                <input type="text" value={editForm.title} onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))} placeholder="请输入文章标题" />
+              </div>
+              <div className="form-group">
+                <label>选择分类</label>
+                <select value={editForm.category} onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value }))}>
+                  <option value="fba-warehouse">FBA仓库介绍</option>
+                  <option value="anti-scam">司机防骗</option>
+                  <option value="industry-news">行业资讯</option>
+                  <option value="experience">经验分享</option>
+                  <option value="qa">问题解答</option>
+                  <option value="policy">政策法规</option>
+                  <option value="technology">技术交流</option>
+                  <option value="career">职场发展</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>文章摘要</label>
+                <textarea rows="2" value={editForm.summary} onChange={(e) => setEditForm(prev => ({ ...prev, summary: e.target.value }))} placeholder="请输入文章摘要（选填）" />
+              </div>
+              <div className="form-group">
+                <label>文章内容</label>
+                <textarea rows="8" value={editForm.content} onChange={(e) => setEditForm(prev => ({ ...prev, content: e.target.value }))} placeholder="请详细描述您的文章内容..." />
+              </div>
+              <div className="form-group">
+                <label>文章标签</label>
+                <input type="text" value={editForm.tags} onChange={(e) => setEditForm(prev => ({ ...prev, tags: e.target.value }))} placeholder="请输入相关标签，用逗号分隔" />
+              </div>
+              <div className="form-group">
+                <label><ImageIcon size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />封面图片URL</label>
+                <input type="text" value={editForm.cover_image} onChange={(e) => setEditForm(prev => ({ ...prev, cover_image: e.target.value }))} placeholder="请输入封面图片链接（选填）" />
+              </div>
+              <div className="article-edit-actions">
+                <button className="btn-cancel" onClick={() => setShowEditModal(false)}>取消</button>
+                <button className="btn-save" onClick={handleSaveArticle} disabled={editSaving || !editForm.title.trim() || !editForm.content.trim()}>
+                  <Save size={16} /> {editSaving ? '保存中...' : '保存修改'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* ---------- HEADER CARD ---------- */}
       <div className="profile-header-card">
         <div className="profile-header-inner">
@@ -688,7 +815,22 @@ const UserProfile = () => {
                       <span className="meta-item"><Calendar size={12} /> {formatDate(article.published_at)}</span>
                     </div>
                   </div>
-                  <ChevronRight size={16} style={{ color: '#ccc', flexShrink: 0, marginTop: 2 }} />
+                  <div className="article-item-actions">
+                    <button
+                      className="article-action-btn edit"
+                      onClick={(e) => handleEditArticle(e, article)}
+                      title="编辑文章"
+                    >
+                      <Edit size={14} /> 编辑
+                    </button>
+                    <button
+                      className="article-action-btn delete"
+                      onClick={(e) => handleDeleteArticle(e, article.id)}
+                      title="删除文章"
+                    >
+                      <Trash2 size={14} /> 删除
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

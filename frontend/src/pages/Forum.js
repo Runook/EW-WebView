@@ -523,18 +523,18 @@ const Forum = () => {
                       {isEmployee && (
                         <>
                           <button
-                            className="action-btn-sm edit-btn"
+                            className="action-btn-labeled edit-btn"
                             onClick={(e) => handleEditArticle(e, post)}
                             title="编辑"
                           >
-                            <Edit size={13} />
+                            <Edit size={13} /> 编辑
                           </button>
                           <button
-                            className="action-btn-sm delete-btn"
+                            className="action-btn-labeled delete-btn"
                             onClick={(e) => handleDeleteArticle(e, post.id)}
                             title="删除"
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={13} /> 删除
                           </button>
                         </>
                       )}
