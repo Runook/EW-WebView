@@ -330,6 +330,16 @@
   color: #34C759;
 }
 
+.action-btn-sm.edit-btn:hover {
+  color: #1890ff;
+  background: rgba(24,144,255,0.08);
+}
+
+.action-btn-sm.delete-btn:hover {
+  color: #e53935;
+  background: rgba(229,57,53,0.08);
+}
+
 /* Loading & Empty */
 .loading {
   display: flex;

@@ -330,6 +330,138 @@
   color: #374151;
 }
 
+.act-edit {
+  color: #1890ff;
+  background: rgba(24,144,255,0.08);
+  border-radius: 6px;
+  padding: 5px 12px;
+}
+
+.act-edit:hover {
+  background: rgba(24,144,255,0.15);
+}
+
+.act-delete {
+  color: #e53935;
+  background: rgba(229,57,53,0.08);
+  border-radius: 6px;
+  padding: 5px 12px;
+}
+
+.act-delete:hover {
+  background: rgba(229,57,53,0.15);
+}
+
+/* Edit Modal - reuse Forum publish modal styles */
+.article-detail-page .modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.article-detail-page .modal-content {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.article-detail-page .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.article-detail-page .modal-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.article-detail-page .modal-header button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 4px;
+}
+
+.article-detail-page .modal-body {
+  padding: 24px;
+}
+
+.article-detail-page .publish-form .form-group {
+  margin-bottom: 16px;
+}
+
+.article-detail-page .publish-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.article-detail-page .publish-form input,
+.article-detail-page .publish-form select,
+.article-detail-page .publish-form textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+.article-detail-page .publish-form textarea {
+  resize: vertical;
+}
+
+.article-detail-page .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.article-detail-page .btn-secondary {
+  padding: 8px 20px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.article-detail-page .btn-primary {
+  padding: 8px 20px;
+  background: #34C759;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.article-detail-page .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Comments Section */
 .comments-section {
   padding: 32px;

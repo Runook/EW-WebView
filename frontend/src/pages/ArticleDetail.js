@@ -16,7 +16,11 @@ import {
   Heart,
   Tag,
   Copy,
-  Check
+  Check,
+  Edit,
+  Save,
+  X,
+  Image as ImageIcon
 } from 'lucide-react';
 import { apiServices } from '../utils/apiClient';
 import { useSEO } from '../hooks/useSEO';
@@ -37,6 +41,10 @@ const ArticleDetail = () => {
   const [replyText, setReplyText] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({ title: '', category: '', content: '', tags: '', cover_image: '', summary: '' });
+  const [saving, setSaving] = useState(false);
+  const isEmployee = user?.isEmployee || user?.employeeRole;
 
   // Fetch article data
   const fetchArticle = useCallback(async () => {
@@ -181,6 +189,62 @@ const ArticleDetail = () => {
       await fetchArticle();
     } catch (err) {
       console.error('Failed to like comment:', err);
+    }
+  };
+
+  // Open edit modal
+  const handleOpenEdit = () => {
+    setEditForm({
+      title: article.title || '',
+      category: article.category || 'industry-news',
+      content: article.content || '',
+      tags: Array.isArray(article.tags) ? article.tags.join(', ') : (article.tags || ''),
+      cover_image: article.cover_image || '',
+      summary: article.summary || ''
+    });
+    setShowEditModal(true);
+  };
+
+  // Save edit
+  const handleSaveEdit = async () => {
+    if (!editForm.title.trim() || !editForm.content.trim()) {
+      alert('请填写标题和内容');
+      return;
+    }
+    setSaving(true);
+    try {
+      const data = {
+        title: editForm.title.trim(),
+        category: editForm.category,
+        content: editForm.content.trim(),
+        tags: editForm.tags.split(/[,，]/).map(t => t.trim()).filter(Boolean),
+        cover_image: editForm.cover_image.trim() || null,
+        summary: editForm.summary.trim() || null
+      };
+      const response = await apiServices.articles.update(article.id, data);
+      if (response.success) {
+        setShowEditModal(false);
+        await fetchArticle();
+      }
+    } catch (err) {
+      console.error('更新文章失败:', err);
+      alert('更新失败，请重试');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Delete article
+  const handleDeleteArticle = async () => {
+    if (!window.confirm('确定要删除这篇文章吗？删除后将无法恢复。')) return;
+    try {
+      const response = await apiServices.articles.delete(article.id);
+      if (response.success) {
+        navigate('/forum');
+      }
+    } catch (err) {
+      console.error('删除文章失败:', err);
+      alert('删除失败，请重试');
     }
   };
 
@@ -390,6 +454,18 @@ const ArticleDetail = () => {
               <ArrowLeft size={14} />
               <span>返回论坛</span>
             </button>
+            {isEmployee && (
+              <>
+                <button className="act-btn act-edit" onClick={handleOpenEdit}>
+                  <Edit size={14} />
+                  <span>编辑</span>
+                </button>
+                <button className="act-btn act-delete" onClick={handleDeleteArticle}>
+                  <Trash2 size={14} />
+                  <span>删除</span>
+                </button>
+              </>
+            )}
           </div>
 
           {/* 文章底部广告位 */}
@@ -587,6 +663,101 @@ const ArticleDetail = () => {
           </section>
         </article>
       </div>
+
+      {/* 编辑文章模态框 */}
+      {showEditModal && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content publish-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>编辑文章</h2>
+              <button onClick={() => setShowEditModal(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="publish-form">
+                <div className="form-group">
+                  <label>文章标题</label>
+                  <input
+                    type="text"
+                    placeholder="请输入文章标题"
+                    value={editForm.title}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>选择分类</label>
+                  <select
+                    value={editForm.category}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, category: e.target.value }))}
+                  >
+                    <option value="fba-warehouse">FBA仓库介绍</option>
+                    <option value="anti-scam">司机防骗</option>
+                    <option value="industry-news">行业资讯</option>
+                    <option value="experience">经验分享</option>
+                    <option value="qa">问题解答</option>
+                    <option value="policy">政策法规</option>
+                    <option value="technology">技术交流</option>
+                    <option value="career">职场发展</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>文章摘要</label>
+                  <textarea
+                    placeholder="请输入文章摘要（选填，不超过200字）"
+                    rows="2"
+                    value={editForm.summary}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, summary: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>文章内容</label>
+                  <textarea
+                    placeholder="请详细描述您的文章内容..."
+                    rows="8"
+                    value={editForm.content}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, content: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>文章标签</label>
+                  <input
+                    type="text"
+                    placeholder="请输入相关标签，用逗号分隔"
+                    value={editForm.tags}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, tags: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>
+                    <ImageIcon size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+                    封面图片URL
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="请输入封面图片链接（选填）"
+                    value={editForm.cover_image}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, cover_image: e.target.value }))}
+                  />
+                </div>
+                <div className="form-actions">
+                  <button className="btn-secondary" onClick={() => setShowEditModal(false)}>
+                    取消
+                  </button>
+                  <button
+                    className="btn-primary"
+                    onClick={handleSaveEdit}
+                    disabled={saving || !editForm.title.trim() || !editForm.content.trim()}
+                  >
+                    <Save size={16} />
+                    {saving ? '保存中...' : '保存修改'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

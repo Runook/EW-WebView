@@ -17,7 +17,10 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Edit,
+  Trash2,
+  Save
 } from 'lucide-react';
 import { apiServices } from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
@@ -74,6 +77,7 @@ const Forum = () => {
     cover_image: '',
     summary: ''
   });
+  const [editingArticle, setEditingArticle] = useState(null);
 
   const isEmployee = user?.isEmployee || user?.employeeRole;
   const LIMIT = 10;
@@ -225,7 +229,7 @@ const Forum = () => {
     }
   };
 
-  // Publish article
+  // Publish or update article
   const handlePublish = async () => {
     if (!publishForm.title.trim() || !publishForm.content.trim()) {
       alert('请填写标题和内容');
@@ -246,9 +250,16 @@ const Forum = () => {
         summary: publishForm.summary.trim() || null
       };
 
-      const response = await apiServices.articles.create(data);
+      let response;
+      if (editingArticle) {
+        response = await apiServices.articles.update(editingArticle.id, data);
+      } else {
+        response = await apiServices.articles.create(data);
+      }
+
       if (response.success) {
         setShowPublishModal(false);
+        setEditingArticle(null);
         setPublishForm({
           title: '',
           category: 'industry-news',
@@ -261,11 +272,62 @@ const Forum = () => {
         fetchPosts();
       }
     } catch (error) {
-      console.error('发布文章失败:', error);
-      alert('发布失败，请重试');
+      console.error(editingArticle ? '更新文章失败:' : '发布文章失败:', error);
+      alert(editingArticle ? '更新失败，请重试' : '发布失败，请重试');
     } finally {
       setPublishing(false);
     }
+  };
+
+  // Open edit modal with article data
+  const handleEditArticle = async (e, post) => {
+    e.stopPropagation();
+    try {
+      const response = await apiServices.articles.getBySlug(post.slug || post.id);
+      const article = response.data || response;
+      setEditingArticle(article);
+      setPublishForm({
+        title: article.title || '',
+        category: article.category || 'industry-news',
+        content: article.content || '',
+        tags: Array.isArray(article.tags) ? article.tags.join(', ') : (article.tags || ''),
+        cover_image: article.cover_image || '',
+        summary: article.summary || ''
+      });
+      setShowPublishModal(true);
+    } catch (error) {
+      console.error('获取文章详情失败:', error);
+      alert('获取文章详情失败，请重试');
+    }
+  };
+
+  // Delete article
+  const handleDeleteArticle = async (e, articleId) => {
+    e.stopPropagation();
+    if (!window.confirm('确定要删除这篇文章吗？删除后将无法恢复。')) return;
+    try {
+      const response = await apiServices.articles.delete(articleId);
+      if (response.success) {
+        fetchPosts();
+      }
+    } catch (error) {
+      console.error('删除文章失败:', error);
+      alert('删除失败，请重试');
+    }
+  };
+
+  // Close publish modal
+  const handleClosePublishModal = () => {
+    setShowPublishModal(false);
+    setEditingArticle(null);
+    setPublishForm({
+      title: '',
+      category: 'industry-news',
+      content: '',
+      tags: '',
+      cover_image: '',
+      summary: ''
+    });
   };
 
   // Format date
@@ -458,6 +520,24 @@ const Forum = () => {
                       >
                         <Share2 size={13} />
                       </button>
+                      {isEmployee && (
+                        <>
+                          <button
+                            className="action-btn-sm edit-btn"
+                            onClick={(e) => handleEditArticle(e, post)}
+                            title="编辑"
+                          >
+                            <Edit size={13} />
+                          </button>
+                          <button
+                            className="action-btn-sm delete-btn"
+                            onClick={(e) => handleDeleteArticle(e, post.id)}
+                            title="删除"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))
@@ -507,13 +587,13 @@ const Forum = () => {
         </div>
       </div>
 
-      {/* 发布文章模态框 */}
+      {/* 发布/编辑文章模态框 */}
       {showPublishModal && (
-        <div className="modal-overlay" onClick={() => setShowPublishModal(false)}>
+        <div className="modal-overlay" onClick={handleClosePublishModal}>
           <div className="modal-content publish-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>发布文章</h2>
-              <button onClick={() => setShowPublishModal(false)}>
+              <h2>{editingArticle ? '编辑文章' : '发布文章'}</h2>
+              <button onClick={handleClosePublishModal}>
                 <X size={20} />
               </button>
             </div>
@@ -588,7 +668,7 @@ const Forum = () => {
                 <div className="form-actions">
                   <button
                     className="btn-secondary"
-                    onClick={() => setShowPublishModal(false)}
+                    onClick={handleClosePublishModal}
                   >
                     取消
                   </button>
@@ -597,8 +677,8 @@ const Forum = () => {
                     onClick={handlePublish}
                     disabled={publishing || !publishForm.title.trim() || !publishForm.content.trim()}
                   >
-                    <Plus size={16} />
-                    {publishing ? '发布中...' : '发布文章'}
+                    {editingArticle ? <Save size={16} /> : <Plus size={16} />}
+                    {publishing ? (editingArticle ? '保存中...' : '发布中...') : (editingArticle ? '保存修改' : '发布文章')}
                   </button>
                 </div>
               </div>
