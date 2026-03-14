@@ -590,3 +590,67 @@
     max-height: 95vh;
   }
 }
+
+/* ==================== Quote Breakdown ==================== */
+.quote-item {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.quote-item:hover {
+  border-color: #34C759;
+}
+
+.quote-item .quote-row {
+  border: none;
+  border-radius: 0;
+}
+
+.quote-price-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 100px;
+}
+
+.btn-breakdown-toggle {
+  background: #34C759;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: fit-content;
+  transition: background 0.15s;
+}
+
+.btn-breakdown-toggle:hover {
+  background: #2db14d;
+}
+
+.quote-breakdown {
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+}
+
+.breakdown-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 0.82rem;
+  color: #4b5563;
+}
+
+.breakdown-line.breakdown-total {
+  border-top: 1px solid #d1d5db;
+  margin-top: 4px;
+  padding-top: 6px;
+  font-weight: 700;
+  color: #1e293b;
+}

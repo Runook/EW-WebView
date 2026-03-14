@@ -19,6 +19,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteResults, setQuoteResults] = useState([]);
   const [quoteSortBy, setQuoteSortBy] = useState('price');
+  const [expandedBreakdown, setExpandedBreakdown] = useState(null);
 
   const fileInputRef = useRef(null);
 
@@ -401,7 +402,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
 
       {/* Quote Modal */}
       {quoteModalIdx !== null && (
-        <div className="quote-modal-overlay" onClick={() => { setQuoteModalIdx(null); setQuoteResults([]); }}>
+        <div className="quote-modal-overlay" onClick={() => { setQuoteModalIdx(null); setQuoteResults([]); setExpandedBreakdown(null); }}>
           <div className="quote-modal" onClick={e => e.stopPropagation()}>
             <div className="quote-modal-header">
               <h3>
@@ -411,7 +412,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
               <div className="quote-route-info">
                 {shipments[quoteModalIdx]?.originZip || '?'} → {shipments[quoteModalIdx]?.destinationCity}, {shipments[quoteModalIdx]?.destinationState} {shipments[quoteModalIdx]?.destinationZip}
               </div>
-              <button className="quote-modal-close" onClick={() => { setQuoteModalIdx(null); setQuoteResults([]); }}>
+              <button className="quote-modal-close" onClick={() => { setQuoteModalIdx(null); setQuoteResults([]); setExpandedBreakdown(null); }}>
                 <X size={20} />
               </button>
             </div>
@@ -433,26 +434,80 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
                   </div>
                   <div className="quote-list">
                     {sortedQuoteResults.map(q => (
-                      <div key={q.id} className="quote-row">
-                        <div className="quote-carrier">
-                          {q.logo && <img src={q.logo} alt={q.carrier} className="quote-carrier-logo" />}
-                          <div>
-                            <div className="quote-carrier-name">{q.carrier}</div>
-                            <div className="quote-service-type">{q.serviceType}</div>
+                      <div key={q.id} className="quote-item">
+                        <div className="quote-row">
+                          <div className="quote-carrier">
+                            {q.logo && <img src={q.logo} alt={q.carrier} className="quote-carrier-logo" />}
+                            <div>
+                              <div className="quote-carrier-name">{q.carrier}</div>
+                              <div className="quote-service-type">{q.serviceType}</div>
+                            </div>
+                          </div>
+                          <div className="quote-price-col">
+                            <div className="quote-price">${(q.price || 0).toFixed(2)}</div>
+                            <button
+                              className="btn-breakdown-toggle"
+                              onClick={() => setExpandedBreakdown(expandedBreakdown === q.id ? null : q.id)}
+                            >
+                              {expandedBreakdown === q.id ? '收起明细' : '价格明细'}
+                            </button>
+                          </div>
+                          <div className="quote-transit">
+                            <Clock size={13} /> {q.transitDays || 'TBD'}
+                          </div>
+                          <div className="quote-extra">
+                            {q.isGuaranteed && <span className="badge-guaranteed">Guaranteed</span>}
+                            {q.maxLiability && (
+                              <span className="badge-liability">
+                                Liability: ${q.maxLiability.new?.toLocaleString()}
+                              </span>
+                            )}
                           </div>
                         </div>
-                        <div className="quote-price">${(q.price || 0).toFixed(2)}</div>
-                        <div className="quote-transit">
-                          <Clock size={13} /> {q.transitDays || 'TBD'}
-                        </div>
-                        <div className="quote-extra">
-                          {q.isGuaranteed && <span className="badge-guaranteed">Guaranteed</span>}
-                          {q.maxLiability && (
-                            <span className="badge-liability">
-                              Liability: ${q.maxLiability.new?.toLocaleString()}
-                            </span>
-                          )}
-                        </div>
+                        {expandedBreakdown === q.id && (
+                          <div className="quote-breakdown">
+                            {q.charges && q.charges.length > 0 ? (
+                              <>
+                                {q.charges.map((c, ci) => (
+                                  <div key={ci} className="breakdown-line">
+                                    <span>{c.description}</span>
+                                    <span>${parseFloat(c.amount || 0).toFixed(2)}</span>
+                                  </div>
+                                ))}
+                                {q.fuelSurcharge && !q.charges.some(c => (c.description || '').toLowerCase().includes('fuel')) && (
+                                  <div className="breakdown-line">
+                                    <span>Fuel Surcharge</span>
+                                    <span>${parseFloat(q.fuelSurcharge).toFixed(2)}</span>
+                                  </div>
+                                )}
+                                <div className="breakdown-line breakdown-total">
+                                  <span>Total</span>
+                                  <span>${(q.price || 0).toFixed(2)}</span>
+                                </div>
+                              </>
+                            ) : q.fuelSurcharge ? (
+                              <>
+                                <div className="breakdown-line">
+                                  <span>Base Freight</span>
+                                  <span>${(Math.round((q.price - parseFloat(q.fuelSurcharge)) * 100) / 100).toFixed(2)}</span>
+                                </div>
+                                <div className="breakdown-line">
+                                  <span>Fuel Surcharge</span>
+                                  <span>${parseFloat(q.fuelSurcharge).toFixed(2)}</span>
+                                </div>
+                                <div className="breakdown-line breakdown-total">
+                                  <span>Total</span>
+                                  <span>${(q.price || 0).toFixed(2)}</span>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="breakdown-line breakdown-total">
+                                <span>Total Charge</span>
+                                <span>${(q.price || 0).toFixed(2)}</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
