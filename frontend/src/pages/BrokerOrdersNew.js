@@ -1210,6 +1210,22 @@ const BrokerOrdersNew = () => {
                             >
                               🗺️
                             </button>
+                            <button
+                              className="btn-delete-order"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (!window.confirm(`确定要删除 ${order.order_number} 吗？`)) return;
+                                try {
+                                  await orderApi.deleteOrder(order.id);
+                                  loadOrders();
+                                } catch (err) {
+                                  alert('删除失败: ' + err.message);
+                                }
+                              }}
+                              title="删除订单"
+                            >
+                              🗑️
+                            </button>
                           </div>
                         ) : order.status === 'ordered' ? (
                           <div className="ordered-actions">
