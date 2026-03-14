@@ -85,7 +85,6 @@ async function batchCreateOrders(items, createdBy) {
 
     for (const item of items) {
       const orderNumber = await generateOrderNumber(trx);
-      const weQuoteNumber = await generateWEQuoteNumber(trx);
 
       // Weight list as JSON array of per-pallet weights (lbs)
       const weightListArr = item.dimensions.map(d => Math.round(d.weight));
@@ -113,7 +112,7 @@ async function batchCreateOrders(items, createdBy) {
         cargo_description: item.product_name_en || item.product_name_cn || '',
         quote_date: nyDate,
         inquiry_company: item.company_name || null,
-        ew_quote_number: weQuoteNumber,
+        ew_quote_number: item.tracking_number || null,
         shipment_number: item.tracking_number || null,
         cargo_description_detailed: [
           item.product_name_cn,
@@ -171,26 +170,25 @@ async function batchCreateOrders(items, createdBy) {
 }
 
 /**
- * Generate a unique order number within a transaction.
+ * Generate next order number (WE + incrementing integer, e.g. WE84, WE85).
  */
 async function generateOrderNumber(trx) {
-  const prefix = 'EW';
-  const date = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }).replace(/-/g, '');
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `${prefix}${date}-${random}`;
+  const result = await trx('employee_orders')
+    .whereRaw("order_number ~ '^WE[0-9]+$'")
+    .select(trx.raw("MAX(CAST(SUBSTRING(order_number FROM 3) AS INTEGER)) as max_num"));
+  const maxNum = result[0]?.max_num || 0;
+  return `WE${maxNum + 1}`;
 }
 
 /**
- * Generate a unique WE quote number (WE-YYYYMMDD-XXXX format).
+ * Generate next WE quote number (WE + incrementing integer, e.g. WE84, WE85).
  */
 async function generateWEQuoteNumber(trx) {
-  const date = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }).replace(/-/g, '');
-  const count = await trx('employee_orders')
-    .where('ew_quote_number', 'like', `WE-${date}%`)
-    .count('* as c')
-    .first();
-  const seq = String(parseInt(count?.c || 0) + 1).padStart(4, '0');
-  return `WE-${date}-${seq}`;
+  const result = await trx('employee_orders')
+    .whereRaw("ew_quote_number ~ '^WE[0-9]+$'")
+    .select(trx.raw("MAX(CAST(SUBSTRING(ew_quote_number FROM 3) AS INTEGER)) as max_num"));
+  const maxNum = result[0]?.max_num || 0;
+  return `WE${maxNum + 1}`;
 }
 
 /**
