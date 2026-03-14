@@ -1111,7 +1111,7 @@ const BrokerOrdersNew = () => {
                       </td>
                       <td className="order-number we-number">
                         <span className="we-number-display">
-                          {order.ew_quote_number || order.order_number || '-'}
+                          {order.order_number || '-'}
                         </span>
                       </td>
                       <td>
