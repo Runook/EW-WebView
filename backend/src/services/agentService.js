@@ -8,18 +8,22 @@ const datService = require('./datService');
  */
 function normalizeShipmentItems(rawItems) {
   return rawItems.map(item => {
-    const dimensions = (item.dimensions || []).map(d => ({
-      length_cm: parseFloat(d.length) || 0,
-      width_cm: parseFloat(d.width) || 0,
-      height_cm: parseFloat(d.height) || 0,
+    // Dimensions from Gemini are already in inches/lbs
+    const dims = (item.dimensions || []).map(d => ({
+      length: Math.round(parseFloat(d.length) || 0),
+      width: Math.round(parseFloat(d.width) || 0),
+      height: Math.round(parseFloat(d.height) || 0),
       pieces: parseInt(d.pieces) || 1,
-      weight_kg: parseFloat(d.weight) || 0,
-      volume_cbm: parseFloat(d.volume) || 0
+      weight: Math.round(parseFloat(d.weight) || 0),
+      freightClass: d.freightClass || '',
+      volume: parseFloat(d.volume) || 0
     }));
 
-    const totalWeightKg = dimensions.reduce((sum, d) => sum + d.weight_kg * d.pieces, 0);
-    const totalWeightLbs = Math.round(totalWeightKg * 2.20462 * 100) / 100;
-    const totalVolumeCbm = dimensions.reduce((sum, d) => sum + d.volume_cbm * d.pieces, 0);
+    const totalWeightLbs = dims.reduce((sum, d) => sum + d.weight * d.pieces, 0);
+    const totalPallets = dims.reduce((sum, d) => sum + d.pieces, 0);
+    const totalCubicFeet = dims.reduce((sum, d) => {
+      return sum + ((d.length * d.width * d.height) / 1728) * d.pieces;
+    }, 0);
 
     const addressTypeRaw = (item.address_type || '').toLowerCase();
     let addressType = 'Commercial';
@@ -52,11 +56,10 @@ function normalizeShipmentItems(rawItems) {
       address: item.address || null,
       address_type: addressType,
       delivery_notes: deliveryNotes,
-      total_pieces: parseInt(item.total_pieces) || 1,
-      dimensions,
-      total_weight_kg: totalWeightKg,
+      total_pieces: totalPallets,
+      dimensions: dims,
       total_weight_lbs: totalWeightLbs,
-      total_volume_cbm: totalVolumeCbm,
+      total_cubic_feet: Math.round(totalCubicFeet * 100) / 100,
       delivery_method: item.delivery_method || null,
       notes: item.notes || null,
       origin_zip: item.origin_zip || null,
@@ -78,22 +81,30 @@ async function batchCreateOrders(items, createdBy) {
     const nyDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
     const orders = [];
 
+    const safeCreatedBy = typeof createdBy === 'number' ? createdBy : (parseInt(createdBy) || 1);
+
     for (const item of items) {
       const orderNumber = await generateOrderNumber(trx);
+      const weQuoteNumber = await generateWEQuoteNumber(trx);
 
-      const dimensionsList = item.dimensions.map(d =>
-        `${d.length_cm}x${d.width_cm}x${d.height_cm}cm (${d.pieces}pcs, ${d.weight_kg}kg)`
-      ).join('; ');
+      // Weight list as JSON array of per-pallet weights (lbs)
+      const weightListArr = item.dimensions.map(d => Math.round(d.weight));
+      const weightList = JSON.stringify(weightListArr);
 
-      const weightList = item.dimensions.map(d =>
-        `${d.weight_kg}kg x${d.pieces}`
-      ).join('; ');
-
-      const safeCreatedBy = typeof createdBy === 'number' ? createdBy : (parseInt(createdBy) || 1);
+      // Dimensions list as JSON array matching existing system format
+      const dimensionsListArr = item.dimensions.map(d => ({
+        length: d.length,
+        width: d.width,
+        height: d.height,
+        pieces: d.pieces,
+        volume: Math.round((d.length * d.width * d.height) / 1728 * 100) / 100,
+        freightClass: d.freightClass || ''
+      }));
+      const dimensionsList = JSON.stringify(dimensionsListArr);
 
       const insertData = {
         order_number: orderNumber,
-        customer_name: item.company_name || item.recipient_name || 'AI Import',
+        customer_name: item.recipient_name || 'AI Import',
         customer_email: item.email || null,
         customer_phone: item.phone || null,
         order_type: 'land_freight',
@@ -102,17 +113,17 @@ async function batchCreateOrders(items, createdBy) {
         cargo_description: item.product_name_en || item.product_name_cn || '',
         quote_date: nyDate,
         inquiry_company: item.company_name || null,
-        ew_quote_number: item.tracking_number || null,
+        ew_quote_number: weQuoteNumber,
         shipment_number: item.tracking_number || null,
         cargo_description_detailed: [
           item.product_name_cn,
           item.product_name_en,
           item.packaging_type ? `包装: ${item.packaging_type}` : null
         ].filter(Boolean).join(' | '),
-        weight_list: weightList || null,
+        weight_list: weightList,
         total_weight_lbs: item.total_weight_lbs || null,
-        dimensions_list: dimensionsList || null,
-        total_volume: item.total_volume_cbm || null,
+        dimensions_list: dimensionsList,
+        total_volume: item.total_cubic_feet || null,
         cargo_value: item.cargo_value || null,
         address_type: item.address_type || 'Commercial',
         actual_pallets: item.total_pieces || null,
@@ -129,10 +140,9 @@ async function batchCreateOrders(items, createdBy) {
         notes: [
           item.notes,
           item.delivery_notes,
-          item.delivery_method ? `派送方式: ${item.delivery_method}` : null,
-          item.confidence ? `AI confidence: ${item.confidence}` : null
+          item.delivery_method ? `派送方式: ${item.delivery_method}` : null
         ].filter(Boolean).join(' | '),
-        internal_notes: 'Created by AI Agent',
+        internal_notes: `Created by AI Agent | Tracking: ${item.tracking_number || 'N/A'}`,
         currency: 'USD',
         created_by: safeCreatedBy,
         assigned_to: safeCreatedBy
@@ -168,6 +178,19 @@ async function generateOrderNumber(trx) {
   const date = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }).replace(/-/g, '');
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `${prefix}${date}-${random}`;
+}
+
+/**
+ * Generate a unique WE quote number (WE-YYYYMMDD-XXXX format).
+ */
+async function generateWEQuoteNumber(trx) {
+  const date = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }).replace(/-/g, '');
+  const count = await trx('employee_orders')
+    .where('ew_quote_number', 'like', `WE-${date}%`)
+    .count('* as c')
+    .first();
+  const seq = String(parseInt(count?.c || 0) + 1).padStart(4, '0');
+  return `WE-${date}-${seq}`;
 }
 
 /**

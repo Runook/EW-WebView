@@ -110,7 +110,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
         destination_state: s.destinationState,
         destination_zip: s.destinationZip,
         destination_country: 'US',
-        company_name: s.companyName,
+        company_name: s.companyName || null,
         recipient_name: s.recipientName,
         phone: s.recipientPhone,
         address: s.recipientAddress,
@@ -122,7 +122,9 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
           width: item.width,
           height: item.height,
           pieces: item.pallets,
-          weight: item.weight
+          weight: item.weight,
+          freightClass: item.freightClass || '',
+          volume: Math.round((item.length * item.width * item.height) / 1728 * 100) / 100
         })),
         total_pieces: s.items.reduce((sum, item) => sum + (item.pallets || 1), 0)
       }));
