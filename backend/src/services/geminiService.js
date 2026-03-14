@@ -193,8 +193,8 @@ SECTION 6: ADDRESS RULES
 - If doc says 卡派/truck dispatch → LTL delivery
 - If doc says 快递/express → may be small parcel, note "Express requested — may not need LTL."
 
-CRITICAL: Every shipment row has destination data in the 邮编/城市/详细地址 columns.
-You MUST extract these for every shipment. Do NOT return null for destination fields when data is present in the row.
+Extract destination data (邮编/城市/详细地址) when present in the row.
+If origin is not in the document or filename, leave origin fields as null — the employee will fill it in manually.
 
 ══════════════════════════════════════════════════
 SECTION 7: OUTPUT
