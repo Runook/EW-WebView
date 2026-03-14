@@ -13,8 +13,17 @@ const PARSE_PROMPT = `You are a senior US LTL freight logistics analyst and NMFC
 ══════════════════════════════════════════════════
 SECTION 1: DOCUMENT FORMAT (Chinese Freight Forwarders)
 ══════════════════════════════════════════════════
-Common Excel/PDF columns:
-  包装类型|外箱单号|备注|派送方式|中文品名|英文品名|价值|国家|邮编|城市|公司名|收件人|电话|邮箱|详细地址|箱数|尺寸箱数|实重(KG)|方数|长(CM)|宽(CM)|高(CM)|报价|地址类型
+FORMAT A — Separate columns (入仓清单 style):
+  包装类型|外箱单号|备注|派送方式|中文品名|英文品名|价值|国家|邮编|城市|收件人|电话|地址|箱数|尺寸箱数|实重(KG)|方数|长(CM)|宽(CM)|高(CM)|地址类型
+  MAIN ROW has all info + first box dims. SUB-ROWS have only dim/weight columns.
+
+FORMAT B — Text-embedded dimensions (拆柜清单/派送表 style):
+  SO/客户代码|箱数|毛重|体积|品名|地址|厘米(dimensions in text)|英寸/磅(imperial conversion)|派送备注
+  Dimensions are in ONE cell with line breaks, format: "weight(kg)LxWxH(cm)" or "weight(lb)L×W×H(in)"
+  Example: "87(kg)90×61×49(cm)\n86(kg)89x60x49(cm)\n..."
+  If the imperial column exists (英寸、磅/换成英寸), USE THOSE VALUES DIRECTLY — they are pre-converted.
+  Parse each line as a separate box/crate. The "箱数" column is total box count.
+  "其他需要打托数据" = additional boxes not yet detailed — note this in the notes field.
 
 Structural patterns:
 - MAIN ROW: first row for a tracking number contains all address/product info + first box dimensions
@@ -60,7 +69,15 @@ SECTION 3: PALLETIZATION RULES
 ══════════════════════════════════════════════════
 Standard US GMA pallet: 48"L × 40"W, pallet itself ~6" tall, ~40 lbs.
 
---- 3A. LOOSE CARTONS → PALLETS ---
+--- 3A. WHEN EACH BOX HAS INDIVIDUAL DIMENSIONS/WEIGHTS (e.g. Format B 拆柜清单) ---
+If the document lists EACH box separately with its own weight and dimensions:
+  → Output EACH box as a SEPARATE item entry with pallets=1
+  → Use that box's ACTUAL dimensions and weight (do NOT merge onto 48×40 pallets)
+  → This is the most common case for 拆柜 (container unloading) shipments
+  → Each box gets its own freight class based on its own density
+
+--- 3B. IDENTICAL SMALL CARTONS → PALLETS (e.g. Format A with 箱数>1 and same dims) ---
+Only palletize when: multiple IDENTICAL boxes (same dimensions) AND box is small enough to stack.
 Step 1: Boxes per layer:
   Normal:  floor(48 / box_L_in) × floor(40 / box_W_in)
   Rotated: floor(48 / box_W_in) × floor(40 / box_L_in)
@@ -75,6 +92,7 @@ Step 4: Pallets needed = ceil(total_boxes / boxes_per_pallet)
 Step 5: Pallet weight = (box_weight × boxes_on_pallet) + 40 lbs (pallet)
 Step 6: Pallet dims = 48"L × 40"W × (box_H × layers + 6)"H
 CONSTRAINT: max 2500 lbs per pallet; if exceeded reduce boxes.
+DO NOT palletize if boxes have different dimensions — list each separately.
 
 --- 3B. WOOD CRATES / SKIDS (木箱/卡脚/木架) ---
 Each crate = 1 pallet unit. Use crate's actual dimensions + weight.
@@ -95,6 +113,7 @@ STACKABILITY:
   stackable = true:  height ≤ 48", sturdy goods (metal, wood, machinery parts, bottled liquids)
   stackable = false: height > 48", fragile, glass, artwork, irregular shape, live plants
   Wood crates and heavy equipment (>500 lbs): NOT stackable
+  Stone/marble (石制品/大理石): NOT stackable, heavy, fragile — each piece separate
 
 ══════════════════════════════════════════════════
 SECTION 4: NMFC FREIGHT CLASS (2025 Density-Based + Commodity Overrides)
