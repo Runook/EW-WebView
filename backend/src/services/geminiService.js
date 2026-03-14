@@ -113,7 +113,7 @@ STACKABILITY:
   stackable = true:  height ≤ 48", sturdy goods (metal, wood, machinery parts, bottled liquids)
   stackable = false: height > 48", fragile, glass, artwork, irregular shape, live plants
   Wood crates and heavy equipment (>500 lbs): NOT stackable
-  Stone/marble (石制品/大理石): NOT stackable, heavy, fragile — each piece separate
+  Stone/marble (石制品/大理石): usually crated, stackable if crated, list each piece separately
 
 ══════════════════════════════════════════════════
 SECTION 4: NMFC FREIGHT CLASS (2025 Density-Based + Commodity Overrides)
