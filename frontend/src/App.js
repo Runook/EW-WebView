@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './components/common/Notification';
 import { Package, BookOpen, Briefcase, ShoppingBag } from 'lucide-react';
@@ -16,6 +16,8 @@ import MultimodalPlatform from './pages/MultimodalPlatform';
 import ComingSoonPlatform from './pages/ComingSoonPlatform';
 import YellowPages from './pages/YellowPages';
 import Jobs from './pages/Jobs';
+import JobDetail from './pages/JobDetail';
+import ResumeDetail from './pages/ResumeDetail';
 import LogisticsRental from './pages/LogisticsRental';
 import Forum from './pages/Forum';
 import ArticleDetail from './pages/ArticleDetail';
@@ -152,6 +154,8 @@ function App() {
               {/* 信息服务 - 使用新的完整功能页面 */}
               <Route path="/yellow-pages-logistics-supplier-directory-物流企业服务商黄页-货运卡车租赁公司查询平台" element={<YellowPages />} />
               <Route path="/jobs-driver-freight-logistics-recruitment-platform-物流司机招聘求职平台-货运卡车运输人才匹配系统" element={<Jobs />} />
+              <Route path="/job/:id/:slug?" element={<JobDetail />} />
+              <Route path="/resume/:id/:slug?" element={<ResumeDetail />} />
               <Route path="/logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台" element={<LogisticsRental />} />
               <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<Forum />} />
               <Route path="/forum" element={<Forum />} />
@@ -220,26 +224,8 @@ function App() {
                   searchPlaceholder="搜索收藏内容"
                 />
               } />
-              <Route path="/my-recruitment" element={
-                <ComingSoonPlatform 
-                  icon={<Briefcase size={48} />}
-                  title="我的招聘"
-                  description="管理我发布的招聘职位和收到的简历"
-                  actionText1="发布职位"
-                  actionText2="管理招聘"
-                  searchPlaceholder="搜索候选人"
-                />
-              } />
-              <Route path="/my-job-search" element={
-                <ComingSoonPlatform 
-                  icon={<Briefcase size={48} />}
-                  title="我的求职"
-                  description="管理我的简历和求职申请"
-                  actionText1="更新简历"
-                  actionText2="查看申请"
-                  searchPlaceholder="搜索职位"
-                />
-              } />
+              <Route path="/my-recruitment" element={<Navigate to="/profile/myJobs" replace />} />
+              <Route path="/my-job-search" element={<Navigate to="/profile/myResumes" replace />} />
               <Route path="/certification" element={
                 <ComingSoonPlatform 
                   icon={<Package size={48} />}

@@ -1,8 +1,9 @@
 User-agent: *
 Allow: /
 
-# Sitemap location
+# Sitemap locations
 Sitemap: https://welogx.com/sitemap.xml
+Sitemap: https://welogx.com/api/sitemap/jobs.xml
 
 # Crawl delay (optional, prevents overwhelming your server)
 Crawl-delay: 1
@@ -11,5 +12,8 @@ Crawl-delay: 1
 Disallow: /login
 Disallow: /register
 Disallow: /profile
+Disallow: /employee
 
-# Allow all other pages to be crawled 
+# Allow job and resume detail pages
+Allow: /job/
+Allow: /resume/

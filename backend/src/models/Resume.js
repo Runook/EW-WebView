@@ -1,58 +1,51 @@
 const { db } = require('../config/database');
 
 class Resume {
-  // 获取所有简历（带筛选）
-  static async getAllResumes(filters = {}) {
+  static async getAllResumes(filters = {}, { page = 1, limit = 20 } = {}) {
     try {
-      let query = db('resumes')
-        .select(
-          'resumes.*',
-          // 添加premium信息
-          'premium_posts.premium_type',
-          'premium_posts.end_time as premium_end_time',
-          'premium_posts.created_at as premium_created_at'
-        )
-        .leftJoin('premium_posts', function() {
-          this.on('premium_posts.post_type', '=', db.raw("'resume'"))
-              .andOn('premium_posts.post_id', '=', 'resumes.id')
-              .andOn('premium_posts.is_active', '=', db.raw('true'))
-              .andOn('premium_posts.end_time', '>', db.raw('NOW()'));
-        })
-        .where('resumes.is_active', true)
-        // 修改排序：置顶内容按置顶时间倒序，普通内容按发布时间倒序
+      const buildBase = () => {
+        let q = db('resumes')
+          .leftJoin('premium_posts', function() {
+            this.on('premium_posts.post_type', '=', db.raw("'resume'"))
+                .andOn('premium_posts.post_id', '=', 'resumes.id')
+                .andOn('premium_posts.is_active', '=', db.raw('true'))
+                .andOn('premium_posts.end_time', '>', db.raw('NOW()'));
+          })
+          .where('resumes.is_active', true);
+
+        if (filters.position) q = q.where('resumes.position', 'ilike', `%${filters.position}%`);
+        if (filters.location) q = q.where('resumes.location', filters.location);
+        if (filters.experience) q = q.where('resumes.experience', filters.experience);
+        if (filters.workTypePreference) q = q.where('resumes.work_type_preference', filters.workTypePreference);
+        if (filters.search) {
+          q = q.where(function() {
+            this.where('resumes.name', 'ilike', `%${filters.search}%`)
+                .orWhere('resumes.position', 'ilike', `%${filters.search}%`)
+                .orWhere('resumes.skills', 'ilike', `%${filters.search}%`)
+                .orWhere('resumes.summary', 'ilike', `%${filters.search}%`);
+          });
+        }
+        return q;
+      };
+
+      const [{ count }] = await buildBase().count('resumes.id as count');
+      const total = parseInt(count);
+
+      const offset = (page - 1) * limit;
+      const resumes = await buildBase()
+        .select('resumes.*', 'premium_posts.premium_type', 'premium_posts.end_time as premium_end_time', 'premium_posts.created_at as premium_created_at')
         .orderBy(db.raw('CASE WHEN premium_posts.premium_type = \'top\' THEN 1 ELSE 2 END'))
         .orderBy('premium_posts.created_at', 'desc')
-        .orderBy('resumes.created_at', 'desc');
+        .orderBy('resumes.created_at', 'desc')
+        .limit(limit)
+        .offset(offset);
 
-      // 应用筛选条件
-      if (filters.position) {
-        query = query.where('resumes.position', 'ilike', `%${filters.position}%`);
-      }
-      
-      if (filters.location) {
-        query = query.where('resumes.location', filters.location);
-      }
-      
-      if (filters.experience) {
-        query = query.where('resumes.experience', filters.experience);
-      }
-      
-      if (filters.workTypePreference) {
-        query = query.where('resumes.work_type_preference', filters.workTypePreference);
-      }
-      
-      if (filters.search) {
-        query = query.where(function() {
-          this.where('resumes.name', 'ilike', `%${filters.search}%`)
-              .orWhere('resumes.position', 'ilike', `%${filters.search}%`)
-              .orWhere('resumes.skills', 'ilike', `%${filters.search}%`)
-              .orWhere('resumes.summary', 'ilike', `%${filters.search}%`);
-        });
-      }
-
-      const resumes = await query;
-      
-      return resumes.map(resume => this.formatResumeData(resume));
+      return {
+        data: resumes.map(resume => this.formatResumeData(resume)),
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+      };
     } catch (error) {
       console.error('Resume.getAllResumes error:', error);
       throw error;

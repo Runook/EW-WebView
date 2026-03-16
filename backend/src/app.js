@@ -225,6 +225,7 @@ app.use('/api/landfreight', require('./routes/landfreight'));
 app.use('/api/companies', require('./routes/companies'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/resumes', require('./routes/resumes'));
+app.use('/api/sitemap', require('./routes/sitemap'));
 app.use('/api/user-management', require('./routes/user-management'));
 
 // 员工系统路由

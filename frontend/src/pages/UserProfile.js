@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   User,
   FileText,
@@ -28,29 +28,57 @@ import {
   Trash2,
   ExternalLink,
   Edit,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Briefcase,
+  Building2,
+  DollarSign,
+  Phone,
+  Mail,
+  Send,
+  BookOpen,
+  RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { apiServices } from '../utils/apiClient';
+import { apiServices, apiClient } from '../utils/apiClient';
 import { useSEO } from '../hooks/useSEO';
 import './UserProfile.css';
 
 const TABS = [
   { key: 'overview', label: '概览', icon: BarChart2 },
   { key: 'quotes', label: '我的报价', icon: Truck },
+  { key: 'myJobs', label: '我的招聘', icon: Briefcase },
+  { key: 'myResumes', label: '我的求职', icon: User },
   { key: 'articles', label: '我的文章', icon: FileText },
   { key: 'bookmarks', label: '收藏', icon: Bookmark },
   { key: 'settings', label: '设置', icon: Settings },
 ];
 
+const JOB_CATEGORIES = [
+  'CLASS A 司机', 'CLASS B 司机', 'CLASS D 司机', '调度找召卡车',
+  '文员OP', '跟单/客服', '应收应付会计', '卸柜搬货工',
+  '出单出货 点数', '物流销售', '货运代理', '卡车修理技工', '货运经纪', '报关师'
+];
+const LOCATIONS = [
+  '洛杉矶', '纽约', '旧金山', '芝加哥', '休斯顿', '凤凰城', '费城', '圣安东尼奥',
+  '圣地亚哥', '达拉斯', '圣何塞', '奥斯汀', '西雅图', '丹佛', '华盛顿', '波士顿',
+  '亚特兰大', '迈阿密', '拉斯维加斯', '波特兰'
+];
+const WORK_TYPES = ['全职', '兼职', '合同工', '临时工'];
+const EXPERIENCE_OPTIONS = ['经验不限', '1年以内', '1-3年', '3-5年', '5-10年', '10年以上'];
+
 const UserProfile = () => {
   const navigate = useNavigate();
+  const { section } = useParams();
   const { user } = useAuth();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('overview');
+  const validTabs = TABS.map(t => t.key);
+  const [activeTab, setActiveTab] = useState(() => {
+    if (section && validTabs.includes(section)) return section;
+    return 'overview';
+  });
 
   // Articles fetched separately for "My Articles" tab
   const [articles, setArticles] = useState([]);
@@ -71,6 +99,14 @@ const UserProfile = () => {
   const [editingArticle, setEditingArticle] = useState(null);
   const [editForm, setEditForm] = useState({ title: '', category: '', content: '', tags: '', cover_image: '', summary: '' });
   const [editSaving, setEditSaving] = useState(false);
+
+  // Jobs/Resumes state
+  const [myJobs, setMyJobs] = useState([]);
+  const [myJobsLoading, setMyJobsLoading] = useState(false);
+  const [myResumes, setMyResumes] = useState([]);
+  const [myResumesLoading, setMyResumesLoading] = useState(false);
+  const [editingJob, setEditingJob] = useState(null);
+  const [editingResume, setEditingResume] = useState(null);
 
   // SEO
   useSEO({
@@ -123,6 +159,10 @@ const UserProfile = () => {
   }, [profile?.id]);
 
   useEffect(() => {
+    if (section && validTabs.includes(section)) setActiveTab(section);
+  }, [section, validTabs]);
+
+  useEffect(() => {
     if (user) fetchProfile();
     else setLoading(false);
   }, [user, fetchProfile]);
@@ -156,6 +196,32 @@ const UserProfile = () => {
       fetchQuoteSessions();
     }
   }, [activeTab, quoteSessions.length, fetchQuoteSessions, user]);
+
+  const fetchMyJobs = useCallback(async () => {
+    try {
+      setMyJobsLoading(true);
+      const res = await apiClient.get('/jobs/my/posts');
+      if (res.success) setMyJobs(res.data || []);
+    } catch (err) { console.error('获取我的职位失败:', err); }
+    finally { setMyJobsLoading(false); }
+  }, []);
+
+  const fetchMyResumes = useCallback(async () => {
+    try {
+      setMyResumesLoading(true);
+      const res = await apiClient.get('/resumes/my/posts');
+      if (res.success) setMyResumes(res.data || []);
+    } catch (err) { console.error('获取我的简历失败:', err); }
+    finally { setMyResumesLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'myJobs' && myJobs.length === 0 && user) fetchMyJobs();
+  }, [activeTab, myJobs.length, user, fetchMyJobs]);
+
+  useEffect(() => {
+    if (activeTab === 'myResumes' && myResumes.length === 0 && user) fetchMyResumes();
+  }, [activeTab, myResumes.length, user, fetchMyResumes]);
 
   // --------------- Form helpers ---------------
   const handleFormChange = (field, value) => {
@@ -472,6 +538,8 @@ const UserProfile = () => {
           if (tab.key === 'articles') count = profile.article_count ?? 0;
           if (tab.key === 'bookmarks') count = bookmarks.length;
           if (tab.key === 'quotes') count = quoteSessions.length || null;
+          if (tab.key === 'myJobs') count = myJobs.length || null;
+          if (tab.key === 'myResumes') count = myResumes.length || null;
           return (
             <button
               key={tab.key}
@@ -490,6 +558,8 @@ const UserProfile = () => {
       <div className="profile-tab-content">
         {activeTab === 'overview' && renderOverview()}
         {activeTab === 'quotes' && renderQuotes()}
+        {activeTab === 'myJobs' && renderMyJobs()}
+        {activeTab === 'myResumes' && renderMyResumesTab()}
         {activeTab === 'articles' && renderArticles()}
         {activeTab === 'bookmarks' && renderBookmarks()}
         {activeTab === 'settings' && renderSettings()}
@@ -765,6 +835,322 @@ const UserProfile = () => {
               <p>暂无报价记录</p>
               <button className="new-article-btn" style={{ marginTop: '1rem' }} onClick={() => navigate('/get-quote-ltl')}>
                 获取第一个LTL报价
+              </button>
+            </div>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  // ===== MY JOBS TAB =====
+  const handleDeleteJob = async (id) => {
+    if (!window.confirm('确定要删除这条招聘信息吗？')) return;
+    try {
+      const res = await apiClient.delete(`/jobs/${id}`);
+      if (res.success) { setMyJobs(prev => prev.filter(j => j.id !== id)); }
+    } catch (err) { console.error('删除职位失败:', err); alert('删除失败'); }
+  };
+
+  const handleSaveJob = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = {};
+    for (let [key, value] of fd.entries()) data[key] = value;
+    try {
+      const res = await apiClient.put(`/jobs/${editingJob.id}`, data);
+      if (res.success) { setEditingJob(null); fetchMyJobs(); }
+    } catch (err) { console.error('更新职位失败:', err); alert('更新失败'); }
+  };
+
+  const handleDeleteResume = async (id) => {
+    if (!window.confirm('确定要删除这条简历吗？')) return;
+    try {
+      const res = await apiClient.delete(`/resumes/${id}`);
+      if (res.success) { setMyResumes(prev => prev.filter(r => r.id !== id)); }
+    } catch (err) { console.error('删除简历失败:', err); alert('删除失败'); }
+  };
+
+  const handleSaveResume = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const data = {};
+    for (let [key, value] of fd.entries()) data[key] = value;
+    if (data.skills) data.skills = data.skills.split(/[,，]/).map(s => s.trim()).filter(Boolean);
+    try {
+      const res = await apiClient.put(`/resumes/${editingResume.id}`, data);
+      if (res.success) { setEditingResume(null); fetchMyResumes(); }
+    } catch (err) { console.error('更新简历失败:', err); alert('更新失败'); }
+  };
+
+  function renderMyJobs() {
+    const activeJobs = myJobs.filter(j => j.isActive);
+    const inactiveJobs = myJobs.filter(j => !j.isActive);
+    return (
+      <>
+        {/* Edit Modal */}
+        {editingJob && (
+          <div className="article-edit-overlay" onClick={() => setEditingJob(null)}>
+            <div className="article-edit-modal" onClick={e => e.stopPropagation()}>
+              <div className="article-edit-header">
+                <h2>编辑职位</h2>
+                <button onClick={() => setEditingJob(null)}><X size={20} /></button>
+              </div>
+              <div className="article-edit-body">
+                <form onSubmit={handleSaveJob}>
+                  <div className="form-group"><label>职位名称</label><input name="title" defaultValue={editingJob.title} required /></div>
+                  <div className="form-group"><label>职位分类</label>
+                    <select name="category" defaultValue={editingJob.category} required>
+                      {JOB_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group"><label>公司名称</label><input name="company" defaultValue={editingJob.company} required /></div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="form-group" style={{ flex: 1 }}><label>工作地点</label>
+                      <select name="location" defaultValue={editingJob.location} required>
+                        {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}><label>薪资待遇</label><input name="salary" defaultValue={editingJob.salary} required /></div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="form-group" style={{ flex: 1 }}><label>工作类型</label>
+                      <select name="workType" defaultValue={editingJob.type} required>
+                        {WORK_TYPES.map(w => <option key={w} value={w}>{w}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}><label>经验要求</label>
+                      <select name="experience" defaultValue={editingJob.experience} required>
+                        {EXPERIENCE_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group"><label>职位描述</label><textarea name="description" defaultValue={editingJob.description} rows={4} required /></div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="form-group" style={{ flex: 1 }}><label>联系人</label><input name="contactPerson" defaultValue={editingJob.contactPerson} /></div>
+                    <div className="form-group" style={{ flex: 1 }}><label>联系电话</label><input name="contactPhone" defaultValue={editingJob.contactPhone} /></div>
+                  </div>
+                  <div className="form-group"><label>联系邮箱</label><input name="contactEmail" defaultValue={editingJob.contactEmail} type="email" /></div>
+                  <div className="article-edit-actions">
+                    <button type="button" className="btn-cancel" onClick={() => setEditingJob(null)}>取消</button>
+                    <button type="submit" className="btn-save"><Save size={16} /> 保存</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="articles-tab-header">
+          <h3>我的招聘 ({myJobs.length})</h3>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="new-article-btn" onClick={() => navigate('/jobs-driver-freight-logistics-recruitment-platform-物流司机招聘求职平台-货运卡车运输人才匹配系统')}>
+              <ExternalLink size={16} /> 招聘大厅
+            </button>
+            <button className="new-article-btn" onClick={fetchMyJobs}>
+              <RefreshCw size={16} /> 刷新
+            </button>
+          </div>
+        </div>
+
+        <div className="profile-section-card">
+          {myJobsLoading ? (
+            <div className="profile-loading" style={{ minHeight: '200px' }}><div className="loading-bar"></div></div>
+          ) : myJobs.length > 0 ? (
+            <div className="my-posts-list">
+              {activeJobs.length > 0 && (
+                <>
+                  <div className="my-posts-section-label">活跃中 ({activeJobs.length})</div>
+                  {activeJobs.map(job => (
+                    <div key={job.id} className="my-post-card">
+                      <div className="my-post-main">
+                        <div className="my-post-title-row">
+                          <h4>{job.title}</h4>
+                          <span className="my-post-status active">活跃</span>
+                        </div>
+                        <div className="my-post-meta">
+                          <span><Building2 size={13} /> {job.company}</span>
+                          <span><MapPin size={13} /> {job.location}</span>
+                          <span><DollarSign size={13} /> {job.salary}</span>
+                          <span><Eye size={13} /> {job.views}</span>
+                          <span><Calendar size={13} /> {job.posted}</span>
+                        </div>
+                      </div>
+                      <div className="my-post-actions">
+                        <button className="article-action-btn edit" onClick={() => setEditingJob(job)}><Edit size={14} /> 编辑</button>
+                        <button className="article-action-btn delete" onClick={() => handleDeleteJob(job.id)}><Trash2 size={14} /> 删除</button>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+              {inactiveJobs.length > 0 && (
+                <>
+                  <div className="my-posts-section-label" style={{ marginTop: activeJobs.length ? 16 : 0 }}>已下线 ({inactiveJobs.length})</div>
+                  {inactiveJobs.map(job => (
+                    <div key={job.id} className="my-post-card inactive">
+                      <div className="my-post-main">
+                        <div className="my-post-title-row">
+                          <h4>{job.title}</h4>
+                          <span className="my-post-status inactive">已下线</span>
+                        </div>
+                        <div className="my-post-meta">
+                          <span><Building2 size={13} /> {job.company}</span>
+                          <span><MapPin size={13} /> {job.location}</span>
+                        </div>
+                      </div>
+                      <div className="my-post-actions">
+                        <button className="article-action-btn delete" onClick={() => handleDeleteJob(job.id)}><Trash2 size={14} /> 删除</button>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-icon"><Briefcase size={28} /></div>
+              <p>暂无发布的招聘信息</p>
+              <button className="new-article-btn" style={{ marginTop: '1rem' }}
+                onClick={() => navigate('/jobs-driver-freight-logistics-recruitment-platform-物流司机招聘求职平台-货运卡车运输人才匹配系统')}>
+                去发布招聘
+              </button>
+            </div>
+          )}
+        </div>
+      </>
+    );
+  }
+
+  // ===== MY RESUMES TAB =====
+  function renderMyResumesTab() {
+    const activeResumes = myResumes.filter(r => r.isActive);
+    const inactiveResumes = myResumes.filter(r => !r.isActive);
+    return (
+      <>
+        {/* Edit Modal */}
+        {editingResume && (
+          <div className="article-edit-overlay" onClick={() => setEditingResume(null)}>
+            <div className="article-edit-modal" onClick={e => e.stopPropagation()}>
+              <div className="article-edit-header">
+                <h2>编辑简历</h2>
+                <button onClick={() => setEditingResume(null)}><X size={20} /></button>
+              </div>
+              <div className="article-edit-body">
+                <form onSubmit={handleSaveResume}>
+                  <div className="form-group"><label>姓名</label><input name="name" defaultValue={editingResume.name} required /></div>
+                  <div className="form-group"><label>求职岗位</label><input name="position" defaultValue={editingResume.position} required /></div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="form-group" style={{ flex: 1 }}><label>工作经验</label>
+                      <select name="experience" defaultValue={editingResume.experience} required>
+                        {EXPERIENCE_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}
+                      </select>
+                    </div>
+                    <div className="form-group" style={{ flex: 1 }}><label>期望地点</label>
+                      <select name="location" defaultValue={editingResume.location} required>
+                        {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="form-group" style={{ flex: 1 }}><label>联系电话</label><input name="phone" defaultValue={editingResume.phone} required /></div>
+                    <div className="form-group" style={{ flex: 1 }}><label>邮箱</label><input name="email" defaultValue={editingResume.email} type="email" required /></div>
+                  </div>
+                  <div className="form-group"><label>技能专长</label><input name="skills" defaultValue={editingResume.skills?.join(', ')} /></div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="form-group" style={{ flex: 1 }}><label>期望薪资</label><input name="expectedSalary" defaultValue={editingResume.expectedSalary} /></div>
+                    <div className="form-group" style={{ flex: 1 }}><label>工作类型偏好</label>
+                      <select name="workTypePreference" defaultValue={editingResume.workTypePreference}>
+                        <option value="">不限</option>
+                        {WORK_TYPES.map(w => <option key={w} value={w}>{w}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group"><label>个人简介</label><textarea name="summary" defaultValue={editingResume.summary} rows={4} /></div>
+                  <div className="article-edit-actions">
+                    <button type="button" className="btn-cancel" onClick={() => setEditingResume(null)}>取消</button>
+                    <button type="submit" className="btn-save"><Save size={16} /> 保存</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="articles-tab-header">
+          <h3>我的求职 ({myResumes.length})</h3>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="new-article-btn" onClick={() => navigate('/jobs-driver-freight-logistics-recruitment-platform-物流司机招聘求职平台-货运卡车运输人才匹配系统')}>
+              <ExternalLink size={16} /> 求职大厅
+            </button>
+            <button className="new-article-btn" onClick={fetchMyResumes}>
+              <RefreshCw size={16} /> 刷新
+            </button>
+          </div>
+        </div>
+
+        <div className="profile-section-card">
+          {myResumesLoading ? (
+            <div className="profile-loading" style={{ minHeight: '200px' }}><div className="loading-bar"></div></div>
+          ) : myResumes.length > 0 ? (
+            <div className="my-posts-list">
+              {activeResumes.length > 0 && (
+                <>
+                  <div className="my-posts-section-label">活跃中 ({activeResumes.length})</div>
+                  {activeResumes.map(resume => (
+                    <div key={resume.id} className="my-post-card">
+                      <div className="my-post-main">
+                        <div className="my-post-title-row">
+                          <h4>{resume.name} — {resume.position}</h4>
+                          <span className="my-post-status active">活跃</span>
+                        </div>
+                        <div className="my-post-meta">
+                          <span><MapPin size={13} /> {resume.location}</span>
+                          <span><BookOpen size={13} /> {resume.experience}</span>
+                          {resume.expectedSalary && <span><DollarSign size={13} /> {resume.expectedSalary}</span>}
+                          <span><Eye size={13} /> {resume.views}</span>
+                          <span><Calendar size={13} /> {resume.posted}</span>
+                        </div>
+                        {resume.skills && resume.skills.length > 0 && (
+                          <div className="my-post-skills">
+                            {resume.skills.slice(0, 5).map((s, i) => <span key={i} className="my-skill-tag">{s}</span>)}
+                          </div>
+                        )}
+                      </div>
+                      <div className="my-post-actions">
+                        <button className="article-action-btn edit" onClick={() => setEditingResume(resume)}><Edit size={14} /> 编辑</button>
+                        <button className="article-action-btn delete" onClick={() => handleDeleteResume(resume.id)}><Trash2 size={14} /> 删除</button>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+              {inactiveResumes.length > 0 && (
+                <>
+                  <div className="my-posts-section-label" style={{ marginTop: activeResumes.length ? 16 : 0 }}>已下线 ({inactiveResumes.length})</div>
+                  {inactiveResumes.map(resume => (
+                    <div key={resume.id} className="my-post-card inactive">
+                      <div className="my-post-main">
+                        <div className="my-post-title-row">
+                          <h4>{resume.name} — {resume.position}</h4>
+                          <span className="my-post-status inactive">已下线</span>
+                        </div>
+                      </div>
+                      <div className="my-post-actions">
+                        <button className="article-action-btn delete" onClick={() => handleDeleteResume(resume.id)}><Trash2 size={14} /> 删除</button>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <div className="empty-icon"><User size={28} /></div>
+              <p>暂无发布的简历</p>
+              <button className="new-article-btn" style={{ marginTop: '1rem' }}
+                onClick={() => navigate('/jobs-driver-freight-logistics-recruitment-platform-物流司机招聘求职平台-货运卡车运输人才匹配系统')}>
+                去发布简历
               </button>
             </div>
           )}

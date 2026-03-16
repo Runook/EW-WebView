@@ -39,12 +39,16 @@ router.get('/', [
       if (!filters[key]) delete filters[key];
     });
 
-    const jobs = await Job.getAllJobs(filters);
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const result = await Job.getAllJobs(filters, { page, limit });
 
     res.json({
       success: true,
-      data: jobs,
-      total: jobs.length
+      data: result.data,
+      total: result.total,
+      page: result.page,
+      totalPages: result.totalPages
     });
 
   } catch (error) {

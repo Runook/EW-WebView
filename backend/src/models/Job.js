@@ -1,57 +1,50 @@
 const { db } = require('../config/database');
 
 class Job {
-  // 获取所有职位（带筛选）
-  static async getAllJobs(filters = {}) {
+  static async getAllJobs(filters = {}, { page = 1, limit = 20 } = {}) {
     try {
-      let query = db('jobs')
-        .select(
-          'jobs.*',
-          // 添加premium信息
-          'premium_posts.premium_type',
-          'premium_posts.end_time as premium_end_time',
-          'premium_posts.created_at as premium_created_at'
-        )
-        .leftJoin('premium_posts', function() {
-          this.on('premium_posts.post_type', '=', db.raw("'job'"))
-              .andOn('premium_posts.post_id', '=', 'jobs.id')
-              .andOn('premium_posts.is_active', '=', db.raw('true'))
-              .andOn('premium_posts.end_time', '>', db.raw('NOW()'));
-        })
-        .where('jobs.is_active', true)
-        // 修改排序：置顶内容按置顶时间倒序，普通内容按发布时间倒序
+      const buildBase = () => {
+        let q = db('jobs')
+          .leftJoin('premium_posts', function() {
+            this.on('premium_posts.post_type', '=', db.raw("'job'"))
+                .andOn('premium_posts.post_id', '=', 'jobs.id')
+                .andOn('premium_posts.is_active', '=', db.raw('true'))
+                .andOn('premium_posts.end_time', '>', db.raw('NOW()'));
+          })
+          .where('jobs.is_active', true);
+
+        if (filters.category) q = q.where('jobs.category', filters.category);
+        if (filters.location) q = q.where('jobs.location', filters.location);
+        if (filters.workType) q = q.where('jobs.work_type', filters.workType);
+        if (filters.experience) q = q.where('jobs.experience', filters.experience);
+        if (filters.search) {
+          q = q.where(function() {
+            this.where('jobs.title', 'ilike', `%${filters.search}%`)
+                .orWhere('jobs.company', 'ilike', `%${filters.search}%`)
+                .orWhere('jobs.description', 'ilike', `%${filters.search}%`);
+          });
+        }
+        return q;
+      };
+
+      const [{ count }] = await buildBase().count('jobs.id as count');
+      const total = parseInt(count);
+
+      const offset = (page - 1) * limit;
+      const jobs = await buildBase()
+        .select('jobs.*', 'premium_posts.premium_type', 'premium_posts.end_time as premium_end_time', 'premium_posts.created_at as premium_created_at')
         .orderBy(db.raw('CASE WHEN premium_posts.premium_type = \'top\' THEN 1 ELSE 2 END'))
         .orderBy('premium_posts.created_at', 'desc')
-        .orderBy('jobs.created_at', 'desc');
+        .orderBy('jobs.created_at', 'desc')
+        .limit(limit)
+        .offset(offset);
 
-      // 应用筛选条件
-      if (filters.category) {
-        query = query.where('jobs.category', filters.category);
-      }
-      
-      if (filters.location) {
-        query = query.where('jobs.location', filters.location);
-      }
-      
-      if (filters.workType) {
-        query = query.where('jobs.work_type', filters.workType);
-      }
-      
-      if (filters.experience) {
-        query = query.where('jobs.experience', filters.experience);
-      }
-      
-      if (filters.search) {
-        query = query.where(function() {
-          this.where('jobs.title', 'ilike', `%${filters.search}%`)
-              .orWhere('jobs.company', 'ilike', `%${filters.search}%`)
-              .orWhere('jobs.description', 'ilike', `%${filters.search}%`);
-        });
-      }
-
-      const jobs = await query;
-      
-      return jobs.map(job => this.formatJobData(job));
+      return {
+        data: jobs.map(job => this.formatJobData(job)),
+        total,
+        page,
+        totalPages: Math.ceil(total / limit)
+      };
     } catch (error) {
       console.error('Job.getAllJobs error:', error);
       throw error;

@@ -71,8 +71,10 @@
     <loc>https://welogx.com/jobs-driver-freight-logistics-recruitment-platform-物流司机招聘求职平台-货运卡车运输人才匹配系统</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
-    <lastmod>2026-02-06</lastmod>
+    <lastmod>2026-03-16</lastmod>
   </url>
+  
+  <!-- Dynamic job/resume sitemaps are at /api/sitemap/jobs.xml -->
   
   <url>
     <loc>https://welogx.com/logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台</loc>

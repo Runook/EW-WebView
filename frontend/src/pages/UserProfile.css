@@ -1259,3 +1259,104 @@
     margin-top: 8px;
   }
 }
+
+/* ===== MY JOBS / MY RESUMES TAB ===== */
+.my-posts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.my-posts-section-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 0 8px;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 4px;
+}
+
+.my-post-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid #f3f4f6;
+  gap: 12px;
+  transition: background 0.15s;
+}
+.my-post-card:hover { background: #fafbfc; margin: 0 -16px; padding-left: 16px; padding-right: 16px; border-radius: 8px; }
+.my-post-card:last-child { border-bottom: none; }
+.my-post-card.inactive { opacity: 0.55; }
+
+.my-post-main { flex: 1; min-width: 0; }
+
+.my-post-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.my-post-title-row h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-post-status {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.my-post-status.active { background: #ecfdf5; color: #059669; }
+.my-post-status.inactive { background: #f3f4f6; color: #9ca3af; }
+.my-post-status.filled { background: #eff6ff; color: #2563eb; }
+
+.my-post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.my-post-meta span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.my-post-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+.my-skill-tag {
+  background: #eff6ff;
+  color: #2563eb;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.my-post-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .my-post-card { flex-direction: column; align-items: flex-start; }
+  .my-post-actions { width: 100%; justify-content: flex-end; }
+  .my-post-title-row { flex-wrap: wrap; }
+}
