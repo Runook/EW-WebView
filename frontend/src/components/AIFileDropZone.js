@@ -18,6 +18,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
   const [quoteModalIdx, setQuoteModalIdx] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteResults, setQuoteResults] = useState([]);
+  const [datRate, setDatRate] = useState(null);
   const [quoteSortBy, setQuoteSortBy] = useState('price');
   const [expandedBreakdown, setExpandedBreakdown] = useState(null);
 
@@ -153,51 +154,76 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
     }
   };
 
-  // Get Quote for a specific shipment
+  // Get Quote for a specific shipment (carrier quotes + DAT rate in parallel)
   const handleGetQuote = async (idx) => {
     const s = shipments[idx];
     setQuoteModalIdx(idx);
     setQuoteLoading(true);
     setQuoteResults([]);
+    setDatRate(null);
+    setExpandedBreakdown(null);
 
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const quoteRequestData = {
-        originCity: s.originCity || '',
-        originState: s.originState || '',
-        originZip: s.originZip || '',
-        originCountry: 'US',
-        originLocationType: 'commercial',
-        destinationCity: s.destinationCity || '',
-        destinationState: s.destinationState || '',
-        destinationZip: s.destinationZip || '',
-        destinationCountry: 'US',
-        destinationLocationType: s.destinationLocationType || 'commercial',
-        pickupDate: s.pickupDate || today,
-        items: s.items.map(item => ({
-          description: item.description || s.cargoDescription || 'Freight',
-          weight: String(item.weight || 500),
-          length: String(item.length || 48),
-          width: String(item.width || 40),
-          height: String(item.height || 48),
-          pallets: String(item.pallets || 1),
-          freightClass: item.freightClass || '70',
-          stackable: item.stackable !== false,
-          hazmat: item.hazmat || false
-        })),
-        pickupServices: [],
-        deliveryServices: [],
-        distanceMiles: null
-      };
+    const today = new Date().toISOString().split('T')[0];
+    const quoteRequestData = {
+      originCity: s.originCity || '',
+      originState: s.originState || '',
+      originZip: s.originZip || '',
+      originCountry: 'US',
+      originLocationType: 'commercial',
+      destinationCity: s.destinationCity || '',
+      destinationState: s.destinationState || '',
+      destinationZip: s.destinationZip || '',
+      destinationCountry: 'US',
+      destinationLocationType: s.destinationLocationType || 'commercial',
+      pickupDate: s.pickupDate || today,
+      items: s.items.map(item => ({
+        description: item.description || s.cargoDescription || 'Freight',
+        weight: String(item.weight || 500),
+        length: String(item.length || 48),
+        width: String(item.width || 40),
+        height: String(item.height || 48),
+        pallets: String(item.pallets || 1),
+        freightClass: item.freightClass || '70',
+        stackable: item.stackable !== false,
+        hazmat: item.hazmat || false
+      })),
+      pickupServices: [],
+      deliveryServices: [],
+      distanceMiles: null
+    };
 
-      const quotes = await freightApi.getAllLTLQuotes(quoteRequestData);
-      setQuoteResults(quotes || []);
-    } catch (err) {
-      console.error('Get quote error:', err);
-      setError(`获取报价失败: ${err.message}`);
-    } finally {
-      setQuoteLoading(false);
+    // Fetch carrier quotes and DAT rate in parallel
+    const [carrierResult, datResult] = await Promise.allSettled([
+      freightApi.getAllLTLQuotes(quoteRequestData),
+      (s.originZip && s.destinationZip) ? fetch(`${getApiBase()}/dat/rate-lookup`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${getAuthToken()}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          originZip: s.originZip,
+          destinationZip: s.destinationZip,
+          equipmentType: 'V',
+          weight: s.items.reduce((sum, item) => sum + (item.weight || 0), 0)
+        })
+      }).then(r => r.json()) : Promise.resolve(null)
+    ]);
+
+    if (carrierResult.status === 'fulfilled') {
+      setQuoteResults(carrierResult.value || []);
+    } else {
+      console.error('Carrier quotes failed:', carrierResult.reason);
+      setError(`获取报价失败: ${carrierResult.reason?.message}`);
     }
+
+    if (datResult.status === 'fulfilled' && datResult.value?.success) {
+      setDatRate(datResult.value.data);
+    } else {
+      console.warn('DAT rate unavailable:', datResult.status === 'rejected' ? datResult.reason : datResult.value);
+    }
+
+    setQuoteLoading(false);
   };
 
   const sortedQuoteResults = [...quoteResults].sort((a, b) => {
@@ -402,7 +428,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
 
       {/* Quote Modal */}
       {quoteModalIdx !== null && (
-        <div className="quote-modal-overlay" onClick={() => { setQuoteModalIdx(null); setQuoteResults([]); setExpandedBreakdown(null); }}>
+        <div className="quote-modal-overlay" onClick={() => { setQuoteModalIdx(null); setQuoteResults([]); setDatRate(null); setExpandedBreakdown(null); }}>
           <div className="quote-modal" onClick={e => e.stopPropagation()}>
             <div className="quote-modal-header">
               <h3>
@@ -412,7 +438,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
               <div className="quote-route-info">
                 {shipments[quoteModalIdx]?.originZip || '?'} → {shipments[quoteModalIdx]?.destinationCity}, {shipments[quoteModalIdx]?.destinationState} {shipments[quoteModalIdx]?.destinationZip}
               </div>
-              <button className="quote-modal-close" onClick={() => { setQuoteModalIdx(null); setQuoteResults([]); setExpandedBreakdown(null); }}>
+              <button className="quote-modal-close" onClick={() => { setQuoteModalIdx(null); setQuoteResults([]); setDatRate(null); setExpandedBreakdown(null); }}>
                 <X size={20} />
               </button>
             </div>
@@ -421,10 +447,45 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
               {quoteLoading ? (
                 <div className="quote-loading">
                   <Loader size={28} className="spin" />
-                  <span>正在从 9 家运输商获取报价...</span>
+                  <span>正在从 9 家运输商 + DAT 获取报价...</span>
                 </div>
               ) : quoteResults.length > 0 ? (
                 <>
+                  {/* DAT Market Reference */}
+                  {datRate && datRate.available && (
+                    <div className="dat-rate-panel">
+                      <div className="dat-rate-header">
+                        <span className="dat-label">DAT Market Reference</span>
+                        {datRate.mock && <span className="dat-mock-badge">Mock</span>}
+                        {datRate.mileage && <span className="dat-mileage">{datRate.mileage} miles</span>}
+                      </div>
+                      <div className="dat-rate-grid">
+                        <div className="dat-rate-item">
+                          <span className="dat-rate-title">Spot Rate</span>
+                          <span className="dat-rate-value">${datRate.spotRate?.toLocaleString() || 'N/A'}</span>
+                        </div>
+                        <div className="dat-rate-item">
+                          <span className="dat-rate-title">Contract</span>
+                          <span className="dat-rate-value">${datRate.contractRate?.toLocaleString() || 'N/A'}</span>
+                        </div>
+                        <div className="dat-rate-item">
+                          <span className="dat-rate-title">Low</span>
+                          <span className="dat-rate-value">${datRate.low?.toLocaleString() || 'N/A'}</span>
+                        </div>
+                        <div className="dat-rate-item">
+                          <span className="dat-rate-title">High</span>
+                          <span className="dat-rate-value">${datRate.high?.toLocaleString() || 'N/A'}</span>
+                        </div>
+                        {datRate.perMile && (
+                          <div className="dat-rate-item">
+                            <span className="dat-rate-title">Per Mile</span>
+                            <span className="dat-rate-value">${datRate.perMile}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="quote-sort-bar">
                     <span>排序:</span>
                     <button className={quoteSortBy === 'price' ? 'active' : ''} onClick={() => setQuoteSortBy('price')}>最低价格</button>
