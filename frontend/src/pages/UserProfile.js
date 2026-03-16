@@ -32,9 +32,6 @@ import {
   Briefcase,
   Building2,
   DollarSign,
-  Phone,
-  Mail,
-  Send,
   BookOpen,
   RefreshCw
 } from 'lucide-react';

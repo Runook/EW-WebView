@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Plus, Briefcase, User, Search, Filter, ChevronDown, ChevronLeft, ChevronRight,
-  Star, MapPin, Clock, BookOpen, Calendar, Send, Bookmark, BookmarkCheck,
+  Star, MapPin, Clock, BookOpen, Calendar, Send, Bookmark, BookMarked,
   Phone, Mail, X, Eye, Edit, Trash2, DollarSign, Users, TrendingUp, Building2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -355,7 +355,7 @@ const Jobs = () => {
                       </>
                     )}
                     <button className={`jact save ${savedIds[`job_${job.id}`] ? 'saved' : ''}`} title="收藏" onClick={(e) => { e.stopPropagation(); toggleSaved('job', job.id); }}>
-                      {savedIds[`job_${job.id}`] ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
+                      {savedIds[`job_${job.id}`] ? <BookMarked size={14} /> : <Bookmark size={14} />}
                     </button>
                     <Link to={`/job/${job.id}/${generateJobSlug(job)}`} className="jact apply" onClick={(e) => e.stopPropagation()}>
                       <Send size={14} /> 申请
@@ -409,7 +409,7 @@ const Jobs = () => {
                       </>
                     )}
                     <button className={`jact save ${savedIds[`resume_${resume.id}`] ? 'saved' : ''}`} title="收藏" onClick={(e) => { e.stopPropagation(); toggleSaved('resume', resume.id); }}>
-                      {savedIds[`resume_${resume.id}`] ? <BookmarkCheck size={14} /> : <Bookmark size={14} />}
+                      {savedIds[`resume_${resume.id}`] ? <BookMarked size={14} /> : <Bookmark size={14} />}
                     </button>
                     <Link to={`/resume/${resume.id}/${generateResumeSlug(resume)}`} className="jact apply" onClick={(e) => e.stopPropagation()}>
                       <Phone size={14} /> 联系

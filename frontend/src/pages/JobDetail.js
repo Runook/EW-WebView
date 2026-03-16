@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-  ArrowLeft, MapPin, Clock, BookOpen, Calendar, Eye, DollarSign,
-  Building2, Phone, Mail, User, Send, Bookmark, BookmarkCheck,
-  Briefcase, ChevronRight, Share2, Check, Copy
+  MapPin, Clock, BookOpen, Calendar, Eye, DollarSign,
+  Building2, Phone, Mail, User, Send, Bookmark, BookMarked,
+  Briefcase, ChevronRight, Share2, Check
 } from 'lucide-react';
 import { apiClient } from '../utils/apiClient';
 import { useSEO } from '../hooks/useSEO';
@@ -12,7 +12,7 @@ import './JobDetail.css';
 export function generateJobSlug(job) {
   if (!job) return '';
   const parts = [job.title, job.company, job.location].filter(Boolean);
-  return parts.join('-').replace(/\s+/g, '-').replace(/[\/\\?&#%]+/g, '').toLowerCase();
+  return parts.join('-').replace(/\s+/g, '-').replace(/[/\\?&#%]+/g, '').toLowerCase();
 }
 
 const SITE_URL = 'https://welogx.com';
@@ -192,7 +192,7 @@ const JobDetail = () => {
               <Send size={16} /> 立即申请
             </button>
             <button className={`jd-btn ${saved ? 'saved' : 'secondary'}`} onClick={toggleSave}>
-              {saved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
+              {saved ? <BookMarked size={16} /> : <Bookmark size={16} />}
               {saved ? '已收藏' : '收藏'}
             </button>
             <button className="jd-btn secondary" onClick={handleShare}>
