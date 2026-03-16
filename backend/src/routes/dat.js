@@ -69,27 +69,27 @@ router.post('/batch-rate-lookup', auth, [
  * Check DAT API configuration and connectivity status.
  */
 router.get('/status', auth, async (req, res) => {
-  const configured = !!(process.env.DAT_CLIENT_ID && process.env.DAT_CLIENT_SECRET);
-
-  let connected = false;
-  if (configured) {
-    try {
-      await datService.getDATToken();
-      connected = true;
-    } catch (e) { /* token fetch failed */ }
+  try {
+    const result = await datService.testConnection();
+    res.json({
+      success: true,
+      data: {
+        configured: datService.isConfigured(),
+        ...result,
+        env: process.env.DAT_API_ENV || 'production'
+      }
+    });
+  } catch (error) {
+    res.json({
+      success: true,
+      data: {
+        configured: false,
+        connected: false,
+        mock: true,
+        message: 'DAT status check failed: ' + error.message
+      }
+    });
   }
-
-  res.json({
-    success: true,
-    data: {
-      configured,
-      connected,
-      apiBase: process.env.DAT_API_BASE_URL || 'https://api.dat.com',
-      message: configured
-        ? (connected ? 'DAT API is connected' : 'DAT API configured but connection failed')
-        : 'DAT API not configured. Set DAT_CLIENT_ID and DAT_CLIENT_SECRET in environment.'
-    }
-  });
 });
 
 module.exports = router;
