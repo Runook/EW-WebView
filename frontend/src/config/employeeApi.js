@@ -732,6 +732,71 @@ export const agentApi = {
   },
 };
 
+// ==========================================
+// DAT Load Board API
+// ==========================================
+
+export const datLoadBoardApi = {
+  // --- Load Posting ---
+  createLoadPost: (data) => {
+    return request('/dat/posts/loads', 'POST', data);
+  },
+
+  updateLoadPost: (datPostId, data) => {
+    return request(`/dat/posts/loads/${datPostId}`, 'PUT', data);
+  },
+
+  refreshLoadPost: (datPostId) => {
+    return request(`/dat/posts/loads/${datPostId}/refresh`, 'POST');
+  },
+
+  deleteLoadPost: (datPostId) => {
+    return request(`/dat/posts/loads/${datPostId}`, 'DELETE');
+  },
+
+  // --- Truck Posting ---
+  createTruckPost: (data) => {
+    return request('/dat/posts/trucks', 'POST', data);
+  },
+
+  updateTruckPost: (datPostId, data) => {
+    return request(`/dat/posts/trucks/${datPostId}`, 'PUT', data);
+  },
+
+  refreshTruckPost: (datPostId) => {
+    return request(`/dat/posts/trucks/${datPostId}/refresh`, 'POST');
+  },
+
+  deleteTruckPost: (datPostId) => {
+    return request(`/dat/posts/trucks/${datPostId}`, 'DELETE');
+  },
+
+  // --- Search ---
+  searchLoads: (criteria) => {
+    return request('/dat/search/loads', 'POST', criteria);
+  },
+
+  searchTrucks: (criteria) => {
+    return request('/dat/search/trucks', 'POST', criteria);
+  },
+
+  // --- Post Management ---
+  getMyPosts: (filters = {}) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    return request(`/dat/posts?${queryParams}`);
+  },
+
+  getPostsForOrder: (orderId) => {
+    return request(`/dat/posts/order/${orderId}`);
+  },
+
+  // --- Equipment Types ---
+  getEquipmentTypes: (equipmentClass) => {
+    const params = equipmentClass ? `?class=${encodeURIComponent(equipmentClass)}` : '';
+    return request(`/dat/equipment-types${params}`);
+  },
+};
+
 export default {
   employeeApi,
   orderApi,
@@ -743,5 +808,6 @@ export default {
   serviceItemApi,
   qboApi,
   agentApi,
+  datLoadBoardApi,
 };
 

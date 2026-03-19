@@ -1,17 +1,19 @@
 /**
- * DAT Freight Rate Service
+ * DAT Freight Service — Authentication & RateView
  *
  * Authentication: DAT uses a two-step JWT flow:
  *   1. POST /access/v1/token/organization — Service Account credentials → Org Token
  *   2. POST /access/v1/token/user — Org Token + Individual User email → User Token
- *   3. Use User Token to call RateView and other DAT APIs
+ *   3. Use User Token to call RateView, Freight Posting, Search, etc.
  *
  * Tokens expire after 30 minutes. Both are cached and auto-refreshed.
+ * User tokens are cached per-email to support seat-based licensing (DAT requires
+ * unique credentials per user — sharing is not permitted).
  *
  * Environment variables:
  *   DAT_SERVICE_EMAIL    — Service Account email (provisioned by DAT)
  *   DAT_SERVICE_PASSWORD — Service Account password
- *   DAT_USER_EMAIL       — Individual user email (DAT One login)
+ *   DAT_USER_EMAIL       — Default / fallback user email (DAT One login)
  *   DAT_API_ENV          — "production" | "staging" | "nprod" (default: production)
  *
  * When credentials are not configured, returns mock data for development/testing.
@@ -40,7 +42,9 @@ const IDENTITY_BASE = IDENTITY_HOSTS[DAT_API_ENV] || IDENTITY_HOSTS.production;
 const API_BASE = API_HOSTS[DAT_API_ENV] || API_HOSTS.production;
 
 let orgTokenCache = { token: null, expiresAt: 0 };
-let userTokenCache = { token: null, expiresAt: 0 };
+
+// Per-user token cache: Map<datEmail, {token, expiresAt}>
+const userTokenCacheMap = new Map();
 
 function isConfigured() {
   return !!(DAT_SERVICE_EMAIL && DAT_SERVICE_PASSWORD && DAT_USER_EMAIL);
@@ -54,7 +58,7 @@ async function getOrgToken() {
     return orgTokenCache.token;
   }
 
-  console.log('🔑 DAT: Requesting org token...');
+  console.log('DAT: Requesting org token...');
   const res = await axios.post(`${IDENTITY_BASE}/access/v1/token/organization`, {
     username: DAT_SERVICE_EMAIL,
     password: DAT_SERVICE_PASSWORD
@@ -63,38 +67,83 @@ async function getOrgToken() {
   const token = res.data.accessToken;
   orgTokenCache = {
     token,
-    expiresAt: Date.now() + 25 * 60 * 1000 // 25 min (tokens expire at 30)
+    expiresAt: Date.now() + 25 * 60 * 1000
   };
 
-  console.log('✅ DAT: Org token obtained');
+  console.log('DAT: Org token obtained');
   return token;
 }
 
 /**
- * Step 2: Get Individual User Access Token using Org Token + user email.
+ * Step 2: Get Individual User Access Token.
+ * Supports per-user tokens keyed by email for seat-based licensing.
+ * Falls back to DAT_USER_EMAIL when no specific email is provided.
  */
-async function getUserToken() {
-  if (userTokenCache.token && Date.now() < userTokenCache.expiresAt) {
-    return userTokenCache.token;
+async function getUserToken(datEmail) {
+  const email = datEmail || DAT_USER_EMAIL;
+  if (!email) {
+    throw new Error('No DAT user email provided and DAT_USER_EMAIL is not set');
+  }
+
+  const cached = userTokenCacheMap.get(email);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.token;
   }
 
   const orgToken = await getOrgToken();
 
-  console.log('🔑 DAT: Requesting user token...');
+  console.log(`DAT: Requesting user token for ${email}...`);
   const res = await axios.post(
     `${IDENTITY_BASE}/access/v1/token/user`,
-    { username: DAT_USER_EMAIL },
+    { username: email },
     { headers: { Authorization: `Bearer ${orgToken}` } }
   );
 
   const token = res.data.accessToken;
-  userTokenCache = {
+  userTokenCacheMap.set(email, {
     token,
     expiresAt: Date.now() + 25 * 60 * 1000
-  };
+  });
 
-  console.log('✅ DAT: User token obtained');
+  console.log(`DAT: User token obtained for ${email}`);
   return token;
+}
+
+/**
+ * Invalidate cached tokens for a specific user (or all users on org-level failure).
+ */
+function invalidateTokens(datEmail) {
+  if (datEmail) {
+    userTokenCacheMap.delete(datEmail);
+  } else {
+    orgTokenCache = { token: null, expiresAt: 0 };
+    userTokenCacheMap.clear();
+  }
+}
+
+/**
+ * Look up a DAT email for an employee by querying the employees/users table.
+ * Returns null if the employee doesn't have a DAT email configured.
+ */
+async function getDATEmailForEmployee(employeeId) {
+  try {
+    const { db } = require('../config/database');
+    const row = await db('users')
+      .where('id', employeeId)
+      .select('dat_email')
+      .first();
+    return row?.dat_email || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get a user token for a specific employee, falling back to default.
+ */
+async function getTokenForEmployee(employeeId) {
+  const datEmail = await getDATEmailForEmployee(employeeId);
+  return getUserToken(datEmail);
 }
 
 /**
@@ -174,14 +223,11 @@ async function rateLookup({ originZip, destinationZip, equipmentType = 'V', weig
     };
   } catch (error) {
     if (error.response?.status === 401) {
-      orgTokenCache = { token: null, expiresAt: 0 };
-      userTokenCache = { token: null, expiresAt: 0 };
+      invalidateTokens();
     }
 
-    console.error('❌ DAT rate lookup failed:', error.response?.status, error.response?.data || error.message);
-
-    // Fallback to mock when API fails
-    console.log('⚠️ DAT: Falling back to mock data');
+    console.error('DAT rate lookup failed:', error.response?.status, error.response?.data || error.message);
+    console.log('DAT: Falling back to mock data');
     return generateMockRate(originZip, destinationZip, weight);
   }
 }
@@ -225,5 +271,11 @@ module.exports = {
   batchRateLookup,
   testConnection,
   isConfigured,
+  getUserToken,
+  getTokenForEmployee,
+  getDATEmailForEmployee,
+  invalidateTokens,
+  IDENTITY_BASE,
+  API_BASE,
   getDATToken: getUserToken
 };

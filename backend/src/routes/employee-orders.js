@@ -3,6 +3,7 @@ const router = express.Router();
 const Order = require('../models/EmployeeOrder');
 const Employee = require('../models/Employee');
 const { auth, requireEmployee, requirePermission } = require('../middleware/auth');
+const datPostingService = require('../services/datPostingService');
 
 /**
  * GET /api/orders
@@ -308,6 +309,16 @@ router.post('/:id/confirm', auth, requireEmployee, async (req, res) => {
       req.user.id,
       sub_status || 'waiting_driver'
     );
+    
+    // Auto-delete any active DAT posts linked to this order (certification requirement)
+    try {
+      const datResults = await datPostingService.deletePostsForOrder(req.user.id, parseInt(id));
+      if (datResults.length > 0) {
+        console.log(`DAT: Auto-deleted ${datResults.length} post(s) for confirmed order ${id}`);
+      }
+    } catch (datError) {
+      console.error(`DAT: Auto-delete failed for order ${id}:`, datError.message);
+    }
     
     res.json({
       success: true,
