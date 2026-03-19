@@ -37,6 +37,7 @@ import Payments from './pages/Payments';
 import MapView from './pages/MapView';
 import AdManager from './pages/AdManager';
 import AIQuoteReview from './pages/AIQuoteReview';
+import DATLoadBoard from './pages/DATLoadBoard';
 import MyQuotes from './pages/MyQuotes';
 import QuoteDetail from './pages/QuoteDetail';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -182,6 +183,7 @@ function App() {
               <Route path="/employee/ads" element={<AdManager />} />
               <Route path="/employee/admin" element={<EmployeeAdmin />} />
               <Route path="/employee/ai-review" element={<AIQuoteReview />} />
+              <Route path="/employee/dat-loadboard" element={<DATLoadBoard />} />
               
               {/* 我们 */}
               <Route path="/my-points" element={

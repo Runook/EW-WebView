@@ -867,6 +867,14 @@ const BrokerOrdersNew = () => {
           AI 报价审核
         </button>
 
+        {/* DAT Load Board */}
+        <button
+          className="nav-item"
+          onClick={() => navigate('/employee/dat-loadboard')}
+        >
+          DAT Load Board
+        </button>
+
         {/* 广告管理 */}
         <button
           className="nav-item"
