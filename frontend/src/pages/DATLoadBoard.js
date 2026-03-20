@@ -53,6 +53,7 @@ const DATLoadBoard = () => {
   const [postForm, setPostForm] = useState({
     originZip: '', destinationZip: '', equipmentType: 'V', fullPartial: 'FULL',
     pickupDate: '', deliveryDate: '', weight: '', length: '', rate: '', commodity: '', comment: '',
+    pallets: '', pieceCount: '', dims: '',
     currentLocation: '', preferredDestination: '', availableDate: '', capacity: '',
   });
 
@@ -111,7 +112,7 @@ const DATLoadBoard = () => {
     setLoading(true);
     try {
       if (postType === 'load') {
-        await datLoadBoardApi.createLoadPost({
+        const loadPayload = {
           originZip: postForm.originZip,
           destinationZip: postForm.destinationZip,
           equipmentType: postForm.equipmentType,
@@ -123,7 +124,17 @@ const DATLoadBoard = () => {
           rate: postForm.rate,
           commodity: postForm.commodity,
           comment: postForm.comment,
-        });
+        };
+        if (postForm.fullPartial === 'PARTIAL') {
+          const parts = [];
+          if (postForm.pallets) parts.push(`${postForm.pallets} pallets`);
+          if (postForm.pieceCount) parts.push(`${postForm.pieceCount} pieces`);
+          if (postForm.dims) parts.push(postForm.dims);
+          if (parts.length > 0) {
+            loadPayload.comment = [parts.join(', '), postForm.comment].filter(Boolean).join(' | ');
+          }
+        }
+        await datLoadBoardApi.createLoadPost(loadPayload);
       } else {
         await datLoadBoardApi.createTruckPost({
           originZip: postForm.originZip || undefined,
@@ -141,6 +152,7 @@ const DATLoadBoard = () => {
       setPostForm({
         originZip: '', destinationZip: '', equipmentType: 'V', fullPartial: 'FULL',
         pickupDate: '', deliveryDate: '', weight: '', length: '', rate: '', commodity: '', comment: '',
+        pallets: '', pieceCount: '', dims: '',
         currentLocation: '', preferredDestination: '', availableDate: '', capacity: '',
       });
     } catch (err) {
@@ -422,6 +434,29 @@ const DATLoadBoard = () => {
                         onChange={e => setPostForm(f => ({ ...f, comment: e.target.value }))} />
                     </div>
                   </div>
+                  {postForm.fullPartial === 'PARTIAL' && (
+                    <div className="dat-form-row dat-partial-row">
+                      <div className="dat-partial-label">Partial / LTL Details</div>
+                      <div className="dat-field">
+                        <label>Pallets</label>
+                        <input type="number" placeholder="e.g. 6"
+                          value={postForm.pallets}
+                          onChange={e => setPostForm(f => ({ ...f, pallets: e.target.value }))} />
+                      </div>
+                      <div className="dat-field">
+                        <label>Piece Count</label>
+                        <input type="number" placeholder="e.g. 12"
+                          value={postForm.pieceCount}
+                          onChange={e => setPostForm(f => ({ ...f, pieceCount: e.target.value }))} />
+                      </div>
+                      <div className="dat-field">
+                        <label>Dimensions (L x W x H)</label>
+                        <input type="text" placeholder='e.g. 48"x40"x48"'
+                          value={postForm.dims}
+                          onChange={e => setPostForm(f => ({ ...f, dims: e.target.value }))} />
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
