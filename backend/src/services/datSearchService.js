@@ -1,37 +1,21 @@
 /**
  * DAT Freight Search Service
  *
- * Wraps the DAT Freight Search API v2 to search loads and trucks on the
- * DAT load board.
+ * Endpoints (base: https://freight.api.dat.com):
+ *   POST /search/v2/loads   — Search loads on DAT load board
+ *   POST /search/v2/trucks  — Search trucks on DAT load board
  *
- * IMPORTANT constraints from DAT certification:
- *  - Searches MUST originate from real-time user requests only.
- *  - Auto-generated / scheduled / automated searches are NOT permitted.
- *  - Do NOT use searches for large-set data analysis.
- *  - All results must be clearly attributed to the DAT load board.
+ * Certification constraints:
+ *   - Searches MUST originate from real-time user requests only
+ *   - Auto-generated / scheduled searches are NOT permitted
+ *   - Do NOT use for large-set data analysis
+ *   - All results must be clearly attributed to DAT
  */
 
 const axios = require('axios');
 const datService = require('./datService');
 const { mapToDATEquipmentCode } = require('./datEquipmentTypes');
 
-/**
- * Search for loads on the DAT load board.
- *
- * @param {number} employeeId - The employee performing the search
- * @param {Object} criteria
- * @param {string} [criteria.originZip]
- * @param {string} [criteria.originCity]
- * @param {string} [criteria.originState]
- * @param {number} [criteria.originRadius] - miles
- * @param {string} [criteria.destinationZip]
- * @param {string} [criteria.destinationCity]
- * @param {string} [criteria.destinationState]
- * @param {number} [criteria.destinationRadius]
- * @param {string} [criteria.equipmentType] - EW or DAT code
- * @param {number} [criteria.limit]
- * @returns {Object} { results, source: 'DAT' }
- */
 async function searchLoads(employeeId, criteria = {}) {
   const token = await datService.getTokenForEmployee(employeeId);
   const payload = buildSearchPayload(criteria);
@@ -40,19 +24,12 @@ async function searchLoads(employeeId, criteria = {}) {
 
   return {
     results: normalizeSearchResults(res.data, 'load'),
-    total: res.data.totalCount || res.data.results?.length || 0,
+    total: res.data.totalCount || res.data.matches?.length || 0,
     source: 'DAT',
     rawResponse: res.data,
   };
 }
 
-/**
- * Search for trucks on the DAT load board.
- *
- * @param {number} employeeId
- * @param {Object} criteria - same shape as searchLoads
- * @returns {Object} { results, source: 'DAT' }
- */
 async function searchTrucks(employeeId, criteria = {}) {
   const token = await datService.getTokenForEmployee(employeeId);
   const payload = buildSearchPayload(criteria);
@@ -61,85 +38,93 @@ async function searchTrucks(employeeId, criteria = {}) {
 
   return {
     results: normalizeSearchResults(res.data, 'truck'),
-    total: res.data.totalCount || res.data.results?.length || 0,
+    total: res.data.totalCount || res.data.matches?.length || 0,
     source: 'DAT',
     rawResponse: res.data,
   };
 }
 
-// ─── Payload Builder ─────────────────────────────────────────────────
-
 function buildSearchPayload(criteria) {
-  const payload = {};
+  const payload = { lane: {} };
 
-  // Origin
   if (criteria.originZip || criteria.originCity) {
-    payload.origin = {};
+    payload.lane.origin = {};
     if (criteria.originZip) {
-      payload.origin.postalCode = String(criteria.originZip).padStart(5, '0');
+      payload.lane.origin.postalCode = String(criteria.originZip).padStart(5, '0');
     } else {
-      if (criteria.originCity) payload.origin.city = criteria.originCity;
-      if (criteria.originState) payload.origin.stateProvince = criteria.originState;
+      if (criteria.originCity) payload.lane.origin.city = criteria.originCity;
+      if (criteria.originState) payload.lane.origin.stateProv = criteria.originState;
     }
-    if (criteria.originRadius) payload.origin.radius = criteria.originRadius;
+    if (criteria.originRadius) {
+      payload.lane.origin.radiusMiles = parseInt(criteria.originRadius) || 100;
+    }
   }
 
-  // Destination
   if (criteria.destinationZip || criteria.destinationCity) {
-    payload.destination = {};
+    payload.lane.destination = {};
     if (criteria.destinationZip) {
-      payload.destination.postalCode = String(criteria.destinationZip).padStart(5, '0');
+      payload.lane.destination.postalCode = String(criteria.destinationZip).padStart(5, '0');
     } else {
-      if (criteria.destinationCity) payload.destination.city = criteria.destinationCity;
-      if (criteria.destinationState) payload.destination.stateProvince = criteria.destinationState;
+      if (criteria.destinationCity) payload.lane.destination.city = criteria.destinationCity;
+      if (criteria.destinationState) payload.lane.destination.stateProv = criteria.destinationState;
     }
-    if (criteria.destinationRadius) payload.destination.radius = criteria.destinationRadius;
+    if (criteria.destinationRadius) {
+      payload.lane.destination.radiusMiles = parseInt(criteria.destinationRadius) || 100;
+    }
   }
 
   if (criteria.equipmentType) {
-    payload.equipmentType = mapToDATEquipmentCode(criteria.equipmentType);
+    payload.freight = { equipmentType: mapToDATEquipmentCode(criteria.equipmentType) };
   }
 
   if (criteria.limit) {
-    payload.limit = Math.min(criteria.limit, 250);
+    payload.limit = Math.min(parseInt(criteria.limit), 250);
   }
 
   return payload;
 }
 
-// ─── Result Normalizer ───────────────────────────────────────────────
-
 function normalizeSearchResults(data, type) {
-  const items = data.results || data.loads || data.trucks || data.items || [];
-  return items.map(item => ({
-    datId: item.id || item.postId,
-    type,
-    origin: item.origin || {},
-    destination: item.destination || {},
-    equipmentType: item.equipmentType,
-    rate: item.rate || null,
-    weight: item.weight || null,
-    length: item.length || null,
-    pickupDate: item.earliestAvailability || item.pickupDate || null,
-    deliveryDate: item.latestAvailability || item.deliveryDate || null,
-    age: item.age || null,
-    company: item.company || item.posterCompanyName || null,
-    contact: item.contact || item.posterContact || null,
-    commodity: item.commodity || null,
-    comment: item.comment || null,
-    source: 'DAT',
-    raw: item,
-  }));
-}
+  const items = data.matches || data.results || data.loads || data.trucks || [];
+  return items.map(item => {
+    const posting = item.posting || item;
+    const lane = posting.lane || {};
+    const freight = posting.freight || {};
+    const exposure = posting.exposure || {};
+    const poster = posting.posterInfo || {};
 
-// ─── HTTP Helper ─────────────────────────────────────────────────────
+    return {
+      datId: posting.id || item.id,
+      type,
+      origin: lane.origin || {},
+      destination: lane.destination || {},
+      equipmentType: freight.equipmentType || null,
+      equipmentName: freight.equipmentName || null,
+      fullPartial: freight.fullPartial || null,
+      rate: item.rate || null,
+      weight: freight.weightPounds || null,
+      length: freight.lengthFeet || null,
+      pickupDate: exposure.earliestAvailabilityWhen || null,
+      deliveryDate: exposure.latestAvailabilityWhen || null,
+      age: item.age || null,
+      company: poster.company?.name || null,
+      contact: poster.contactMethods?.[0]?.value || null,
+      commodity: freight.commodity?.details || null,
+      comment: freight.comments?.[0]?.comment || null,
+      referenceId: posting.referenceId || null,
+      tripMiles: posting.tripLength?.miles || null,
+      source: 'DAT',
+      raw: item,
+    };
+  });
+}
 
 async function datApiRequest(method, path, data, token) {
   try {
     const config = {
       method,
       url: `${datService.API_BASE}${path}`,
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     };
     if (data && (method === 'POST' || method === 'PUT')) {
       config.data = data;
@@ -149,10 +134,10 @@ async function datApiRequest(method, path, data, token) {
     if (error.response?.status === 401) {
       datService.invalidateTokens();
     }
-    const msg = error.response?.data?.message
-      || error.response?.data?.errors?.[0]?.message
+    const msg = error.response?.data?.errors?.[0]?.message
+      || error.response?.data?.message
       || error.message;
-    const wrapped = new Error(`DAT Search API ${method} ${path} failed: ${msg}`);
+    const wrapped = new Error(`DAT Search API ${method} ${path}: ${msg}`);
     wrapped.statusCode = error.response?.status;
     wrapped.datErrors = error.response?.data;
     throw wrapped;

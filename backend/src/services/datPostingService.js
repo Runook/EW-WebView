@@ -1,16 +1,26 @@
 /**
  * DAT Freight Posting Service
  *
- * Wraps the DAT Freight Posting API v2 to create, update, refresh and delete
- * load and truck posts on the DAT load board.
+ * Endpoints (base: https://freight.api.dat.com):
+ *   POST   /v2/loads              — Create load post
+ *   PUT    /v2/loads/{id}         — Update load post
+ *   POST   /v2/loads/{id}/refresh — Refresh (15-min minimum interval)
+ *   DELETE /v2/loads/{id}         — Delete load post
+ *   POST   /v2/trucks             — Create truck post
+ *   PUT    /v2/trucks/{id}        — Update truck post
+ *   POST   /v2/trucks/{id}/refresh
+ *   DELETE /v2/trucks/{id}
  *
- * Every mutation is tracked in the local `dat_posts` table so the app knows
- * which DAT posts belong to which employee / order.
+ * Payload structure matches official DAT API spec:
+ *   { freight: { equipmentType, weightPounds, lengthFeet, fullPartial, commodity, comments },
+ *     lane: { origin: { postalCode | city+stateProv }, destination: { ... } },
+ *     exposure: { earliestAvailabilityWhen, latestAvailabilityWhen },
+ *     referenceId }
  *
- * IMPORTANT constraints from DAT certification:
- *  - Never bulk-delete and re-post to "refresh" — use the refresh endpoint.
- *  - Never create duplicates — update the existing post instead.
- *  - Delete individual posts, never mass-delete unless absolutely necessary.
+ * Certification constraints:
+ *   - Never bulk-delete and re-post to "refresh"
+ *   - Never create duplicate posts
+ *   - Delete individual posts only
  */
 
 const axios = require('axios');
@@ -23,12 +33,10 @@ const { db } = require('../config/database');
 async function createLoadPost(employeeId, loadData) {
   const token = await datService.getTokenForEmployee(employeeId);
   const equipmentCode = mapToDATEquipmentCode(loadData.equipmentType || loadData.truckType);
-
   const payload = buildLoadPayload(loadData, equipmentCode);
 
-  const res = await datApiRequest('POST', '/posting/v2/loads', payload, token);
-
-  const datPostId = res.data.id || res.data.postId || res.data.loadPostId;
+  const res = await datApiRequest('POST', '/v2/loads', payload, token);
+  const datPostId = res.data.id;
 
   await db('dat_posts').insert({
     dat_post_id: String(datPostId),
@@ -47,49 +55,35 @@ async function createLoadPost(employeeId, loadData) {
 async function updateLoadPost(employeeId, datPostId, loadData) {
   const token = await datService.getTokenForEmployee(employeeId);
   const equipmentCode = mapToDATEquipmentCode(loadData.equipmentType || loadData.truckType);
-
   const payload = buildLoadPayload(loadData, equipmentCode);
 
-  const res = await datApiRequest('PUT', `/posting/v2/loads/${datPostId}`, payload, token);
+  const res = await datApiRequest('PUT', `/v2/loads/${datPostId}`, payload, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
-    .update({
-      dat_payload: JSON.stringify(payload),
-      dat_equipment_type: equipmentCode,
-      updated_at: db.fn.now(),
-    });
+    .update({ dat_payload: JSON.stringify(payload), dat_equipment_type: equipmentCode, updated_at: db.fn.now() });
 
   return { datPostId: String(datPostId), payload, response: res.data };
 }
 
 async function refreshLoadPost(employeeId, datPostId) {
   const token = await datService.getTokenForEmployee(employeeId);
-
-  const res = await datApiRequest('POST', `/posting/v2/loads/${datPostId}/refresh`, {}, token);
+  const res = await datApiRequest('POST', `/v2/loads/${datPostId}/refresh`, null, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
-    .update({
-      status: 'active',
-      last_refreshed_at: db.fn.now(),
-      updated_at: db.fn.now(),
-    });
+    .update({ status: 'active', last_refreshed_at: db.fn.now(), updated_at: db.fn.now() });
 
   return { datPostId: String(datPostId), response: res.data };
 }
 
 async function deleteLoadPost(employeeId, datPostId) {
   const token = await datService.getTokenForEmployee(employeeId);
-
-  await datApiRequest('DELETE', `/posting/v2/loads/${datPostId}`, null, token);
+  await datApiRequest('DELETE', `/v2/loads/${datPostId}`, null, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
-    .update({
-      status: 'deleted',
-      updated_at: db.fn.now(),
-    });
+    .update({ status: 'deleted', updated_at: db.fn.now() });
 
   return { datPostId: String(datPostId), deleted: true };
 }
@@ -99,12 +93,10 @@ async function deleteLoadPost(employeeId, datPostId) {
 async function createTruckPost(employeeId, truckData) {
   const token = await datService.getTokenForEmployee(employeeId);
   const equipmentCode = mapToDATEquipmentCode(truckData.equipmentType || truckData.truckType);
-
   const payload = buildTruckPayload(truckData, equipmentCode);
 
-  const res = await datApiRequest('POST', '/posting/v2/trucks', payload, token);
-
-  const datPostId = res.data.id || res.data.postId || res.data.truckPostId;
+  const res = await datApiRequest('POST', '/v2/trucks', payload, token);
+  const datPostId = res.data.id;
 
   await db('dat_posts').insert({
     dat_post_id: String(datPostId),
@@ -123,59 +115,41 @@ async function createTruckPost(employeeId, truckData) {
 async function updateTruckPost(employeeId, datPostId, truckData) {
   const token = await datService.getTokenForEmployee(employeeId);
   const equipmentCode = mapToDATEquipmentCode(truckData.equipmentType || truckData.truckType);
-
   const payload = buildTruckPayload(truckData, equipmentCode);
 
-  const res = await datApiRequest('PUT', `/posting/v2/trucks/${datPostId}`, payload, token);
+  const res = await datApiRequest('PUT', `/v2/trucks/${datPostId}`, payload, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
-    .update({
-      dat_payload: JSON.stringify(payload),
-      dat_equipment_type: equipmentCode,
-      updated_at: db.fn.now(),
-    });
+    .update({ dat_payload: JSON.stringify(payload), dat_equipment_type: equipmentCode, updated_at: db.fn.now() });
 
   return { datPostId: String(datPostId), payload, response: res.data };
 }
 
 async function refreshTruckPost(employeeId, datPostId) {
   const token = await datService.getTokenForEmployee(employeeId);
-
-  const res = await datApiRequest('POST', `/posting/v2/trucks/${datPostId}/refresh`, {}, token);
+  const res = await datApiRequest('POST', `/v2/trucks/${datPostId}/refresh`, null, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
-    .update({
-      status: 'active',
-      last_refreshed_at: db.fn.now(),
-      updated_at: db.fn.now(),
-    });
+    .update({ status: 'active', last_refreshed_at: db.fn.now(), updated_at: db.fn.now() });
 
   return { datPostId: String(datPostId), response: res.data };
 }
 
 async function deleteTruckPost(employeeId, datPostId) {
   const token = await datService.getTokenForEmployee(employeeId);
-
-  await datApiRequest('DELETE', `/posting/v2/trucks/${datPostId}`, null, token);
+  await datApiRequest('DELETE', `/v2/trucks/${datPostId}`, null, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
-    .update({
-      status: 'deleted',
-      updated_at: db.fn.now(),
-    });
+    .update({ status: 'deleted', updated_at: db.fn.now() });
 
   return { datPostId: String(datPostId), deleted: true };
 }
 
 // ─── Auto-delete on order match ──────────────────────────────────────
 
-/**
- * Delete all active DAT posts linked to a confirmed/matched employee order.
- * Called from the order confirmation flow.
- */
 async function deletePostsForOrder(employeeId, employeeOrderId) {
   const activePosts = await db('dat_posts')
     .where('employee_order_id', employeeOrderId)
@@ -189,102 +163,102 @@ async function deletePostsForOrder(employeeId, employeeOrderId) {
       } else {
         await deleteTruckPost(employeeId, post.dat_post_id);
       }
-
-      await db('dat_posts')
-        .where('id', post.id)
-        .update({ status: 'matched', updated_at: db.fn.now() });
-
+      await db('dat_posts').where('id', post.id).update({ status: 'matched', updated_at: db.fn.now() });
       results.push({ datPostId: post.dat_post_id, status: 'matched' });
     } catch (error) {
       console.error(`DAT: Failed to delete post ${post.dat_post_id} for order ${employeeOrderId}:`, error.message);
       results.push({ datPostId: post.dat_post_id, status: 'error', error: error.message });
     }
   }
-
   return results;
 }
 
-// ─── Payload Builders ────────────────────────────────────────────────
+// ─── Payload Builders (DAT official spec) ────────────────────────────
 
 function buildLoadPayload(data, equipmentCode) {
   const payload = {
-    equipmentType: equipmentCode,
-    origin: {},
-    destination: {},
+    freight: {
+      equipmentType: equipmentCode,
+      fullPartial: data.fullPartial || 'FULL',
+    },
+    lane: {
+      origin: buildLocation(data.originZip, data.originCity, data.originState, data.origin),
+      destination: buildLocation(data.destinationZip, data.destinationCity, data.destinationState, data.destination),
+    },
+    exposure: {},
   };
 
-  if (data.originZip) {
-    payload.origin.postalCode = String(data.originZip).padStart(5, '0');
-  } else if (data.originCity && data.originState) {
-    payload.origin.city = data.originCity;
-    payload.origin.stateProvince = data.originState;
-  } else if (data.origin) {
-    payload.origin.open = data.origin;
+  if (data.weight) payload.freight.weightPounds = parseInt(data.weight) || undefined;
+  if (data.length) payload.freight.lengthFeet = parseInt(data.length) || undefined;
+  if (data.commodity) {
+    payload.freight.commodity = { details: data.commodity };
+  }
+  if (data.comment) {
+    payload.freight.comments = [{ comment: data.comment }];
+  }
+  if (data.pickupHours) payload.freight.pickupHours = data.pickupHours;
+  if (data.dropOffHours) payload.freight.dropOffHours = data.dropOffHours;
+
+  if (data.pickupDate || data.earliestAvailabilityWhen) {
+    payload.exposure.earliestAvailabilityWhen = toISODate(data.pickupDate || data.earliestAvailabilityWhen);
+  }
+  if (data.deliveryDate || data.latestAvailabilityWhen) {
+    payload.exposure.latestAvailabilityWhen = toISODate(data.deliveryDate || data.latestAvailabilityWhen);
   }
 
-  if (data.destinationZip) {
-    payload.destination.postalCode = String(data.destinationZip).padStart(5, '0');
-  } else if (data.destinationCity && data.destinationState) {
-    payload.destination.city = data.destinationCity;
-    payload.destination.stateProvince = data.destinationState;
-  } else if (data.destination) {
-    payload.destination.open = data.destination;
+  if (data.referenceId || data.referenceNumber) {
+    payload.referenceId = data.referenceId || data.referenceNumber;
   }
-
-  if (data.pickupDate || data.earliestPickupDate) {
-    payload.earliestAvailability = data.pickupDate || data.earliestPickupDate;
+  if (data.rate) {
+    payload.exposure.transactionDetails = { rate: { amount: parseFloat(data.rate) } };
   }
-  if (data.deliveryDate || data.latestAvailability) {
-    payload.latestAvailability = data.deliveryDate || data.latestAvailability;
-  }
-
-  if (data.weight) payload.weight = parseFloat(data.weight) || undefined;
-  if (data.length) payload.length = parseFloat(data.length) || undefined;
-  if (data.rate) payload.rate = parseFloat(data.rate) || undefined;
-  if (data.commodity) payload.commodity = data.commodity;
-  if (data.comment) payload.comment = data.comment;
-  if (data.referenceNumber) payload.referenceNumber = data.referenceNumber;
 
   return payload;
 }
 
 function buildTruckPayload(data, equipmentCode) {
   const payload = {
-    equipmentType: equipmentCode,
-    origin: {},
-    destination: {},
+    freight: {
+      equipmentType: equipmentCode,
+    },
+    lane: {
+      origin: buildLocation(data.originZip, data.originCity, data.originState, data.currentLocation),
+      destination: buildLocation(data.destinationZip, data.destinationCity, data.destinationState, data.preferredDestination),
+    },
+    exposure: {},
   };
 
-  if (data.originZip) {
-    payload.origin.postalCode = String(data.originZip).padStart(5, '0');
-  } else if (data.currentLocation) {
-    payload.origin.open = data.currentLocation;
-  } else if (data.originCity && data.originState) {
-    payload.origin.city = data.originCity;
-    payload.origin.stateProvince = data.originState;
+  if (data.capacity) payload.freight.weightPounds = parseInt(data.capacity) || undefined;
+  if (data.length) payload.freight.lengthFeet = parseInt(data.length) || undefined;
+  if (data.comment) {
+    payload.freight.comments = [{ comment: data.comment }];
   }
 
-  if (data.destinationZip) {
-    payload.destination.postalCode = String(data.destinationZip).padStart(5, '0');
-  } else if (data.preferredDestination) {
-    payload.destination.open = data.preferredDestination;
-  } else if (data.destinationCity && data.destinationState) {
-    payload.destination.city = data.destinationCity;
-    payload.destination.stateProvince = data.destinationState;
+  if (data.availableDate || data.earliestAvailabilityWhen) {
+    payload.exposure.earliestAvailabilityWhen = toISODate(data.availableDate || data.earliestAvailabilityWhen);
   }
-
-  if (data.availableDate || data.earliestAvailability) {
-    payload.earliestAvailability = data.availableDate || data.earliestAvailability;
+  if (data.latestAvailabilityWhen) {
+    payload.exposure.latestAvailabilityWhen = toISODate(data.latestAvailabilityWhen);
   }
-  if (data.latestAvailability) {
-    payload.latestAvailability = data.latestAvailability;
-  }
-
-  if (data.capacity) payload.weight = parseFloat(data.capacity) || undefined;
-  if (data.length) payload.length = parseFloat(data.length) || undefined;
-  if (data.comment) payload.comment = data.comment;
 
   return payload;
+}
+
+function buildLocation(zip, city, state, fallback) {
+  const loc = {};
+  if (zip) {
+    loc.postalCode = String(zip).padStart(5, '0');
+  } else if (city && state) {
+    loc.city = city;
+    loc.stateProv = state;
+  }
+  return loc;
+}
+
+function toISODate(val) {
+  if (!val) return undefined;
+  if (typeof val === 'string' && val.includes('T')) return val;
+  return new Date(val).toISOString();
 }
 
 // ─── HTTP Helper ─────────────────────────────────────────────────────
@@ -294,7 +268,7 @@ async function datApiRequest(method, path, data, token) {
     const config = {
       method,
       url: `${datService.API_BASE}${path}`,
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     };
     if (data && (method === 'POST' || method === 'PUT')) {
       config.data = data;
@@ -304,10 +278,10 @@ async function datApiRequest(method, path, data, token) {
     if (error.response?.status === 401) {
       datService.invalidateTokens();
     }
-    const msg = error.response?.data?.message
-      || error.response?.data?.errors?.[0]?.message
+    const msg = error.response?.data?.errors?.[0]?.message
+      || error.response?.data?.message
       || error.message;
-    const wrapped = new Error(`DAT Posting API ${method} ${path} failed: ${msg}`);
+    const wrapped = new Error(`DAT API ${method} ${path}: ${msg}`);
     wrapped.statusCode = error.response?.status;
     wrapped.datErrors = error.response?.data;
     throw wrapped;

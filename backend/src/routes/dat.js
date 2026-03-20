@@ -98,10 +98,10 @@ router.get('/status', auth, async (req, res) => {
 
 /**
  * GET /api/dat/equipment-types
- * List all DAT equipment types (optionally filtered by class).
+ * List all DAT equipment types.
  */
 router.get('/equipment-types', auth, (req, res) => {
-  const types = listEquipmentTypes(req.query.class || null);
+  const types = listEquipmentTypes();
   res.json({ success: true, data: types });
 });
 

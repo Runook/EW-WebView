@@ -1,57 +1,93 @@
 /**
  * DAT Equipment Type codes and mapping utilities.
  *
- * DAT classifies equipment into types and classes. The Freight Posting and
- * Search APIs require these codes when creating posts or filtering results.
- *
- * Reference: DAT Developer Portal — Equipment Types
+ * Official enum from DAT Freight Posting API documentation.
+ * These codes are used in freight.equipmentType for posting and searching.
  */
 
 const DAT_EQUIPMENT_TYPES = {
-  V:   { code: 'V',   name: 'Van',              class: 'Van' },
-  VV:  { code: 'VV',  name: 'Vented Van',       class: 'Van' },
-  VA:  { code: 'VA',  name: 'Van - Air Ride',    class: 'Van' },
-  VR:  { code: 'VR',  name: 'Van or Reefer',     class: 'Van' },
-  VI:  { code: 'VI',  name: 'Van - Insulated',   class: 'Van' },
-  VB:  { code: 'VB',  name: 'Van - Blanket Wrap', class: 'Van' },
-
-  R:   { code: 'R',   name: 'Reefer',            class: 'Reefer' },
-
-  F:   { code: 'F',   name: 'Flatbed',           class: 'Flatbed' },
-  FA:  { code: 'FA',  name: 'Flatbed - Air Ride', class: 'Flatbed' },
-  FM:  { code: 'FM',  name: 'Flatbed - Maxi',    class: 'Flatbed' },
-  FS:  { code: 'FS',  name: 'Flatbed - Sides',   class: 'Flatbed' },
-  FT:  { code: 'FT',  name: 'Flatbed with Tarps', class: 'Flatbed' },
-  FN:  { code: 'FN',  name: 'Flatbed - Conestoga', class: 'Flatbed' },
-  FH:  { code: 'FH',  name: 'Flatbed - HotShot',  class: 'Flatbed' },
-
-  SD:  { code: 'SD',  name: 'Step Deck',         class: 'Flatbed' },
-  ST:  { code: 'ST',  name: 'Step Deck with Tarps', class: 'Flatbed' },
-  SN:  { code: 'SN',  name: 'Step Deck - Conestoga', class: 'Flatbed' },
-
-  DD:  { code: 'DD',  name: 'Double Drop',       class: 'Flatbed' },
-  LB:  { code: 'LB',  name: 'Lowboy',            class: 'Flatbed' },
-  RGN: { code: 'RGN', name: 'Removable Gooseneck', class: 'Flatbed' },
-  MX:  { code: 'MX',  name: 'Maxi Flat / Stretch', class: 'Flatbed' },
-
-  AC:  { code: 'AC',  name: 'Auto Carrier',      class: 'Specialized' },
-  CN:  { code: 'CN',  name: 'Container',         class: 'Specialized' },
-  DT:  { code: 'DT',  name: 'Dump Trailer',      class: 'Specialized' },
-  HB:  { code: 'HB',  name: 'Hopper Bottom',     class: 'Specialized' },
-  LA:  { code: 'LA',  name: 'Landoll',           class: 'Specialized' },
-  PO:  { code: 'PO',  name: 'Power Only',        class: 'Specialized' },
-  TK:  { code: 'TK',  name: 'Tanker',            class: 'Specialized' },
-  NU:  { code: 'NU',  name: 'Moving Van / Furniture', class: 'Specialized' },
-  CV:  { code: 'CV',  name: 'Cargo Van / Sprinter',   class: 'Specialized' },
-  BT:  { code: 'BT',  name: 'B-Train / Double',  class: 'Specialized' },
+  AC:  { code: 'AC',  name: 'Auto Carrier' },
+  C:   { code: 'C',   name: 'Container' },
+  CI:  { code: 'CI',  name: 'Container, Insulated' },
+  CR:  { code: 'CR',  name: 'Container, Refrigerated' },
+  DD:  { code: 'DD',  name: 'Double Drop' },
+  LA:  { code: 'LA',  name: 'Drop Deck, Landoll' },
+  DT:  { code: 'DT',  name: 'Dump Trailer' },
+  F:   { code: 'F',   name: 'Flatbed' },
+  FA:  { code: 'FA',  name: 'Flatbed, Air-Ride' },
+  BT:  { code: 'BT',  name: 'Flatbed, B-Train' },
+  F2:  { code: 'F2',  name: 'Flatbed, Double' },
+  FZ:  { code: 'FZ',  name: 'Flatbed, HazMat' },
+  FH:  { code: 'FH',  name: 'Flatbed, Hotshot' },
+  MX:  { code: 'MX',  name: 'Flatbed, Maxi' },
+  FS:  { code: 'FS',  name: 'Flatbed w/Sides' },
+  FT:  { code: 'FT',  name: 'Flatbed w/Tarps' },
+  FM:  { code: 'FM',  name: 'Flatbed w/Team' },
+  FD:  { code: 'FD',  name: 'Flatbed or Step Deck' },
+  FR:  { code: 'FR',  name: 'Flatbed/Van/Reefer' },
+  FC:  { code: 'FC',  name: 'Flatbed, w/Chains' },
+  FO:  { code: 'FO',  name: 'Flatbed, Over Dimension' },
+  CN:  { code: 'CN',  name: 'Conestoga' },
+  FN:  { code: 'FN',  name: 'Flatbed Conestoga' },
+  SN:  { code: 'SN',  name: 'Stepdeck Conestoga' },
+  HB:  { code: 'HB',  name: 'Hopper Bottom' },
+  LB:  { code: 'LB',  name: 'Lowboy' },
+  LO:  { code: 'LO',  name: 'Lowboy, Over Dimension' },
+  LR:  { code: 'LR',  name: 'Lowboy or RGN' },
+  MV:  { code: 'MV',  name: 'Moving Van' },
+  NU:  { code: 'NU',  name: 'Pneumatic' },
+  PO:  { code: 'PO',  name: 'Power Only' },
+  PT:  { code: 'PT',  name: 'Power Only Towaway' },
+  PL:  { code: 'PL',  name: 'Power Only Load Out' },
+  R:   { code: 'R',   name: 'Reefer' },
+  RA:  { code: 'RA',  name: 'Reefer, Air-Ride' },
+  R2:  { code: 'R2',  name: 'Reefer, Double' },
+  RZ:  { code: 'RZ',  name: 'Reefer, HazMat' },
+  RN:  { code: 'RN',  name: 'Reefer, Intermodal' },
+  RL:  { code: 'RL',  name: 'Reefer, Logistics' },
+  RM:  { code: 'RM',  name: 'Reefer w/Team' },
+  RP:  { code: 'RP',  name: 'Reefer, w/Pallet Exchange' },
+  RV:  { code: 'RV',  name: 'Reefer or Vented Van' },
+  RG:  { code: 'RG',  name: 'Removable Gooseneck' },
+  SD:  { code: 'SD',  name: 'Step Deck' },
+  SR:  { code: 'SR',  name: 'Step Deck or RGN' },
+  ST:  { code: 'ST',  name: 'Stretch Trailer' },
+  TA:  { code: 'TA',  name: 'Tanker, Aluminum' },
+  TN:  { code: 'TN',  name: 'Tanker, Intermodal' },
+  TS:  { code: 'TS',  name: 'Tanker, Steel' },
+  TT:  { code: 'TT',  name: 'Truck and Trailer' },
+  V:   { code: 'V',   name: 'Van' },
+  VA:  { code: 'VA',  name: 'Van, Air-Ride' },
+  VS:  { code: 'VS',  name: 'Van, Conestoga' },
+  VC:  { code: 'VC',  name: 'Van, Curtain' },
+  V2:  { code: 'V2',  name: 'Van, Double' },
+  VZ:  { code: 'VZ',  name: 'Van, HazMat' },
+  VH:  { code: 'VH',  name: 'Van, Hotshot' },
+  VI:  { code: 'VI',  name: 'Van, Insulated' },
+  VN:  { code: 'VN',  name: 'Van, Intermodal' },
+  VG:  { code: 'VG',  name: 'Van, Lift-Gate' },
+  VL:  { code: 'VL',  name: 'Van, Logistics' },
+  OT:  { code: 'OT',  name: 'Van, Open-Top' },
+  VB:  { code: 'VB',  name: 'Van, Roller Bed' },
+  V3:  { code: 'V3',  name: 'Van, Triple' },
+  VV:  { code: 'VV',  name: 'Van, Vented' },
+  VM:  { code: 'VM',  name: 'Van w/Team' },
+  VT:  { code: 'VT',  name: 'Van or Flatbed w/Tarps' },
+  VF:  { code: 'VF',  name: 'Van or Flatbed' },
+  VR:  { code: 'VR',  name: 'Van or Reefer' },
+  IR:  { code: 'IR',  name: 'Insulated Van or Reefer' },
+  VW:  { code: 'VW',  name: 'Van, w/Blanket Wrap' },
+  VP:  { code: 'VP',  name: 'Van, w/Pallet Exchange' },
+  CV:  { code: 'CV',  name: 'Conveyor' },
+  SB:  { code: 'SB',  name: 'Straight Box Truck' },
+  SV:  { code: 'SV',  name: 'Sprinter Van' },
+  SZ:  { code: 'SZ',  name: 'Sprinter Van Hazmat' },
+  SC:  { code: 'SC',  name: 'Sprinter Van Temp-Controlled' },
+  SM:  { code: 'SM',  name: 'Sprinter Van Team' },
+  BR:  { code: 'BR',  name: 'Straight Box Truck - Reefer' },
+  BZ:  { code: 'BZ',  name: 'Straight Box Truck Hazmat' },
 };
 
-const EQUIPMENT_CLASSES = ['Van', 'Reefer', 'Flatbed', 'Specialized'];
-
-/**
- * Map EW internal truck type / equipment strings to a DAT equipment code.
- * Performs case-insensitive partial matching.
- */
 const EW_TO_DAT_MAP = {
   'dry van':       'V',
   'van':           'V',
@@ -64,32 +100,30 @@ const EW_TO_DAT_MAP = {
   'double drop':   'DD',
   'lowboy':        'LB',
   'auto carrier':  'AC',
-  'container':     'CN',
-  'tanker':        'TK',
+  'container':     'C',
+  'tanker':        'TA',
   'hopper':        'HB',
   'hopper bottom': 'HB',
   'power only':    'PO',
-  'conestoga':     'FN',
+  'conestoga':     'CN',
   'hotshot':       'FH',
-  'sprinter':      'CV',
-  'cargo van':     'CV',
-  'box truck':     'V',
+  'sprinter':      'SV',
+  'cargo van':     'SV',
+  'box truck':     'SB',
+  'straight box':  'SB',
   'dump':          'DT',
   'dump trailer':  'DT',
-  'removable gooseneck': 'RGN',
-  'rgn':           'RGN',
+  'removable gooseneck': 'RG',
+  'rgn':           'RG',
   'landoll':       'LA',
-  'moving van':    'NU',
+  'moving van':    'MV',
+  'pneumatic':     'NU',
 };
 
-/**
- * Convert an EW truck type string to a DAT equipment code.
- * Returns 'V' (Van) as default when no match is found.
- */
 function mapToDATEquipmentCode(ewType) {
   if (!ewType) return 'V';
 
-  const code = String(ewType).toUpperCase();
+  const code = String(ewType).toUpperCase().trim();
   if (DAT_EQUIPMENT_TYPES[code]) return code;
 
   const lower = String(ewType).toLowerCase().trim();
@@ -102,25 +136,16 @@ function mapToDATEquipmentCode(ewType) {
   return 'V';
 }
 
-/**
- * Get the full equipment type object for a DAT code.
- */
 function getEquipmentInfo(code) {
   return DAT_EQUIPMENT_TYPES[code] || null;
 }
 
-/**
- * List all equipment types, optionally filtered by class.
- */
-function listEquipmentTypes(filterClass) {
-  const types = Object.values(DAT_EQUIPMENT_TYPES);
-  if (!filterClass) return types;
-  return types.filter(t => t.class === filterClass);
+function listEquipmentTypes() {
+  return Object.values(DAT_EQUIPMENT_TYPES);
 }
 
 module.exports = {
   DAT_EQUIPMENT_TYPES,
-  EQUIPMENT_CLASSES,
   mapToDATEquipmentCode,
   getEquipmentInfo,
   listEquipmentTypes,

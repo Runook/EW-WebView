@@ -16,18 +16,22 @@ const TABS = [
 ];
 
 const EQUIPMENT_COMMON = [
-  { code: 'V', name: 'Van (Dry Van)' },
+  { code: 'V', name: 'Van' },
   { code: 'R', name: 'Reefer' },
   { code: 'F', name: 'Flatbed' },
   { code: 'VR', name: 'Van or Reefer' },
   { code: 'SD', name: 'Step Deck' },
+  { code: 'FT', name: 'Flatbed w/Tarps' },
   { code: 'DD', name: 'Double Drop' },
   { code: 'LB', name: 'Lowboy' },
+  { code: 'RG', name: 'Removable Gooseneck' },
   { code: 'AC', name: 'Auto Carrier' },
-  { code: 'CN', name: 'Container' },
+  { code: 'C', name: 'Container' },
   { code: 'PO', name: 'Power Only' },
-  { code: 'FT', name: 'Flatbed with Tarps' },
-  { code: 'CV', name: 'Cargo Van / Sprinter' },
+  { code: 'HB', name: 'Hopper Bottom' },
+  { code: 'TA', name: 'Tanker, Aluminum' },
+  { code: 'SV', name: 'Sprinter Van' },
+  { code: 'SB', name: 'Straight Box Truck' },
 ];
 
 const DATLoadBoard = () => {
