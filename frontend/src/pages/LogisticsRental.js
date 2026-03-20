@@ -492,64 +492,52 @@ const LogisticsRental = () => {
   const publishTimeOptions = ['全部时间', '今天', '3天内', '1周内', '1个月内'];
 
   return (
-    <div className="logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台-page">
-      {/* 页面头部 */}
-      <div className="page-header-rental">
-        <div className="header-content">
+    <div className="lr-page">
+      {/* Hero */}
+      <div className="lr-hero">
+        <div className="lr-hero-bg"><div className="lr-orb lr-orb-1"></div><div className="lr-orb lr-orb-2"></div></div>
+        <div className="lr-hero-content">
           <h1>物流租售</h1>
           <p>专业的物流设备租赁与买卖平台</p>
         </div>
       </div>
 
-      {/* 切换标签 */}
-      <div className="tab-switcher">
-        <button
-          className={`tab-button ${activeTab === 'rental' ? 'active' : ''}`}
-          onClick={() => setActiveTab('rental')}
-        >
-          <Building size={20} />
-          物流出租
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'sale' ? 'active' : ''}`}
-          onClick={() => setActiveTab('sale')}
-        >
-          <Package size={20} />
-          物流出售
-        </button>
-      </div>
+      <div className="lr-body">
+        {/* Tab + Controls Row */}
+        <div className="lr-toolbar">
+          <div className="lr-tabs">
+            <button className={`lr-tab ${activeTab === 'rental' ? 'lr-tab-active' : ''}`} onClick={() => setActiveTab('rental')}>
+              <Building size={16} />
+              物流出租
+            </button>
+            <button className={`lr-tab ${activeTab === 'sale' ? 'lr-tab-active' : ''}`} onClick={() => setActiveTab('sale')}>
+              <Package size={16} />
+              物流出售
+            </button>
+          </div>
 
-      {/* 搜索和控制区域 */}
-      <div className="controls-section">
-        <div className="search-bar">
-          <Search size={20} />
-          <input
-            type="text"
-            placeholder={activeTab === 'rental' ? '搜索租赁设备...' : '搜索出售物品...'}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+          <div className="lr-search">
+            <Search size={16} />
+            <input
+              type="text"
+              placeholder={activeTab === 'rental' ? '搜索租赁设备...' : '搜索出售物品...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <div className="lr-actions">
+            <button className={`lr-filter-btn ${showFilters ? 'active' : ''}`} onClick={() => setShowFilters(!showFilters)}>
+              <Filter size={15} />
+              筛选
+              <ChevronDown size={14} className={showFilters ? 'rotated' : ''} />
+            </button>
+            <button className="lr-post-btn" onClick={() => setShowPostModal(true)}>
+              <Plus size={15} />
+              {activeTab === 'rental' ? '发布出租' : '发布出售'}
+            </button>
+          </div>
         </div>
-
-        <div className="control-buttons">
-          <button
-            className={`filter-button ${showFilters ? 'active' : ''}`}
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Filter size={20} />
-            筛选
-            <ChevronDown size={16} className={showFilters ? 'rotated' : ''} />
-          </button>
-
-          <button
-            className="post-button"
-            onClick={() => setShowPostModal(true)}
-          >
-            <Plus size={20} />
-            {activeTab === 'rental' ? '发布出租' : '发布出售'}
-          </button>
-        </div>
-      </div>
 
       {/* 筛选面板 */}
       {showFilters && (
@@ -638,102 +626,62 @@ const LogisticsRental = () => {
         </div>
       )}
 
-      {/* 内容区域 */}
-      <div className="content-area">
-        <div className="items-list">
-          {getCurrentItems().map(item => (
-            <div key={item.id} className="item-card">
-              {/* 添加图片显示区域 */}
-              <div className="item-image">
-                {item.images && item.images.length > 0 ? (
-                  <img
-                    src={item.images[item.coverImageIndex || 0]}
-                    alt={item.title}
-                    onError={(e) => {
-                      e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop';
-                    }}
-                  />
-                ) : (
-                  <div className="no-image">
-                    <ImageIcon size={48} />
-                    <span>暂无图片</span>
-                  </div>
-                )}
-                {item.images && item.images.length > 1 && (
-                  <div className="image-count">
-                    <Camera size={14} />
-                    {item.images.length}
-                  </div>
-                )}
+      {/* Items List */}
+      <div className="lr-list">
+        {getCurrentItems().map(item => (
+          <div key={item.id} className="lr-card">
+            <div className="lr-card-thumb">
+              {item.images && item.images.length > 0 ? (
+                <img src={item.images[item.coverImageIndex || 0]} alt={item.title} onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop'; }} />
+              ) : (
+                <div className="lr-no-img"><ImageIcon size={28} /></div>
+              )}
+              {item.images && item.images.length > 1 && (
+                <span className="lr-img-count"><Camera size={11} /> {item.images.length}</span>
+              )}
+            </div>
+
+            <div className="lr-card-body">
+              <div className="lr-card-row1">
+                <h3 className="lr-card-title" onClick={() => handleViewDetails(item)}>{item.title}</h3>
+                <span className="lr-card-badge">{activeTab === 'rental' ? '出租' : '出售'}</span>
               </div>
 
-              <div className="item-content">
-                <div className="item-header">
-                  <div className="item-title">
-                    <h3>{item.title}</h3>
-                    <span className="item-category">{item.category}</span>
-                    {item.subCategory && (
-                      <span className="item-subcategory">{item.subCategory}</span>
-                    )}
-                  </div>
-                  <div className="item-price">{item.price}</div>
+              <div className="lr-card-price">{item.price}</div>
+
+              <div className="lr-card-tags">
+                <span>{item.category}</span>
+                {item.subCategory && <span>{item.subCategory}</span>}
+                <span>{item.condition}</span>
+                {item.brand && <span>{item.brand}</span>}
+              </div>
+
+              <p className="lr-card-desc">{item.description}</p>
+
+              <div className="lr-card-bottom">
+                <div className="lr-card-meta">
+                  <span className="lr-meta-loc"><MapPin size={13} /> {item.location}</span>
+                  <span className="lr-meta-date"><Calendar size={13} /> {item.posted}</span>
+                  <span className="lr-meta-view"><Eye size={13} /> {item.views}</span>
                 </div>
-
-                <div className="item-details">
-                  <div className="detail-item">
-                    <MapPin size={16} />
-                    <span>{item.location}</span>
-                  </div>
-                  <div className="detail-item">
-                    <Settings size={16} />
-                    <span>{item.condition}</span>
-                  </div>
-                  {item.brand && (
-                    <div className="detail-item">
-                      <Truck size={16} />
-                      <span>{item.brand}</span>
-                    </div>
-                  )}
-                  <div className="detail-item posted">
-                    <Calendar size={16} />
-                    <span>{item.posted}</span>
-                  </div>
-                </div>
-
-                <p className="item-description">{item.description}</p>
-
-                <div className="item-footer">
-                  <div className="item-stats">
-                    <span><Eye size={14} /> {item.views}浏览</span>
-                    <span>{item.contact.name} · {item.contact.company}</span>
-                  </div>
-
-                  <div className="item-actions">
-                    <button className="contact-button">
-                      <Phone size={16} />
-                      联系卖家
-                    </button>
-                    <button
-                      className="details-button"
-                      onClick={() => handleViewDetails(item)}
-                    >
-                      查看详情
-                    </button>
-                  </div>
+                <div className="lr-card-btns">
+                  <button className="lr-btn-phone"><Phone size={13} /> 查看电话</button>
+                  <button className="lr-btn-detail" onClick={() => handleViewDetails(item)}>查看详情</button>
                 </div>
               </div>
             </div>
-          ))}
+          </div>
+        ))}
 
-          {getCurrentItems().length === 0 && (
-            <div className="empty-state">
-              {activeTab === 'rental' ? <Building size={64} /> : <Package size={64} />}
-              <h3>暂无{activeTab === 'rental' ? '租赁' : '出售'}信息</h3>
-              <p>试试调整搜索条件或发布您的{activeTab === 'rental' ? '出租' : '出售'}信息</p>
-            </div>
-          )}
-        </div>
+        {getCurrentItems().length === 0 && (
+          <div className="lr-empty">
+            {activeTab === 'rental' ? <Building size={48} /> : <Package size={48} />}
+            <h3>暂无{activeTab === 'rental' ? '租赁' : '出售'}信息</h3>
+            <p>试试调整搜索条件或发布您的{activeTab === 'rental' ? '出租' : '出售'}信息</p>
+          </div>
+        )}
       </div>
+      </div>{/* end lr-body */}
 
       {/* 发布模态框 */}
       {showPostModal && (
