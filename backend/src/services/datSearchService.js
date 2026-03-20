@@ -1,9 +1,14 @@
 /**
- * DAT Freight Search Service
+ * DAT Freight Search Service (Search v4 — "Search Freight Marketplaces")
  *
- * Endpoints (base: https://freight.api.dat.com):
- *   POST /search/v2/loads   — Search loads on DAT load board
- *   POST /search/v2/trucks  — Search trucks on DAT load board
+ * Server: https://freight.api.prod.dat.com  (production)
+ *         https://freight.api.nprod.dat.com  (nprod/testing)
+ *
+ * Endpoints:
+ *   POST /marketplaces/v1/loads/search      — Search for load postings
+ *   GET  /marketplaces/v1/loads/search/{id}  — Get load details
+ *   POST /marketplaces/v1/equipment/search  — Search for truck/equipment postings
+ *   GET  /marketplaces/v1/equipment/search/{id} — Get equipment details
  *
  * Certification constraints:
  *   - Searches MUST originate from real-time user requests only
@@ -18,13 +23,13 @@ const { mapToDATEquipmentCode } = require('./datEquipmentTypes');
 
 async function searchLoads(employeeId, criteria = {}) {
   const token = await datService.getTokenForEmployee(employeeId);
-  const payload = buildSearchPayload(criteria);
+  const payload = buildLoadSearchPayload(criteria);
 
-  const res = await datApiRequest('POST', '/search/v2/loads', payload, token);
+  const res = await searchRequest('POST', '/marketplaces/v1/loads/search', payload, token);
 
   return {
-    results: normalizeSearchResults(res.data, 'load'),
-    total: res.data.totalCount || res.data.matches?.length || 0,
+    results: normalizeLoadResults(res.data),
+    total: res.data.totalMatchCount || res.data.matches?.length || 0,
     source: 'DAT',
     rawResponse: res.data,
   };
@@ -32,60 +37,91 @@ async function searchLoads(employeeId, criteria = {}) {
 
 async function searchTrucks(employeeId, criteria = {}) {
   const token = await datService.getTokenForEmployee(employeeId);
-  const payload = buildSearchPayload(criteria);
+  const payload = buildEquipmentSearchPayload(criteria);
 
-  const res = await datApiRequest('POST', '/search/v2/trucks', payload, token);
+  const res = await searchRequest('POST', '/marketplaces/v1/equipment/search', payload, token);
 
   return {
-    results: normalizeSearchResults(res.data, 'truck'),
-    total: res.data.totalCount || res.data.matches?.length || 0,
+    results: normalizeEquipmentResults(res.data),
+    total: res.data.totalMatchCount || res.data.matches?.length || 0,
     source: 'DAT',
     rawResponse: res.data,
   };
 }
 
-function buildSearchPayload(criteria) {
-  const payload = { lane: {} };
+// ─── Payload Builders ────────────────────────────────────────────────
+
+function buildLoadSearchPayload(criteria) {
+  const payload = {
+    criteria: {
+      lane: {},
+    },
+  };
 
   if (criteria.originZip || criteria.originCity) {
-    payload.lane.origin = {};
-    if (criteria.originZip) {
-      payload.lane.origin.postalCode = String(criteria.originZip).padStart(5, '0');
-    } else {
-      if (criteria.originCity) payload.lane.origin.city = criteria.originCity;
-      if (criteria.originState) payload.lane.origin.stateProv = criteria.originState;
-    }
-    if (criteria.originRadius) {
-      payload.lane.origin.radiusMiles = parseInt(criteria.originRadius) || 100;
-    }
+    payload.criteria.lane.origin = buildSearchLocation(criteria, 'origin');
   }
-
   if (criteria.destinationZip || criteria.destinationCity) {
-    payload.lane.destination = {};
-    if (criteria.destinationZip) {
-      payload.lane.destination.postalCode = String(criteria.destinationZip).padStart(5, '0');
-    } else {
-      if (criteria.destinationCity) payload.lane.destination.city = criteria.destinationCity;
-      if (criteria.destinationState) payload.lane.destination.stateProv = criteria.destinationState;
-    }
-    if (criteria.destinationRadius) {
-      payload.lane.destination.radiusMiles = parseInt(criteria.destinationRadius) || 100;
-    }
+    payload.criteria.lane.destination = buildSearchLocation(criteria, 'destination');
   }
 
   if (criteria.equipmentType) {
-    payload.freight = { equipmentType: mapToDATEquipmentCode(criteria.equipmentType) };
+    payload.criteria.equipmentClasses = [mapToDATEquipmentCode(criteria.equipmentType)];
   }
 
-  if (criteria.limit) {
-    payload.limit = Math.min(parseInt(criteria.limit), 250);
+  if (criteria.fullPartial) {
+    payload.criteria.fullPartial = criteria.fullPartial;
   }
 
   return payload;
 }
 
-function normalizeSearchResults(data, type) {
-  const items = data.matches || data.results || data.loads || data.trucks || [];
+function buildEquipmentSearchPayload(criteria) {
+  const payload = {
+    criteria: {
+      lane: {},
+    },
+  };
+
+  if (criteria.originZip || criteria.originCity) {
+    payload.criteria.lane.origin = buildSearchLocation(criteria, 'origin');
+  }
+  if (criteria.destinationZip || criteria.destinationCity) {
+    payload.criteria.lane.destination = buildSearchLocation(criteria, 'destination');
+  }
+
+  if (criteria.equipmentType) {
+    payload.criteria.equipmentClasses = [mapToDATEquipmentCode(criteria.equipmentType)];
+  }
+
+  return payload;
+}
+
+function buildSearchLocation(criteria, prefix) {
+  const loc = {};
+  const zip = criteria[`${prefix}Zip`];
+  const city = criteria[`${prefix}City`];
+  const state = criteria[`${prefix}State`];
+  const radius = criteria[`${prefix}Radius`];
+
+  if (zip) {
+    loc.postalCode = String(zip).padStart(5, '0');
+  } else if (city && state) {
+    loc.city = city;
+    loc.stateProv = state;
+  }
+
+  if (radius) {
+    loc.radiusMiles = parseInt(radius) || 100;
+  }
+
+  return loc;
+}
+
+// ─── Result Normalizers ──────────────────────────────────────────────
+
+function normalizeLoadResults(data) {
+  const items = data.matches || data.results || [];
   return items.map(item => {
     const posting = item.posting || item;
     const lane = posting.lane || {};
@@ -94,19 +130,18 @@ function normalizeSearchResults(data, type) {
     const poster = posting.posterInfo || {};
 
     return {
-      datId: posting.id || item.id,
-      type,
+      datId: posting.id || item.matchId || item.resultId,
+      type: 'load',
       origin: lane.origin || {},
       destination: lane.destination || {},
       equipmentType: freight.equipmentType || null,
       equipmentName: freight.equipmentName || null,
       fullPartial: freight.fullPartial || null,
-      rate: item.rate || null,
       weight: freight.weightPounds || null,
       length: freight.lengthFeet || null,
       pickupDate: exposure.earliestAvailabilityWhen || null,
       deliveryDate: exposure.latestAvailabilityWhen || null,
-      age: item.age || null,
+      age: item.age || item.ageMinutes || null,
       company: poster.company?.name || null,
       contact: poster.contactMethods?.[0]?.value || null,
       commodity: freight.commodity?.details || null,
@@ -119,11 +154,42 @@ function normalizeSearchResults(data, type) {
   });
 }
 
-async function datApiRequest(method, path, data, token) {
+function normalizeEquipmentResults(data) {
+  const items = data.matches || data.results || [];
+  return items.map(item => {
+    const posting = item.posting || item;
+    const lane = posting.lane || {};
+    const freight = posting.freight || posting.equipment || {};
+    const exposure = posting.exposure || {};
+    const poster = posting.posterInfo || {};
+
+    return {
+      datId: posting.id || item.matchId || item.resultId,
+      type: 'truck',
+      origin: lane.origin || {},
+      destination: lane.destination || {},
+      equipmentType: freight.equipmentType || null,
+      equipmentName: freight.equipmentName || null,
+      weight: freight.weightPounds || null,
+      length: freight.lengthFeet || null,
+      availableDate: exposure.earliestAvailabilityWhen || null,
+      age: item.age || item.ageMinutes || null,
+      company: poster.company?.name || null,
+      contact: poster.contactMethods?.[0]?.value || null,
+      comment: freight.comments?.[0]?.comment || null,
+      source: 'DAT',
+      raw: item,
+    };
+  });
+}
+
+// ─── HTTP Helper (uses SEARCH_BASE) ──────────────────────────────────
+
+async function searchRequest(method, path, data, token) {
   try {
     const config = {
       method,
-      url: `${datService.API_BASE}${path}`,
+      url: `${datService.SEARCH_BASE}${path}`,
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     };
     if (data && (method === 'POST' || method === 'PUT')) {

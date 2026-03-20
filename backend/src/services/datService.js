@@ -32,14 +32,28 @@ const IDENTITY_HOSTS = {
   nprod: 'https://identity.api.nprod.dat.com'
 };
 
-const API_HOSTS = {
+const POSTING_HOSTS = {
+  production: 'https://freight.api.dat.com/posting',
+  staging: 'https://freight.api.staging.dat.com/posting',
+  nprod: 'https://freight.api.nprod.dat.com/posting'
+};
+
+const SEARCH_HOSTS = {
+  production: 'https://freight.api.prod.dat.com',
+  staging: 'https://freight.api.staging.dat.com',
+  nprod: 'https://freight.api.nprod.dat.com'
+};
+
+const ANALYTICS_HOSTS = {
   production: 'https://freight.api.dat.com',
   staging: 'https://freight.api.staging.dat.com',
   nprod: 'https://freight.api.nprod.dat.com'
 };
 
 const IDENTITY_BASE = IDENTITY_HOSTS[DAT_API_ENV] || IDENTITY_HOSTS.production;
-const API_BASE = API_HOSTS[DAT_API_ENV] || API_HOSTS.production;
+const POSTING_BASE = POSTING_HOSTS[DAT_API_ENV] || POSTING_HOSTS.production;
+const SEARCH_BASE = SEARCH_HOSTS[DAT_API_ENV] || SEARCH_HOSTS.production;
+const API_BASE = ANALYTICS_HOSTS[DAT_API_ENV] || ANALYTICS_HOSTS.production;
 
 let orgTokenCache = { token: null, expiresAt: 0 };
 
@@ -276,6 +290,8 @@ module.exports = {
   getDATEmailForEmployee,
   invalidateTokens,
   IDENTITY_BASE,
+  POSTING_BASE,
+  SEARCH_BASE,
   API_BASE,
   getDATToken: getUserToken
 };

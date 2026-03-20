@@ -1,21 +1,18 @@
 /**
  * DAT Freight Posting Service
  *
- * Endpoints (base: https://freight.api.dat.com):
- *   POST   /v2/loads              — Create load post
- *   PUT    /v2/loads/{id}         — Update load post
- *   POST   /v2/loads/{id}/refresh — Refresh (15-min minimum interval)
- *   DELETE /v2/loads/{id}         — Delete load post
- *   POST   /v2/trucks             — Create truck post
- *   PUT    /v2/trucks/{id}        — Update truck post
- *   POST   /v2/trucks/{id}/refresh
- *   DELETE /v2/trucks/{id}
+ * Server: https://freight.api.dat.com/posting  (production)
+ *         https://freight.api.nprod.dat.com/posting  (nprod/testing)
  *
- * Payload structure matches official DAT API spec:
- *   { freight: { equipmentType, weightPounds, lengthFeet, fullPartial, commodity, comments },
- *     lane: { origin: { postalCode | city+stateProv }, destination: { ... } },
- *     exposure: { earliestAvailabilityWhen, latestAvailabilityWhen },
- *     referenceId }
+ * Endpoints:
+ *   POST   /v2/loads              — Create load post
+ *   PATCH  /v2/loads/{id}         — Update load post
+ *   POST   /v2/loads/{id}/refresh — Refresh (15-min minimum interval, 100 req/min)
+ *   DELETE /v2/loads              — Delete load post (by id or referenceId query param)
+ *   POST   /v2/trucks             — Create truck post
+ *   PATCH  /v2/trucks/{id}        — Update truck post
+ *   POST   /v2/trucks/{id}/refresh
+ *   DELETE /v2/trucks/{id}        — Delete truck post
  *
  * Certification constraints:
  *   - Never bulk-delete and re-post to "refresh"
@@ -35,7 +32,7 @@ async function createLoadPost(employeeId, loadData) {
   const equipmentCode = mapToDATEquipmentCode(loadData.equipmentType || loadData.truckType);
   const payload = buildLoadPayload(loadData, equipmentCode);
 
-  const res = await datApiRequest('POST', '/v2/loads', payload, token);
+  const res = await postingRequest('POST', '/v2/loads', payload, token);
   const datPostId = res.data.id;
 
   await db('dat_posts').insert({
@@ -57,7 +54,7 @@ async function updateLoadPost(employeeId, datPostId, loadData) {
   const equipmentCode = mapToDATEquipmentCode(loadData.equipmentType || loadData.truckType);
   const payload = buildLoadPayload(loadData, equipmentCode);
 
-  const res = await datApiRequest('PUT', `/v2/loads/${datPostId}`, payload, token);
+  const res = await postingRequest('PATCH', `/v2/loads/${datPostId}`, payload, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
@@ -68,7 +65,7 @@ async function updateLoadPost(employeeId, datPostId, loadData) {
 
 async function refreshLoadPost(employeeId, datPostId) {
   const token = await datService.getTokenForEmployee(employeeId);
-  const res = await datApiRequest('POST', `/v2/loads/${datPostId}/refresh`, null, token);
+  const res = await postingRequest('POST', `/v2/loads/${datPostId}/refresh`, null, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
@@ -79,7 +76,7 @@ async function refreshLoadPost(employeeId, datPostId) {
 
 async function deleteLoadPost(employeeId, datPostId) {
   const token = await datService.getTokenForEmployee(employeeId);
-  await datApiRequest('DELETE', `/v2/loads/${datPostId}`, null, token);
+  await postingRequest('DELETE', `/v2/loads?id=${encodeURIComponent(datPostId)}`, null, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
@@ -95,7 +92,7 @@ async function createTruckPost(employeeId, truckData) {
   const equipmentCode = mapToDATEquipmentCode(truckData.equipmentType || truckData.truckType);
   const payload = buildTruckPayload(truckData, equipmentCode);
 
-  const res = await datApiRequest('POST', '/v2/trucks', payload, token);
+  const res = await postingRequest('POST', '/v2/trucks', payload, token);
   const datPostId = res.data.id;
 
   await db('dat_posts').insert({
@@ -117,7 +114,7 @@ async function updateTruckPost(employeeId, datPostId, truckData) {
   const equipmentCode = mapToDATEquipmentCode(truckData.equipmentType || truckData.truckType);
   const payload = buildTruckPayload(truckData, equipmentCode);
 
-  const res = await datApiRequest('PUT', `/v2/trucks/${datPostId}`, payload, token);
+  const res = await postingRequest('PATCH', `/v2/trucks/${datPostId}`, payload, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
@@ -128,7 +125,7 @@ async function updateTruckPost(employeeId, datPostId, truckData) {
 
 async function refreshTruckPost(employeeId, datPostId) {
   const token = await datService.getTokenForEmployee(employeeId);
-  const res = await datApiRequest('POST', `/v2/trucks/${datPostId}/refresh`, null, token);
+  const res = await postingRequest('POST', `/v2/trucks/${datPostId}/refresh`, null, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
@@ -139,7 +136,7 @@ async function refreshTruckPost(employeeId, datPostId) {
 
 async function deleteTruckPost(employeeId, datPostId) {
   const token = await datService.getTokenForEmployee(employeeId);
-  await datApiRequest('DELETE', `/v2/trucks/${datPostId}`, null, token);
+  await postingRequest('DELETE', `/v2/trucks/${datPostId}`, null, token);
 
   await db('dat_posts')
     .where('dat_post_id', String(datPostId))
@@ -182,8 +179,8 @@ function buildLoadPayload(data, equipmentCode) {
       fullPartial: data.fullPartial || 'FULL',
     },
     lane: {
-      origin: buildLocation(data.originZip, data.originCity, data.originState, data.origin),
-      destination: buildLocation(data.destinationZip, data.destinationCity, data.destinationState, data.destination),
+      origin: buildLocation(data.originZip, data.originCity, data.originState),
+      destination: buildLocation(data.destinationZip, data.destinationCity, data.destinationState),
     },
     exposure: {},
   };
@@ -209,9 +206,6 @@ function buildLoadPayload(data, equipmentCode) {
   if (data.referenceId || data.referenceNumber) {
     payload.referenceId = data.referenceId || data.referenceNumber;
   }
-  if (data.rate) {
-    payload.exposure.transactionDetails = { rate: { amount: parseFloat(data.rate) } };
-  }
 
   return payload;
 }
@@ -222,8 +216,8 @@ function buildTruckPayload(data, equipmentCode) {
       equipmentType: equipmentCode,
     },
     lane: {
-      origin: buildLocation(data.originZip, data.originCity, data.originState, data.currentLocation),
-      destination: buildLocation(data.destinationZip, data.destinationCity, data.destinationState, data.preferredDestination),
+      origin: buildLocation(data.originZip, data.originCity, data.originState),
+      destination: buildLocation(data.destinationZip, data.destinationCity, data.destinationState),
     },
     exposure: {},
   };
@@ -244,7 +238,7 @@ function buildTruckPayload(data, equipmentCode) {
   return payload;
 }
 
-function buildLocation(zip, city, state, fallback) {
+function buildLocation(zip, city, state) {
   const loc = {};
   if (zip) {
     loc.postalCode = String(zip).padStart(5, '0');
@@ -261,16 +255,16 @@ function toISODate(val) {
   return new Date(val).toISOString();
 }
 
-// ─── HTTP Helper ─────────────────────────────────────────────────────
+// ─── HTTP Helper (uses POSTING_BASE) ─────────────────────────────────
 
-async function datApiRequest(method, path, data, token) {
+async function postingRequest(method, path, data, token) {
   try {
     const config = {
       method,
-      url: `${datService.API_BASE}${path}`,
+      url: `${datService.POSTING_BASE}${path}`,
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     };
-    if (data && (method === 'POST' || method === 'PUT')) {
+    if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
       config.data = data;
     }
     return await axios(config);
@@ -281,7 +275,7 @@ async function datApiRequest(method, path, data, token) {
     const msg = error.response?.data?.errors?.[0]?.message
       || error.response?.data?.message
       || error.message;
-    const wrapped = new Error(`DAT API ${method} ${path}: ${msg}`);
+    const wrapped = new Error(`DAT Posting API ${method} ${path}: ${msg}`);
     wrapped.statusCode = error.response?.status;
     wrapped.datErrors = error.response?.data;
     throw wrapped;
