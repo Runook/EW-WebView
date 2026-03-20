@@ -1,98 +1,6 @@
 /* ============================================================
    FOOTER — Premium Redesign
-   Dark gradient, contact cards, glassmorphism, brand certs
    ============================================================ */
-
-/* ==================== Contact Strip ==================== */
-.footer-contact-strip {
-  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 50%, #fef2f2 100%);
-  padding: var(--space-12) 0;
-}
-
-.contact-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-4);
-}
-
-.contact-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-5) var(--space-5);
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  text-decoration: none;
-  color: inherit;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.contact-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
-  border-color: transparent;
-}
-
-.contact-card-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  flex-shrink: 0;
-}
-
-.contact-icon-green {
-  background: linear-gradient(145deg, #d1fae5, #a7f3d0);
-  color: #059669;
-}
-
-.contact-icon-blue {
-  background: linear-gradient(145deg, #dbeafe, #bfdbfe);
-  color: #2563eb;
-}
-
-.contact-icon-purple {
-  background: linear-gradient(145deg, #ede9fe, #ddd6fe);
-  color: #7c3aed;
-}
-
-.contact-icon-red {
-  background: linear-gradient(145deg, #fee2e2, #fecaca);
-  color: #dc2626;
-}
-
-.contact-card:hover .contact-card-icon {
-  transform: scale(1.08);
-  transition: transform 0.3s ease;
-}
-
-.contact-card-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.contact-card-label {
-  font-size: var(--font-size-xs);
-  color: var(--text-secondary);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 2px;
-}
-
-.contact-card-value {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
 /* ==================== Main Footer ==================== */
 .footer-new {
@@ -375,10 +283,6 @@
 
 /* ==================== Responsive ==================== */
 @media (max-width: 1024px) {
-  .contact-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .footer-columns {
     grid-template-columns: 1fr 1fr;
     gap: var(--space-10) var(--space-8);
@@ -391,15 +295,6 @@
 }
 
 @media (max-width: 768px) {
-  .footer-contact-strip {
-    padding: var(--space-8) 0;
-  }
-
-  .contact-cards {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-  }
-
   .footer-main {
     padding: var(--space-12) 0 0;
   }
@@ -415,10 +310,6 @@
   }
 
   .footer-logo {
-    justify-content: center;
-  }
-
-  .footer-certs {
     justify-content: center;
   }
 
@@ -454,16 +345,6 @@
 }
 
 @media (max-width: 480px) {
-  .contact-card {
-    padding: var(--space-4);
-  }
-
-  .contact-card-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-  }
-
   .footer-legal {
     flex-wrap: wrap;
     justify-content: center;

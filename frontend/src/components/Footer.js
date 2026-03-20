@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Facebook, Twitter, Linkedin, Instagram,
-  Phone, Mail, MapPin, MessageCircle,
   ArrowUpRight
 } from 'lucide-react';
 import './Footer.css';
@@ -28,50 +27,6 @@ const Footer = () => {
 
   return (
     <footer className="footer-new">
-      {/* Contact Strip */}
-      <div className="footer-contact-strip">
-        <div className="container">
-          <div className="contact-cards">
-            <a href="tel:5164277016" className="contact-card">
-              <div className="contact-card-icon contact-icon-green">
-                <Phone size={20} />
-              </div>
-              <div className="contact-card-info">
-                <span className="contact-card-label">电话咨询</span>
-                <span className="contact-card-value">(516) 427-7016</span>
-              </div>
-            </a>
-            <a href="mailto:ftl.us48@gmail.com" className="contact-card">
-              <div className="contact-card-icon contact-icon-blue">
-                <Mail size={20} />
-              </div>
-              <div className="contact-card-info">
-                <span className="contact-card-label">商务邮箱</span>
-                <span className="contact-card-value">ftl.us48@gmail.com</span>
-              </div>
-            </a>
-            <div className="contact-card">
-              <div className="contact-card-icon contact-icon-purple">
-                <MessageCircle size={20} />
-              </div>
-              <div className="contact-card-info">
-                <span className="contact-card-label">微信联系</span>
-                <span className="contact-card-value">LtlshippingtoUsa</span>
-              </div>
-            </div>
-            <div className="contact-card">
-              <div className="contact-card-icon contact-icon-red">
-                <MapPin size={20} />
-              </div>
-              <div className="contact-card-info">
-                <span className="contact-card-label">公司地址</span>
-                <span className="contact-card-value">Hauppauge, NY 11788</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Footer */}
       <div className="footer-main">
         <div className="footer-bg-grid"></div>
