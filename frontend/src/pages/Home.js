@@ -16,8 +16,15 @@ import './Home.css';
 const Home = () => {
   const navigate = useNavigate();
 
-  const handleNavigateToFreightBoard = () => {
+  const handleNavigateToForum = () => {
     navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区');
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleNavigateToLTL = () => {
+    navigate('/get-quote-ltl');
     setTimeout(() => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }, 100);
@@ -65,12 +72,12 @@ const Home = () => {
             </p>
 
             <div className="hero-prime-actions">
-              <button onClick={handleNavigateToFreightBoard} className="btn-hero-primary">
-                立即开始
+              <button onClick={handleNavigateToLTL} className="btn-hero-primary">
+                立即获取LTL报价
                 <ArrowRight size={18} />
               </button>
-              <button onClick={handleNavigateToFreightBoard} className="btn-hero-secondary">
-                搜索货源车源
+              <button onClick={handleNavigateToForum} className="btn-hero-secondary">
+                物流论坛
                 <ArrowRight size={18} />
               </button>
             </div>
@@ -259,8 +266,8 @@ const Home = () => {
               无论您是货主、承运商还是物流服务商，我们都为您提供最合适的平台服务
             </p>
             <div className="cta-actions">
-              <button onClick={handleNavigateToFreightBoard} className="btn btn-primary">
-                开始使用平台
+              <button onClick={handleNavigateToLTL} className="btn btn-primary">
+                立即获取LTL报价
                 <ArrowRight size={20} />
               </button>
             </div>
