@@ -6,11 +6,7 @@ import {
   CheckCircle,
   Truck,
   Globe,
-  Shield,
   Zap,
-  BarChart3,
-  Users,
-  MapPin,
   Package
 } from 'lucide-react';
 
@@ -116,29 +112,73 @@ const Home = () => {
       <section className="stats-strip">
         <div className="container">
           <div className="stats-grid">
-            <div className="stat-item">
-              <div className="stat-icon"><MapPin size={20} /></div>
+            <div className="stat-card stat-card-green">
+              <div className="stat-icon-wrap stat-icon-green">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="24" cy="20" r="14" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" opacity="0.3"/>
+                  <circle cx="24" cy="20" r="8" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
+                  <circle cx="24" cy="20" r="3" fill="currentColor"/>
+                  <path d="M24 34 L24 42" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M18 42 L30 42" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                  <path d="M10 20 L6 20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+                  <path d="M42 20 L38 20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+                  <path d="M24 6 L24 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+                </svg>
+              </div>
               <div className="stat-info">
                 <span className="stat-number">全美覆盖</span>
                 <span className="stat-label">DOT检查站查询</span>
               </div>
             </div>
-            <div className="stat-item">
-              <div className="stat-icon"><BarChart3 size={20} /></div>
+
+            <div className="stat-card stat-card-blue">
+              <div className="stat-icon-wrap stat-icon-blue">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="8" y="14" width="32" height="24" rx="4" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M14 26 L20 22 L26 28 L34 18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="34" cy="18" r="2.5" fill="currentColor"/>
+                  <path d="M16 8 L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M24 6 L24 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M32 8 L32 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M20 10 L28 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4"/>
+                </svg>
+              </div>
               <div className="stat-info">
                 <span className="stat-number">AI 智能</span>
                 <span className="stat-label">数字化物流方案</span>
               </div>
             </div>
-            <div className="stat-item">
-              <div className="stat-icon"><Users size={20} /></div>
+
+            <div className="stat-card stat-card-purple">
+              <div className="stat-icon-wrap stat-icon-purple">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="16" cy="16" r="6" stroke="currentColor" strokeWidth="2"/>
+                  <circle cx="32" cy="16" r="6" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M16 24 C16 24, 16 30, 10 34" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M32 24 C32 24, 32 30, 38 34" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M18 23 L30 23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.4"/>
+                  <path d="M20 28 C22 32, 26 32, 28 28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                  <path d="M22 34 L24 38 L26 34" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="24" cy="42" r="2" fill="currentColor" opacity="0.5"/>
+                </svg>
+              </div>
               <div className="stat-info">
                 <span className="stat-number">B2B 平台</span>
                 <span className="stat-label">货主与承运商对接</span>
               </div>
             </div>
-            <div className="stat-item">
-              <div className="stat-icon"><Shield size={20} /></div>
+
+            <div className="stat-card stat-card-red">
+              <div className="stat-icon-wrap stat-icon-red">
+                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M24 6 L40 16 L40 34 L24 44 L8 34 L8 16 Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                  <path d="M24 12 L34 18 L34 30 L24 36 L14 30 L14 18 Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" opacity="0.35"/>
+                  <path d="M19 22 L23 27 L30 19" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                  <circle cx="24" cy="6" r="2" fill="currentColor" opacity="0.5"/>
+                  <circle cx="40" cy="16" r="1.5" fill="currentColor" opacity="0.3"/>
+                  <circle cx="8" cy="16" r="1.5" fill="currentColor" opacity="0.3"/>
+                </svg>
+              </div>
               <div className="stat-info">
                 <span className="stat-number">安全可靠</span>
                 <span className="stat-label">合规运营保障</span>
