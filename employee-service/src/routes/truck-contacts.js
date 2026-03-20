@@ -93,6 +93,43 @@ router.get('/search', auth, requireEmployee, async (req, res) => {
 });
 
 /**
+ * POST /api/truck-contacts/upsert
+ * 自动保存：MC Number 不存在则插入，已存在则跳过
+ */
+router.post('/upsert', auth, requireEmployee, async (req, res) => {
+  try {
+    const { mc_number, truck_company_name, truck_contact } = req.body;
+
+    if (!mc_number || !truck_company_name || !truck_contact) {
+      return res.status(400).json({ success: false, message: '缺少必填字段' });
+    }
+
+    const existing = await db('truck_contacts')
+      .where('mc_number', mc_number.trim())
+      .where('is_deleted', false)
+      .first();
+
+    if (existing) {
+      return res.json({ success: true, data: existing, message: '联系人已存在，跳过' });
+    }
+
+    const [newContact] = await db('truck_contacts')
+      .insert({
+        mc_number: mc_number.trim(),
+        truck_company_name: truck_company_name.trim(),
+        truck_contact: truck_contact.trim(),
+        created_by: req.user.id
+      })
+      .returning('*');
+
+    res.status(201).json({ success: true, data: newContact, message: '联系人已自动保存' });
+  } catch (error) {
+    console.error('Upsert联系人失败:', error);
+    res.status(500).json({ success: false, message: 'Upsert联系人失败', error: error.message });
+  }
+});
+
+/**
  * POST /api/truck-contacts
  * 添加新联系人
  */

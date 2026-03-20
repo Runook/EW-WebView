@@ -469,6 +469,11 @@ export const truckContactApi = {
     return request('/truck-contacts', 'POST', contactData);
   },
 
+  // 自动保存（MC已存在则跳过，不存在则新增）
+  upsertContact: (contactData) => {
+    return request('/truck-contacts/upsert', 'POST', contactData);
+  },
+
   // 更新联系人
   updateContact: (id, contactData) => {
     return request(`/truck-contacts/${id}`, 'PUT', contactData);

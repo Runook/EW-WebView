@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { orderApi } from '../config/employeeApi';
+import { orderApi, truckContactApi } from '../config/employeeApi';
 import EditableCell from '../components/EditableCell';
 import CompanyEditableCell from '../components/CompanyEditableCell';
 import ConfirmOrderModal from '../components/ConfirmOrderModal';
@@ -232,6 +232,17 @@ const BrokerOrdersNew = () => {
           backup_driver_3_phone: formData.backup_driver_3_phone || null
         });
         
+        // 自动保存卡车联系人到联系簿（新MC则新增，已有则跳过）
+        try {
+          await truckContactApi.upsertContact({
+            mc_number: formData.mc_number,
+            truck_company_name: formData.truck_company_name,
+            truck_contact: formData.truck_contact
+          });
+        } catch (e) {
+          console.warn('Auto-save contact failed:', e);
+        }
+
         alert('订单已确认下单，卡车和备用司机信息已保存！');
         
         // 关闭模态框
@@ -873,6 +884,14 @@ const BrokerOrdersNew = () => {
           onClick={() => navigate('/employee/dat-loadboard')}
         >
           DAT Load Board
+        </button>
+
+        {/* 司机联系簿 */}
+        <button
+          className="nav-item"
+          onClick={() => navigate('/employee/driver-contacts')}
+        >
+          司机联系簿
         </button>
 
         {/* 广告管理 */}

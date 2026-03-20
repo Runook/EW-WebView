@@ -30,8 +30,6 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeField, setActiveField] = useState(null);
   
-  // 保存状态
-  const [saveMessage, setSaveMessage] = useState(null);
 
   // 防抖搜索
   const debounce = (func, wait) => {
@@ -121,34 +119,6 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
     setContactBookResults([]);
   };
 
-  // 保存联系人到联系簿
-  const saveToContactBook = async () => {
-    const { mc_number, truck_company_name, truck_contact } = formData;
-    
-    if (!mc_number || !truck_company_name || !truck_contact) {
-      setSaveMessage({ type: 'error', text: '请先填写完整的卡车信息（MC Number、公司名、联络方式）' });
-      setTimeout(() => setSaveMessage(null), 3000);
-      return;
-    }
-    
-    try {
-      const response = await truckContactApi.saveContact({
-        mc_number,
-        truck_company_name,
-        truck_contact
-      });
-      
-      if (response.success) {
-        setSaveMessage({ type: 'success', text: '✓ 已保存到联系簿' });
-      } else {
-        setSaveMessage({ type: 'error', text: response.message || '保存失败' });
-      }
-    } catch (error) {
-      setSaveMessage({ type: 'error', text: error.message || '保存失败，请重试' });
-    }
-    
-    setTimeout(() => setSaveMessage(null), 3000);
-  };
 
   const validate = () => {
     const newErrors = {};
@@ -241,22 +211,9 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
                   >
                     📒 联系簿
                   </button>
-                  <button 
-                    type="button" 
-                    className="btn-save-contact"
-                    onClick={saveToContactBook}
-                  >
-                    💾 保存联系
-                  </button>
                 </div>
               </div>
               
-              {/* 保存消息提示 */}
-              {saveMessage && (
-                <div className={`save-message ${saveMessage.type}`}>
-                  {saveMessage.text}
-                </div>
-              )}
               
               {/* 联系簿弹出框 */}
               {showContactBook && (

@@ -38,6 +38,7 @@ import MapView from './pages/MapView';
 import AdManager from './pages/AdManager';
 import AIQuoteReview from './pages/AIQuoteReview';
 import DATLoadBoard from './pages/DATLoadBoard';
+import DriverContacts from './pages/DriverContacts';
 import MyQuotes from './pages/MyQuotes';
 import QuoteDetail from './pages/QuoteDetail';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -184,6 +185,7 @@ function App() {
               <Route path="/employee/admin" element={<EmployeeAdmin />} />
               <Route path="/employee/ai-review" element={<AIQuoteReview />} />
               <Route path="/employee/dat-loadboard" element={<DATLoadBoard />} />
+              <Route path="/employee/driver-contacts" element={<DriverContacts />} />
               
               {/* 我们 */}
               <Route path="/my-points" element={
