@@ -203,11 +203,7 @@ const Contact = () => {
               {/* Company Info */}
               <div className="ct-info-card ct-info-brand">
                 <p className="ct-brand-name">WELOGX TECHNOLOGY INC</p>
-                <div className="ct-brand-certs">
-                  <span>MC# 1094635</span>
-                  <span>Broker MC# 1281963</span>
-                  <span>SCAC: EWLV</span>
-                </div>
+                <p className="ct-brand-slogan">连接世界 · 智慧物流</p>
               </div>
             </div>
           </div>

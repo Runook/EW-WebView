@@ -456,26 +456,18 @@
   font-size: var(--font-size-sm);
   font-weight: 700;
   color: #ffffff;
-  margin: 0 0 var(--space-3);
+  margin: 0 0 6px;
   letter-spacing: 0.05em;
 }
 
-.ct-brand-certs {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 6px;
-}
-
-.ct-brand-certs span {
-  padding: 4px 10px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.55);
-  font-family: 'SF Mono', 'Fira Code', monospace;
+.ct-brand-slogan {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  background: linear-gradient(90deg, var(--primary-green), var(--royal-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
 }
 
 /* ==================== Responsive ==================== */

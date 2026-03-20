@@ -91,11 +91,6 @@ const Footer = () => {
               <p className="footer-brand-desc">
                 AI 驱动的一站式数字化物流服务平台，连接货主、承运商与物流服务商，让每一次运输都更高效、更透明。
               </p>
-              <div className="footer-certs">
-                <div className="cert-badge">MC# 1094635</div>
-                <div className="cert-badge">Broker MC# 1281963</div>
-                <div className="cert-badge">SCAC: EWLV</div>
-              </div>
             </div>
 
             {/* Quick Links */}
