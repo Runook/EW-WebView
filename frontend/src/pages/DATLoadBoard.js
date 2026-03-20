@@ -51,9 +51,9 @@ const DATLoadBoard = () => {
   // Post state
   const [postType, setPostType] = useState('load');
   const [postForm, setPostForm] = useState({
-    originZip: '', destinationZip: '', equipmentType: 'V',
-    pickupDate: '', deliveryDate: '', weight: '', rate: '', commodity: '', comment: '',
-    currentLocation: '', preferredDestination: '', availableDate: '', capacity: '', length: '',
+    originZip: '', destinationZip: '', equipmentType: 'V', fullPartial: 'FULL',
+    pickupDate: '', deliveryDate: '', weight: '', length: '', rate: '', commodity: '', comment: '',
+    currentLocation: '', preferredDestination: '', availableDate: '', capacity: '',
   });
 
   // My posts state
@@ -115,9 +115,11 @@ const DATLoadBoard = () => {
           originZip: postForm.originZip,
           destinationZip: postForm.destinationZip,
           equipmentType: postForm.equipmentType,
+          fullPartial: postForm.fullPartial,
           pickupDate: postForm.pickupDate,
           deliveryDate: postForm.deliveryDate,
           weight: postForm.weight,
+          length: postForm.length,
           rate: postForm.rate,
           commodity: postForm.commodity,
           comment: postForm.comment,
@@ -137,9 +139,9 @@ const DATLoadBoard = () => {
       }
       setSuccess(`${postType === 'load' ? 'Load' : 'Truck'} posted to DAT successfully!`);
       setPostForm({
-        originZip: '', destinationZip: '', equipmentType: 'V',
-        pickupDate: '', deliveryDate: '', weight: '', rate: '', commodity: '', comment: '',
-        currentLocation: '', preferredDestination: '', availableDate: '', capacity: '', length: '',
+        originZip: '', destinationZip: '', equipmentType: 'V', fullPartial: 'FULL',
+        pickupDate: '', deliveryDate: '', weight: '', length: '', rate: '', commodity: '', comment: '',
+        currentLocation: '', preferredDestination: '', availableDate: '', capacity: '',
       });
     } catch (err) {
       setError(err.message);
@@ -367,6 +369,14 @@ const DATLoadBoard = () => {
                         ))}
                       </select>
                     </div>
+                    <div className="dat-field">
+                      <label>Full / Partial *</label>
+                      <select value={postForm.fullPartial}
+                        onChange={e => setPostForm(f => ({ ...f, fullPartial: e.target.value }))}>
+                        <option value="FULL">Full Truckload (FTL)</option>
+                        <option value="PARTIAL">Partial</option>
+                      </select>
+                    </div>
                   </div>
                   <div className="dat-form-row">
                     <div className="dat-field">
@@ -384,6 +394,12 @@ const DATLoadBoard = () => {
                       <input type="number" placeholder="e.g. 40000"
                         value={postForm.weight}
                         onChange={e => setPostForm(f => ({ ...f, weight: e.target.value }))} />
+                    </div>
+                    <div className="dat-field">
+                      <label>Length (ft)</label>
+                      <input type="number" placeholder="e.g. 53"
+                        value={postForm.length}
+                        onChange={e => setPostForm(f => ({ ...f, length: e.target.value }))} />
                     </div>
                   </div>
                   <div className="dat-form-row">
