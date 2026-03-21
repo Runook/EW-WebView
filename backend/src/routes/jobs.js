@@ -194,7 +194,7 @@ router.post('/', auth, [
   body('experience').notEmpty().withMessage('经验要求不能为空'),
   body('description').notEmpty().withMessage('职位描述不能为空'),
   body('contactPhone').optional(),
-  body('contactEmail').optional().isEmail(),
+  body('contactEmail').optional().isString(),
   body('contactPerson').optional().isString()
 ], async (req, res) => {
   try {
@@ -305,7 +305,7 @@ router.put('/:id', auth, [
   body('experience').optional().notEmpty(),
   body('description').optional().notEmpty(),
   body('contactPhone').optional(),
-  body('contactEmail').optional().isEmail(),
+  body('contactEmail').optional().isString(),
   body('contactPerson').optional().isString()
 ], async (req, res) => {
   try {

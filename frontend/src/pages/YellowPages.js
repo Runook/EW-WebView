@@ -395,8 +395,8 @@ const YellowPages = () => {
     };
 
     return (
-      <div className="yp-modal-overlay" onClick={publishModal.close}>
-        <div className="yp-modal" onClick={e => e.stopPropagation()}>
+      <div className="yp-inline-form" ref={el => el?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+        <div className="yp-inline-card">
           <div className="yp-modal-header">
             <h2>发布企业信息</h2>
             <button onClick={publishModal.close} type="button">×</button>
@@ -431,7 +431,7 @@ const YellowPages = () => {
                 </div>
                 <div className="yp-field">
                   <label>邮箱地址 *</label>
-                  <input type="email" name="email" placeholder="请输入企业邮箱" required />
+                  <input type="text" name="email" placeholder="请输入企业邮箱" required />
                 </div>
               </div>
               <div className="yp-field">

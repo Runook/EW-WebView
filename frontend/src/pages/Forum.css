@@ -610,3 +610,18 @@
     white-space: normal;
   }
 }
+
+/* Inline publish form (replaces modal overlay) */
+.forum-inline-form {
+  max-width: 750px;
+  margin: 20px auto;
+  padding: 0 16px;
+}
+
+.forum-inline-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}

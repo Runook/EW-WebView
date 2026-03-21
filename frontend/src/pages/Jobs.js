@@ -524,10 +524,10 @@ const Jobs = () => {
         </div>
       )}
 
-      {/* Edit Modal */}
+      {/* Edit Form (inline) */}
       {editItem && (
-        <div className="jobs-modal-overlay" onClick={() => setEditItem(null)}>
-          <div className="jobs-modal" onClick={e => e.stopPropagation()}>
+        <div className="jobs-inline-form" ref={el => el?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+          <div className="jobs-inline-card">
             <button className="jobs-modal-close" onClick={() => setEditItem(null)}><X size={22} /></button>
             <h2 className="edit-modal-title">{editItem._editType === 'job' ? '编辑职位' : '编辑简历'}</h2>
             <form className="edit-form" onSubmit={handleEditSubmit}>
@@ -566,7 +566,7 @@ const Jobs = () => {
                     <div className="form-group"><label>联系人</label><input name="contactPerson" defaultValue={editItem.contactPerson} /></div>
                     <div className="form-group"><label>联系电话</label><input name="contactPhone" defaultValue={editItem.contactPhone} /></div>
                   </div>
-                  <div className="form-group"><label>联系邮箱</label><input name="contactEmail" defaultValue={editItem.contactEmail} type="email" /></div>
+                  <div className="form-group"><label>联系邮箱</label><input name="contactEmail" defaultValue={editItem.contactEmail} type="text" /></div>
                 </>
               ) : (
                 <>
@@ -587,7 +587,7 @@ const Jobs = () => {
                   </div>
                   <div className="form-row">
                     <div className="form-group"><label>联系电话</label><input name="phone" defaultValue={editItem.phone} required /></div>
-                    <div className="form-group"><label>邮箱</label><input name="email" defaultValue={editItem.email} type="email" required /></div>
+                    <div className="form-group"><label>邮箱</label><input name="email" defaultValue={editItem.email} type="text" required /></div>
                   </div>
                   <div className="form-group"><label>技能专长</label><input name="skills" defaultValue={editItem.skills?.join(', ')} /></div>
                   <div className="form-row">
@@ -611,10 +611,10 @@ const Jobs = () => {
         </div>
       )}
 
-      {/* Post Modal */}
+      {/* Post Form (inline) */}
       {postModal.isOpen && (
-        <div className="jobs-modal-overlay" onClick={postModal.close}>
-          <div className="jobs-modal" onClick={e => e.stopPropagation()}>
+        <div className="jobs-inline-form" ref={el => el?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+          <div className="jobs-inline-card">
             <button className="jobs-modal-close" onClick={postModal.close}><X size={22} /></button>
             <h2 className="edit-modal-title">{activeTab === 'jobs' ? '发布招聘职位' : '发布求职简历'}</h2>
             <form className="edit-form" onSubmit={(e) => { e.preventDefault(); handlePost(new FormData(e.target)); }}>
@@ -644,7 +644,7 @@ const Jobs = () => {
                     <div className="form-group"><label>联系人</label><input name="contactPerson" placeholder="如：张经理" /></div>
                     <div className="form-group"><label>联系电话 *</label><input name="contactPhone" required placeholder="如：(323) 888-1001" /></div>
                   </div>
-                  <div className="form-group"><label>联系邮箱 *</label><input name="contactEmail" required type="email" placeholder="如：hr@company.com" /></div>
+                  <div className="form-group"><label>联系邮箱 *</label><input name="contactEmail" required type="text" placeholder="如：hr@company.com" /></div>
                 </>
               ) : (
                 <>
@@ -660,7 +660,7 @@ const Jobs = () => {
                   </div>
                   <div className="form-row">
                     <div className="form-group"><label>联系电话 *</label><input name="phone" required placeholder="(123) 456-7890" /></div>
-                    <div className="form-group"><label>邮箱 *</label><input name="email" required type="email" placeholder="zhangsan@email.com" /></div>
+                    <div className="form-group"><label>邮箱 *</label><input name="email" required type="text" placeholder="zhangsan@email.com" /></div>
                   </div>
                   <div className="form-group"><label>技能专长 *</label><input name="skills" required placeholder="用逗号分隔，如：CDL-A驾照, 长途运输" /></div>
                   <div className="form-row">

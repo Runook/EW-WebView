@@ -589,8 +589,8 @@ const Forum = () => {
 
       {/* 发布/编辑文章模态框 */}
       {showPublishModal && (
-        <div className="modal-overlay" onClick={handleClosePublishModal}>
-          <div className="modal-content publish-modal" onClick={e => e.stopPropagation()}>
+        <div className="forum-inline-form" ref={el => el?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+          <div className="forum-inline-card">
             <div className="modal-header">
               <h2>{editingArticle ? '编辑文章' : '发布文章'}</h2>
               <button onClick={handleClosePublishModal}>

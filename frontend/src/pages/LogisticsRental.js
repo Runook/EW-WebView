@@ -683,10 +683,10 @@ const LogisticsRental = () => {
       </div>
       </div>{/* end lr-body */}
 
-      {/* 发布模态框 */}
+      {/* 发布表单 (inline) */}
       {showPostModal && (
-        <div className="modal-overlay" onClick={() => setShowPostModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="lr-inline-form" ref={el => el?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
+          <div className="lr-inline-card">
             <div className="modal-header">
               <h2>{activeTab === 'rental' ? '发布出租信息' : '发布出售信息'}</h2>
               <button onClick={() => {

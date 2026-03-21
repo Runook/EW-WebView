@@ -633,3 +633,18 @@ a.jact { text-decoration: none; }
   .jcard-actions { width: 100%; justify-content: flex-end; }
   .jobs-tab-bar { max-width: 100%; }
 }
+
+/* Inline publish/edit form (replaces modal overlay) */
+.jobs-inline-form {
+  max-width: 700px;
+  margin: 20px auto;
+  padding: 0 16px;
+}
+
+.jobs-inline-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
