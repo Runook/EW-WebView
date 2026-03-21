@@ -483,6 +483,11 @@ export const truckContactApi = {
   deleteContact: (id) => {
     return request(`/truck-contacts/${id}`, 'DELETE');
   },
+
+  // 获取该司机的历史订单
+  getContactOrders: (id) => {
+    return request(`/truck-contacts/${id}/orders`);
+  },
 };
 
 // ==========================================
