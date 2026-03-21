@@ -235,6 +235,7 @@ app.use('/api/orders', require('./routes/order-pods'));
 app.use('/api/orders', require('./routes/order-documents'));
 app.use('/api/customers', require('./routes/customers'));
 app.use('/api/vendors', require('./routes/vendors'));
+app.use('/api/truck-contacts', require('./routes/truck-contacts'));
 app.use('/api/articles', require('./routes/articles'));
 app.use('/api/ads', require('./routes/ad-slots'));
 app.use('/api/payments', require('./routes/payments'));
