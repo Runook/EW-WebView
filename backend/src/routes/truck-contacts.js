@@ -30,14 +30,15 @@ router.get('/', auth, requireEmployee, async (req, res) => {
     const mcNumbers = contacts.map(c => c.mc_number).filter(Boolean);
     let orderStats = {};
     if (mcNumbers.length > 0) {
-      const stats = await db('employee_orders')
-        .select('mc_number')
-        .count('id as order_count')
-        .max('created_at as last_order_date')
-        .sum(db.raw("COALESCE(CAST(ew_final_price AS numeric), 0) as total_revenue"))
-        .whereIn('mc_number', mcNumbers)
-        .whereNot('status', 'cancelled')
-        .groupBy('mc_number');
+      const stats = await db.raw(`
+        SELECT mc_number,
+               COUNT(id)::int AS order_count,
+               MAX(created_at) AS last_order_date,
+               COALESCE(SUM(CASE WHEN ew_final_price ~ '^[0-9.]+$' THEN ew_final_price::numeric ELSE 0 END), 0) AS total_revenue
+        FROM employee_orders
+        WHERE mc_number = ANY(?) AND status != 'cancelled'
+        GROUP BY mc_number
+      `, [mcNumbers]).then(r => r.rows);
       stats.forEach(s => {
         orderStats[s.mc_number] = {
           order_count: parseInt(s.order_count),
