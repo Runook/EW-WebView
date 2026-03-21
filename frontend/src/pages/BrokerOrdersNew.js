@@ -219,11 +219,16 @@ const BrokerOrdersNew = () => {
       if (response.success) {
         // 然后更新卡车和备用司机信息，同时更新日期为当天（下单日期）
         await orderApi.updateOrder(selectedOrder.id, {
-          quote_date: getNYDate(), // 下单时更新为当天日期
+          quote_date: getNYDate(),
           truck_payment: parseFloat(formData.truck_payment),
           mc_number: formData.mc_number,
+          dot_number: formData.dot_number || null,
           truck_company_name: formData.truck_company_name,
           truck_contact: formData.truck_contact,
+          carrier_email: formData.carrier_email || null,
+          carrier_address: formData.carrier_address || null,
+          driver_name: formData.driver_name || null,
+          driver_phone: formData.driver_phone || null,
           backup_driver_1_name: formData.backup_driver_1_name || null,
           backup_driver_1_phone: formData.backup_driver_1_phone || null,
           backup_driver_2_name: formData.backup_driver_2_name || null,
@@ -232,12 +237,13 @@ const BrokerOrdersNew = () => {
           backup_driver_3_phone: formData.backup_driver_3_phone || null
         });
         
-        // 自动保存卡车联系人到联系簿（新MC则新增，已有则跳过）
         try {
           await truckContactApi.upsertContact({
             mc_number: formData.mc_number,
             truck_company_name: formData.truck_company_name,
-            truck_contact: formData.truck_contact
+            truck_contact: formData.truck_contact,
+            dot_number: formData.dot_number || null,
+            carrier_email: formData.carrier_email || null
           });
         } catch (e) {
           console.warn('Auto-save contact failed:', e);

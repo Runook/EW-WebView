@@ -488,6 +488,21 @@ export const truckContactApi = {
   getContactOrders: (id) => {
     return request(`/truck-contacts/${id}/orders`);
   },
+
+  // 添加司机到联系人
+  addDriver: (contactId, driverData) => {
+    return request(`/truck-contacts/${contactId}/drivers`, 'POST', driverData);
+  },
+
+  // 更新司机（admin only）
+  updateDriver: (contactId, driverId, driverData) => {
+    return request(`/truck-contacts/${contactId}/drivers/${driverId}`, 'PUT', driverData);
+  },
+
+  // 删除司机（admin only）
+  deleteDriver: (contactId, driverId) => {
+    return request(`/truck-contacts/${contactId}/drivers/${driverId}`, 'DELETE');
+  },
 };
 
 // ==========================================

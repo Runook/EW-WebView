@@ -428,6 +428,7 @@ class Order {
         'tql_price_1', 'tql_price_2', 'other_api_price',
         'quote_reference', 'quote_ref_10', 'quote_ref_20', 'quote_ref_30',
         'truck_payment', 'mc_number', 'truck_company_name', 'truck_contact',
+        'dot_number', 'carrier_email', 'carrier_address', 'driver_name', 'driver_phone',
         // 备用司机信息
         'backup_driver_1_name', 'backup_driver_1_phone',
         'backup_driver_2_name', 'backup_driver_2_phone',
