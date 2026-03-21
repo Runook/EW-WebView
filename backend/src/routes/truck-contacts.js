@@ -34,7 +34,7 @@ router.get('/', auth, requireEmployee, async (req, res) => {
         SELECT mc_number,
                COUNT(id)::int AS order_count,
                MAX(created_at) AS last_order_date,
-               COALESCE(SUM(ew_final_price), 0) AS total_revenue
+               COALESCE(SUM(COALESCE(ew_final_price, ew_quote_price, 0)), 0) AS total_revenue
         FROM employee_orders
         WHERE mc_number = ANY(?) AND status != 'cancelled'
         GROUP BY mc_number
