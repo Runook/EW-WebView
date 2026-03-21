@@ -24,14 +24,17 @@ const JOB_CATEGORIES = [
 ];
 
 const LOCATIONS = [
-  '洛杉矶', '纽约', '旧金山', '芝加哥', '休斯顿', '凤凰城',
-  '费城', '圣安东尼奥', '圣地亚哥', '达拉斯', '圣何塞', '奥斯汀',
-  '杰克逊维尔', '印第安纳波利斯', '旧金山湾区', '西雅图', '丹佛',
-  '华盛顿', '波士顿', '纳什维尔', '巴尔的摩', '俄克拉荷马城',
-  '路易斯维尔', '波特兰', '拉斯维加斯', '密尔沃基', '阿尔伯克基',
-  '图森', '弗雷斯诺', '萨克拉门托', '堪萨斯城', '梅萨', '亚特兰大',
-  '奥马哈', '科罗拉多斯普林斯', '罗利', '迈阿密', '克利夫兰',
-  '弗吉尼亚海滩', '明尼阿波利斯', '新奥尔良'
+  'Alabama (AL)', 'Alaska (AK)', 'Arizona (AZ)', 'Arkansas (AR)', 'California (CA)',
+  'Colorado (CO)', 'Connecticut (CT)', 'Delaware (DE)', 'Florida (FL)', 'Georgia (GA)',
+  'Hawaii (HI)', 'Idaho (ID)', 'Illinois (IL)', 'Indiana (IN)', 'Iowa (IA)',
+  'Kansas (KS)', 'Kentucky (KY)', 'Louisiana (LA)', 'Maine (ME)', 'Maryland (MD)',
+  'Massachusetts (MA)', 'Michigan (MI)', 'Minnesota (MN)', 'Mississippi (MS)', 'Missouri (MO)',
+  'Montana (MT)', 'Nebraska (NE)', 'Nevada (NV)', 'New Hampshire (NH)', 'New Jersey (NJ)',
+  'New Mexico (NM)', 'New York (NY)', 'North Carolina (NC)', 'North Dakota (ND)', 'Ohio (OH)',
+  'Oklahoma (OK)', 'Oregon (OR)', 'Pennsylvania (PA)', 'Rhode Island (RI)', 'South Carolina (SC)',
+  'South Dakota (SD)', 'Tennessee (TN)', 'Texas (TX)', 'Utah (UT)', 'Vermont (VT)',
+  'Virginia (VA)', 'Washington (WA)', 'West Virginia (WV)', 'Wisconsin (WI)', 'Wyoming (WY)',
+  'Washington D.C.'
 ];
 
 const WORK_TYPES = ['全职', '兼职', '合同工', '临时工'];
@@ -286,9 +289,9 @@ const Jobs = () => {
               </div>
             )}
             <div className="filter-item">
-              <label>工作地点</label>
+              <label>工作州</label>
               <select value={filters.location} onChange={(e) => setFilters(f => ({ ...f, location: e.target.value }))}>
-                <option value="">全部地点</option>
+                <option value="">全部州</option>
                 {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
             </div>
@@ -538,8 +541,9 @@ const Jobs = () => {
                   </div>
                   <div className="form-group"><label>公司名称</label><input name="company" defaultValue={editItem.company} required /></div>
                   <div className="form-row">
-                    <div className="form-group"><label>工作地点</label>
+                    <div className="form-group"><label>工作州</label>
                       <select name="location" defaultValue={editItem.location} required>
+                        <option value="">请选择州</option>
                         {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
                       </select>
                     </div>
@@ -574,8 +578,9 @@ const Jobs = () => {
                         {EXPERIENCE_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}
                       </select>
                     </div>
-                    <div className="form-group"><label>期望地点</label>
+                    <div className="form-group"><label>期望州</label>
                       <select name="location" defaultValue={editItem.location} required>
+                        <option value="">请选择州</option>
                         {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
                       </select>
                     </div>
@@ -621,8 +626,8 @@ const Jobs = () => {
                   </div>
                   <div className="form-group"><label>公司名称 *</label><input name="company" required placeholder="公司名称" /></div>
                   <div className="form-row">
-                    <div className="form-group"><label>工作地点 *</label>
-                      <select name="location" required><option value="">请选择</option>{LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}</select>
+                    <div className="form-group"><label>工作州 *</label>
+                      <select name="location" required><option value="">请选择州</option>{LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}</select>
                     </div>
                     <div className="form-group"><label>薪资待遇 *</label><input name="salary" required placeholder="如：$4000-6000/月" /></div>
                   </div>
@@ -649,8 +654,8 @@ const Jobs = () => {
                     <div className="form-group"><label>工作经验 *</label>
                       <select name="experience" required><option value="">请选择</option>{EXPERIENCE_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}</select>
                     </div>
-                    <div className="form-group"><label>期望地点 *</label>
-                      <select name="location" required><option value="">请选择</option>{LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}</select>
+                    <div className="form-group"><label>期望州 *</label>
+                      <select name="location" required><option value="">请选择州</option>{LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}</select>
                     </div>
                   </div>
                   <div className="form-row">
