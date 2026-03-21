@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   MapPin, Calendar, Eye, DollarSign, Phone, User, Building, Package,
   ChevronRight, ChevronLeft, Share2, Check, Heart, Bookmark, BookMarked,
@@ -19,8 +19,10 @@ export function generateRentalSlug(item) {
 const SITE_URL = 'https://welogx.com';
 
 const RentalDetail = () => {
-  const { type, id } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const type = location.pathname.startsWith('/rental') ? 'rental' : 'sale';
   const isRental = type === 'rental';
   const endpoint = isRental ? '/rentals' : '/sales';
 
