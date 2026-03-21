@@ -1207,7 +1207,7 @@ const BrokerOrdersNew = () => {
                           {order.truck_company_name ? (
                             <div className="truck-info-mini">
                               {order.truck_company_name}
-                              {order.mc_number && <div className="mc-num">MC: {order.mc_number}</div>}
+                              {order.mc_number && <div className="mc-num">MC# {order.mc_number}</div>}
                             </div>
                           ) : '-'}
                         </td>
@@ -1723,7 +1723,7 @@ const BrokerOrdersNew = () => {
                             {/* 下单后的卡车信息 */}
                             {currentStatus !== 'quote' && (
                               <div className="truck-details">
-                                <h4>卡车信息</h4>
+                                <h4>承运商信息</h4>
                                 <div className="detail-grid">
                                   <div className="detail-item">
                                     <label>付卡车价格:</label>
@@ -1737,11 +1737,21 @@ const BrokerOrdersNew = () => {
                                     />
                                   </div>
                                   <div className="detail-item">
-                                    <label>MC Number:</label>
+                                    <label>MC#:</label>
                                     <EditableCell
                                       value={order.mc_number}
                                       orderId={order.id}
                                       field="mc_number"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                    />
+                                  </div>
+                                  <div className="detail-item">
+                                    <label>DOT#:</label>
+                                    <EditableCell
+                                      value={order.dot_number}
+                                      orderId={order.id}
+                                      field="dot_number"
                                       type="text"
                                       onSave={handleCellUpdate}
                                     />
@@ -1757,11 +1767,55 @@ const BrokerOrdersNew = () => {
                                     />
                                   </div>
                                   <div className="detail-item">
-                                    <label>联络方式:</label>
+                                    <label>公司联络方式:</label>
                                     <EditableCell
                                       value={order.truck_contact}
                                       orderId={order.id}
                                       field="truck_contact"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                    />
+                                  </div>
+                                  <div className="detail-item">
+                                    <label>Carrier Email:</label>
+                                    <EditableCell
+                                      value={order.carrier_email}
+                                      orderId={order.id}
+                                      field="carrier_email"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                    />
+                                  </div>
+                                  <div className="detail-item">
+                                    <label>Carrier Address:</label>
+                                    <EditableCell
+                                      value={order.carrier_address}
+                                      orderId={order.id}
+                                      field="carrier_address"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                    />
+                                  </div>
+                                </div>
+
+                                <h4 style={{ marginTop: 12 }}>司机信息</h4>
+                                <div className="detail-grid">
+                                  <div className="detail-item">
+                                    <label>司机姓名:</label>
+                                    <EditableCell
+                                      value={order.driver_name}
+                                      orderId={order.id}
+                                      field="driver_name"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                    />
+                                  </div>
+                                  <div className="detail-item">
+                                    <label>司机电话:</label>
+                                    <EditableCell
+                                      value={order.driver_phone}
+                                      orderId={order.id}
+                                      field="driver_phone"
                                       type="text"
                                       onSave={handleCellUpdate}
                                     />
