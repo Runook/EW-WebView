@@ -94,7 +94,6 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
     if (!formData.truck_company_name?.trim()) newErrors.truck_company_name = '卡车公司名不能为空';
     if (!formData.truck_contact?.trim()) newErrors.truck_contact = '公司联络方式不能为空';
     if (!formData.carrier_email?.trim()) newErrors.carrier_email = 'Carrier Email 不能为空';
-    if (!formData.carrier_address?.trim()) newErrors.carrier_address = 'Carrier Address 不能为空';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -225,9 +224,8 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
                   {errors.carrier_email && <span className="error-message">{errors.carrier_email}</span>}
                 </div>
                 <div className="form-group">
-                  <label>Carrier Address <span className="required">*</span></label>
-                  <input type="text" value={formData.carrier_address} onChange={(e) => handleChange('carrier_address', e.target.value)} placeholder="承运商地址" className={errors.carrier_address ? 'error' : ''} />
-                  {errors.carrier_address && <span className="error-message">{errors.carrier_address}</span>}
+                  <label>Carrier Address <span className="optional">(选填)</span></label>
+                  <input type="text" value={formData.carrier_address} onChange={(e) => handleChange('carrier_address', e.target.value)} placeholder="承运商地址" />
                 </div>
               </div>
             </div>
