@@ -151,10 +151,10 @@ const DriverContacts = () => {
         {showAddForm && (
           <div className="dc-add-form">
             <div className="dc-add-row">
-              <div className="dc-add-field"><label>MC# *</label><input value={addForm.mc_number} onChange={(e) => setAddForm(p => ({ ...p, mc_number: e.target.value }))} placeholder="MC-123456" /></div>
-              <div className="dc-add-field"><label>DOT#</label><input value={addForm.dot_number} onChange={(e) => setAddForm(p => ({ ...p, dot_number: e.target.value }))} placeholder="DOT-789012" /></div>
+              <div className="dc-add-field"><label>MC# *</label><input value={addForm.mc_number} onChange={(e) => setAddForm(p => ({ ...p, mc_number: e.target.value }))} placeholder="1234567" /></div>
+              <div className="dc-add-field"><label>DOT#</label><input value={addForm.dot_number} onChange={(e) => setAddForm(p => ({ ...p, dot_number: e.target.value }))} placeholder="7654321" /></div>
               <div className="dc-add-field"><label>卡车公司名 *</label><input value={addForm.truck_company_name} onChange={(e) => setAddForm(p => ({ ...p, truck_company_name: e.target.value }))} placeholder="ABC Trucking" /></div>
-              <div className="dc-add-field"><label>公司电话 *</label><input value={addForm.truck_contact} onChange={(e) => setAddForm(p => ({ ...p, truck_contact: e.target.value }))} placeholder="(123) 456-7890" /></div>
+              <div className="dc-add-field"><label>公司电话 *</label><input value={addForm.truck_contact} onChange={(e) => setAddForm(p => ({ ...p, truck_contact: e.target.value }))} placeholder="1234567890" /></div>
               <div className="dc-add-field"><label>Carrier Email</label><input value={addForm.carrier_email} onChange={(e) => setAddForm(p => ({ ...p, carrier_email: e.target.value }))} placeholder="carrier@co.com" /></div>
               <div className="dc-add-field"><label>备注</label><input value={addForm.notes} onChange={(e) => setAddForm(p => ({ ...p, notes: e.target.value }))} placeholder="选填" /></div>
             </div>

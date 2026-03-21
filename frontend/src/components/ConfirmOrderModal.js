@@ -191,13 +191,13 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
               <div className="form-row">
                 <div className="form-group autocomplete-wrapper">
                   <label>MC# <span className="required">*</span></label>
-                  <input type="text" value={formData.mc_number} onChange={(e) => handleChange('mc_number', e.target.value)} onFocus={() => setActiveField('mc_number')} placeholder="如：MC-123456" className={errors.mc_number ? 'error' : ''} onClick={(e) => e.stopPropagation()} />
+                  <input type="text" value={formData.mc_number} onChange={(e) => handleChange('mc_number', e.target.value)} onFocus={() => setActiveField('mc_number')} placeholder="1234567" className={errors.mc_number ? 'error' : ''} onClick={(e) => e.stopPropagation()} />
                   {errors.mc_number && <span className="error-message">{errors.mc_number}</span>}
                   {renderSuggestions('mc_number')}
                 </div>
                 <div className="form-group autocomplete-wrapper">
                   <label>DOT# <span className="required">*</span></label>
-                  <input type="text" value={formData.dot_number} onChange={(e) => handleChange('dot_number', e.target.value)} onFocus={() => setActiveField('dot_number')} placeholder="如：DOT-789012" className={errors.dot_number ? 'error' : ''} onClick={(e) => e.stopPropagation()} />
+                  <input type="text" value={formData.dot_number} onChange={(e) => handleChange('dot_number', e.target.value)} onFocus={() => setActiveField('dot_number')} placeholder="7654321" className={errors.dot_number ? 'error' : ''} onClick={(e) => e.stopPropagation()} />
                   {errors.dot_number && <span className="error-message">{errors.dot_number}</span>}
                   {renderSuggestions('dot_number')}
                 </div>
@@ -212,7 +212,7 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
                 </div>
                 <div className="form-group autocomplete-wrapper">
                   <label>公司联络方式 <span className="required">*</span></label>
-                  <input type="text" value={formData.truck_contact} onChange={(e) => handleChange('truck_contact', e.target.value)} onFocus={() => setActiveField('truck_contact')} placeholder="公司电话" className={errors.truck_contact ? 'error' : ''} onClick={(e) => e.stopPropagation()} />
+                  <input type="text" value={formData.truck_contact} onChange={(e) => handleChange('truck_contact', e.target.value)} onFocus={() => setActiveField('truck_contact')} placeholder="1234567890" className={errors.truck_contact ? 'error' : ''} onClick={(e) => e.stopPropagation()} />
                   {errors.truck_contact && <span className="error-message">{errors.truck_contact}</span>}
                   {renderSuggestions('truck_contact')}
                 </div>
