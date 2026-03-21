@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, Send, Upload, X } from 'lucide-react';
 import PremiumPostStep from '../components/PremiumPostStep';
 import './LogisticsRental.css';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../components/common/Notification';
 import { apiClient } from '../utils/apiClient';
-import { PATH_LOGISTICS_RENTAL } from '../constants/servicePaths';
+import { PATH_LOGISTICS_RENTAL, PATH_LOGISTICS_RENTAL_ONLY, PATH_LOGISTICS_SALE_ONLY } from '../constants/servicePaths';
 
 const rentalCategories = [
   '卡车', '叉车', '仓库/物流园区', '船舶/飞机', '车架/车身', '海柜干柜', '特殊设备',
@@ -30,10 +30,12 @@ const LogisticsRentalPostPage = () => {
   const [currentFormData, setCurrentFormData] = useState(null);
   const [postForm, setPostForm] = useState({ images: [], coverImageIndex: 0 });
 
-  const listHref = useMemo(
-    () => `${PATH_LOGISTICS_RENTAL}?tab=${mode === 'rental' ? 'rental' : 'sale'}`,
-    [mode]
-  );
+  const location = useLocation();
+  const listHref = useMemo(() => {
+    if (location.pathname.includes('rental-equipment-leasing')) return PATH_LOGISTICS_RENTAL_ONLY;
+    if (location.pathname.includes('sale-equipment-trading')) return PATH_LOGISTICS_SALE_ONLY;
+    return `${PATH_LOGISTICS_RENTAL}?tab=${mode === 'rental' ? 'rental' : 'sale'}`;
+  }, [mode, location.pathname]);
 
   const getCurrentCategories = () => (mode === 'rental' ? rentalCategories : saleCategories);
   const resetPostForm = () => setPostForm({ images: [], coverImageIndex: 0 });

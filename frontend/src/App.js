@@ -170,6 +170,10 @@ function App() {
               <Route path="/resume/:id/:slug?" element={<ResumeDetail />} />
               <Route path="/logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台" element={<LogisticsRental />} />
               <Route path="/logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台/post" element={<LogisticsRentalPostPage />} />
+              <Route path="/logistics-truck-rental-equipment-leasing-物流设备出租平台-卡车叉车仓库租赁服务" element={<LogisticsRental defaultTab="rental" />} />
+              <Route path="/logistics-truck-rental-equipment-leasing-物流设备出租平台-卡车叉车仓库租赁服务/post" element={<LogisticsRentalPostPage />} />
+              <Route path="/logistics-truck-sale-equipment-trading-物流设备出售平台-卡车叉车仓库买卖交易" element={<LogisticsRental defaultTab="sale" />} />
+              <Route path="/logistics-truck-sale-equipment-trading-物流设备出售平台-卡车叉车仓库买卖交易/post" element={<LogisticsRentalPostPage />} />
               <Route path="/rental/:id/:slug?" element={<RentalDetail />} />
               <Route path="/sale/:id/:slug?" element={<RentalDetail />} />
               <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<Forum />} />

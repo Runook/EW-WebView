@@ -3,13 +3,15 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Phone, Heart, Building, Package, Search, Filter, ChevronDown, ImageIcon, Camera, MapPin, Calendar, Eye, Plus } from 'lucide-react';
 import { generateRentalSlug } from './RentalDetail';
 import './LogisticsRental.css';
-import { PATH_LOGISTICS_RENTAL } from '../constants/servicePaths';
+import { PATH_LOGISTICS_RENTAL, PATH_LOGISTICS_RENTAL_ONLY, PATH_LOGISTICS_SALE_ONLY } from '../constants/servicePaths';
 import { useNotification } from '../components/common/Notification';
 import { apiClient } from '../utils/apiClient';
+import { useLocation } from 'react-router-dom';
 
-const LogisticsRental = () => {
+const LogisticsRental = ({ defaultTab }) => {
 
-  const [activeTab, setActiveTab] = useState('rental'); // 'rental' 或 'sale'
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(defaultTab || 'rental');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -109,10 +111,11 @@ const LogisticsRental = () => {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- mount-only load
 
   useEffect(() => {
+    if (defaultTab) { setActiveTab(defaultTab); return; }
     const t = searchParams.get('tab');
     if (t === 'sale') setActiveTab('sale');
     else if (t === 'rental') setActiveTab('rental');
-  }, [searchParams]);
+  }, [searchParams, defaultTab]);
 
   const setTab = (tab) => {
     setActiveTab(tab);
@@ -254,6 +257,10 @@ const LogisticsRental = () => {
 
   const getDetailLink = (item) => `/${activeTab === 'rental' ? 'rental' : 'sale'}/${item.id}/${generateRentalSlug(item)}`;
 
+  const currentBasePath = defaultTab === 'sale' ? PATH_LOGISTICS_SALE_ONLY
+    : defaultTab === 'rental' ? PATH_LOGISTICS_RENTAL_ONLY
+    : PATH_LOGISTICS_RENTAL;
+
   // 定义地点、状态、租期和发布时间选项
   const locations = ['洛杉矶', '纽约', '旧金山', '芝加哥', '休斯顿', '凤凰城'];
   const conditions = ['全新', '9成新', '8成新', '7成新', '6成新', '5成新', '4成新', '3成新', '2成新', '1成新'];
@@ -266,24 +273,26 @@ const LogisticsRental = () => {
       <div className="lr-hero">
         <div className="lr-hero-bg"><div className="lr-orb lr-orb-1"></div><div className="lr-orb lr-orb-2"></div></div>
         <div className="lr-hero-content">
-          <h1>物流租售</h1>
-          <p>专业的物流设备租赁与买卖平台</p>
+          <h1>{defaultTab === 'rental' ? '物流出租' : defaultTab === 'sale' ? '物流出售' : '物流租售'}</h1>
+          <p>{defaultTab === 'rental' ? '专业的物流设备租赁平台' : defaultTab === 'sale' ? '专业的物流设备买卖平台' : '专业的物流设备租赁与买卖平台'}</p>
         </div>
       </div>
 
       <div className="lr-body">
         {/* Tab + Controls Row */}
         <div className="lr-toolbar">
-          <div className="lr-tabs">
-            <button type="button" className={`lr-tab ${activeTab === 'rental' ? 'lr-tab-active' : ''}`} onClick={() => setTab('rental')}>
-              <Building size={16} />
-              物流出租
-            </button>
-            <button type="button" className={`lr-tab ${activeTab === 'sale' ? 'lr-tab-active' : ''}`} onClick={() => setTab('sale')}>
-              <Package size={16} />
-              物流出售
-            </button>
-          </div>
+          {!defaultTab && (
+            <div className="lr-tabs">
+              <button type="button" className={`lr-tab ${activeTab === 'rental' ? 'lr-tab-active' : ''}`} onClick={() => setTab('rental')}>
+                <Building size={16} />
+                物流出租
+              </button>
+              <button type="button" className={`lr-tab ${activeTab === 'sale' ? 'lr-tab-active' : ''}`} onClick={() => setTab('sale')}>
+                <Package size={16} />
+                物流出售
+              </button>
+            </div>
+          )}
 
           <div className="lr-search">
             <Search size={16} />
@@ -303,7 +312,7 @@ const LogisticsRental = () => {
             </button>
             <Link
               className="lr-post-btn"
-              to={`${PATH_LOGISTICS_RENTAL}/post?mode=${activeTab === 'rental' ? 'rental' : 'sale'}`}
+              to={`${currentBasePath}/post?mode=${activeTab === 'rental' ? 'rental' : 'sale'}`}
             >
               <Plus size={15} />
               {activeTab === 'rental' ? '发布出租' : '发布出售'}
