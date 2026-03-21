@@ -577,7 +577,7 @@ const CognitoAuth = ({ type = 'login' }) => {
                         onChange={handleInputChange}
                         className="form-input"
                         style={{ paddingLeft: '50px' }}
-                        placeholder={formData.countryCode === '+1' ? '2135096697' : formData.countryCode === '+86' ? '13812345678' : '输入手机号码'}
+                        placeholder={formData.countryCode === '+1' ? '输入10位手机号码' : formData.countryCode === '+86' ? '输入11位手机号码' : '输入手机号码'}
                       />
                     </div>
                   </div>
