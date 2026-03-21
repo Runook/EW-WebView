@@ -138,7 +138,7 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
             <div className="summary-grid">
               <div className="summary-item"><span className="label">WE单号:</span><span className="value">{order.ew_quote_number || '-'}</span></div>
               <div className="summary-item"><span className="label">询价公司:</span><span className="value">{order.inquiry_company || '-'}</span></div>
-              <div className="summary-item"><span className="label">日期:</span><span className="value">{order.quote_date ? new Date(order.quote_date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric', timeZone: 'America/New_York' }) : '-'}</span></div>
+              <div className="summary-item"><span className="label">日期:</span><span className="value">{order.quote_date ? (() => { const d = new Date(order.quote_date); return `${d.getUTCMonth()+1}/${d.getUTCDate()}/${d.getUTCFullYear()}`; })() : '-'}</span></div>
               <div className="summary-item"><span className="label">WE报价:</span><span className="value">${order.ew_quote_price ? parseFloat(order.ew_quote_price).toLocaleString() : '-'}</span></div>
               <div className="summary-item full-width"><span className="label">线路:</span><span className="value">{order.origin_city || '-'} → {order.destination_city || '-'}</span></div>
             </div>

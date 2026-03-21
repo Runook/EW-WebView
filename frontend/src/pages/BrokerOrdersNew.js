@@ -217,10 +217,14 @@ const BrokerOrdersNew = () => {
       const response = await orderApi.confirmOrder(selectedOrder.id, 'waiting_driver');
       
       if (response.success) {
-        // 然后更新卡车和备用司机信息，同时更新日期为当天（下单日期）
+        const truckPayment = parseFloat(formData.truck_payment) || 0;
+        const wePrice = parseFloat(selectedOrder.ew_quote_price) || 0;
+        const profit = wePrice - truckPayment;
+
         await orderApi.updateOrder(selectedOrder.id, {
           quote_date: getNYDate(),
-          truck_payment: parseFloat(formData.truck_payment),
+          truck_payment: truckPayment,
+          profit: profit,
           mc_number: formData.mc_number,
           dot_number: formData.dot_number || null,
           truck_company_name: formData.truck_company_name,
