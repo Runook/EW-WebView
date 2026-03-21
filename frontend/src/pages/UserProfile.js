@@ -33,7 +33,11 @@ import {
   Building2,
   DollarSign,
   BookOpen,
-  RefreshCw
+  RefreshCw,
+  Coins,
+  CreditCard,
+  ArrowUpCircle,
+  ArrowDownCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiServices, apiClient } from '../utils/apiClient';
@@ -42,6 +46,7 @@ import './UserProfile.css';
 
 const TABS = [
   { key: 'overview', label: '概览', icon: BarChart2 },
+  { key: 'credits', label: '我的积分', icon: Coins },
   { key: 'quotes', label: '我的报价', icon: Truck },
   { key: 'myJobs', label: '我的招聘', icon: Briefcase },
   { key: 'myResumes', label: '我的求职', icon: User },
@@ -96,6 +101,13 @@ const UserProfile = () => {
   const [editingArticle, setEditingArticle] = useState(null);
   const [editForm, setEditForm] = useState({ title: '', category: '', content: '', tags: '', cover_image: '', summary: '' });
   const [editSaving, setEditSaving] = useState(false);
+
+  // Credits state
+  const [creditsInfo, setCreditsInfo] = useState(null);
+  const [creditsHistory, setCreditsHistory] = useState([]);
+  const [creditsLoading, setCreditsLoading] = useState(false);
+  const [rechargeRates, setRechargeRates] = useState(null);
+  const [rechargingAmount, setRechargingAmount] = useState(null);
 
   // Jobs/Resumes state
   const [myJobs, setMyJobs] = useState([]);
@@ -219,6 +231,41 @@ const UserProfile = () => {
   useEffect(() => {
     if (activeTab === 'myResumes' && myResumes.length === 0 && user) fetchMyResumes();
   }, [activeTab, myResumes.length, user, fetchMyResumes]);
+
+  // Credits fetching
+  const fetchCreditsData = useCallback(async () => {
+    try {
+      setCreditsLoading(true);
+      const [creditsRes, historyRes, configRes] = await Promise.all([
+        apiClient.get('/user-management/credits'),
+        apiClient.get('/user-management/credits/history', { limit: 30, offset: 0 }),
+        apiClient.get('/user-management/system-config', { keys: 'recharge_rates' })
+      ]);
+      if (creditsRes.success) setCreditsInfo(creditsRes.data);
+      if (historyRes.success) setCreditsHistory(historyRes.data || []);
+      if (configRes.success && configRes.data?.recharge_rates) setRechargeRates(configRes.data.recharge_rates);
+    } catch (err) { console.error('获取积分数据失败:', err); }
+    finally { setCreditsLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'credits' && user && !creditsInfo) fetchCreditsData();
+  }, [activeTab, user, creditsInfo, fetchCreditsData]);
+
+  const handleRecharge = async (amount) => {
+    try {
+      setRechargingAmount(amount);
+      const res = await apiClient.post('/user-management/recharge', { amount: parseFloat(amount), paymentMethod: 'mock' });
+      if (res.success) {
+        alert(`充值成功！获得 ${res.data.credits} 积分`);
+        setCreditsInfo(null);
+        fetchCreditsData();
+      } else {
+        alert('充值失败: ' + (res.message || '未知错误'));
+      }
+    } catch (err) { alert('充值失败: ' + err.message); }
+    finally { setRechargingAmount(null); }
+  };
 
   // --------------- Form helpers ---------------
   const handleFormChange = (field, value) => {
@@ -554,6 +601,7 @@ const UserProfile = () => {
       {/* ---------- TAB CONTENT ---------- */}
       <div className="profile-tab-content">
         {activeTab === 'overview' && renderOverview()}
+        {activeTab === 'credits' && renderCreditsTab()}
         {activeTab === 'quotes' && renderQuotes()}
         {activeTab === 'myJobs' && renderMyJobs()}
         {activeTab === 'myResumes' && renderMyResumesTab()}
@@ -563,6 +611,77 @@ const UserProfile = () => {
       </div>
     </div>
   );
+
+  // ===== CREDITS TAB =====
+  function renderCreditsTab() {
+    if (creditsLoading) {
+      return <div className="loading-state"><RefreshCw size={24} className="spin-icon" /><p>加载积分数据...</p></div>;
+    }
+    const formatDate = (d) => {
+      if (!d) return '';
+      const dt = new Date(d);
+      return dt.toLocaleDateString('zh-CN') + ' ' + dt.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    };
+    return (
+      <div className="credits-tab">
+        {/* Balance card */}
+        <div className="credits-balance-card">
+          <div className="credits-balance-icon"><Coins size={32} /></div>
+          <div className="credits-balance-info">
+            <div className="credits-balance-label">当前积分余额</div>
+            <div className="credits-balance-amount">{creditsInfo?.current ?? 0}</div>
+          </div>
+        </div>
+
+        {/* Recharge section */}
+        {rechargeRates && Object.keys(rechargeRates).length > 0 && (
+          <div className="credits-recharge-section">
+            <h3><CreditCard size={18} /> 积分充值</h3>
+            <div className="credits-recharge-grid">
+              {Object.entries(rechargeRates).map(([credits, price]) => (
+                <button
+                  key={credits}
+                  className="credits-recharge-item"
+                  disabled={rechargingAmount !== null}
+                  onClick={() => handleRecharge(price)}
+                >
+                  <div className="recharge-credits"><Coins size={16} /> {credits} 积分</div>
+                  <div className="recharge-price">${price}</div>
+                  {rechargingAmount === price && <span className="recharge-loading">处理中...</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* History */}
+        <div className="credits-history-section">
+          <h3><Clock size={18} /> 积分明细</h3>
+          {creditsHistory.length > 0 ? (
+            <div className="credits-history-list">
+              {creditsHistory.map((item, idx) => (
+                <div key={item.id || idx} className="credits-history-row">
+                  <div className="credits-history-icon">
+                    {item.type === 'earn' ? <ArrowUpCircle size={18} className="credit-earn" /> : <ArrowDownCircle size={18} className="credit-spend" />}
+                  </div>
+                  <div className="credits-history-desc">
+                    <span className="credits-desc-text">{item.description}</span>
+                    <span className="credits-desc-date">{formatDate(item.created_at)}</span>
+                  </div>
+                  <div className={`credits-history-amount ${item.type === 'earn' ? 'earn' : 'spend'}`}>
+                    {item.type === 'earn' ? '+' : '-'}{Math.abs(item.amount)}
+                  </div>
+                  <div className="credits-history-balance">余额: {item.balance_after}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="credits-empty"><AlertCircle size={20} /> 暂无积分记录</div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   // ===== OVERVIEW TAB =====
   function renderOverview() {

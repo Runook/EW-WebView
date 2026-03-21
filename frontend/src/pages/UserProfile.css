@@ -1360,3 +1360,84 @@
   .my-post-actions { width: 100%; justify-content: flex-end; }
   .my-post-title-row { flex-wrap: wrap; }
 }
+
+/* ===== Credits Tab ===== */
+.credits-tab { max-width: 720px; }
+
+.credits-balance-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 24px;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border-radius: 16px;
+  margin-bottom: 28px;
+}
+.credits-balance-icon { color: #d97706; }
+.credits-balance-label { font-size: 0.88rem; color: #78350f; font-weight: 500; }
+.credits-balance-amount { font-size: 2.2rem; font-weight: 800; color: #92400e; margin-top: 2px; }
+
+.credits-recharge-section { margin-bottom: 28px; }
+.credits-recharge-section h3,
+.credits-history-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 14px;
+}
+.credits-recharge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.credits-recharge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.credits-recharge-item:hover { border-color: #f59e0b; background: #fffbeb; }
+.credits-recharge-item:disabled { opacity: 0.5; cursor: not-allowed; }
+.recharge-credits { display: flex; align-items: center; gap: 5px; font-weight: 700; color: #d97706; font-size: 1rem; }
+.recharge-price { font-size: 0.9rem; color: #6b7280; font-weight: 600; }
+.recharge-loading { font-size: 0.75rem; color: #f59e0b; }
+
+.credits-history-section { margin-bottom: 12px; }
+.credits-history-list { display: flex; flex-direction: column; gap: 6px; }
+.credits-history-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 10px;
+}
+.credits-history-icon { flex-shrink: 0; }
+.credit-earn { color: #10b981; }
+.credit-spend { color: #ef4444; }
+.credits-history-desc { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.credits-desc-text { font-size: 0.88rem; color: #374151; }
+.credits-desc-date { font-size: 0.75rem; color: #9ca3af; }
+.credits-history-amount { font-weight: 700; font-size: 0.95rem; white-space: nowrap; }
+.credits-history-amount.earn { color: #10b981; }
+.credits-history-amount.spend { color: #ef4444; }
+.credits-history-balance { font-size: 0.78rem; color: #9ca3af; white-space: nowrap; }
+.credits-empty { display: flex; align-items: center; gap: 8px; color: #9ca3af; font-size: 0.9rem; padding: 24px 0; }
+.spin-icon { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+@media (max-width: 600px) {
+  .credits-recharge-grid { grid-template-columns: repeat(2, 1fr); }
+  .credits-history-row { flex-wrap: wrap; }
+  .credits-history-balance { width: 100%; text-align: right; }
+}
