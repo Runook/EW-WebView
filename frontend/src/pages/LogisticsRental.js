@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Phone, Heart, X, Building, Package, Search, Filter, ChevronDown, ImageIcon, Camera, MapPin, Calendar, Eye, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { Phone, Heart, Building, Package, Search, Filter, ChevronDown, ImageIcon, Camera, MapPin, Calendar, Eye, Plus } from 'lucide-react';
+import { generateRentalSlug } from './RentalDetail';
 import './LogisticsRental.css';
 import { PATH_LOGISTICS_RENTAL } from '../constants/servicePaths';
 import { useNotification } from '../components/common/Notification';
@@ -14,9 +15,6 @@ const LogisticsRental = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [rentalItems, setRentalItems] = useState([]);
   const [saleItems, setSaleItems] = useState([]);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { apiError } = useNotification();
 
   // 筛选条件状态
@@ -254,29 +252,7 @@ const LogisticsRental = () => {
     return activeTab === 'rental' ? filteredRentalItems : filteredSaleItems;
   };
 
-  // 查看详情
-  const handleViewDetails = (item) => {
-    setSelectedItem(item);
-    setCurrentImageIndex(0);
-    setShowDetailModal(true);
-  };
-
-  // 图片导航
-  const nextImage = () => {
-    if (selectedItem && selectedItem.images.length > 1) {
-      setCurrentImageIndex((prev) =>
-        prev === selectedItem.images.length - 1 ? 0 : prev + 1
-      );
-    }
-  };
-
-  const prevImage = () => {
-    if (selectedItem && selectedItem.images.length > 1) {
-      setCurrentImageIndex((prev) =>
-        prev === 0 ? selectedItem.images.length - 1 : prev - 1
-      );
-    }
-  };
+  const getDetailLink = (item) => `/${activeTab === 'rental' ? 'rental' : 'sale'}/${item.id}/${generateRentalSlug(item)}`;
 
   // 定义地点、状态、租期和发布时间选项
   const locations = ['洛杉矶', '纽约', '旧金山', '芝加哥', '休斯顿', '凤凰城'];
@@ -439,7 +415,7 @@ const LogisticsRental = () => {
 
             <div className="lr-card-body">
               <div className="lr-card-row1">
-                <h3 className="lr-card-title" onClick={() => handleViewDetails(item)}>{item.title}</h3>
+                <Link to={getDetailLink(item)} className="lr-card-title">{item.title}</Link>
                 <span className="lr-card-badge">{activeTab === 'rental' ? '出租' : '出售'}</span>
               </div>
 
@@ -462,7 +438,7 @@ const LogisticsRental = () => {
                 </div>
                 <div className="lr-card-btns">
                   <button className="lr-btn-phone"><Phone size={13} /> 查看电话</button>
-                  <button className="lr-btn-detail" onClick={() => handleViewDetails(item)}>查看详情</button>
+                  <Link to={getDetailLink(item)} className="lr-btn-detail">查看详情</Link>
                 </div>
               </div>
             </div>
@@ -479,136 +455,6 @@ const LogisticsRental = () => {
       </div>
       </div>{/* end lr-body */}
 
-      {/* 详情模态框 */}
-      {showDetailModal && selectedItem && (
-        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-          <div className="modal-content detail-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{selectedItem.title}</h2>
-              <button onClick={() => setShowDetailModal(false)}>
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="modal-body">
-              {/* 图片展示区域 */}
-              {selectedItem.images && selectedItem.images.length > 0 && (
-                <div className="detail-images">
-                  <div className="main-image">
-                    <img
-                      src={selectedItem.images[currentImageIndex]}
-                      alt={`${selectedItem.title} - 图片 ${currentImageIndex + 1}`}
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&h=600&fit=crop';
-                      }}
-                    />
-                    {selectedItem.images.length > 1 && (
-                      <>
-                        <button className="image-nav prev" onClick={prevImage}>
-                          <ChevronLeft size={24} />
-                        </button>
-                        <button className="image-nav next" onClick={nextImage}>
-                          <ChevronRight size={24} />
-                        </button>
-                        <div className="image-indicator">
-                          {currentImageIndex + 1} / {selectedItem.images.length}
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {selectedItem.images.length > 1 && (
-                    <div className="image-thumbnails">
-                      {selectedItem.images.map((image, index) => (
-                        <img
-                          key={index}
-                          src={image}
-                          alt={`缩略图 ${index + 1}`}
-                          className={currentImageIndex === index ? 'active' : ''}
-                          onClick={() => setCurrentImageIndex(index)}
-                          onError={(e) => {
-                            e.target.src = 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=150&h=100&fit=crop';
-                          }}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="detail-price">{selectedItem.price}</div>
-
-              <div className="detail-info">
-                <div className="info-row">
-                  <span className="label">分类：</span>
-                  <span>{selectedItem.category}</span>
-                </div>
-                {selectedItem.subCategory && (
-                  <div className="info-row">
-                    <span className="label">细分：</span>
-                    <span>{selectedItem.subCategory}</span>
-                  </div>
-                )}
-                <div className="info-row">
-                  <span className="label">地点：</span>
-                  <span>{selectedItem.location}</span>
-                </div>
-                <div className="info-row">
-                  <span className="label">状态：</span>
-                  <span>{selectedItem.condition}</span>
-                </div>
-                {selectedItem.brand && (
-                  <div className="info-row">
-                    <span className="label">品牌：</span>
-                    <span>{selectedItem.brand}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="detail-description">
-                <h4>详细描述</h4>
-                <p>{selectedItem.description}</p>
-              </div>
-
-              {selectedItem.specifications && Object.keys(selectedItem.specifications).length > 0 && (
-                <div className="detail-specifications">
-                  <h4>技术参数</h4>
-                  <div className="specs-grid">
-                    {Object.entries(selectedItem.specifications).map(([key, value]) => (
-                      <div key={key} className="spec-item">
-                        <span className="spec-label">{key}：</span>
-                        <span className="spec-value">{Array.isArray(value) ? value.join(', ') : value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="detail-contact">
-                <h4>联系信息</h4>
-                <div className="contact-info">
-                  <div><strong>联系人：</strong>{selectedItem.contact.name}</div>
-                  {selectedItem.contact.company && (
-                    <div><strong>公司：</strong>{selectedItem.contact.company}</div>
-                  )}
-                  <div><strong>电话：</strong>{selectedItem.contact.phone}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button className="contact-button">
-                <Phone size={16} />
-                联系卖家
-              </button>
-              <button className="favorite-button">
-                <Heart size={16} />
-                收藏
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

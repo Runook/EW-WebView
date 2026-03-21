@@ -19,6 +19,7 @@ import Jobs from './pages/Jobs';
 import JobDetail from './pages/JobDetail';
 import ResumeDetail from './pages/ResumeDetail';
 import LogisticsRental from './pages/LogisticsRental';
+import RentalDetail from './pages/RentalDetail';
 import Forum from './pages/Forum';
 import ArticleDetail from './pages/ArticleDetail';
 import UserProfile from './pages/UserProfile';
@@ -169,6 +170,8 @@ function App() {
               <Route path="/resume/:id/:slug?" element={<ResumeDetail />} />
               <Route path="/logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台" element={<LogisticsRental />} />
               <Route path="/logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台/post" element={<LogisticsRentalPostPage />} />
+              <Route path="/rental/:id/:slug?" element={<RentalDetail />} />
+              <Route path="/sale/:id/:slug?" element={<RentalDetail />} />
               <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<Forum />} />
               <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区/post" element={<ForumPostPage />} />
               <Route path="/forum" element={<Forum />} />
