@@ -164,7 +164,7 @@
 
 .publish-btn {
   background: #34C759;
-  color: white;
+  color: white !important;
   border: none;
   padding: 8px 20px;
   border-radius: 8px;
@@ -176,6 +176,8 @@
   gap: 6px;
   transition: background 0.2s;
   white-space: nowrap;
+  text-decoration: none;
+  box-sizing: border-box;
 }
 
 .publish-btn:hover {
@@ -624,4 +626,16 @@
   padding: 28px;
   border: 1px solid #e2e8f0;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.forum-post-page .jobs-post-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+.forum-post-page .jobs-post-back:hover {
+  color: #34c759;
 }

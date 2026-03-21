@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './components/common/Notification';
@@ -27,7 +27,6 @@ import KgcmConverter from './pages/KgcmConverter';
 import FBALocations from './pages/FBALocations';
 import FBALocationDetail from './pages/FBALocationDetail';
 import GATest from './pages/GATest';
-import EmployeeOrders from './pages/EmployeeOrders';
 import EmployeeAdmin from './pages/EmployeeAdmin';
 import BrokerOrders from './pages/BrokerOrdersNew';
 import BrokerOrderForm from './pages/BrokerOrderForm';
@@ -44,11 +43,18 @@ import QuoteDetail from './pages/QuoteDetail';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import AccountingGuide from './pages/AccountingGuide';
-import './App.css';
-import './config/amplify'; 
-
-// 导入 Google Maps 诊断功能
 import { diagnoseGoogleMapsIssues } from './config/googleMaps';
+import './App.css';
+import './config/amplify';
+
+const JobPostPage = lazy(() => import('./pages/JobPostPage'));
+const LogisticsRentalPostPage = lazy(() => import('./pages/LogisticsRentalPostPage'));
+const YellowPagesPostPage = lazy(() => import('./pages/YellowPagesPostPage'));
+const ForumPostPage = lazy(() => import('./pages/ForumPostPage'));
+
+const pageLoading = (
+  <div style={{ padding: '48px', textAlign: 'center', color: '#666' }}>加载中…</div>
+);
 
 function App() {
   const location = useLocation();
@@ -94,6 +100,7 @@ function App() {
         <div className="App">
           <Header />
           <main>
+            <Suspense fallback={pageLoading}>
             <Routes>
               {/* 首页 */}
               <Route path="/" element={<Home />} />
@@ -155,12 +162,17 @@ function App() {
               
               {/* 信息服务 - 使用新的完整功能页面 */}
               <Route path="/yellow-pages-logistics-supplier-directory-物流企业服务商黄页-货运卡车租赁公司查询平台" element={<YellowPages />} />
+              <Route path="/yellow-pages-logistics-supplier-directory-物流企业服务商黄页-货运卡车租赁公司查询平台/post" element={<YellowPagesPostPage />} />
               <Route path="/jobs-driver-freight-logistics-recruitment-platform-物流司机招聘求职平台-货运卡车运输人才匹配系统" element={<Jobs />} />
+              <Route path="/jobs-driver-freight-logistics-recruitment-platform-物流司机招聘求职平台-货运卡车运输人才匹配系统/post" element={<JobPostPage />} />
               <Route path="/job/:id/:slug?" element={<JobDetail />} />
               <Route path="/resume/:id/:slug?" element={<ResumeDetail />} />
               <Route path="/logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台" element={<LogisticsRental />} />
+              <Route path="/logistics-truck-rental-fleet-platform-美国货运物流租车系统-卡车货车设备租赁服务信息平台/post" element={<LogisticsRentalPostPage />} />
               <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区" element={<Forum />} />
+              <Route path="/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区/post" element={<ForumPostPage />} />
               <Route path="/forum" element={<Forum />} />
+              <Route path="/forum/post" element={<ForumPostPage />} />
               <Route path="/article/:slug" element={<ArticleDetail />} />
               
               {/* 物流工具 */}
@@ -297,6 +309,7 @@ function App() {
                 />
               } />
             </Routes>
+            </Suspense>
           </main>
           <Footer />
         </div>

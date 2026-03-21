@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { 
   ArrowLeft, 
   Plus, 
@@ -21,25 +22,20 @@ import {
   Scale,
   MoreHorizontal
 } from 'lucide-react';
-import PremiumPostModal from '../components/PremiumPostModal';
-import { apiServices, getAuthToken, apiClient } from '../utils/apiClient';
+import { apiServices } from '../utils/apiClient';
+import { PATH_YELLOW_PAGES } from '../constants/servicePaths';
 import { useNotification } from '../components/common/Notification';
 import { apiLogger } from '../utils/logger';
-import { useModal } from '../hooks';
 import './YellowPages.css';
 
 const YellowPages = () => {
-  const { success, error: showError, apiError } = useNotification();
-  const publishModal = useModal();
-  const premiumModal = useModal();
+  const { apiError } = useNotification();
   
   const [currentView, setCurrentView] = useState('main');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
   const [companies, setCompanies] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentFormData, setCurrentFormData] = useState(null);
-
   const categories = {
     '仓储货代': {
       color: '#f59e0b',
@@ -135,35 +131,12 @@ const YellowPages = () => {
 
   const filteredCompanies = companies;
 
-  const handleFormSubmit = (companyData) => {
-    const token = getAuthToken();
-    if (!token) {
-      showError('请先登录');
-      return;
+  const postPageHref = useMemo(() => {
+    if (selectedSubcategory) {
+      return `${PATH_YELLOW_PAGES}/post?subcategory=${encodeURIComponent(selectedSubcategory)}`;
     }
-    setCurrentFormData(companyData);
-    publishModal.close();
-    premiumModal.open();
-  };
-
-  const handleConfirmPublish = async ({ formData, premium }) => {
-    try {
-      const postData = { ...formData, premium };
-      const result = await apiClient.post('/companies', postData);
-      if (result.success) {
-        success(`企业信息发布成功！已扣除 ${result.creditsSpent} 积分`);
-        premiumModal.close();
-        setCurrentFormData(null);
-        if (selectedSubcategory === formData.subcategory) fetchCompanies();
-        fetchCategoryStats();
-      } else {
-        throw new Error(result.message || '发布失败');
-      }
-    } catch (error) {
-      apiLogger.error('发布公司信息失败', error);
-      showError('发布失败: ' + error.message);
-    }
-  };
+    return `${PATH_YELLOW_PAGES}/post`;
+  }, [selectedSubcategory]);
 
   const getTotalCount = (catName) => {
     const stats = categoryStats[catName];
@@ -310,10 +283,10 @@ const YellowPages = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <button className="yp-publish-btn" onClick={publishModal.open}>
+          <Link className="yp-publish-btn" to={postPageHref}>
             <Plus size={18} />
             发布企业信息
-          </button>
+          </Link>
         </div>
 
         <div className="yp-companies">
@@ -359,95 +332,12 @@ const YellowPages = () => {
               <div className="yp-empty-icon"><Building size={48} /></div>
               <h3>暂无企业信息</h3>
               <p>成为第一个在此分类发布信息的企业</p>
-              <button className="yp-publish-btn" onClick={publishModal.open}>
+              <Link className="yp-publish-btn" to={postPageHref}>
                 <Plus size={18} />
                 发布企业信息
-              </button>
+              </Link>
             </div>
           )}
-        </div>
-      </div>
-    );
-  };
-
-  const renderPublishModal = () => {
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const companyData = {
-        name: formData.get('name'),
-        description: formData.get('description'),
-        subcategory: formData.get('subcategory'),
-        phone: formData.get('phone'),
-        email: formData.get('email'),
-        address: formData.get('address'),
-        website: formData.get('website') || ''
-      };
-      let category = '';
-      for (const [catName, catData] of Object.entries(categories)) {
-        if (catData.subcategories.includes(companyData.subcategory)) {
-          category = catName;
-          break;
-        }
-      }
-      companyData.category = category;
-      handleFormSubmit(companyData);
-    };
-
-    return (
-      <div className="yp-inline-form" ref={el => el?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-        <div className="yp-inline-card">
-          <div className="yp-modal-header">
-            <h2>发布企业信息</h2>
-            <button onClick={publishModal.close} type="button">×</button>
-          </div>
-          <div className="yp-modal-body">
-            <form className="yp-form" onSubmit={handleSubmit}>
-              <div className="yp-field">
-                <label>企业名称 *</label>
-                <input type="text" name="name" placeholder="请输入企业全称" required />
-              </div>
-              <div className="yp-field">
-                <label>服务分类 *</label>
-                <select name="subcategory" required defaultValue={selectedSubcategory || ''}>
-                  <option value="">请选择服务分类</option>
-                  {Object.entries(categories).map(([catName, catData]) => (
-                    <optgroup key={catName} label={catName}>
-                      {catData.subcategories.map(sub => (
-                        <option key={sub} value={sub}>{sub}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
-              <div className="yp-field">
-                <label>企业简介 *</label>
-                <textarea name="description" placeholder="请简要介绍您的企业主营业务和优势" rows="4" required></textarea>
-              </div>
-              <div className="yp-field-row">
-                <div className="yp-field">
-                  <label>联系电话 *</label>
-                  <input type="tel" name="phone" placeholder="请输入联系电话" required />
-                </div>
-                <div className="yp-field">
-                  <label>邮箱地址 *</label>
-                  <input type="text" name="email" placeholder="请输入企业邮箱" required />
-                </div>
-              </div>
-              <div className="yp-field">
-                <label>企业地址 *</label>
-                <input type="text" name="address" placeholder="请输入详细地址" required />
-              </div>
-              <div className="yp-field">
-                <label>企业网站</label>
-                <input type="url" name="website" placeholder="https://（可选）" />
-              </div>
-              <div className="yp-form-actions">
-                <button type="button" className="yp-btn-cancel" onClick={publishModal.close}>取消</button>
-                <button type="submit" className="yp-btn-submit">立即发布</button>
-              </div>
-            </form>
-          </div>
         </div>
       </div>
     );
@@ -460,14 +350,6 @@ const YellowPages = () => {
       {currentView === 'main' && renderMainView()}
       {currentView === 'category' && renderCategoryView()}
       {currentView === 'subcategory' && renderSubcategoryView()}
-      {publishModal.isOpen && renderPublishModal()}
-      <PremiumPostModal
-        isOpen={premiumModal.isOpen}
-        onClose={() => { premiumModal.close(); setCurrentFormData(null); }}
-        onConfirm={handleConfirmPublish}
-        postType="company"
-        formData={currentFormData}
-      />
     </div>
   );
 };

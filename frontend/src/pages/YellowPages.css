@@ -334,7 +334,7 @@
   gap: 8px;
   padding: 12px 22px;
   background: linear-gradient(135deg, var(--primary-green), #2aa44a);
-  color: #ffffff;
+  color: #ffffff !important;
   border: none;
   border-radius: 12px;
   font-size: var(--font-size-sm);
@@ -343,6 +343,8 @@
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(52, 199, 89, 0.25);
   white-space: nowrap;
+  text-decoration: none;
+  box-sizing: border-box;
 }
 
 .yp-publish-btn:hover {
@@ -830,4 +832,34 @@
   padding: 28px;
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Dedicated post page */
+.yp-post-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+.yp-post-page-header {
+  margin-bottom: 20px;
+}
+.yp-post-page-header h1 {
+  font-size: 1.5rem;
+  margin: 8px 0 0;
+  color: #111827;
+}
+.yp-post-page .jobs-post-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4b5563;
+  text-decoration: none;
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+}
+.yp-post-page .jobs-post-back:hover {
+  color: var(--primary-green, #34c759);
+}
+.yp-post-page-card {
+  margin-top: 8px;
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { PATH_FORUM_LONG } from '../constants/servicePaths';
 import {
   Search,
   MessageCircle,
@@ -47,7 +48,6 @@ const CATEGORY_NAME_MAP = CATEGORIES.reduce((acc, cat) => {
 }, {});
 
 const Forum = () => {
-  const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
 
   // SEO
@@ -62,7 +62,6 @@ const Forum = () => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [showPublishModal, setShowPublishModal] = useState(false);
   const [hotTags, setHotTags] = useState([]);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
@@ -229,8 +228,9 @@ const Forum = () => {
     }
   };
 
-  // Publish or update article
+  // Update article (new posts use ForumPostPage)
   const handlePublish = async () => {
+    if (!editingArticle) return;
     if (!publishForm.title.trim() || !publishForm.content.trim()) {
       alert('请填写标题和内容');
       return;
@@ -250,15 +250,9 @@ const Forum = () => {
         summary: publishForm.summary.trim() || null
       };
 
-      let response;
-      if (editingArticle) {
-        response = await apiServices.articles.update(editingArticle.id, data);
-      } else {
-        response = await apiServices.articles.create(data);
-      }
+      const response = await apiServices.articles.update(editingArticle.id, data);
 
       if (response.success) {
-        setShowPublishModal(false);
         setEditingArticle(null);
         setPublishForm({
           title: '',
@@ -272,8 +266,8 @@ const Forum = () => {
         fetchPosts();
       }
     } catch (error) {
-      console.error(editingArticle ? '更新文章失败:' : '发布文章失败:', error);
-      alert(editingArticle ? '更新失败，请重试' : '发布失败，请重试');
+      console.error('更新文章失败:', error);
+      alert('更新失败，请重试');
     } finally {
       setPublishing(false);
     }
@@ -294,7 +288,6 @@ const Forum = () => {
         cover_image: article.cover_image || '',
         summary: article.summary || ''
       });
-      setShowPublishModal(true);
     } catch (error) {
       console.error('获取文章详情失败:', error);
       alert('获取文章详情失败，请重试');
@@ -318,7 +311,6 @@ const Forum = () => {
 
   // Close publish modal
   const handleClosePublishModal = () => {
-    setShowPublishModal(false);
     setEditingArticle(null);
     setPublishForm({
       title: '',
@@ -438,13 +430,10 @@ const Forum = () => {
               </div>
 
               {isEmployee && (
-                <button
-                  className="publish-btn"
-                  onClick={() => setShowPublishModal(true)}
-                >
+                <Link className="publish-btn" to={`${PATH_FORUM_LONG}/post`}>
                   <Plus size={20} />
                   发布文章
-                </button>
+                </Link>
               )}
             </div>
 
@@ -587,12 +576,12 @@ const Forum = () => {
         </div>
       </div>
 
-      {/* 发布/编辑文章模态框 */}
-      {showPublishModal && (
+      {/* 编辑文章模态框 */}
+      {editingArticle && (
         <div className="forum-inline-form" ref={el => el?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
           <div className="forum-inline-card">
             <div className="modal-header">
-              <h2>{editingArticle ? '编辑文章' : '发布文章'}</h2>
+              <h2>编辑文章</h2>
               <button onClick={handleClosePublishModal}>
                 <X size={20} />
               </button>
@@ -677,8 +666,8 @@ const Forum = () => {
                     onClick={handlePublish}
                     disabled={publishing || !publishForm.title.trim() || !publishForm.content.trim()}
                   >
-                    {editingArticle ? <Save size={16} /> : <Plus size={16} />}
-                    {publishing ? (editingArticle ? '保存中...' : '发布中...') : (editingArticle ? '保存修改' : '发布文章')}
+                    <Save size={16} />
+                    {publishing ? '保存中...' : '保存修改'}
                   </button>
                 </div>
               </div>

@@ -1,58 +1,37 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Plus, Briefcase, User, Search, Filter, ChevronDown, ChevronLeft, ChevronRight,
   Star, MapPin, Clock, BookOpen, Calendar, Send, Bookmark, BookMarked,
-  Phone, Mail, X, Eye, Edit, Trash2, DollarSign, Users, TrendingUp, Building2
+  Phone, Mail, X, Eye, Edit, Trash2, DollarSign, Users, TrendingUp
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import PremiumPostModal from '../components/PremiumPostModal';
 import { useNotification } from '../components/common/Notification';
 import { apiLogger } from '../utils/logger';
 import { generateJobSlug } from './JobDetail';
 import { generateResumeSlug } from './ResumeDetail';
-import { useModal, useLoading } from '../hooks';
+import { useLoading } from '../hooks';
 import { apiClient } from '../utils/apiClient';
+import { PATH_JOBS } from '../constants/servicePaths';
+import { JOB_CATEGORIES, LOCATIONS, WORK_TYPES, EXPERIENCE_OPTIONS } from './jobsConstants';
 import './Jobs.css';
 
 const ITEMS_PER_PAGE = 12;
 
-const JOB_CATEGORIES = [
-  'CLASS A 司机', 'CLASS B 司机', 'CLASS D 司机', '调度找召卡车',
-  '文员OP', '跟单/客服', '应收应付会计', '卸柜搬货工',
-  '出单出货 点数', '物流销售', '货运代理', '卡车修理技工', '货运经纪', '报关师'
-];
-
-const LOCATIONS = [
-  'Alabama (AL)', 'Alaska (AK)', 'Arizona (AZ)', 'Arkansas (AR)', 'California (CA)',
-  'Colorado (CO)', 'Connecticut (CT)', 'Delaware (DE)', 'Florida (FL)', 'Georgia (GA)',
-  'Hawaii (HI)', 'Idaho (ID)', 'Illinois (IL)', 'Indiana (IN)', 'Iowa (IA)',
-  'Kansas (KS)', 'Kentucky (KY)', 'Louisiana (LA)', 'Maine (ME)', 'Maryland (MD)',
-  'Massachusetts (MA)', 'Michigan (MI)', 'Minnesota (MN)', 'Mississippi (MS)', 'Missouri (MO)',
-  'Montana (MT)', 'Nebraska (NE)', 'Nevada (NV)', 'New Hampshire (NH)', 'New Jersey (NJ)',
-  'New Mexico (NM)', 'New York (NY)', 'North Carolina (NC)', 'North Dakota (ND)', 'Ohio (OH)',
-  'Oklahoma (OK)', 'Oregon (OR)', 'Pennsylvania (PA)', 'Rhode Island (RI)', 'South Carolina (SC)',
-  'South Dakota (SD)', 'Tennessee (TN)', 'Texas (TX)', 'Utah (UT)', 'Vermont (VT)',
-  'Virginia (VA)', 'Washington (WA)', 'West Virginia (WV)', 'Wisconsin (WI)', 'Wyoming (WY)',
-  'Washington D.C.'
-];
-
-const WORK_TYPES = ['全职', '兼职', '合同工', '临时工'];
-const EXPERIENCE_OPTIONS = ['经验不限', '1年以内', '1-3年', '3-5年', '5-10年', '10年以上'];
-
 const Jobs = () => {
   const { success, error: showError, apiError } = useNotification();
-  const postModal = useModal();
-  const premiumModal = useModal();
   const { withLoading } = useLoading(false);
-  const { isAuthenticated, user } = useAuth();
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState('jobs');
+  const view = searchParams.get('view') === 'resumes' ? 'resumes' : 'jobs';
+  const activeTab = view === 'jobs' ? 'jobs' : 'resumes';
+
   const [searchQuery, setSearchQuery] = useState('');
   const [jobs, setJobs] = useState([]);
   const [resumes, setResumes] = useState([]);
   const [categoryStats, setCategoryStats] = useState({});
-  const [currentFormData, setCurrentFormData] = useState(null);
+  const [resumeTotalCount, setResumeTotalCount] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [detailItem, setDetailItem] = useState(null);
   const [editItem, setEditItem] = useState(null);
@@ -104,6 +83,7 @@ const Jobs = () => {
         if (result.success) {
           setResumes(result.data);
           setPagination({ page: result.page, total: result.total, totalPages: result.totalPages });
+          setResumeTotalCount(result.total ?? 0);
         }
       } catch (error) {
         apiLogger.error('获取简历数据错误', error);
@@ -115,15 +95,23 @@ const Jobs = () => {
   useEffect(() => { fetchCategoryStats(); }, [fetchCategoryStats]);
 
   useEffect(() => {
+    (async () => {
+      try {
+        const r = await apiClient.get('/resumes', { page: 1, limit: 1 });
+        if (r.success && typeof r.total === 'number') setResumeTotalCount(r.total);
+      } catch { /* ignore */ }
+    })();
+  }, []);
+
+  useEffect(() => {
     setPagination(p => ({ ...p, page: 1 }));
     if (activeTab === 'jobs') fetchJobs(1);
     else fetchResumes(1);
   }, [activeTab, searchQuery, filters, fetchJobs, fetchResumes]);
 
-  const totalStats = useMemo(() => {
-    const totalJobs = Object.values(categoryStats).reduce((a, b) => a + b, 0);
-    return { totalJobs, totalResumes: pagination.total };
-  }, [categoryStats, pagination.total]);
+  const totalStats = useMemo(() => ({
+    totalJobs: Object.values(categoryStats).reduce((a, b) => a + b, 0)
+  }), [categoryStats]);
 
   const toggleSaved = (type, id) => {
     const key = `${type}_${id}`;
@@ -141,34 +129,6 @@ const Jobs = () => {
     if (activeTab === 'jobs') fetchJobs(newPage);
     else fetchResumes(newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handlePost = (formData) => {
-    if (!isAuthenticated) { showError('请先登录再发布'); return; }
-    const formDataObj = {};
-    for (let [key, value] of formData.entries()) formDataObj[key] = value;
-    setCurrentFormData(formDataObj);
-    postModal.close();
-    premiumModal.open();
-  };
-
-  const handleConfirmPost = async ({ formData, premium }) => {
-    await withLoading(async () => {
-      try {
-        const postData = { ...formData, premium };
-        const endpoint = activeTab === 'jobs' ? '/jobs' : '/resumes';
-        const result = await apiClient.post(endpoint, postData);
-        if (result.success) {
-          premiumModal.close();
-          setCurrentFormData(null);
-          if (activeTab === 'jobs') { fetchJobs(1); fetchCategoryStats(); } else fetchResumes(1);
-          success(`${activeTab === 'jobs' ? '职位' : '简历'}发布成功！已扣除 ${result.creditsSpent} 积分`);
-        } else throw new Error(result.message || '发布失败');
-      } catch (error) {
-        apiLogger.error('发布失败', error);
-        showError('发布失败: ' + error.message);
-      }
-    });
   };
 
   const handleDelete = async (type, id) => {
@@ -213,32 +173,30 @@ const Jobs = () => {
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
+  const listBase = PATH_JOBS;
+  const jobsListLink = `${listBase}?view=jobs`;
+  const resumesListLink = `${listBase}?view=resumes`;
+
   return (
     <div className="jobs-page">
-      {/* Hero */}
       <div className="jobs-hero">
         <div className="jobs-hero-content">
           <h1>物流招聘求职</h1>
           <p>连接北美物流企业与专业人才 — 司机、调度、报关、仓储</p>
           <div className="jobs-hero-stats">
             <div className="hero-stat"><Briefcase size={20} /><span className="hero-stat-num">{totalStats.totalJobs}</span><span>招聘职位</span></div>
-            <div className="hero-stat"><Users size={20} /><span className="hero-stat-num">{resumes.length || 0}</span><span>求职简历</span></div>
+            <div className="hero-stat"><Users size={20} /><span className="hero-stat-num">{resumeTotalCount}</span><span>求职简历</span></div>
             <div className="hero-stat"><TrendingUp size={20} /><span className="hero-stat-num">{Object.keys(categoryStats).length}</span><span>热门分类</span></div>
           </div>
         </div>
       </div>
 
-      {/* Tab Switcher */}
-      <div className="jobs-tab-bar">
-        <button className={`jobs-tab ${activeTab === 'jobs' ? 'active' : ''}`} onClick={() => setActiveTab('jobs')}>
-          <Briefcase size={18} /> 招聘职位
-        </button>
-        <button className={`jobs-tab ${activeTab === 'resumes' ? 'active' : ''}`} onClick={() => setActiveTab('resumes')}>
-          <User size={18} /> 求职简历
-        </button>
+      <div className="jobs-view-switch">
+        <Link className={`jobs-view-link ${view === 'jobs' ? 'active' : ''}`} to={jobsListLink}>招聘职位</Link>
+        <span className="jobs-view-sep" aria-hidden>·</span>
+        <Link className={`jobs-view-link ${view === 'resumes' ? 'active' : ''}`} to={resumesListLink}>求职简历</Link>
       </div>
 
-      {/* Category Pills (jobs only) */}
       {activeTab === 'jobs' && Object.keys(categoryStats).length > 0 && (
         <div className="jobs-category-bar">
           <button className={`cat-pill ${!filters.category ? 'active' : ''}`} onClick={() => setFilters(f => ({ ...f, category: '' }))}>
@@ -252,7 +210,6 @@ const Jobs = () => {
         </div>
       )}
 
-      {/* Search & Controls */}
       <div className="jobs-controls">
         <div className="jobs-search-box">
           <Search size={18} />
@@ -269,13 +226,12 @@ const Jobs = () => {
             <Filter size={16} /> 筛选 {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
             <ChevronDown size={14} className={showFilters ? 'rotated' : ''} />
           </button>
-          <button className="jobs-post-btn" onClick={postModal.open}>
+          <Link className="jobs-post-btn" to={activeTab === 'jobs' ? `${listBase}/post?kind=job` : `${listBase}/post?kind=resume`}>
             <Plus size={18} /> {activeTab === 'jobs' ? '发布职位' : '发布简历'}
-          </button>
+          </Link>
         </div>
       </div>
 
-      {/* Filter Panel */}
       {showFilters && (
         <div className="jobs-filter-panel">
           <div className="filter-grid">
@@ -319,114 +275,110 @@ const Jobs = () => {
         </div>
       )}
 
-      {/* Content */}
       <div className="jobs-content-area">
         {activeTab === 'jobs' ? (
-          <div className="jobs-grid">
-            {jobs.length > 0 ? jobs.map(job => (
-              <div key={job.id} className={`jcard${job.is_premium ? ' jcard-premium' : ''}${job.premium_type === 'top' ? ' jcard-top' : ''}${job.premium_type === 'highlight' ? ' jcard-highlight' : ''}`}>
-                {job.premium_type === 'top' && <div className="jcard-top-badge"><Star size={12} fill="currentColor" /> 置顶</div>}
-                <Link to={`/job/${job.id}/${generateJobSlug(job)}`} className="jcard-header">
-                  <div className="jcard-company-avatar">{(job.company || '?')[0]}</div>
-                  <div className="jcard-header-info">
-                    <h3 className="jcard-title">{job.title}</h3>
-                    <div className="jcard-company"><Building2 size={14} /> {job.company}</div>
-                  </div>
-                  <div className="jcard-salary"><DollarSign size={14} /> {job.salary}</div>
-                </Link>
-                <div className="jcard-tags">
-                  <span className="jtag location"><MapPin size={12} /> {job.location}</span>
-                  <span className="jtag type"><Clock size={12} /> {job.type}</span>
-                  <span className="jtag exp"><BookOpen size={12} /> {job.experience}</span>
-                  {job.category && <span className="jtag cat">{job.category}</span>}
-                </div>
-                <p className="jcard-desc">{job.description}</p>
-                <div className="jcard-footer">
-                  <div className="jcard-meta">
-                    <span><Eye size={13} /> {job.views}</span>
-                    <span><Calendar size={13} /> {job.posted}</span>
-                  </div>
-                  <div className="jcard-actions">
-                    {currentUserId && job.publisher?.userId === currentUserId && (
-                      <>
-                        <button className="jact edit" title="编辑" onClick={(e) => { e.stopPropagation(); setEditItem({ ...job, _editType: 'job' }); }}>
-                          <Edit size={14} />
-                        </button>
-                        <button className="jact delete" title="删除" onClick={(e) => { e.stopPropagation(); handleDelete('job', job.id); }}>
-                          <Trash2 size={14} />
-                        </button>
-                      </>
-                    )}
-                    <button className={`jact save ${savedIds[`job_${job.id}`] ? 'saved' : ''}`} title="收藏" onClick={(e) => { e.stopPropagation(); toggleSaved('job', job.id); }}>
-                      {savedIds[`job_${job.id}`] ? <BookMarked size={14} /> : <Bookmark size={14} />}
-                    </button>
-                    <Link to={`/job/${job.id}/${generateJobSlug(job)}`} className="jact apply" onClick={(e) => e.stopPropagation()}>
-                      <Send size={14} /> 申请
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )) : (
+          <div className="jobs-table-wrap">
+            {jobs.length > 0 ? (
+              <table className="jobs-table">
+                <thead>
+                  <tr>
+                    <th>职位</th>
+                    <th>公司</th>
+                    <th>州</th>
+                    <th>薪资</th>
+                    <th>类型</th>
+                    <th>日期</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {jobs.map(job => (
+                    <tr key={job.id} className={job.premium_type === 'top' ? 'row-top' : ''}>
+                      <td>
+                        <div className="jobs-td-title">
+                          {job.premium_type === 'top' && <span className="jobs-pin-badge"><Star size={12} />置顶</span>}
+                          <Link to={`/job/${job.id}/${generateJobSlug(job)}`}>{job.title}</Link>
+                        </div>
+                        {job.category && <span className="jobs-td-sub muted">{job.category}</span>}
+                      </td>
+                      <td>{job.company}</td>
+                      <td><span className="jobs-td-nowrap"><MapPin size={12} /> {job.location}</span></td>
+                      <td>{job.salary}</td>
+                      <td>{job.type}</td>
+                      <td className="muted">{job.posted}</td>
+                      <td>
+                        <div className="jobs-td-actions">
+                          {currentUserId && job.publisher?.userId === currentUserId && (
+                            <>
+                              <button type="button" className="jact edit" title="编辑" onClick={() => setEditItem({ ...job, _editType: 'job' })}><Edit size={14} /></button>
+                              <button type="button" className="jact delete" title="删除" onClick={() => handleDelete('job', job.id)}><Trash2 size={14} /></button>
+                            </>
+                          )}
+                          <button type="button" className={`jact save ${savedIds[`job_${job.id}`] ? 'saved' : ''}`} title="收藏" onClick={() => toggleSaved('job', job.id)}>
+                            {savedIds[`job_${job.id}`] ? <BookMarked size={14} /> : <Bookmark size={14} />}
+                          </button>
+                          <Link to={`/job/${job.id}/${generateJobSlug(job)}`} className="jact apply"><Send size={14} /> 申请</Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
               <div className="jobs-empty"><Briefcase size={56} /><h3>暂无职位信息</h3><p>试试调整搜索条件或发布您的招聘需求</p></div>
             )}
           </div>
         ) : (
-          <div className="jobs-grid">
-            {resumes.length > 0 ? resumes.map(resume => (
-              <div key={resume.id} className={`rcard${resume.is_premium ? ' rcard-premium' : ''}${resume.premium_type === 'top' ? ' jcard-top' : ''}${resume.premium_type === 'highlight' ? ' jcard-highlight' : ''}`}>
-                {resume.premium_type === 'top' && <div className="jcard-top-badge"><Star size={12} fill="currentColor" /> 置顶</div>}
-                <Link to={`/resume/${resume.id}/${generateResumeSlug(resume)}`} className="rcard-header">
-                  <div className="rcard-avatar">{(resume.name || '?')[0]}</div>
-                  <div className="rcard-header-info">
-                    <h3 className="rcard-name">{resume.name}</h3>
-                    <div className="rcard-position">{resume.position}</div>
-                  </div>
-                  {resume.expectedSalary && <div className="rcard-salary">{resume.expectedSalary}</div>}
-                </Link>
-                <div className="jcard-tags">
-                  <span className="jtag location"><MapPin size={12} /> {resume.location}</span>
-                  <span className="jtag exp"><BookOpen size={12} /> {resume.experience}</span>
-                  {resume.workTypePreference && <span className="jtag type"><Clock size={12} /> {resume.workTypePreference}</span>}
-                </div>
-                {resume.skills && resume.skills.length > 0 && (
-                  <div className="rcard-skills">
-                    {resume.skills.slice(0, 6).map((skill, idx) => <span key={idx} className="skill-pill">{skill}</span>)}
-                    {resume.skills.length > 6 && <span className="skill-pill more">+{resume.skills.length - 6}</span>}
-                  </div>
-                )}
-                {resume.summary && <p className="jcard-desc">{resume.summary}</p>}
-                <div className="jcard-footer">
-                  <div className="jcard-meta">
-                    <span><Eye size={13} /> {resume.views}</span>
-                    <span><Calendar size={13} /> {resume.posted}</span>
-                  </div>
-                  <div className="jcard-actions">
-                    {currentUserId && resume.publisher?.userId === currentUserId && (
-                      <>
-                        <button className="jact edit" title="编辑" onClick={(e) => { e.stopPropagation(); setEditItem({ ...resume, _editType: 'resume' }); }}>
-                          <Edit size={14} />
-                        </button>
-                        <button className="jact delete" title="删除" onClick={(e) => { e.stopPropagation(); handleDelete('resume', resume.id); }}>
-                          <Trash2 size={14} />
-                        </button>
-                      </>
-                    )}
-                    <button className={`jact save ${savedIds[`resume_${resume.id}`] ? 'saved' : ''}`} title="收藏" onClick={(e) => { e.stopPropagation(); toggleSaved('resume', resume.id); }}>
-                      {savedIds[`resume_${resume.id}`] ? <BookMarked size={14} /> : <Bookmark size={14} />}
-                    </button>
-                    <Link to={`/resume/${resume.id}/${generateResumeSlug(resume)}`} className="jact apply" onClick={(e) => e.stopPropagation()}>
-                      <Phone size={14} /> 联系
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )) : (
+          <div className="jobs-table-wrap">
+            {resumes.length > 0 ? (
+              <table className="jobs-table jobs-table-resumes">
+                <thead>
+                  <tr>
+                    <th>姓名</th>
+                    <th>求职岗位</th>
+                    <th>州</th>
+                    <th>经验</th>
+                    <th>日期</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resumes.map(resume => (
+                    <tr key={resume.id} className={resume.premium_type === 'top' ? 'row-top' : ''}>
+                      <td>
+                        <div className="jobs-td-title">
+                          {resume.premium_type === 'top' && <span className="jobs-pin-badge"><Star size={12} />置顶</span>}
+                          <Link to={`/resume/${resume.id}/${generateResumeSlug(resume)}`}>{resume.name}</Link>
+                        </div>
+                      </td>
+                      <td>{resume.position}</td>
+                      <td><span className="jobs-td-nowrap"><MapPin size={12} /> {resume.location}</span></td>
+                      <td>{resume.experience}</td>
+                      <td className="muted">{resume.posted}</td>
+                      <td>
+                        <div className="jobs-td-actions">
+                          {currentUserId && resume.publisher?.userId === currentUserId && (
+                            <>
+                              <button type="button" className="jact edit" title="编辑" onClick={() => setEditItem({ ...resume, _editType: 'resume' })}><Edit size={14} /></button>
+                              <button type="button" className="jact delete" title="删除" onClick={() => handleDelete('resume', resume.id)}><Trash2 size={14} /></button>
+                            </>
+                          )}
+                          <button type="button" className={`jact save ${savedIds[`resume_${resume.id}`] ? 'saved' : ''}`} title="收藏" onClick={() => toggleSaved('resume', resume.id)}>
+                            {savedIds[`resume_${resume.id}`] ? <BookMarked size={14} /> : <Bookmark size={14} />}
+                          </button>
+                          <Link to={`/resume/${resume.id}/${generateResumeSlug(resume)}`} className="jact apply"><Phone size={14} /> 联系</Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
               <div className="jobs-empty"><User size={56} /><h3>暂无简历信息</h3><p>试试调整搜索条件或发布您的简历信息</p></div>
             )}
           </div>
         )}
 
-        {/* Pagination */}
         {pagination.totalPages > 1 && (
           <div className="jobs-pagination">
             <button disabled={pagination.page <= 1} onClick={() => handlePageChange(pagination.page - 1)}><ChevronLeft size={16} /></button>
@@ -448,7 +400,6 @@ const Jobs = () => {
         )}
       </div>
 
-      {/* Detail Modal */}
       {detailItem && (
         <div className="jobs-modal-overlay" onClick={() => setDetailItem(null)}>
           <div className="jobs-modal" onClick={e => e.stopPropagation()}>
@@ -524,7 +475,6 @@ const Jobs = () => {
         </div>
       )}
 
-      {/* Edit Form (inline) */}
       {editItem && (
         <div className="jobs-inline-form" ref={el => el?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
           <div className="jobs-inline-card">
@@ -610,85 +560,6 @@ const Jobs = () => {
           </div>
         </div>
       )}
-
-      {/* Post Form (inline) */}
-      {postModal.isOpen && (
-        <div className="jobs-inline-form" ref={el => el?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-          <div className="jobs-inline-card">
-            <button className="jobs-modal-close" onClick={postModal.close}><X size={22} /></button>
-            <h2 className="edit-modal-title">{activeTab === 'jobs' ? '发布招聘职位' : '发布求职简历'}</h2>
-            <form className="edit-form" onSubmit={(e) => { e.preventDefault(); handlePost(new FormData(e.target)); }}>
-              {activeTab === 'jobs' ? (
-                <>
-                  <div className="form-group"><label>职位名称 *</label><input name="title" required placeholder="如：CLASS A 司机" /></div>
-                  <div className="form-group"><label>职位分类 *</label>
-                    <select name="category" required><option value="">请选择</option>{JOB_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
-                  </div>
-                  <div className="form-group"><label>公司名称 *</label><input name="company" required placeholder="公司名称" /></div>
-                  <div className="form-row">
-                    <div className="form-group"><label>工作州 *</label>
-                      <select name="location" required><option value="">请选择州</option>{LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}</select>
-                    </div>
-                    <div className="form-group"><label>薪资待遇 *</label><input name="salary" required placeholder="如：$4000-6000/月" /></div>
-                  </div>
-                  <div className="form-row">
-                    <div className="form-group"><label>工作类型 *</label>
-                      <select name="workType" required><option value="">请选择</option>{WORK_TYPES.map(w => <option key={w} value={w}>{w}</option>)}</select>
-                    </div>
-                    <div className="form-group"><label>经验要求 *</label>
-                      <select name="experience" required><option value="">请选择</option>{EXPERIENCE_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}</select>
-                    </div>
-                  </div>
-                  <div className="form-group"><label>职位描述 *</label><textarea name="description" required rows={5} placeholder="详细描述职位要求、工作内容、福利待遇等..." /></div>
-                  <div className="form-row">
-                    <div className="form-group"><label>联系人</label><input name="contactPerson" placeholder="如：张经理" /></div>
-                    <div className="form-group"><label>联系电话 *</label><input name="contactPhone" required placeholder="如：(323) 888-1001" /></div>
-                  </div>
-                  <div className="form-group"><label>联系邮箱 *</label><input name="contactEmail" required type="text" placeholder="如：hr@company.com" /></div>
-                </>
-              ) : (
-                <>
-                  <div className="form-group"><label>姓名 *</label><input name="name" required placeholder="如：张三" /></div>
-                  <div className="form-group"><label>求职岗位 *</label><input name="position" required placeholder="如：CLASS A 司机" /></div>
-                  <div className="form-row">
-                    <div className="form-group"><label>工作经验 *</label>
-                      <select name="experience" required><option value="">请选择</option>{EXPERIENCE_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}</select>
-                    </div>
-                    <div className="form-group"><label>期望州 *</label>
-                      <select name="location" required><option value="">请选择州</option>{LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}</select>
-                    </div>
-                  </div>
-                  <div className="form-row">
-                    <div className="form-group"><label>联系电话 *</label><input name="phone" required placeholder="(123) 456-7890" /></div>
-                    <div className="form-group"><label>邮箱 *</label><input name="email" required type="text" placeholder="zhangsan@email.com" /></div>
-                  </div>
-                  <div className="form-group"><label>技能专长 *</label><input name="skills" required placeholder="用逗号分隔，如：CDL-A驾照, 长途运输" /></div>
-                  <div className="form-row">
-                    <div className="form-group"><label>期望薪资</label><input name="expectedSalary" placeholder="如：$4000-5000/月" /></div>
-                    <div className="form-group"><label>工作类型偏好</label>
-                      <select name="workTypePreference"><option value="">不限</option>{WORK_TYPES.map(w => <option key={w} value={w}>{w}</option>)}</select>
-                    </div>
-                  </div>
-                  <div className="form-group"><label>个人简介</label><textarea name="summary" rows={4} placeholder="简要介绍您的工作经验、技能优势等..." /></div>
-                </>
-              )}
-              <div className="edit-form-actions">
-                <button type="button" className="btn-cancel" onClick={postModal.close}>取消</button>
-                <button type="submit" className="btn-save"><Send size={16} /> 发布</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Premium Modal */}
-      <PremiumPostModal
-        isOpen={premiumModal.isOpen}
-        onClose={() => { premiumModal.close(); setCurrentFormData(null); }}
-        onConfirm={handleConfirmPost}
-        postType={activeTab === 'jobs' ? 'job' : 'resume'}
-        formData={currentFormData}
-      />
     </div>
   );
 };

@@ -187,7 +187,7 @@
   gap: 4px;
   padding: 7px 16px;
   background: var(--primary-green);
-  color: #fff;
+  color: #fff !important;
   border: none;
   border-radius: 8px;
   font-size: 13px;
@@ -195,6 +195,8 @@
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
+  text-decoration: none;
+  box-sizing: border-box;
 }
 
 .lr-post-btn:hover {
@@ -1001,4 +1003,23 @@
   padding: 24px;
   border: 1px solid #e8e8e8;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* Dedicated post page */
+.lr-post-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+.lr-post-page-header {
+  margin-bottom: 24px;
+}
+.lr-post-page-header h1 {
+  font-size: 1.5rem;
+  margin: 8px 0 0;
+  color: #111827;
+}
+.lr-post-page-card {
+  max-width: 720px;
+  margin: 0 auto;
 }
