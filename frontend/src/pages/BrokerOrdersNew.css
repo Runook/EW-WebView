@@ -127,6 +127,7 @@
   display: flex;
   flex-direction: column;
   overflow: auto;
+  min-width: 0;
 }
 
 .toolbar {
@@ -187,6 +188,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85em;
+  table-layout: auto;
 }
 
 .orders-table thead {
@@ -197,13 +199,13 @@
 }
 
 .orders-table th {
-  padding: 10px 12px;
+  padding: 8px 8px;
   text-align: left;
   font-weight: 600;
   color: #555;
   border-bottom: 2px solid #e1e8ed;
   white-space: nowrap;
-  font-size: 0.9em;
+  font-size: 0.85em;
 }
 
 .orders-table th.text-right,
@@ -238,8 +240,11 @@
 }
 
 .orders-table td {
-  padding: 10px 12px;
+  padding: 8px 8px;
   color: #333;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .order-number {
@@ -693,8 +698,12 @@
   }
 
   .orders-table {
-    min-width: 1200px;
+    min-width: 0;
+    font-size: 0.8em;
   }
+
+  .orders-table th { padding: 6px 6px; font-size: 0.8em; }
+  .orders-table td { padding: 6px 6px; max-width: 120px; }
 }
 
 /* 无操作状态 */
