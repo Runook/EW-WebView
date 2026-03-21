@@ -37,10 +37,16 @@ const JobPostPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const WELOGX_FOOTER = '\n\n联系我时请说在Welogx平台看到的，谢谢！';
+
   const handleConfirmPost = async ({ formData, premium }) => {
     await withLoading(async () => {
       try {
+        const descKey = kind === 'job' ? 'description' : 'summary';
         const postData = { ...formData, premium };
+        if (postData[descKey] && !postData[descKey].includes('联系我时请说在Welogx平台看到的')) {
+          postData[descKey] = postData[descKey] + WELOGX_FOOTER;
+        }
         const endpoint = kind === 'job' ? '/jobs' : '/resumes';
         const result = await apiClient.post(endpoint, postData);
         if (result.success) {
@@ -104,7 +110,11 @@ const JobPostPage = () => {
                   <select name="experience" required defaultValue={currentFormData?.experience || ''}><option value="">请选择</option>{EXPERIENCE_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}</select>
                 </div>
               </div>
-              <div className="form-group"><label>职位描述 *</label><textarea name="description" required rows={5} placeholder="详细描述职位要求、工作内容、福利待遇等..." defaultValue={currentFormData?.description || ''} /></div>
+              <div className="form-group">
+                <label>职位描述 *</label>
+                <textarea name="description" required rows={5} placeholder="详细描述职位要求、工作内容、福利待遇等..." defaultValue={currentFormData?.description || ''} />
+                <div className="welogx-footer-hint">发布后将自动附加：联系我时请说在Welogx平台看到的，谢谢！</div>
+              </div>
               <div className="form-row">
                 <div className="form-group"><label>联系人</label><input name="contactPerson" placeholder="如：张经理" defaultValue={currentFormData?.contactPerson || ''} /></div>
                 <div className="form-group"><label>联系电话 *</label><input name="contactPhone" required placeholder="如：(323) 888-1001" defaultValue={currentFormData?.contactPhone || ''} /></div>
@@ -134,7 +144,11 @@ const JobPostPage = () => {
                   <select name="workTypePreference" defaultValue={currentFormData?.workTypePreference || ''}><option value="">不限</option>{WORK_TYPES.map(w => <option key={w} value={w}>{w}</option>)}</select>
                 </div>
               </div>
-              <div className="form-group"><label>个人简介</label><textarea name="summary" rows={4} placeholder="简要介绍您的工作经验、技能优势等..." defaultValue={currentFormData?.summary || ''} /></div>
+              <div className="form-group">
+                <label>个人简介</label>
+                <textarea name="summary" rows={4} placeholder="简要介绍您的工作经验、技能优势等..." defaultValue={currentFormData?.summary || ''} />
+                <div className="welogx-footer-hint">发布后将自动附加：联系我时请说在Welogx平台看到的，谢谢！</div>
+              </div>
             </>
           )}
           <div className="edit-form-actions">

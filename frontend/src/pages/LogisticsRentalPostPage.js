@@ -121,10 +121,15 @@ const LogisticsRentalPostPage = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const WELOGX_FOOTER = '\n\n联系我时请说在Welogx平台看到的，谢谢！';
+
   const handleConfirmPost = async ({ formData, premium }) => {
     try {
       setLoading(true);
       const postData = { ...(formData || currentFormData), premium };
+      if (postData.description && !postData.description.includes('联系我时请说在Welogx平台看到的')) {
+        postData.description = postData.description + WELOGX_FOOTER;
+      }
       const endpoint = mode === 'rental' ? '/rentals' : '/sales';
       const result = await apiClient.post(endpoint, postData);
       if (result.success) {
@@ -215,7 +220,11 @@ const LogisticsRentalPostPage = () => {
               </div>
               <div className="form-group"><label>品牌</label><input type="text" name="brand" placeholder="如：沃尔沃" /></div>
             </div>
-            <div className="form-group"><label>详细描述 *</label><textarea name="description" required placeholder="详细描述设备信息、技术参数、使用条件等..." /></div>
+            <div className="form-group">
+              <label>详细描述 *</label>
+              <textarea name="description" required placeholder="详细描述设备信息、技术参数、使用条件等..." />
+              <div className="welogx-footer-hint">发布后将自动附加：联系我时请说在Welogx平台看到的，谢谢！</div>
+            </div>
             <div className="form-row">
               <div className="form-group"><label>联系人 *</label><input type="text" name="contactName" required placeholder="如：张经理" /></div>
               <div className="form-group"><label>公司名称</label><input type="text" name="company" placeholder="如：冷链物流公司" /></div>

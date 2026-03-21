@@ -763,3 +763,14 @@ a.jact { text-decoration: none; }
   border: 1px solid #e2e8f0;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
+
+.welogx-footer-hint {
+  margin-top: 6px;
+  padding: 8px 12px;
+  background: #f0fdf4;
+  border: 1px dashed #86efac;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #15803d;
+  user-select: none;
+}
