@@ -87,9 +87,29 @@ const Forum = () => {
 
   const isEmployee = user?.isEmployee || user?.employeeRole;
 
+  const compressImageForEdit = useCallback((file, maxWidth = 1200, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new window.Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          if (w > maxWidth) { h = (h * maxWidth) / w; w = maxWidth; }
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', quality);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
   const uploadImageForEdit = useCallback(async (file) => {
+    const compressed = await compressImageForEdit(file);
     const fd = new FormData();
-    fd.append('image', file);
+    fd.append('image', compressed);
     const token = getAuthToken();
     const res = await fetch(`${API_BASE}/upload/single`, {
       method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd
@@ -97,7 +117,7 @@ const Forum = () => {
     const data = await res.json();
     if (data.success) return data.data.url;
     throw new Error(data.message || '上传失败');
-  }, []);
+  }, [compressImageForEdit]);
 
   const editImageHandler = useCallback(() => {
     const input = document.createElement('input');

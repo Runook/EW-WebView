@@ -57,9 +57,32 @@ const ForumPostPage = () => {
     }
   }, [user, navigate]);
 
+  const compressImage = useCallback((file, maxWidth = 1200, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new window.Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          if (w > maxWidth) { h = (h * maxWidth) / w; w = maxWidth; }
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob((blob) => {
+            resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
+          }, 'image/jpeg', quality);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
   const uploadImage = useCallback(async (file) => {
+    const compressed = await compressImage(file);
     const formData = new FormData();
-    formData.append('image', file);
+    formData.append('image', compressed);
     const token = getAuthToken();
     const res = await fetch(`${API_BASE}/upload/single`, {
       method: 'POST',
@@ -69,7 +92,7 @@ const ForumPostPage = () => {
     const data = await res.json();
     if (data.success) return data.data.url;
     throw new Error(data.message || '上传失败');
-  }, []);
+  }, [compressImage]);
 
   const imageHandler = useCallback(() => {
     const input = document.createElement('input');
