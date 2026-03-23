@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -8,12 +8,15 @@ import {
   TrendingUp,
   MessageCircle,
   Award,
-  User
+  User,
+  Upload
 } from 'lucide-react';
-import { apiServices } from '../utils/apiClient';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import { apiServices, getAuthToken } from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import { PATH_FORUM_LONG } from '../constants/servicePaths';
-import './Forum.css';
+import './ForumEditor.css';
 
 const CATEGORIES = [
   { id: 'fba-warehouse', name: 'FBA仓库介绍', icon: Star, color: '#ff6b35' },
@@ -26,22 +29,22 @@ const CATEGORIES = [
   { id: 'career', name: '职场发展', icon: User, color: '#eb2f96' }
 ];
 
-/**
- * Dedicated publish page for forum articles (employee-only). No PremiumPostModal — API has no credits flow.
- */
+const API_BASE = process.env.REACT_APP_API_URL || 'https://welogx.com/api';
+
 const ForumPostPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isEmployee = user?.isEmployee || user?.employeeRole;
+  const quillRef = useRef(null);
+
   const [publishing, setPublishing] = useState(false);
-  const [publishForm, setPublishForm] = useState({
-    title: '',
-    category: 'industry-news',
-    content: '',
-    tags: '',
-    cover_image: '',
-    summary: ''
-  });
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('industry-news');
+  const [content, setContent] = useState('');
+  const [tags, setTags] = useState('');
+  const [coverImage, setCoverImage] = useState('');
+  const [summary, setSummary] = useState('');
+  const [coverUploading, setCoverUploading] = useState(false);
 
   useEffect(() => {
     const ok = user?.isEmployee || user?.employeeRole;
@@ -50,20 +53,91 @@ const ForumPostPage = () => {
     }
   }, [user, navigate]);
 
+  const uploadImage = useCallback(async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const token = getAuthToken();
+    const res = await fetch(`${API_BASE}/upload/single`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData
+    });
+    const data = await res.json();
+    if (data.success) return data.data.url;
+    throw new Error(data.message || '上传失败');
+  }, []);
+
+  const imageHandler = useCallback(() => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+      try {
+        const url = await uploadImage(file);
+        const quill = quillRef.current?.getEditor();
+        if (quill) {
+          const range = quill.getSelection(true);
+          quill.insertEmbed(range.index, 'image', url);
+          quill.setSelection(range.index + 1);
+        }
+      } catch (err) {
+        alert('图片上传失败: ' + err.message);
+      }
+    };
+  }, [uploadImage]);
+
+  const modules = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ header: [1, 2, 3, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['blockquote', 'link', 'image'],
+        [{ align: [] }],
+        ['clean']
+      ],
+      handlers: {
+        image: imageHandler
+      }
+    }
+  }), [imageHandler]);
+
+  const formats = [
+    'header', 'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet', 'blockquote', 'link', 'image', 'align'
+  ];
+
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setCoverUploading(true);
+    try {
+      const url = await uploadImage(file);
+      setCoverImage(url);
+    } catch (err) {
+      alert('封面上传失败: ' + err.message);
+    } finally {
+      setCoverUploading(false);
+    }
+  };
+
   const handlePublish = async () => {
-    if (!publishForm.title.trim() || !publishForm.content.trim()) {
+    if (!title.trim() || !content.trim() || content === '<p><br></p>') {
       alert('请填写标题和内容');
       return;
     }
     setPublishing(true);
     try {
       const data = {
-        title: publishForm.title.trim(),
-        category: publishForm.category,
-        content: publishForm.content.trim(),
-        tags: publishForm.tags.split(/[,，]/).map(t => t.trim()).filter(Boolean),
-        cover_image: publishForm.cover_image.trim() || null,
-        summary: publishForm.summary.trim() || null
+        title: title.trim(),
+        category,
+        content: content,
+        tags: tags.split(/[,，]/).map(t => t.trim()).filter(Boolean),
+        cover_image: coverImage || null,
+        summary: summary.trim() || null
       };
       const response = await apiServices.articles.create(data);
       if (response.success) {
@@ -79,8 +153,8 @@ const ForumPostPage = () => {
 
   if (!isEmployee) {
     return (
-      <div className="forum forum-post-page">
-        <div className="container" style={{ padding: '48px 24px' }}>
+      <div className="forum-editor-page">
+        <div className="fe-container">
           <p>仅员工可发布文章，正在跳转…</p>
           <Link to={PATH_FORUM_LONG}>返回论坛</Link>
         </div>
@@ -89,91 +163,88 @@ const ForumPostPage = () => {
   }
 
   return (
-    <div className="forum forum-post-page">
-      <div className="container" style={{ maxWidth: 800, padding: '24px 16px 48px' }}>
-        <div className="forum-post-page-header" style={{ marginBottom: 24 }}>
-          <Link to={PATH_FORUM_LONG} className="jobs-post-back" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+    <div className="forum-editor-page">
+      <div className="fe-container">
+        <div className="fe-header">
+          <Link to={PATH_FORUM_LONG} className="fe-back">
             <ArrowLeft size={20} /> 返回论坛
           </Link>
-          <h1 style={{ fontSize: '1.75rem', margin: 0 }}>发布文章</h1>
+          <h1>发布文章</h1>
         </div>
 
-        <div className="forum-inline-card" style={{ position: 'relative', top: 0 }}>
-          <div className="modal-body">
-            <div className="publish-form">
-              <div className="form-group">
-                <label>文章标题</label>
-                <input
-                  type="text"
-                  placeholder="请输入文章标题"
-                  value={publishForm.title}
-                  onChange={(e) => setPublishForm(prev => ({ ...prev, title: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label>选择分类</label>
-                <select
-                  value={publishForm.category}
-                  onChange={(e) => setPublishForm(prev => ({ ...prev, category: e.target.value }))}
-                >
-                  {CATEGORIES.map(category => (
-                    <option key={category.id} value={category.id}>{category.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>文章摘要</label>
-                <textarea
-                  placeholder="请输入文章摘要（选填，不超过200字）"
-                  rows="2"
-                  value={publishForm.summary}
-                  onChange={(e) => setPublishForm(prev => ({ ...prev, summary: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label>文章内容</label>
-                <textarea
-                  placeholder="请详细描述您的文章内容..."
-                  rows="8"
-                  value={publishForm.content}
-                  onChange={(e) => setPublishForm(prev => ({ ...prev, content: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label>文章标签</label>
-                <input
-                  type="text"
-                  placeholder="请输入相关标签，用逗号分隔"
-                  value={publishForm.tags}
-                  onChange={(e) => setPublishForm(prev => ({ ...prev, tags: e.target.value }))}
-                />
-              </div>
-              <div className="form-group">
-                <label>
-                  <ImageIcon size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-                  封面图片URL
-                </label>
-                <input
-                  type="text"
-                  placeholder="请输入封面图片链接（选填）"
-                  value={publishForm.cover_image}
-                  onChange={(e) => setPublishForm(prev => ({ ...prev, cover_image: e.target.value }))}
-                />
-              </div>
-              <div className="form-actions">
-                <Link to={PATH_FORUM_LONG} className="btn-secondary" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-                  取消
-                </Link>
-                <button
-                  className="btn-primary"
-                  type="button"
-                  onClick={handlePublish}
-                  disabled={publishing || !publishForm.title.trim() || !publishForm.content.trim()}
-                >
-                  {publishing ? '发布中...' : (<><Plus size={16} /> 发布文章</>)}
-                </button>
-              </div>
+        <div className="fe-card">
+          {/* Title */}
+          <div className="fe-field">
+            <label>文章标题 *</label>
+            <input type="text" placeholder="请输入文章标题" value={title} onChange={(e) => setTitle(e.target.value)} className="fe-input" />
+          </div>
+
+          {/* Category + Tags row */}
+          <div className="fe-row">
+            <div className="fe-field">
+              <label>选择分类</label>
+              <select value={category} onChange={(e) => setCategory(e.target.value)} className="fe-select">
+                {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
             </div>
+            <div className="fe-field">
+              <label>文章标签</label>
+              <input type="text" placeholder="用逗号分隔，如：物流,行业资讯" value={tags} onChange={(e) => setTags(e.target.value)} className="fe-input" />
+            </div>
+          </div>
+
+          {/* Summary */}
+          <div className="fe-field">
+            <label>文章摘要（选填）</label>
+            <textarea placeholder="不超过200字，留空将自动截取正文前200字" rows="2" value={summary} onChange={(e) => setSummary(e.target.value)} className="fe-textarea" />
+          </div>
+
+          {/* Cover image upload */}
+          <div className="fe-field">
+            <label><ImageIcon size={14} /> 封面图片（选填）</label>
+            <div className="fe-cover-area">
+              {coverImage ? (
+                <div className="fe-cover-preview">
+                  <img src={coverImage} alt="封面预览" />
+                  <button type="button" className="fe-cover-remove" onClick={() => setCoverImage('')}>更换</button>
+                </div>
+              ) : (
+                <label className="fe-cover-upload">
+                  <input type="file" accept="image/*" onChange={handleCoverUpload} style={{ display: 'none' }} />
+                  {coverUploading ? '上传中...' : (<><Upload size={20} /> 点击上传封面图片</>)}
+                </label>
+              )}
+            </div>
+          </div>
+
+          {/* Rich text editor */}
+          <div className="fe-field">
+            <label>文章内容 *</label>
+            <p className="fe-hint">点击工具栏图片按钮可在任意位置插入图片，图片将自动上传到服务器</p>
+            <div className="fe-editor-wrap">
+              <ReactQuill
+                ref={quillRef}
+                theme="snow"
+                value={content}
+                onChange={setContent}
+                modules={modules}
+                formats={formats}
+                placeholder="在这里撰写文章内容..."
+              />
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="fe-actions">
+            <Link to={PATH_FORUM_LONG} className="fe-btn secondary">取消</Link>
+            <button
+              type="button"
+              className="fe-btn primary"
+              onClick={handlePublish}
+              disabled={publishing || !title.trim() || !content.trim() || content === '<p><br></p>'}
+            >
+              {publishing ? '发布中...' : (<><Plus size={16} /> 发布文章</>)}
+            </button>
           </div>
         </div>
       </div>

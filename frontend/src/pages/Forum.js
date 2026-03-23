@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { PATH_FORUM_LONG } from '../constants/servicePaths';
 import {
@@ -18,17 +18,22 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  Image as ImageIcon,
+  Upload,
   Edit,
   Trash2,
   Save
 } from 'lucide-react';
-import { apiServices } from '../utils/apiClient';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
+import { apiServices, getAuthToken } from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import { useSEO } from '../hooks/useSEO';
 
 import AdSlot from '../components/AdSlot';
 import './Forum.css';
+import './ForumEditor.css';
+
+const API_BASE = process.env.REACT_APP_API_URL || 'https://welogx.com/api';
 
 const CATEGORIES = [
   { id: 'all', name: '全部话题', icon: Hash, color: '#666' },
@@ -77,8 +82,47 @@ const Forum = () => {
     summary: ''
   });
   const [editingArticle, setEditingArticle] = useState(null);
+  const [editCoverUploading, setEditCoverUploading] = useState(false);
+  const editQuillRef = useRef(null);
 
   const isEmployee = user?.isEmployee || user?.employeeRole;
+
+  const uploadImageForEdit = useCallback(async (file) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    const token = getAuthToken();
+    const res = await fetch(`${API_BASE}/upload/single`, {
+      method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd
+    });
+    const data = await res.json();
+    if (data.success) return data.data.url;
+    throw new Error(data.message || '上传失败');
+  }, []);
+
+  const editImageHandler = useCallback(() => {
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.click();
+    input.onchange = async () => {
+      const file = input.files[0];
+      if (!file) return;
+      try {
+        const url = await uploadImageForEdit(file);
+        const quill = editQuillRef.current?.getEditor();
+        if (quill) { const range = quill.getSelection(true); quill.insertEmbed(range.index, 'image', url); quill.setSelection(range.index + 1); }
+      } catch (err) { alert('图片上传失败: ' + err.message); }
+    };
+  }, [uploadImageForEdit]);
+
+  const editQuillModules = useMemo(() => ({
+    toolbar: {
+      container: [[{ header: [1, 2, 3, false] }], ['bold', 'italic', 'underline', 'strike'], [{ list: 'ordered' }, { list: 'bullet' }], ['blockquote', 'link', 'image'], [{ align: [] }], ['clean']],
+      handlers: { image: editImageHandler }
+    }
+  }), [editImageHandler]);
+
+  const editQuillFormats = ['header', 'bold', 'italic', 'underline', 'strike', 'list', 'bullet', 'blockquote', 'link', 'image', 'align'];
   const LIMIT = 10;
 
   // Fetch posts from API
@@ -623,12 +667,17 @@ const Forum = () => {
 
                 <div className="form-group">
                   <label>文章内容</label>
-                  <textarea
-                    placeholder="请详细描述您的文章内容..."
-                    rows="8"
-                    value={publishForm.content}
-                    onChange={(e) => setPublishForm(prev => ({ ...prev, content: e.target.value }))}
-                  />
+                  <div className="fe-editor-wrap">
+                    <ReactQuill
+                      ref={editQuillRef}
+                      theme="snow"
+                      value={publishForm.content}
+                      onChange={(val) => setPublishForm(prev => ({ ...prev, content: val }))}
+                      modules={editQuillModules}
+                      formats={editQuillFormats}
+                      placeholder="在这里编辑文章内容，可插入图片..."
+                    />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -642,16 +691,26 @@ const Forum = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>
-                    <ImageIcon size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-                    封面图片URL
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="请输入封面图片链接（选填）"
-                    value={publishForm.cover_image}
-                    onChange={(e) => setPublishForm(prev => ({ ...prev, cover_image: e.target.value }))}
-                  />
+                  <label>封面图片</label>
+                  <div className="fe-cover-area">
+                    {publishForm.cover_image ? (
+                      <div className="fe-cover-preview">
+                        <img src={publishForm.cover_image} alt="封面" />
+                        <button type="button" className="fe-cover-remove" onClick={() => setPublishForm(prev => ({ ...prev, cover_image: '' }))}>更换</button>
+                      </div>
+                    ) : (
+                      <label className="fe-cover-upload">
+                        <input type="file" accept="image/*" onChange={async (e) => {
+                          const file = e.target.files[0]; if (!file) return;
+                          setEditCoverUploading(true);
+                          try { const url = await uploadImageForEdit(file); setPublishForm(prev => ({ ...prev, cover_image: url })); }
+                          catch (err) { alert('上传失败: ' + err.message); }
+                          finally { setEditCoverUploading(false); }
+                        }} style={{ display: 'none' }} />
+                        {editCoverUploading ? '上传中...' : (<><Upload size={16} /> 上传封面</>)}
+                      </label>
+                    )}
+                  </div>
                 </div>
 
                 <div className="form-actions">
