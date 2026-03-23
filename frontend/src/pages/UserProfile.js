@@ -50,6 +50,8 @@ const TABS = [
   { key: 'quotes', label: '我的报价', icon: Truck },
   { key: 'myJobs', label: '我的招聘', icon: Briefcase },
   { key: 'myResumes', label: '我的求职', icon: User },
+  { key: 'myRentals', label: '我的出租', icon: Building2 },
+  { key: 'mySales', label: '我的出售', icon: DollarSign },
   { key: 'articles', label: '我的文章', icon: FileText },
   { key: 'bookmarks', label: '收藏', icon: Bookmark },
   { key: 'settings', label: '设置', icon: Settings },
@@ -116,6 +118,12 @@ const UserProfile = () => {
   const [myResumesLoading, setMyResumesLoading] = useState(false);
   const [editingJob, setEditingJob] = useState(null);
   const [editingResume, setEditingResume] = useState(null);
+
+  // Rentals/Sales state
+  const [myRentals, setMyRentals] = useState([]);
+  const [myRentalsLoading, setMyRentalsLoading] = useState(false);
+  const [mySales, setMySales] = useState([]);
+  const [mySalesLoading, setMySalesLoading] = useState(false);
 
   // SEO
   useSEO({
@@ -231,6 +239,24 @@ const UserProfile = () => {
   useEffect(() => {
     if (activeTab === 'myResumes' && myResumes.length === 0 && user) fetchMyResumes();
   }, [activeTab, myResumes.length, user, fetchMyResumes]);
+
+  const fetchMyRentals = useCallback(async () => {
+    try { setMyRentalsLoading(true); const res = await apiClient.get('/rentals/my/posts'); if (res.success) setMyRentals(res.data || []); }
+    catch (err) { console.error('获取我的出租失败:', err); } finally { setMyRentalsLoading(false); }
+  }, []);
+
+  const fetchMySales = useCallback(async () => {
+    try { setMySalesLoading(true); const res = await apiClient.get('/sales/my/posts'); if (res.success) setMySales(res.data || []); }
+    catch (err) { console.error('获取我的出售失败:', err); } finally { setMySalesLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'myRentals' && myRentals.length === 0 && user) fetchMyRentals();
+  }, [activeTab, myRentals.length, user, fetchMyRentals]);
+
+  useEffect(() => {
+    if (activeTab === 'mySales' && mySales.length === 0 && user) fetchMySales();
+  }, [activeTab, mySales.length, user, fetchMySales]);
 
   // Credits fetching
   const fetchCreditsData = useCallback(async () => {
@@ -605,6 +631,8 @@ const UserProfile = () => {
         {activeTab === 'quotes' && renderQuotes()}
         {activeTab === 'myJobs' && renderMyJobs()}
         {activeTab === 'myResumes' && renderMyResumesTab()}
+        {activeTab === 'myRentals' && renderMyRentalsTab()}
+        {activeTab === 'mySales' && renderMySalesTab()}
         {activeTab === 'articles' && renderArticles()}
         {activeTab === 'bookmarks' && renderBookmarks()}
         {activeTab === 'settings' && renderSettings()}
@@ -960,44 +988,40 @@ const UserProfile = () => {
   }
 
   // ===== MY JOBS TAB =====
-  const handleDeleteJob = async (id) => {
+  function handleDeleteJob(id) {
     if (!window.confirm('确定要删除这条招聘信息吗？')) return;
-    try {
-      const res = await apiClient.delete(`/jobs/${id}`);
-      if (res.success) { setMyJobs(prev => prev.filter(j => j.id !== id)); }
-    } catch (err) { console.error('删除职位失败:', err); alert('删除失败'); }
-  };
+    apiClient.delete(`/jobs/${id}`).then(res => {
+      if (res.success) setMyJobs(prev => prev.filter(j => j.id !== id));
+    }).catch(err => { console.error('删除职位失败:', err); alert('删除失败'); });
+  }
 
-  const handleSaveJob = async (e) => {
+  function handleSaveJob(e) {
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = {};
     for (let [key, value] of fd.entries()) data[key] = value;
-    try {
-      const res = await apiClient.put(`/jobs/${editingJob.id}`, data);
+    apiClient.put(`/jobs/${editingJob.id}`, data).then(res => {
       if (res.success) { setEditingJob(null); fetchMyJobs(); }
-    } catch (err) { console.error('更新职位失败:', err); alert('更新失败'); }
-  };
+    }).catch(err => { console.error('更新职位失败:', err); alert('更新失败'); });
+  }
 
-  const handleDeleteResume = async (id) => {
+  function handleDeleteResume(id) {
     if (!window.confirm('确定要删除这条简历吗？')) return;
-    try {
-      const res = await apiClient.delete(`/resumes/${id}`);
-      if (res.success) { setMyResumes(prev => prev.filter(r => r.id !== id)); }
-    } catch (err) { console.error('删除简历失败:', err); alert('删除失败'); }
-  };
+    apiClient.delete(`/resumes/${id}`).then(res => {
+      if (res.success) setMyResumes(prev => prev.filter(r => r.id !== id));
+    }).catch(err => { console.error('删除简历失败:', err); alert('删除失败'); });
+  }
 
-  const handleSaveResume = async (e) => {
+  function handleSaveResume(e) {
     e.preventDefault();
     const fd = new FormData(e.target);
     const data = {};
     for (let [key, value] of fd.entries()) data[key] = value;
     if (data.skills) data.skills = data.skills.split(/[,，]/).map(s => s.trim()).filter(Boolean);
-    try {
-      const res = await apiClient.put(`/resumes/${editingResume.id}`, data);
+    apiClient.put(`/resumes/${editingResume.id}`, data).then(res => {
       if (res.success) { setEditingResume(null); fetchMyResumes(); }
-    } catch (err) { console.error('更新简历失败:', err); alert('更新失败'); }
-  };
+    }).catch(err => { console.error('更新简历失败:', err); alert('更新失败'); });
+  }
 
   function renderMyJobs() {
     const activeJobs = myJobs.filter(j => j.isActive);
@@ -1271,6 +1295,79 @@ const UserProfile = () => {
             </div>
           )}
         </div>
+      </>
+    );
+  }
+
+  // ===== MY RENTALS TAB =====
+  function handleDeleteRental(id) {
+    if (!window.confirm('确定要删除这条出租信息吗？')) return;
+    apiClient.delete(`/rentals/${id}`).then(res => {
+      if (res.success) setMyRentals(prev => prev.filter(r => r.id !== id));
+    }).catch(err => { console.error('删除出租失败:', err); alert('删除失败'); });
+  }
+
+  function handleDeleteSale(id) {
+    if (!window.confirm('确定要删除这条出售信息吗？')) return;
+    apiClient.delete(`/sales/${id}`).then(res => {
+      if (res.success) setMySales(prev => prev.filter(s => s.id !== id));
+    }).catch(err => { console.error('删除出售失败:', err); alert('删除失败'); });
+  }
+
+  function renderRentalSaleList(items, type, loading, onDelete) {
+    const typeName = type === 'rental' ? '出租' : '出售';
+    if (loading) return <div className="loading-state"><RefreshCw size={24} className="spin-icon" /><p>加载中...</p></div>;
+    if (items.length === 0) return (
+      <div className="empty-state">
+        <div className="empty-icon">{type === 'rental' ? <Building2 size={28} /> : <DollarSign size={28} />}</div>
+        <p>暂无{typeName}信息</p>
+      </div>
+    );
+    return (
+      <div className="my-posts-list">
+        {items.map(item => (
+          <div key={item.id} className="my-post-card">
+            <div className="my-post-info" style={{ flex: 1 }}>
+              <div className="my-post-title-row">
+                <span className="my-post-title">{item.title}</span>
+                <span className="my-post-badge">{item.category}</span>
+                {item.is_premium && <span className="my-post-badge premium">置顶</span>}
+              </div>
+              <div className="my-post-meta">
+                <span>{item.price}</span>
+                <span>{item.location}</span>
+                <span>{item.condition}</span>
+                <span><Eye size={12} /> {item.views || 0}</span>
+                <span>{item.posted || (item.created_at ? new Date(item.created_at).toLocaleDateString('zh-CN') : '')}</span>
+              </div>
+            </div>
+            <div className="my-post-actions">
+              <button className="article-action-btn delete" onClick={() => onDelete(item.id)}><Trash2 size={14} /> 删除</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  function renderMyRentalsTab() {
+    return (
+      <>
+        <div className="tab-header">
+          <h2>我的出租 ({myRentals.length})</h2>
+        </div>
+        {renderRentalSaleList(myRentals, 'rental', myRentalsLoading, handleDeleteRental)}
+      </>
+    );
+  }
+
+  function renderMySalesTab() {
+    return (
+      <>
+        <div className="tab-header">
+          <h2>我的出售 ({mySales.length})</h2>
+        </div>
+        {renderRentalSaleList(mySales, 'sale', mySalesLoading, handleDeleteSale)}
       </>
     );
   }
