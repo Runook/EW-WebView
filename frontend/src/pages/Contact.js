@@ -58,7 +58,7 @@ const Contact = () => {
                 <MessageCircle size={22} />
               </div>
               <h3>微信联系</h3>
-              <p className="ct-card-value">LtlshippingtoUsa</p>
+              <p className="ct-card-value">welogx</p>
               <p className="ct-card-note">添加好友请备注来意</p>
             </div>
 
