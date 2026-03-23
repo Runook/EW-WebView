@@ -9,10 +9,12 @@ import {
   MessageCircle,
   Award,
   User,
-  Upload
+  Upload,
+  Send
 } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import PremiumPostStep from '../components/PremiumPostStep';
 import { apiServices, getAuthToken } from '../utils/apiClient';
 import { useAuth } from '../contexts/AuthContext';
 import { PATH_FORUM_LONG } from '../constants/servicePaths';
@@ -38,6 +40,7 @@ const ForumPostPage = () => {
   const quillRef = useRef(null);
 
   const [publishing, setPublishing] = useState(false);
+  const [step, setStep] = useState('editor'); // 'editor' | 'premium'
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('industry-news');
   const [content, setContent] = useState('');
@@ -45,6 +48,7 @@ const ForumPostPage = () => {
   const [coverImage, setCoverImage] = useState('');
   const [summary, setSummary] = useState('');
   const [coverUploading, setCoverUploading] = useState(false);
+  const [savedFormData, setSavedFormData] = useState(null);
 
   useEffect(() => {
     const ok = user?.isEmployee || user?.employeeRole;
@@ -124,22 +128,29 @@ const ForumPostPage = () => {
     }
   };
 
-  const handlePublish = async () => {
+  const handleGoToPremium = () => {
     if (!title.trim() || !content.trim() || content === '<p><br></p>') {
       alert('请填写标题和内容');
       return;
     }
+    const data = {
+      title: title.trim(),
+      category,
+      content,
+      tags: tags.split(/[,，]/).map(t => t.trim()).filter(Boolean),
+      cover_image: coverImage || null,
+      summary: summary.trim() || null
+    };
+    setSavedFormData(data);
+    setStep('premium');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleConfirmPublish = async ({ formData, premium }) => {
     setPublishing(true);
     try {
-      const data = {
-        title: title.trim(),
-        category,
-        content: content,
-        tags: tags.split(/[,，]/).map(t => t.trim()).filter(Boolean),
-        cover_image: coverImage || null,
-        summary: summary.trim() || null
-      };
-      const response = await apiServices.articles.create(data);
+      const postData = { ...formData, premium };
+      const response = await apiServices.articles.create(postData);
       if (response.success) {
         navigate(PATH_FORUM_LONG);
       }
@@ -157,6 +168,28 @@ const ForumPostPage = () => {
         <div className="fe-container">
           <p>仅员工可发布文章，正在跳转…</p>
           <Link to={PATH_FORUM_LONG}>返回论坛</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'premium' && savedFormData) {
+    return (
+      <div className="forum-editor-page">
+        <div className="fe-container">
+          <div className="fe-header">
+            <Link to={PATH_FORUM_LONG} className="fe-back"><ArrowLeft size={20} /> 返回论坛</Link>
+            <h1>发布文章</h1>
+          </div>
+          <div className="fe-card">
+            <PremiumPostStep
+              postType="article"
+              formData={savedFormData}
+              onConfirm={handleConfirmPublish}
+              onBack={() => setStep('editor')}
+              loading={publishing}
+            />
+          </div>
         </div>
       </div>
     );
@@ -240,10 +273,10 @@ const ForumPostPage = () => {
             <button
               type="button"
               className="fe-btn primary"
-              onClick={handlePublish}
-              disabled={publishing || !title.trim() || !content.trim() || content === '<p><br></p>'}
+              onClick={handleGoToPremium}
+              disabled={!title.trim() || !content.trim() || content === '<p><br></p>'}
             >
-              {publishing ? '发布中...' : (<><Plus size={16} /> 发布文章</>)}
+              <Send size={16} /> 下一步（积分与置顶）
             </button>
           </div>
         </div>

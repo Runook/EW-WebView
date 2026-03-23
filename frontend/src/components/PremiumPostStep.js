@@ -64,7 +64,8 @@ const PremiumPostStep = ({ postType, formData, onConfirm, onBack, loading: exter
 
   const POST_TYPE_NAMES = {
     load: '货源信息', truck: '车源信息', company: '企业信息',
-    job: '职位信息', resume: '简历信息', rental: '物流出租信息', sale: '物流出售信息'
+    job: '职位信息', resume: '简历信息', rental: '物流出租信息', sale: '物流出售信息',
+    article: '论坛文章'
   };
 
   const handleConfirm = async () => {

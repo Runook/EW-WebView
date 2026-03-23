@@ -475,7 +475,8 @@ class UserManagement {
       job: '职位信息',
       resume: '简历信息',
       rental: '租赁信息',
-      sale: '出售信息'
+      sale: '出售信息',
+      article: '论坛文章'
     };
     return nameMap[postType] || postType;
   }

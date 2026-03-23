@@ -4,6 +4,7 @@ const { db } = require('../config/database');
 const { auth, optionalAuth, requireEmployee } = require('../middleware/auth');
 const { cacheResponse } = require('../middleware/cache');
 const { deleteCachePattern } = require('../config/redis');
+const UserManagement = require('../models/UserManagement');
 
 // ============================
 // 辅助函数
@@ -57,6 +58,7 @@ router.get('/', cacheResponse(120, 'articles'), optionalAuth, async (req, res) =
         'a.id', 'a.slug', 'a.title', 'a.summary', 'a.cover_image',
         'a.category', 'a.tags', 'a.view_count', 'a.like_count',
         'a.comment_count', 'a.share_count', 'a.is_pinned', 'a.is_featured',
+        'a.is_premium', 'a.premium_type', 'a.premium_end_time',
         'a.published_at', 'a.created_at',
         authorSelect
       );
@@ -82,11 +84,11 @@ router.get('/', cacheResponse(120, 'articles'), optionalAuth, async (req, res) =
       });
     }
 
-    // 排序
+    // 排序: premium top first, then pinned, then by tab criteria
     if (tab === 'hot') {
-      query = query.orderByRaw('a.is_pinned DESC, (a.like_count * 3 + a.comment_count * 5 + a.view_count) DESC');
+      query = query.orderByRaw("CASE WHEN a.premium_type = 'top' AND a.premium_end_time > NOW() THEN 0 ELSE 1 END, a.is_pinned DESC, (a.like_count * 3 + a.comment_count * 5 + a.view_count) DESC");
     } else {
-      query = query.orderByRaw('a.is_pinned DESC, a.published_at DESC NULLS LAST');
+      query = query.orderByRaw("CASE WHEN a.premium_type = 'top' AND a.premium_end_time > NOW() THEN 0 ELSE 1 END, a.is_pinned DESC, a.published_at DESC NULLS LAST");
     }
 
     // 总数
@@ -346,46 +348,75 @@ router.get('/:slug', optionalAuth, async (req, res) => {
  */
 router.post('/', auth, requireEmployee, async (req, res) => {
   try {
-    const { title, summary, content, cover_image, category, tags, status, seo_title, seo_description, seo_keywords } = req.body;
+    const { title, summary, content, cover_image, category, tags, status, premium, seo_title, seo_description, seo_keywords } = req.body;
 
     if (!title || !content) {
       return res.status(400).json({ success: false, message: '标题和内容不能为空' });
     }
 
+    // Check credits
+    const postCost = await UserManagement.getSystemConfig('post_costs.article') || 0;
+    const userId = req.user.userId || req.user.id;
+
+    let totalCreditsSpent = 0;
+    if (postCost > 0) {
+      const userCredits = await UserManagement.getUserCredits(userId);
+      let totalNeeded = postCost;
+      if (premium?.type === 'top') {
+        const dur = premium.duration || 24;
+        const topKey = dur <= 24 ? 'premium_costs.top_24h' : dur <= 72 ? 'premium_costs.top_72h' : 'premium_costs.top_168h';
+        totalNeeded += (await UserManagement.getSystemConfig(topKey)) || 0;
+      } else if (premium?.type === 'highlight') {
+        totalNeeded += (await UserManagement.getSystemConfig('premium_costs.highlight')) || 0;
+      }
+      if (userCredits.current < totalNeeded) {
+        return res.status(400).json({ success: false, message: '积分余额不足', data: { requiredCredits: totalNeeded, currentCredits: userCredits.current } });
+      }
+    }
+
     const slug = generateSlug(title);
+    const plainContent = content.replace(/<[^>]*>/g, '');
 
     const [article] = await db('articles').insert({
-      slug,
-      title,
-      summary: summary || content.substring(0, 200),
+      slug, title,
+      summary: summary || plainContent.substring(0, 200),
       content,
       cover_image: cover_image || null,
       category: category || 'industry-news',
       tags: tags || [],
-      author_id: req.user.id,
+      author_id: userId,
       status: status || 'published',
       seo_title: seo_title || title,
-      seo_description: seo_description || summary || content.substring(0, 160),
+      seo_description: seo_description || summary || plainContent.substring(0, 160),
       seo_keywords: seo_keywords || tags || [],
       published_at: status === 'draft' ? null : new Date()
     }).returning('*');
 
-    // 更新作者文章数
-    await db('user_profiles')
-      .where('user_id', req.user.id)
-      .increment('article_count', 1)
-      .catch(() => {
-        // 如果 profile 不存在，创建一个
-        return db('user_profiles').insert({
-          user_id: req.user.id,
-          article_count: 1
-        }).onConflict('user_id').merge({ article_count: db.raw('user_profiles.article_count + 1') });
-      });
+    // Charge credits
+    if (postCost > 0) {
+      try {
+        await UserManagement.chargeForPost(userId, 'article', article.id);
+        totalCreditsSpent = postCost;
+      } catch (e) { console.error('Article credit charge failed:', e); }
+    }
 
-    // 清除文章相关缓存
+    // Handle premium
+    let premiumInfo = null;
+    if (premium?.type) {
+      try {
+        const premiumResult = await UserManagement.makePremium(userId, 'article', article.id, premium.type, premium.duration || 24);
+        totalCreditsSpent += premiumResult.cost;
+        premiumInfo = { type: premium.type, duration: premium.duration || 24, cost: premiumResult.cost, endTime: premiumResult.endTime };
+        await db('articles').where('id', article.id).update({ is_premium: true, premium_type: premium.type, premium_end_time: premiumResult.endTime });
+      } catch (e) { console.error('Article premium failed:', e); }
+    }
+
+    await db('user_profiles').where('user_id', userId).increment('article_count', 1)
+      .catch(() => db('user_profiles').insert({ user_id: userId, article_count: 1 }).onConflict('user_id').merge({ article_count: db.raw('user_profiles.article_count + 1') }));
+
     await deleteCachePattern('cache:articles*');
     
-    res.status(201).json({ success: true, data: article, message: '文章发布成功' });
+    res.status(201).json({ success: true, data: article, creditsSpent: totalCreditsSpent, premium: premiumInfo, message: '文章发布成功' });
   } catch (error) {
     console.error('发布文章失败:', error);
     res.status(500).json({ success: false, message: '发布文章失败', error: error.message });

@@ -263,6 +263,7 @@ router.get('/system-config', async (req, res) => {
         'post_costs.company',
         'post_costs.job',
         'post_costs.resume',
+        'post_costs.article',
         'premium_costs.top_24h',
         'premium_costs.top_72h',
         'premium_costs.top_168h',

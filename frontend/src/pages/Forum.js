@@ -62,7 +62,7 @@ const Forum = () => {
     keywords: '物流论坛,行业资讯,经验分享,物流社区,货运讨论,物流政策,技术交流,物流行业'
   });
 
-  const [activeTab, setActiveTab] = useState('hot');
+  const [activeTab, setActiveTab] = useState('latest');
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -518,12 +518,13 @@ const Forum = () => {
                 </div>
               ) : posts.length > 0 ? (
                 posts.map(post => (
-                  <div key={post.id} className="post-row" onClick={() => handlePostClick(post.slug)}>
+                  <div key={post.id} className={`post-row${post.premium_type === 'top' && new Date(post.premium_end_time) > new Date() ? ' post-row-top' : ''}${post.premium_type === 'highlight' && new Date(post.premium_end_time) > new Date() ? ' post-row-highlight' : ''}`} onClick={() => handlePostClick(post.slug)}>
                     <div className="post-row-left">
                       <span className="category-badge-sm">
                         {CATEGORY_NAME_MAP[post.category] || post.category}
                       </span>
-                      {post.is_pinned && <span className="pin-badge">📌</span>}
+                      {post.premium_type === 'top' && new Date(post.premium_end_time) > new Date() && <span className="premium-pin-badge"><Star size={11} /> 置顶</span>}
+                      {post.is_pinned && !post.premium_type && <span className="pin-badge">📌</span>}
                       <span className="post-row-title">{post.title}</span>
                     </div>
                     <div className="post-row-right">
