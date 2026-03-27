@@ -3141,6 +3141,20 @@
       "is_active": true
     },
     {
+      "code": "ABE8",
+      "address": "1 Centerpoint Blvd",
+      "city": "New Castle",
+      "state": "PA",
+      "zip": "16101",
+      "type": "FC",
+      "country": "US",
+      "name": "ABE8 - New Castle",
+      "latitude": null,
+      "longitude": null,
+      "description": null,
+      "is_active": true
+    },
+    {
       "code": "AVP1",
       "address": "550 Oak Ridge Road",
       "city": "Hazle Township",

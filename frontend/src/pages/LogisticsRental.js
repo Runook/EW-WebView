@@ -262,7 +262,19 @@ const LogisticsRental = ({ defaultTab }) => {
     : PATH_LOGISTICS_RENTAL;
 
   // 定义地点、状态、租期和发布时间选项
-  const locations = ['洛杉矶', '纽约', '旧金山', '芝加哥', '休斯顿', '凤凰城'];
+  const locations = [
+    'Alabama (AL)', 'Alaska (AK)', 'Arizona (AZ)', 'Arkansas (AR)', 'California (CA)',
+    'Colorado (CO)', 'Connecticut (CT)', 'Delaware (DE)', 'Florida (FL)', 'Georgia (GA)',
+    'Hawaii (HI)', 'Idaho (ID)', 'Illinois (IL)', 'Indiana (IN)', 'Iowa (IA)',
+    'Kansas (KS)', 'Kentucky (KY)', 'Louisiana (LA)', 'Maine (ME)', 'Maryland (MD)',
+    'Massachusetts (MA)', 'Michigan (MI)', 'Minnesota (MN)', 'Mississippi (MS)', 'Missouri (MO)',
+    'Montana (MT)', 'Nebraska (NE)', 'Nevada (NV)', 'New Hampshire (NH)', 'New Jersey (NJ)',
+    'New Mexico (NM)', 'New York (NY)', 'North Carolina (NC)', 'North Dakota (ND)', 'Ohio (OH)',
+    'Oklahoma (OK)', 'Oregon (OR)', 'Pennsylvania (PA)', 'Rhode Island (RI)', 'South Carolina (SC)',
+    'South Dakota (SD)', 'Tennessee (TN)', 'Texas (TX)', 'Utah (UT)', 'Vermont (VT)',
+    'Virginia (VA)', 'Washington (WA)', 'West Virginia (WV)', 'Wisconsin (WI)', 'Wyoming (WY)',
+    'Washington D.C.'
+  ];
   const conditions = ['全新', '9成新', '8成新', '7成新', '6成新', '5成新', '4成新', '3成新', '2成新', '1成新'];
   const rentalPeriods = ['不限', '1天', '3天', '1周', '1个月'];
   const publishTimeOptions = ['全部时间', '今天', '3天内', '1周内', '1个月内'];
@@ -370,7 +382,7 @@ const LogisticsRental = ({ defaultTab }) => {
                 onChange={(e) => handleFilterChange('condition', e.target.value)}
               >
                 <option value="">全部状态</option>
-                {conditions.slice(1).map(condition => (
+                {conditions.map(condition => (
                   <option key={condition} value={condition}>{condition}</option>
                 ))}
               </select>
@@ -428,7 +440,7 @@ const LogisticsRental = ({ defaultTab }) => {
                 <span className="lr-card-badge">{activeTab === 'rental' ? '出租' : '出售'}</span>
               </div>
 
-              <div className="lr-card-price">{item.price}</div>
+              <div className="lr-card-price">{item.price && !String(item.price).startsWith('$') ? '$' + item.price : item.price}</div>
 
               <div className="lr-card-tags">
                 <span>{item.category}</span>
@@ -446,7 +458,7 @@ const LogisticsRental = ({ defaultTab }) => {
                   <span className="lr-meta-view"><Eye size={13} /> {item.views}</span>
                 </div>
                 <div className="lr-card-btns">
-                  <button className="lr-btn-phone"><Phone size={13} /> 查看电话</button>
+                  <button className="lr-btn-phone" onClick={(e) => { e.stopPropagation(); const phone = item.contact?.phone || item.contactPhone; if (phone) { alert(`联系电话: ${phone}`); } else { alert('暂无电话信息'); } }}><Phone size={13} /> 查看电话</button>
                   <Link to={getDetailLink(item)} className="lr-btn-detail">查看详情</Link>
                 </div>
               </div>

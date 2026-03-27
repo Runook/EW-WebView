@@ -124,6 +124,7 @@ const UserProfile = () => {
   const [myRentalsLoading, setMyRentalsLoading] = useState(false);
   const [mySales, setMySales] = useState([]);
   const [mySalesLoading, setMySalesLoading] = useState(false);
+  const [editingRentalSale, setEditingRentalSale] = useState(null); // { ...item, _type: 'rental'|'sale' }
 
   // SEO
   useSEO({
@@ -1314,6 +1315,21 @@ const UserProfile = () => {
     }).catch(err => { console.error('删除出售失败:', err); alert('删除失败'); });
   }
 
+  function handleSaveRentalSale(e) {
+    e.preventDefault();
+    if (!editingRentalSale) return;
+    const fd = new FormData(e.target);
+    const data = {};
+    for (let [key, value] of fd.entries()) data[key] = value;
+    const endpoint = editingRentalSale._type === 'rental' ? `/rentals/${editingRentalSale.id}` : `/sales/${editingRentalSale.id}`;
+    apiClient.put(endpoint, data).then(res => {
+      if (res.success) {
+        setEditingRentalSale(null);
+        if (editingRentalSale._type === 'rental') fetchMyRentals(); else fetchMySales();
+      }
+    }).catch(err => { console.error('更新失败:', err); alert('更新失败: ' + err.message); });
+  }
+
   function renderRentalSaleList(items, type, loading, onDelete) {
     const typeName = type === 'rental' ? '出租' : '出售';
     if (loading) return <div className="loading-state"><RefreshCw size={24} className="spin-icon" /><p>加载中...</p></div>;
@@ -1342,10 +1358,37 @@ const UserProfile = () => {
               </div>
             </div>
             <div className="my-post-actions">
+              <button className="article-action-btn edit" onClick={() => setEditingRentalSale({ ...item, _type: type })}><Edit size={14} /> 编辑</button>
               <button className="article-action-btn delete" onClick={() => onDelete(item.id)}><Trash2 size={14} /> 删除</button>
             </div>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  function renderRentalSaleEditModal() {
+    if (!editingRentalSale) return null;
+    const typeName = editingRentalSale._type === 'rental' ? '出租' : '出售';
+    return (
+      <div className="article-edit-overlay" onClick={() => setEditingRentalSale(null)}>
+        <div className="article-edit-modal" onClick={e => e.stopPropagation()}>
+          <div className="article-edit-header">
+            <h2>编辑{typeName}信息</h2>
+            <button onClick={() => setEditingRentalSale(null)}><X size={20} /></button>
+          </div>
+          <form onSubmit={handleSaveRentalSale} style={{ padding: 20 }}>
+            <div className="form-group"><label>标题</label><input name="title" defaultValue={editingRentalSale.title} required /></div>
+            <div className="form-group"><label>价格</label><input name="price" defaultValue={editingRentalSale.price} required /></div>
+            <div className="form-group"><label>地点</label><input name="location" defaultValue={editingRentalSale.location} /></div>
+            <div className="form-group"><label>状态</label><input name="condition" defaultValue={editingRentalSale.condition} /></div>
+            <div className="form-group"><label>描述</label><textarea name="description" defaultValue={editingRentalSale.description} rows={4} /></div>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 16 }}>
+              <button type="button" className="btn-secondary" onClick={() => setEditingRentalSale(null)}>取消</button>
+              <button type="submit" className="btn-primary"><Save size={14} /> 保存</button>
+            </div>
+          </form>
+        </div>
       </div>
     );
   }
@@ -1357,6 +1400,7 @@ const UserProfile = () => {
           <h2>我的出租 ({myRentals.length})</h2>
         </div>
         {renderRentalSaleList(myRentals, 'rental', myRentalsLoading, handleDeleteRental)}
+        {renderRentalSaleEditModal()}
       </>
     );
   }
@@ -1368,6 +1412,7 @@ const UserProfile = () => {
           <h2>我的出售 ({mySales.length})</h2>
         </div>
         {renderRentalSaleList(mySales, 'sale', mySalesLoading, handleDeleteSale)}
+        {renderRentalSaleEditModal()}
       </>
     );
   }
