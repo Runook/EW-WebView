@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { agentApi } from '../config/employeeApi';
+import { agentApi, orderApi } from '../config/employeeApi';
 import {
   Bot, FileText, CheckCircle, XCircle, Send, RefreshCw, Clock,
   ChevronDown, ChevronUp, AlertTriangle, Package, MapPin, DollarSign,
@@ -28,6 +28,8 @@ const AIQuoteReview = () => {
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(null);
   const [systemStatus, setSystemStatus] = useState(null);
+  const [editingPrices, setEditingPrices] = useState({}); // { orderId: { ew_quote_price, truck_reference_price } }
+  const [savingPrice, setSavingPrice] = useState(null);
 
   const fetchTasks = useCallback(async () => {
     setLoading(true);
@@ -125,6 +127,34 @@ const AIQuoteReview = () => {
       setError(err.message);
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handlePriceChange = (orderId, field, value) => {
+    setEditingPrices(prev => ({
+      ...prev,
+      [orderId]: { ...prev[orderId], [field]: value }
+    }));
+  };
+
+  const handleSavePrice = async (orderId) => {
+    const prices = editingPrices[orderId];
+    if (!prices) return;
+    setSavingPrice(orderId);
+    try {
+      const updateData = {};
+      if (prices.ew_quote_price !== undefined) updateData.ew_quote_price = parseFloat(prices.ew_quote_price) || null;
+      if (prices.truck_reference_price !== undefined) updateData.truck_reference_price = parseFloat(prices.truck_reference_price) || null;
+      await orderApi.updateOrder(orderId, updateData);
+      if (expandedTask) {
+        const res = await agentApi.getReviewById(expandedTask);
+        setTaskDetail(res.data);
+      }
+      setEditingPrices(prev => { const n = { ...prev }; delete n[orderId]; return n; });
+    } catch (err) {
+      alert('保存失败: ' + err.message);
+    } finally {
+      setSavingPrice(null);
     }
   };
 
@@ -309,11 +339,18 @@ const AIQuoteReview = () => {
                                   <th>件数</th>
                                   <th>地址类型</th>
                                   <th>DAT</th>
-                                  <th>EW报价</th>
+                                  <th>WE报价</th>
+                                  <th>卡车参考价</th>
+                                  <th></th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {(taskDetail.orders || []).map((order, idx) => (
+                                {(taskDetail.orders || []).map((order, idx) => {
+                                  const ep = editingPrices[order.id] || {};
+                                  const ewVal = ep.ew_quote_price !== undefined ? ep.ew_quote_price : (order.ew_quote_price || '');
+                                  const trVal = ep.truck_reference_price !== undefined ? ep.truck_reference_price : (order.truck_reference_price || '');
+                                  const isDirty = ep.ew_quote_price !== undefined || ep.truck_reference_price !== undefined;
+                                  return (
                                   <tr key={order.id || idx}>
                                     <td className="td-tracking">
                                       <span className="tracking-number">{order.ew_quote_number || order.order_number}</span>
@@ -338,17 +375,42 @@ const AIQuoteReview = () => {
                                       </span>
                                     </td>
                                     <td className="td-price">
-                                      {order.total_dat ? `$${order.total_dat}` : (
-                                        <span className="no-data">-</span>
-                                      )}
+                                      {order.total_dat ? `$${order.total_dat}` : <span className="no-data">-</span>}
                                     </td>
-                                    <td className="td-price">
-                                      {order.ew_quote_price ? `$${order.ew_quote_price}` : (
-                                        <span className="no-data">-</span>
+                                    <td className="td-price-edit">
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        className="price-input"
+                                        value={ewVal}
+                                        placeholder="WE报价"
+                                        onChange={(e) => handlePriceChange(order.id, 'ew_quote_price', e.target.value)}
+                                      />
+                                    </td>
+                                    <td className="td-price-edit">
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        className="price-input"
+                                        value={trVal}
+                                        placeholder="参考价"
+                                        onChange={(e) => handlePriceChange(order.id, 'truck_reference_price', e.target.value)}
+                                      />
+                                    </td>
+                                    <td>
+                                      {isDirty && (
+                                        <button
+                                          className="btn-save-price"
+                                          onClick={() => handleSavePrice(order.id)}
+                                          disabled={savingPrice === order.id}
+                                        >
+                                          {savingPrice === order.id ? '...' : '保存'}
+                                        </button>
                                       )}
                                     </td>
                                   </tr>
-                                ))}
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>

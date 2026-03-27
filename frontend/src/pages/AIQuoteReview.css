@@ -590,3 +590,35 @@
     gap: 6px;
   }
 }
+
+/* Price edit inputs in AI review table */
+.td-price-edit {
+  min-width: 100px;
+}
+.price-input {
+  width: 90px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.85em;
+  text-align: right;
+  background: #fff;
+}
+.price-input:focus {
+  border-color: #3498db;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(52,152,219,0.15);
+}
+.btn-save-price {
+  padding: 3px 10px;
+  border: none;
+  border-radius: 4px;
+  background: #27ae60;
+  color: white;
+  font-size: 0.8em;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-save-price:hover { background: #219a52; }
+.btn-save-price:disabled { opacity: 0.5; cursor: not-allowed; }

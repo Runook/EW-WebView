@@ -5,7 +5,7 @@ import './ConfirmOrderModal.css';
 const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
   const [formData, setFormData] = useState({
     truck_payment: '',
-    truck_reference_price: '',
+    truck_reference_price: order?.truck_reference_price || '',
     mc_number: '',
     dot_number: '',
     truck_company_name: '',

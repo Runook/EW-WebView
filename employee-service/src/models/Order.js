@@ -379,7 +379,7 @@ class Order {
         'transport_distance', 'ideal_quote', 'truck_pallets', 
         'tql_price_1', 'tql_price_2', 'other_api_price',
         'quote_reference', 'quote_ref_10', 'quote_ref_20', 'quote_ref_30',
-        'truck_payment', 'mc_number', 'truck_company_name', 'truck_contact',
+        'truck_payment', 'truck_reference_price', 'mc_number', 'truck_company_name', 'truck_contact',
         'dot_number', 'carrier_email', 'carrier_address', 'driver_name', 'driver_phone',
         // 地址
         'origin_address', 'origin_city', 'origin_state', 'origin_country', 'origin_zipcode',

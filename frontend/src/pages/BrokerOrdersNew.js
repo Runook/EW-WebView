@@ -224,6 +224,7 @@ const BrokerOrdersNew = () => {
         await orderApi.updateOrder(selectedOrder.id, {
           quote_date: getNYDate(),
           truck_payment: truckPayment,
+          truck_reference_price: formData.truck_reference_price ? parseFloat(formData.truck_reference_price) : null,
           profit: profit,
           mc_number: formData.mc_number,
           dot_number: formData.dot_number || null,
