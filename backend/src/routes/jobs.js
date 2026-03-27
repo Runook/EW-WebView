@@ -188,7 +188,7 @@ router.post('/', auth, [
   body('title').notEmpty().withMessage('职位名称不能为空'),
   body('category').notEmpty().withMessage('职位分类不能为空'),
   body('company').optional(),
-  body('location').notEmpty().withMessage('工作地点不能为空'),
+  body('location').optional().isString(),
   body('salary').notEmpty().withMessage('薪资不能为空'),
   body('workType').notEmpty().withMessage('工作类型不能为空'),
   body('experience').notEmpty().withMessage('经验要求不能为空'),

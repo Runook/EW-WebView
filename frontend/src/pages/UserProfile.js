@@ -63,9 +63,17 @@ const JOB_CATEGORIES = [
   '出单出货 点数', '物流销售', '货运代理', '卡车修理技工', '货运经纪', '报关师'
 ];
 const LOCATIONS = [
-  '洛杉矶', '纽约', '旧金山', '芝加哥', '休斯顿', '凤凰城', '费城', '圣安东尼奥',
-  '圣地亚哥', '达拉斯', '圣何塞', '奥斯汀', '西雅图', '丹佛', '华盛顿', '波士顿',
-  '亚特兰大', '迈阿密', '拉斯维加斯', '波特兰'
+  'Alabama (AL)', 'Alaska (AK)', 'Arizona (AZ)', 'Arkansas (AR)', 'California (CA)',
+  'Colorado (CO)', 'Connecticut (CT)', 'Delaware (DE)', 'Florida (FL)', 'Georgia (GA)',
+  'Hawaii (HI)', 'Idaho (ID)', 'Illinois (IL)', 'Indiana (IN)', 'Iowa (IA)',
+  'Kansas (KS)', 'Kentucky (KY)', 'Louisiana (LA)', 'Maine (ME)', 'Maryland (MD)',
+  'Massachusetts (MA)', 'Michigan (MI)', 'Minnesota (MN)', 'Mississippi (MS)', 'Missouri (MO)',
+  'Montana (MT)', 'Nebraska (NE)', 'Nevada (NV)', 'New Hampshire (NH)', 'New Jersey (NJ)',
+  'New Mexico (NM)', 'New York (NY)', 'North Carolina (NC)', 'North Dakota (ND)', 'Ohio (OH)',
+  'Oklahoma (OK)', 'Oregon (OR)', 'Pennsylvania (PA)', 'Rhode Island (RI)', 'South Carolina (SC)',
+  'South Dakota (SD)', 'Tennessee (TN)', 'Texas (TX)', 'Utah (UT)', 'Vermont (VT)',
+  'Virginia (VA)', 'Washington (WA)', 'West Virginia (WV)', 'Wisconsin (WI)', 'Wyoming (WY)',
+  'Washington D.C.'
 ];
 const WORK_TYPES = ['全职', '兼职', '合同工', '临时工'];
 const EXPERIENCE_OPTIONS = ['经验不限', '1年以内', '1-3年', '3-5年', '5-10年', '10年以上'];
@@ -1045,13 +1053,9 @@ const UserProfile = () => {
                       {JOB_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
-                  <div className="form-group"><label>公司名称</label><input name="company" defaultValue={editingJob.company} required /></div>
+                  <div className="form-group"><label>公司名称</label><input name="company" defaultValue={editingJob.company} placeholder="选填" /></div>
                   <div style={{ display: 'flex', gap: 12 }}>
-                    <div className="form-group" style={{ flex: 1 }}><label>工作地点</label>
-                      <select name="location" defaultValue={editingJob.location} required>
-                        {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
-                      </select>
-                    </div>
+                    <div className="form-group" style={{ flex: 1 }}><label>工作州</label><input name="location" defaultValue={editingJob.location} placeholder="如：California (CA), Texas (TX)（选填）" /></div>
                     <div className="form-group" style={{ flex: 1 }}><label>薪资待遇</label><input name="salary" defaultValue={editingJob.salary} required /></div>
                   </div>
                   <div style={{ display: 'flex', gap: 12 }}>
@@ -1071,7 +1075,7 @@ const UserProfile = () => {
                     <div className="form-group" style={{ flex: 1 }}><label>联系人</label><input name="contactPerson" defaultValue={editingJob.contactPerson} /></div>
                     <div className="form-group" style={{ flex: 1 }}><label>联系电话</label><input name="contactPhone" defaultValue={editingJob.contactPhone} /></div>
                   </div>
-                  <div className="form-group"><label>联系邮箱</label><input name="contactEmail" defaultValue={editingJob.contactEmail} type="email" /></div>
+                  <div className="form-group"><label>联系邮箱</label><input name="contactEmail" defaultValue={editingJob.contactEmail} type="text" placeholder="选填" /></div>
                   <div className="article-edit-actions">
                     <button type="button" className="btn-cancel" onClick={() => setEditingJob(null)}>取消</button>
                     <button type="submit" className="btn-save"><Save size={16} /> 保存</button>
@@ -1187,15 +1191,11 @@ const UserProfile = () => {
                         {EXPERIENCE_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}
                       </select>
                     </div>
-                    <div className="form-group" style={{ flex: 1 }}><label>期望地点</label>
-                      <select name="location" defaultValue={editingResume.location} required>
-                        {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
-                      </select>
-                    </div>
+                    <div className="form-group" style={{ flex: 1 }}><label>期望州</label><input name="location" defaultValue={editingResume.location} placeholder="如：California (CA), Texas (TX)（选填）" /></div>
                   </div>
                   <div style={{ display: 'flex', gap: 12 }}>
                     <div className="form-group" style={{ flex: 1 }}><label>联系电话</label><input name="phone" defaultValue={editingResume.phone} required /></div>
-                    <div className="form-group" style={{ flex: 1 }}><label>邮箱</label><input name="email" defaultValue={editingResume.email} type="email" required /></div>
+                    <div className="form-group" style={{ flex: 1 }}><label>邮箱</label><input name="email" defaultValue={editingResume.email} type="text" placeholder="选填" /></div>
                   </div>
                   <div className="form-group"><label>技能专长</label><input name="skills" defaultValue={editingResume.skills?.join(', ')} /></div>
                   <div style={{ display: 'flex', gap: 12 }}>

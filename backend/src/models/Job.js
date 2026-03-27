@@ -14,7 +14,7 @@ class Job {
           .where('jobs.is_active', true);
 
         if (filters.category) q = q.where('jobs.category', filters.category);
-        if (filters.location) q = q.where('jobs.location', filters.location);
+        if (filters.location) q = q.where('jobs.location', 'ilike', `%${filters.location}%`);
         if (filters.workType) q = q.where('jobs.work_type', filters.workType);
         if (filters.experience) q = q.where('jobs.experience', filters.experience);
         if (filters.search) {
@@ -230,7 +230,7 @@ class Job {
       }
       
       if (filters.location) {
-        query = query.where('jobs.location', filters.location);
+        query = query.where('jobs.location', 'ilike', `%${filters.location}%`);
       }
 
       query = query.orderBy('jobs.created_at', 'desc');

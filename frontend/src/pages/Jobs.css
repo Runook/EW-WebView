@@ -774,3 +774,165 @@ a.jact { text-decoration: none; }
   color: #15803d;
   user-select: none;
 }
+
+/* State Multi-Select */
+.state-multi-group {
+  position: relative;
+}
+.state-multi-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+  min-height: 42px;
+}
+.state-multi-trigger:hover,
+.state-multi-trigger.open {
+  border-color: #3b82f6;
+}
+.state-multi-trigger svg.rotated {
+  transform: rotate(180deg);
+}
+.state-multi-placeholder {
+  color: #9ca3af;
+}
+.state-multi-count {
+  color: #3b82f6;
+  font-weight: 500;
+}
+.state-multi-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.state-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+.state-tag button {
+  display: inline-flex;
+  align-items: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #93c5fd;
+  padding: 0;
+  line-height: 1;
+}
+.state-tag button:hover {
+  color: #dc2626;
+}
+.state-multi-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  z-index: 100;
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+.state-multi-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.state-multi-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.85rem;
+  background: transparent;
+}
+.state-multi-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+.state-multi-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s;
+}
+.state-multi-option:hover {
+  background: #f3f4f6;
+}
+.state-multi-option.checked {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+.state-multi-option input[type="checkbox"] {
+  accent-color: #3b82f6;
+  width: 15px;
+  height: 15px;
+}
+.state-multi-empty {
+  padding: 16px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+.state-multi-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-top: 1px solid #e5e7eb;
+}
+.state-clear-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.state-clear-btn:hover {
+  color: #dc2626;
+}
+.state-done-btn {
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.state-done-btn:hover {
+  background: #2563eb;
+}
+
+/* Location display in table */
+.jobs-td-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}

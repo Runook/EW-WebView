@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Send, X } from 'lucide-react';
+import { ArrowLeft, Send, X, ChevronDown, Search } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import PremiumPostStep from '../components/PremiumPostStep';
 import { useNotification } from '../components/common/Notification';
@@ -11,6 +11,82 @@ import { PATH_JOBS } from '../constants/servicePaths';
 import { JOB_CATEGORIES, LOCATIONS, WORK_TYPES, EXPERIENCE_OPTIONS } from './jobsConstants';
 import './Jobs.css';
 
+const StateMultiSelect = ({ selected, onChange, label = '工作州', placeholder = '请选择州（选填）' }) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filtered = useMemo(
+    () => search ? LOCATIONS.filter(l => l.toLowerCase().includes(search.toLowerCase())) : LOCATIONS,
+    [search]
+  );
+
+  const toggle = useCallback((loc) => {
+    onChange(prev => prev.includes(loc) ? prev.filter(l => l !== loc) : [...prev, loc]);
+  }, [onChange]);
+
+  const removeTag = (loc, e) => { e.stopPropagation(); onChange(prev => prev.filter(l => l !== loc)); };
+
+  return (
+    <div className="form-group state-multi-group" ref={ref}>
+      <label>{label}</label>
+      <div className={`state-multi-trigger ${open ? 'open' : ''}`} onClick={() => setOpen(!open)}>
+        {selected.length === 0
+          ? <span className="state-multi-placeholder">{placeholder}</span>
+          : <span className="state-multi-count">{selected.length} 个州已选</span>
+        }
+        <ChevronDown size={16} className={open ? 'rotated' : ''} />
+      </div>
+
+      {selected.length > 0 && (
+        <div className="state-multi-tags">
+          {selected.map(s => (
+            <span key={s} className="state-tag">
+              {s.match(/\(([A-Z]{2})\)/)?.[1] || s}
+              <button type="button" onClick={(e) => removeTag(s, e)}><X size={12} /></button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {open && (
+        <div className="state-multi-dropdown">
+          <div className="state-multi-search">
+            <Search size={14} />
+            <input
+              type="text" placeholder="搜索州..."
+              value={search} onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              autoFocus
+            />
+          </div>
+          <div className="state-multi-list">
+            {filtered.map(loc => (
+              <label key={loc} className={`state-multi-option ${selected.includes(loc) ? 'checked' : ''}`}>
+                <input type="checkbox" checked={selected.includes(loc)} onChange={() => toggle(loc)} />
+                <span>{loc}</span>
+              </label>
+            ))}
+            {filtered.length === 0 && <div className="state-multi-empty">未找到匹配的州</div>}
+          </div>
+          {selected.length > 0 && (
+            <div className="state-multi-footer">
+              <button type="button" className="state-clear-btn" onClick={() => onChange([])}>清除全部</button>
+              <button type="button" className="state-done-btn" onClick={() => setOpen(false)}>确定 ({selected.length})</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const JobPostPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -18,13 +94,20 @@ const JobPostPage = () => {
   const { success, error: showError } = useNotification();
   const { withLoading } = useLoading(false);
   const { isAuthenticated } = useAuth();
-  const [step, setStep] = useState('form'); // 'form' | 'premium'
+  const [step, setStep] = useState('form');
   const [currentFormData, setCurrentFormData] = useState(null);
+  const [selectedStates, setSelectedStates] = useState([]);
 
   const listHref = useMemo(
     () => `${PATH_JOBS}?view=${kind === 'job' ? 'jobs' : 'resumes'}`,
     [kind]
   );
+
+  useEffect(() => {
+    if (currentFormData?.location) {
+      setSelectedStates(currentFormData.location.split(', ').filter(Boolean));
+    }
+  }, [currentFormData]);
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
@@ -32,6 +115,7 @@ const JobPostPage = () => {
     const fd = new FormData(e.target);
     const obj = {};
     for (let [key, value] of fd.entries()) obj[key] = value;
+    obj.location = selectedStates.join(', ');
     setCurrentFormData(obj);
     setStep('premium');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -97,9 +181,7 @@ const JobPostPage = () => {
               </div>
               <div className="form-group"><label>公司名称</label><input name="company" placeholder="公司名称（选填）" defaultValue={currentFormData?.company || ''} /></div>
               <div className="form-row">
-                <div className="form-group"><label>工作州 *</label>
-                  <select name="location" required defaultValue={currentFormData?.location || ''}><option value="">请选择州</option>{LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}</select>
-                </div>
+                <StateMultiSelect selected={selectedStates} onChange={setSelectedStates} />
                 <div className="form-group"><label>薪资待遇 *</label><input name="salary" required placeholder="如：$4000-6000/月" defaultValue={currentFormData?.salary || ''} /></div>
               </div>
               <div className="form-row">
@@ -119,7 +201,7 @@ const JobPostPage = () => {
                 <div className="form-group"><label>联系人</label><input name="contactPerson" placeholder="如：张经理" defaultValue={currentFormData?.contactPerson || ''} /></div>
                 <div className="form-group"><label>联系电话 *</label><input name="contactPhone" required placeholder="如：(323) 888-1001" defaultValue={currentFormData?.contactPhone || ''} /></div>
               </div>
-              <div className="form-group"><label>联系邮箱 *</label><input name="contactEmail" required type="text" placeholder="如：hr@company.com" defaultValue={currentFormData?.contactEmail || ''} /></div>
+              <div className="form-group"><label>联系邮箱</label><input name="contactEmail" type="text" placeholder="如：hr@company.com（选填）" defaultValue={currentFormData?.contactEmail || ''} /></div>
             </>
           ) : (
             <>
@@ -129,13 +211,11 @@ const JobPostPage = () => {
                 <div className="form-group"><label>工作经验 *</label>
                   <select name="experience" required defaultValue={currentFormData?.experience || ''}><option value="">请选择</option>{EXPERIENCE_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}</select>
                 </div>
-                <div className="form-group"><label>期望州 *</label>
-                  <select name="location" required defaultValue={currentFormData?.location || ''}><option value="">请选择州</option>{LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}</select>
-                </div>
+                <StateMultiSelect selected={selectedStates} onChange={setSelectedStates} label="期望州" placeholder="请选择州（选填）" />
               </div>
               <div className="form-row">
                 <div className="form-group"><label>联系电话 *</label><input name="phone" required placeholder="(123) 456-7890" defaultValue={currentFormData?.phone || ''} /></div>
-                <div className="form-group"><label>邮箱 *</label><input name="email" required type="text" placeholder="zhangsan@email.com" defaultValue={currentFormData?.email || ''} /></div>
+                <div className="form-group"><label>邮箱</label><input name="email" type="text" placeholder="zhangsan@email.com（选填）" defaultValue={currentFormData?.email || ''} /></div>
               </div>
               <div className="form-group"><label>技能专长 *</label><input name="skills" required placeholder="用逗号分隔，如：CDL-A驾照, 长途运输" defaultValue={currentFormData?.skills || ''} /></div>
               <div className="form-row">

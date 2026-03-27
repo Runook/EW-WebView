@@ -14,7 +14,7 @@ class Resume {
           .where('resumes.is_active', true);
 
         if (filters.position) q = q.where('resumes.position', 'ilike', `%${filters.position}%`);
-        if (filters.location) q = q.where('resumes.location', filters.location);
+        if (filters.location) q = q.where('resumes.location', 'ilike', `%${filters.location}%`);
         if (filters.experience) q = q.where('resumes.experience', filters.experience);
         if (filters.workTypePreference) q = q.where('resumes.work_type_preference', filters.workTypePreference);
         if (filters.search) {
@@ -227,7 +227,7 @@ class Resume {
       }
       
       if (filters.location) {
-        query = query.where('resumes.location', filters.location);
+        query = query.where('resumes.location', 'ilike', `%${filters.location}%`);
       }
 
       query = query.orderBy('resumes.created_at', 'desc');

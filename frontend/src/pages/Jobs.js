@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Plus, Briefcase, User, Search, Filter, ChevronDown, ChevronLeft, ChevronRight,
@@ -18,6 +18,82 @@ import './Jobs.css';
 
 const ITEMS_PER_PAGE = 12;
 
+const formatLocationShort = (location) => {
+  if (!location) return '—';
+  const parts = location.split(', ').map(s => {
+    const m = s.match(/\(([A-Z]{2})\)/);
+    return m ? m[1] : s;
+  });
+  if (parts.length <= 3) return parts.join(', ');
+  return `${parts.slice(0, 2).join(', ')} +${parts.length - 2}`;
+};
+
+const EditStateMultiSelect = ({ selected, onChange, label = '工作州' }) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filtered = useMemo(
+    () => search ? LOCATIONS.filter(l => l.toLowerCase().includes(search.toLowerCase())) : LOCATIONS,
+    [search]
+  );
+
+  const toggle = (loc) => {
+    onChange(prev => prev.includes(loc) ? prev.filter(l => l !== loc) : [...prev, loc]);
+  };
+
+  return (
+    <div className="form-group state-multi-group" ref={ref}>
+      <label>{label}</label>
+      <div className={`state-multi-trigger ${open ? 'open' : ''}`} onClick={() => setOpen(!open)}>
+        {selected.length === 0
+          ? <span className="state-multi-placeholder">请选择州（选填）</span>
+          : <span className="state-multi-count">{selected.length} 个州已选</span>
+        }
+        <ChevronDown size={16} className={open ? 'rotated' : ''} />
+      </div>
+      {selected.length > 0 && (
+        <div className="state-multi-tags">
+          {selected.map(s => (
+            <span key={s} className="state-tag">
+              {s.match(/\(([A-Z]{2})\)/)?.[1] || s}
+              <button type="button" onClick={(e) => { e.stopPropagation(); onChange(prev => prev.filter(l => l !== s)); }}><X size={12} /></button>
+            </span>
+          ))}
+        </div>
+      )}
+      {open && (
+        <div className="state-multi-dropdown">
+          <div className="state-multi-search">
+            <Search size={14} />
+            <input type="text" placeholder="搜索州..." value={search} onChange={(e) => setSearch(e.target.value)} onClick={(e) => e.stopPropagation()} autoFocus />
+          </div>
+          <div className="state-multi-list">
+            {filtered.map(loc => (
+              <label key={loc} className={`state-multi-option ${selected.includes(loc) ? 'checked' : ''}`}>
+                <input type="checkbox" checked={selected.includes(loc)} onChange={() => toggle(loc)} />
+                <span>{loc}</span>
+              </label>
+            ))}
+          </div>
+          {selected.length > 0 && (
+            <div className="state-multi-footer">
+              <button type="button" className="state-clear-btn" onClick={() => onChange([])}>清除全部</button>
+              <button type="button" className="state-done-btn" onClick={() => setOpen(false)}>确定 ({selected.length})</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Jobs = () => {
   const { success, error: showError, apiError } = useNotification();
   const { withLoading } = useLoading(false);
@@ -35,6 +111,7 @@ const Jobs = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [detailItem, setDetailItem] = useState(null);
   const [editItem, setEditItem] = useState(null);
+  const [editStates, setEditStates] = useState([]);
   const [savedIds, setSavedIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem('ew_saved_jobs') || '{}'); } catch { return {}; }
   });
@@ -148,6 +225,7 @@ const Jobs = () => {
     const fd = new FormData(e.target);
     const data = {};
     for (let [key, value] of fd.entries()) data[key] = value;
+    data.location = editStates.join(', ');
     try {
       const type = editItem._editType;
       const endpoint = type === 'job' ? `/jobs/${editItem.id}` : `/resumes/${editItem.id}`;
@@ -302,7 +380,7 @@ const Jobs = () => {
                         {job.category && <span className="jobs-td-sub muted">{job.category}</span>}
                       </td>
                       <td>{job.company}</td>
-                      <td><span className="jobs-td-nowrap"><MapPin size={12} /> {job.location}</span></td>
+                      <td><span className="jobs-td-location"><MapPin size={12} /> {formatLocationShort(job.location)}</span></td>
                       <td>{job.salary && !String(job.salary).startsWith('$') ? '$' + job.salary : job.salary}</td>
                       <td>{job.type}</td>
                       <td className="muted">{job.posted}</td>
@@ -310,7 +388,7 @@ const Jobs = () => {
                         <div className="jobs-td-actions">
                           {currentUserId && job.publisher?.userId === currentUserId && (
                             <>
-                              <button type="button" className="jact edit" title="编辑" onClick={() => setEditItem({ ...job, _editType: 'job' })}><Edit size={14} /></button>
+                              <button type="button" className="jact edit" title="编辑" onClick={() => { setEditItem({ ...job, _editType: 'job' }); setEditStates(job.location ? job.location.split(', ').filter(Boolean) : []); }}><Edit size={14} /></button>
                               <button type="button" className="jact delete" title="删除" onClick={() => handleDelete('job', job.id)}><Trash2 size={14} /></button>
                             </>
                           )}
@@ -352,14 +430,14 @@ const Jobs = () => {
                         </div>
                       </td>
                       <td>{resume.position}</td>
-                      <td><span className="jobs-td-nowrap"><MapPin size={12} /> {resume.location}</span></td>
+                      <td><span className="jobs-td-location"><MapPin size={12} /> {formatLocationShort(resume.location)}</span></td>
                       <td>{resume.experience}</td>
                       <td className="muted">{resume.posted}</td>
                       <td>
                         <div className="jobs-td-actions">
                           {currentUserId && resume.publisher?.userId === currentUserId && (
                             <>
-                              <button type="button" className="jact edit" title="编辑" onClick={() => setEditItem({ ...resume, _editType: 'resume' })}><Edit size={14} /></button>
+                              <button type="button" className="jact edit" title="编辑" onClick={() => { setEditItem({ ...resume, _editType: 'resume' }); setEditStates(resume.location ? resume.location.split(', ').filter(Boolean) : []); }}><Edit size={14} /></button>
                               <button type="button" className="jact delete" title="删除" onClick={() => handleDelete('resume', resume.id)}><Trash2 size={14} /></button>
                             </>
                           )}
@@ -489,14 +567,9 @@ const Jobs = () => {
                       {JOB_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
-                  <div className="form-group"><label>公司名称</label><input name="company" defaultValue={editItem.company} required /></div>
+                  <div className="form-group"><label>公司名称</label><input name="company" defaultValue={editItem.company} /></div>
                   <div className="form-row">
-                    <div className="form-group"><label>工作州</label>
-                      <select name="location" defaultValue={editItem.location} required>
-                        <option value="">请选择州</option>
-                        {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
-                      </select>
-                    </div>
+                    <EditStateMultiSelect selected={editStates} onChange={setEditStates} />
                     <div className="form-group"><label>薪资待遇</label><input name="salary" defaultValue={editItem.salary} required /></div>
                   </div>
                   <div className="form-row">
@@ -516,7 +589,7 @@ const Jobs = () => {
                     <div className="form-group"><label>联系人</label><input name="contactPerson" defaultValue={editItem.contactPerson} /></div>
                     <div className="form-group"><label>联系电话</label><input name="contactPhone" defaultValue={editItem.contactPhone} /></div>
                   </div>
-                  <div className="form-group"><label>联系邮箱</label><input name="contactEmail" defaultValue={editItem.contactEmail} type="text" /></div>
+                  <div className="form-group"><label>联系邮箱</label><input name="contactEmail" defaultValue={editItem.contactEmail} type="text" placeholder="选填" /></div>
                 </>
               ) : (
                 <>
@@ -528,16 +601,11 @@ const Jobs = () => {
                         {EXPERIENCE_OPTIONS.map(e => <option key={e} value={e}>{e}</option>)}
                       </select>
                     </div>
-                    <div className="form-group"><label>期望州</label>
-                      <select name="location" defaultValue={editItem.location} required>
-                        <option value="">请选择州</option>
-                        {LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}
-                      </select>
-                    </div>
+                    <EditStateMultiSelect selected={editStates} onChange={setEditStates} label="期望州" />
                   </div>
                   <div className="form-row">
                     <div className="form-group"><label>联系电话</label><input name="phone" defaultValue={editItem.phone} required /></div>
-                    <div className="form-group"><label>邮箱</label><input name="email" defaultValue={editItem.email} type="text" required /></div>
+                    <div className="form-group"><label>邮箱</label><input name="email" defaultValue={editItem.email} type="text" placeholder="选填" /></div>
                   </div>
                   <div className="form-group"><label>技能专长</label><input name="skills" defaultValue={editItem.skills?.join(', ')} /></div>
                   <div className="form-row">
