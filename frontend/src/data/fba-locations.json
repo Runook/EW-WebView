@@ -2164,10 +2164,10 @@
   "NJ": [
     {
       "code": "ABE8",
-      "address": "401 Independence Road",
+      "address": "309 Cedar Ln",
       "city": "Florence",
       "state": "NJ",
-      "zip": "8518",
+      "zip": "08518",
       "type": "FC",
       "country": "US",
       "name": "ABE8 - Florence",
@@ -3135,20 +3135,6 @@
       "type": "FC",
       "country": "US",
       "name": "ABE5 - Harrisburg",
-      "latitude": null,
-      "longitude": null,
-      "description": null,
-      "is_active": true
-    },
-    {
-      "code": "ABE8",
-      "address": "1 Centerpoint Blvd",
-      "city": "New Castle",
-      "state": "PA",
-      "zip": "16101",
-      "type": "FC",
-      "country": "US",
-      "name": "ABE8 - New Castle",
       "latitude": null,
       "longitude": null,
       "description": null,
