@@ -187,7 +187,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', auth, [
   body('title').notEmpty().withMessage('职位名称不能为空'),
   body('category').notEmpty().withMessage('职位分类不能为空'),
-  body('company').notEmpty().withMessage('公司名称不能为空'),
+  body('company').optional(),
   body('location').notEmpty().withMessage('工作地点不能为空'),
   body('salary').notEmpty().withMessage('薪资不能为空'),
   body('workType').notEmpty().withMessage('工作类型不能为空'),

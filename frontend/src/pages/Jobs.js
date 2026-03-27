@@ -303,7 +303,7 @@ const Jobs = () => {
                       </td>
                       <td>{job.company}</td>
                       <td><span className="jobs-td-nowrap"><MapPin size={12} /> {job.location}</span></td>
-                      <td>{job.salary}</td>
+                      <td>{job.salary && !String(job.salary).startsWith('$') ? '$' + job.salary : job.salary}</td>
                       <td>{job.type}</td>
                       <td className="muted">{job.posted}</td>
                       <td>

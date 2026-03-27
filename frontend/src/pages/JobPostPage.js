@@ -95,7 +95,7 @@ const JobPostPage = () => {
               <div className="form-group"><label>职位分类 *</label>
                 <select name="category" required defaultValue={currentFormData?.category || ''}><option value="">请选择</option>{JOB_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
               </div>
-              <div className="form-group"><label>公司名称 *</label><input name="company" required placeholder="公司名称" defaultValue={currentFormData?.company || ''} /></div>
+              <div className="form-group"><label>公司名称</label><input name="company" placeholder="公司名称（选填）" defaultValue={currentFormData?.company || ''} /></div>
               <div className="form-row">
                 <div className="form-group"><label>工作州 *</label>
                   <select name="location" required defaultValue={currentFormData?.location || ''}><option value="">请选择州</option>{LOCATIONS.map(l => <option key={l} value={l}>{l}</option>)}</select>
