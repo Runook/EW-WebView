@@ -2177,20 +2177,6 @@
       "is_active": true
     },
     {
-      "code": "ABE8-309",
-      "address": "309 Cedar Lane",
-      "city": "Florence",
-      "state": "NJ",
-      "zip": "8518",
-      "type": "FC",
-      "country": "US",
-      "name": "ABE8-309 - Florence",
-      "latitude": null,
-      "longitude": null,
-      "description": null,
-      "is_active": true
-    },
-    {
       "code": "ACY1",
       "address": "240 Mantua Grove Road",
       "city": "West Deptford",
