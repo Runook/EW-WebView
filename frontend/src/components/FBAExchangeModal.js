@@ -253,12 +253,13 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
       
       if (response.success) {
         const { contact_person, wechat, contact_phone_us, contact_phone_cn, company_name } = response.data;
-        let msg = `联系方式：\n联系人：${contact_person}`;
-        if (wechat) msg += `\n微信：${wechat}`;
-        if (contact_phone_us) msg += `\n电话(美国)：${contact_phone_us}`;
-        if (contact_phone_cn) msg += `\n电话(中国)：${contact_phone_cn}`;
-        if (company_name) msg += `\n公司：${company_name}`;
-        alert(msg);
+        const lines = [];
+        if (contact_person) lines.push(`联系人：${contact_person}`);
+        if (wechat) lines.push(`微信：${wechat}`);
+        if (contact_phone_us) lines.push(`电话(美国)：${contact_phone_us}`);
+        if (contact_phone_cn) lines.push(`电话(中国)：${contact_phone_cn}`);
+        if (company_name) lines.push(`公司：${company_name}`);
+        alert(lines.length > 0 ? lines.join('\n') : '暂无联系方式');
       } else {
         alert(response.message || '获取联系信息失败，请重试');
       }
