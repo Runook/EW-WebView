@@ -98,6 +98,7 @@ class Rental {
           specifications: rentalData.specifications,
           images: rentalData.images,
           contact_phone: rentalData.contactPhone,
+          contact_phone_cn: rentalData.contactPhoneCN,
           contact_email: rentalData.contactEmail,
           contact_person: rentalData.contactPerson,
           company: rentalData.company,
@@ -283,6 +284,7 @@ class Rental {
       specifications: rental.specifications,
       images: rental.images ? (rental.images.includes('|||') ? rental.images.split('|||').filter(img => img.trim()) : [rental.images]) : [],
       contactPhone: rental.contact_phone,
+      contactPhoneCN: rental.contact_phone_cn,
       contactEmail: rental.contact_email,
       contactPerson: rental.contact_person,
       company: rental.company,
@@ -303,7 +305,8 @@ class Rental {
       contact: {
         name: rental.contact_person,
         company: rental.company,
-        phone: rental.contact_phone
+        phone: rental.contact_phone,
+        phoneCN: rental.contact_phone_cn
       }
     };
   }

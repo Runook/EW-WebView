@@ -7,6 +7,13 @@ const logger = require('../utils/logger');
 // 获取所有预约交换信息（支持筛选）
 router.get('/', async (req, res) => {
   try {
+    // Auto-cleanup expired entries
+    try {
+      await FBAExchange.deleteExpired();
+    } catch (cleanupErr) {
+      logger.warn('FBA exchange cleanup failed:', cleanupErr);
+    }
+
     const filters = {
       fba_code: req.query.fba_code,
       exchange_type: req.query.exchange_type,
@@ -132,7 +139,9 @@ router.post('/', auth, async (req, res) => {
       cargo_type: cargo_type || '地板',
       description: description || '', // 允许空描述
       is_urgent: is_urgent || false,
-      expires_at
+      expires_at,
+      contact_phone_us: req.body.contact_phone_us || null,
+      contact_phone_cn: req.body.contact_phone_cn || null,
     };
 
     const newExchange = await FBAExchange.create(exchangeData);
@@ -197,7 +206,7 @@ router.put('/:id', auth, async (req, res) => {
     const allowedFields = [
       'exchange_type', 'pricing_strategy', 'contact_person', 'contact_phone',
       'appointment_date', 'appointment_time', 'time_zone', 'cargo_type',
-      'description', 'is_urgent'
+      'description', 'is_urgent', 'contact_phone_us', 'contact_phone_cn'
     ];
 
     allowedFields.forEach(field => {
@@ -303,8 +312,9 @@ router.post('/:id/contact', auth, async (req, res) => {
       success: true,
       data: {
         contact_person: exchange.contact_person,
-        contact_phone: exchange.contact_phone,
-        user_phone: exchange.user_phone,
+        wechat: exchange.contact_phone,
+        contact_phone_us: exchange.contact_phone_us,
+        contact_phone_cn: exchange.contact_phone_cn,
         company_name: exchange.company_name
       }
     });

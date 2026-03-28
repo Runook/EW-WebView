@@ -118,6 +118,7 @@ const LogisticsRentalPostPage = () => {
       condition: formData.get('condition'),
       description: formData.get('description'),
       contactPhone: formData.get('phone'),
+      contactPhoneCN: formData.get('phoneCN'),
       contactPerson: formData.get('contactName')
     };
     const subCategory = formData.get('subCategory');
@@ -244,7 +245,10 @@ const LogisticsRentalPostPage = () => {
               <div className="form-group"><label>联系人 *</label><input type="text" name="contactName" required placeholder="如：张经理" /></div>
               <div className="form-group"><label>公司名称</label><input type="text" name="company" placeholder="如：冷链物流公司" /></div>
             </div>
-            <div className="form-group"><label>联系电话 *</label><input type="tel" name="phone" required placeholder="如：(123) 456-7890" /></div>
+            <div className="form-row">
+              <div className="form-group"><label>联系电话(美国)</label><input type="tel" name="phone" placeholder="如：(123) 456-7890（选填）" /></div>
+              <div className="form-group"><label>联系电话(中国)</label><input type="tel" name="phoneCN" placeholder="如：138-0000-0000（选填）" /></div>
+            </div>
           </div>
           <div className="form-actions">
             <Link to={listHref} className="cancel-button" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>取消</Link>

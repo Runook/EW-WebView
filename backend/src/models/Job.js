@@ -85,6 +85,7 @@ class Job {
           experience: jobData.experience,
           description: jobData.description,
           contact_phone: jobData.contactPhone,
+          contact_phone_cn: jobData.contactPhoneCN,
           contact_email: jobData.contactEmail,
           contact_person: jobData.contactPerson,
           is_active: true,
@@ -124,6 +125,7 @@ class Job {
       if (jobData.experience) updateData.experience = jobData.experience;
       if (jobData.description) updateData.description = jobData.description;
       if (jobData.contactPhone) updateData.contact_phone = jobData.contactPhone;
+      if (jobData.contactPhoneCN !== undefined) updateData.contact_phone_cn = jobData.contactPhoneCN;
       if (jobData.contactEmail) updateData.contact_email = jobData.contactEmail;
       if (jobData.contactPerson) updateData.contact_person = jobData.contactPerson;
 
@@ -258,6 +260,7 @@ class Job {
       experience: job.experience,
       description: job.description,
       contactPhone: job.contact_phone,
+      contactPhoneCN: job.contact_phone_cn,
       contactEmail: job.contact_email,
       contactPerson: job.contact_person,
       views: job.views || 0,

@@ -189,12 +189,13 @@ router.post('/', auth, [
   body('position').notEmpty().withMessage('求职岗位不能为空'),
   body('experience').notEmpty().withMessage('工作经验不能为空'),
   body('location').optional().isString(),
-  body('phone').notEmpty().withMessage('联系电话不能为空'),
+  body('phone').optional().isString(),
   body('email').optional().isString(),
   body('skills').notEmpty().withMessage('技能专长不能为空'),
   body('summary').optional().isString(),
   body('expectedSalary').optional().isString(),
-  body('workTypePreference').optional().isString()
+  body('workTypePreference').optional().isString(),
+  body('phoneCN').optional().isString()
 ], async (req, res) => {
   try {
     // 验证输入
@@ -242,7 +243,8 @@ router.post('/', auth, [
       skills: skills,
       summary: req.body.summary,
       expectedSalary: req.body.expectedSalary,
-      workTypePreference: req.body.workTypePreference
+      workTypePreference: req.body.workTypePreference,
+      phoneCN: req.body.phoneCN || null
     };
 
     const resume = await Resume.createResume(resumeData);

@@ -23,6 +23,8 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
     pricing_strategy: '普通', // 默认选择普通
     contact_person: user?.first_name || '',
     contact_phone: user?.phone || '',
+    contact_phone_us: '',
+    contact_phone_cn: '',
     appointment_date: '',
     appointment_time: '',
     time_zone: 'PDT',
@@ -212,6 +214,8 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
           pricing_strategy: '普通', // 默认选择普通
           contact_person: user?.first_name || '',
           contact_phone: user?.phone || '',
+          contact_phone_us: '',
+          contact_phone_cn: '',
           appointment_date: '',
           appointment_time: '',
           time_zone: 'PDT',
@@ -248,8 +252,13 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
       const response = await apiClient.post(`/fba-exchange/${exchangeId}/contact`);
       
       if (response.success) {
-        const { contact_person, contact_phone, company_name } = response.data;
-        alert(`联系方式：\n联系人：${contact_person}\n电话：${contact_phone}${company_name ? `\n公司：${company_name}` : ''}`);
+        const { contact_person, wechat, contact_phone_us, contact_phone_cn, company_name } = response.data;
+        let msg = `联系方式：\n联系人：${contact_person}`;
+        if (wechat) msg += `\n微信：${wechat}`;
+        if (contact_phone_us) msg += `\n电话(美国)：${contact_phone_us}`;
+        if (contact_phone_cn) msg += `\n电话(中国)：${contact_phone_cn}`;
+        if (company_name) msg += `\n公司：${company_name}`;
+        alert(msg);
       } else {
         alert(response.message || '获取联系信息失败，请重试');
       }
@@ -877,6 +886,29 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
                       required
                     />
                     {formErrors.contact_phone && <span className="error">{formErrors.contact_phone}</span>}
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>联系电话(美国)</label>
+                    <input
+                      type="text"
+                      name="contact_phone_us"
+                      value={formData.contact_phone_us}
+                      onChange={handleFormChange}
+                      placeholder="如：(123) 456-7890（选填）"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>联系电话(中国)</label>
+                    <input
+                      type="text"
+                      name="contact_phone_cn"
+                      value={formData.contact_phone_cn}
+                      onChange={handleFormChange}
+                      placeholder="如：138-0000-0000（选填）"
+                    />
                   </div>
                 </div>
 

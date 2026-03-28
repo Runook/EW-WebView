@@ -197,7 +197,8 @@ router.post('/', auth, [
   body('contactPhone').optional(),
   body('contactPerson').optional().isString(),
   body('company').optional().isString(),
-  body('specifications').optional().isString()
+  body('specifications').optional().isString(),
+  body('contactPhoneCN').optional().isString()
 ], async (req, res) => {
   try {
     console.log('📥 接收到租赁项发布请求:', {
@@ -244,6 +245,7 @@ router.post('/', auth, [
       description: req.body.description,
       images: req.body.images ? (Array.isArray(req.body.images) ? req.body.images.join('|||') : req.body.images) : null,
       contactPhone: req.body.contactPhone || null,
+      contactPhoneCN: req.body.contactPhoneCN || null,
       contactPerson: req.body.contactPerson || null,
       company: req.body.company || null,
       specifications: req.body.specifications || null,

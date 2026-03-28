@@ -458,7 +458,7 @@ const LogisticsRental = ({ defaultTab }) => {
                   <span className="lr-meta-view"><Eye size={13} /> {item.views}</span>
                 </div>
                 <div className="lr-card-btns">
-                  <button className="lr-btn-phone" onClick={(e) => { e.stopPropagation(); const phone = item.contact?.phone || item.contactPhone; if (phone) { alert(`联系电话: ${phone}`); } else { alert('暂无电话信息'); } }}><Phone size={13} /> 查看电话</button>
+                  <button className="lr-btn-phone" onClick={(e) => { e.stopPropagation(); const phoneUS = item.contact?.phone || item.contactPhone; const phoneCN = item.contact?.phoneCN || item.contactPhoneCN; let msg = ''; if (phoneUS) msg += `电话(美国): ${phoneUS}\n`; if (phoneCN) msg += `电话(中国): ${phoneCN}\n`; if (!msg) msg = '暂无电话信息'; alert(msg.trim()); }}><Phone size={13} /> 查看电话</button>
                   <Link to={getDetailLink(item)} className="lr-btn-detail">查看详情</Link>
                 </div>
               </div>

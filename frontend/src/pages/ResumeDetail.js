@@ -147,8 +147,9 @@ const ResumeDetail = () => {
           <section className="jd-section">
             <h2>联系方式</h2>
             <div className="jd-contact-grid">
-              <div className="jd-contact-item"><Phone size={18} /><div><div className="contact-label">电话</div><a href={`tel:${resume.phone}`} className="contact-value">{resume.phone}</a></div></div>
-              <div className="jd-contact-item"><Mail size={18} /><div><div className="contact-label">邮箱</div><a href={`mailto:${resume.email}`} className="contact-value">{resume.email}</a></div></div>
+              {resume.phone && <div className="jd-contact-item"><Phone size={18} /><div><div className="contact-label">电话(美国)</div><a href={`tel:${resume.phone}`} className="contact-value">{resume.phone}</a></div></div>}
+              {resume.phoneCN && <div className="jd-contact-item"><Phone size={18} /><div><div className="contact-label">电话(中国)</div><div className="contact-value">{resume.phoneCN}</div></div></div>}
+              {resume.email && <div className="jd-contact-item"><Mail size={18} /><div><div className="contact-label">邮箱</div><a href={`mailto:${resume.email}`} className="contact-value">{resume.email}</a></div></div>}
             </div>
           </section>
 

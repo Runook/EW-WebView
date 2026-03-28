@@ -1073,9 +1073,12 @@ const UserProfile = () => {
                   <div className="form-group"><label>职位描述</label><textarea name="description" defaultValue={editingJob.description} rows={4} required /></div>
                   <div style={{ display: 'flex', gap: 12 }}>
                     <div className="form-group" style={{ flex: 1 }}><label>联系人</label><input name="contactPerson" defaultValue={editingJob.contactPerson} /></div>
-                    <div className="form-group" style={{ flex: 1 }}><label>联系电话</label><input name="contactPhone" defaultValue={editingJob.contactPhone} /></div>
+                    <div className="form-group" style={{ flex: 1 }}><label>联系电话(美国)</label><input name="contactPhone" defaultValue={editingJob.contactPhone} placeholder="选填" /></div>
                   </div>
-                  <div className="form-group"><label>联系邮箱</label><input name="contactEmail" defaultValue={editingJob.contactEmail} type="text" placeholder="选填" /></div>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <div className="form-group" style={{ flex: 1 }}><label>联系电话(中国)</label><input name="contactPhoneCN" defaultValue={editingJob.contactPhoneCN} placeholder="选填" /></div>
+                    <div className="form-group" style={{ flex: 1 }}><label>联系邮箱</label><input name="contactEmail" defaultValue={editingJob.contactEmail} type="text" placeholder="选填" /></div>
+                  </div>
                   <div className="article-edit-actions">
                     <button type="button" className="btn-cancel" onClick={() => setEditingJob(null)}>取消</button>
                     <button type="submit" className="btn-save"><Save size={16} /> 保存</button>
@@ -1194,7 +1197,10 @@ const UserProfile = () => {
                     <div className="form-group" style={{ flex: 1 }}><label>期望州</label><input name="location" defaultValue={editingResume.location} placeholder="如：California (CA), Texas (TX)（选填）" /></div>
                   </div>
                   <div style={{ display: 'flex', gap: 12 }}>
-                    <div className="form-group" style={{ flex: 1 }}><label>联系电话</label><input name="phone" defaultValue={editingResume.phone} required /></div>
+                    <div className="form-group" style={{ flex: 1 }}><label>联系电话(美国)</label><input name="phone" defaultValue={editingResume.phone} placeholder="选填" /></div>
+                    <div className="form-group" style={{ flex: 1 }}><label>联系电话(中国)</label><input name="phoneCN" defaultValue={editingResume.phoneCN} placeholder="选填" /></div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 12 }}>
                     <div className="form-group" style={{ flex: 1 }}><label>邮箱</label><input name="email" defaultValue={editingResume.email} type="text" placeholder="选填" /></div>
                   </div>
                   <div className="form-group"><label>技能专长</label><input name="skills" defaultValue={editingResume.skills?.join(', ')} /></div>

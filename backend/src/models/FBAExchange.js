@@ -17,7 +17,9 @@ class FBAExchange {
         cargo_type: data.cargo_type,
         description: data.description,
         is_urgent: data.is_urgent || false,
-        expires_at: data.expires_at
+        expires_at: data.expires_at,
+        contact_phone_us: data.contact_phone_us || null,
+        contact_phone_cn: data.contact_phone_cn || null,
       }).returning('*');
       
       return newExchange;
@@ -159,6 +161,10 @@ class FBAExchange {
     } catch (error) {
       throw new Error(`清理过期记录失败: ${error.message}`);
     }
+  }
+
+  static async deleteExpired() {
+    return db('fba_exchanges').where('expires_at', '<', db.fn.now()).del();
   }
 }
 

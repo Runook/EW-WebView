@@ -82,6 +82,7 @@ class Resume {
           experience: resumeData.experience,
           location: resumeData.location,
           phone: resumeData.phone,
+          phone_cn: resumeData.phoneCN,
           email: resumeData.email,
           skills: JSON.stringify(resumeData.skills || []),
           summary: resumeData.summary,
@@ -120,6 +121,7 @@ class Resume {
       if (resumeData.experience) updateData.experience = resumeData.experience;
       if (resumeData.location) updateData.location = resumeData.location;
       if (resumeData.phone) updateData.phone = resumeData.phone;
+      if (resumeData.phoneCN !== undefined) updateData.phone_cn = resumeData.phoneCN;
       if (resumeData.email) updateData.email = resumeData.email;
       if (resumeData.skills) updateData.skills = JSON.stringify(resumeData.skills);
       if (resumeData.summary) updateData.summary = resumeData.summary;
@@ -260,6 +262,7 @@ class Resume {
       experience: resume.experience,
       location: resume.location,
       phone: resume.phone,
+      phoneCN: resume.phone_cn,
       email: resume.email,
       skills: skills,
       summary: resume.summary,

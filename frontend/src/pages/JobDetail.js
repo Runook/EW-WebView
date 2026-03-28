@@ -182,7 +182,8 @@ const JobDetail = () => {
             <h2>联系方式</h2>
             <div className="jd-contact-grid">
               {job.contactPerson && <div className="jd-contact-item"><User size={18} /><div><div className="contact-label">联系人</div><div className="contact-value">{job.contactPerson}</div></div></div>}
-              {job.contactPhone && <div className="jd-contact-item"><Phone size={18} /><div><div className="contact-label">电话</div><a href={`tel:${job.contactPhone}`} className="contact-value">{job.contactPhone}</a></div></div>}
+              {job.contactPhone && <div className="jd-contact-item"><Phone size={18} /><div><div className="contact-label">电话(美国)</div><a href={`tel:${job.contactPhone}`} className="contact-value">{job.contactPhone}</a></div></div>}
+              {job.contactPhoneCN && <div className="jd-contact-item"><Phone size={18} /><div><div className="contact-label">电话(中国)</div><div className="contact-value">{job.contactPhoneCN}</div></div></div>}
               {job.contactEmail && <div className="jd-contact-item"><Mail size={18} /><div><div className="contact-label">邮箱</div><a href={`mailto:${job.contactEmail}`} className="contact-value">{job.contactEmail}</a></div></div>}
             </div>
           </section>

@@ -195,7 +195,8 @@ router.post('/', auth, [
   body('description').notEmpty().withMessage('职位描述不能为空'),
   body('contactPhone').optional(),
   body('contactEmail').optional().isString(),
-  body('contactPerson').optional().isString()
+  body('contactPerson').optional().isString(),
+  body('contactPhoneCN').optional().isString()
 ], async (req, res) => {
   try {
     // 验证输入
@@ -235,6 +236,7 @@ router.post('/', auth, [
       experience: req.body.experience,
       description: req.body.description,
       contactPhone: req.body.contactPhone,
+      contactPhoneCN: req.body.contactPhoneCN || null,
       contactEmail: req.body.contactEmail,
       contactPerson: req.body.contactPerson
     };
@@ -306,7 +308,8 @@ router.put('/:id', auth, [
   body('description').optional().notEmpty(),
   body('contactPhone').optional(),
   body('contactEmail').optional().isString(),
-  body('contactPerson').optional().isString()
+  body('contactPerson').optional().isString(),
+  body('contactPhoneCN').optional().isString()
 ], async (req, res) => {
   try {
     // 验证输入
@@ -338,6 +341,7 @@ router.put('/:id', auth, [
       experience: req.body.experience,
       description: req.body.description,
       contactPhone: req.body.contactPhone,
+      contactPhoneCN: req.body.contactPhoneCN,
       contactEmail: req.body.contactEmail,
       contactPerson: req.body.contactPerson
     };

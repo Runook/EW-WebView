@@ -98,6 +98,7 @@ class Sale {
           specifications: saleData.specifications,
           images: saleData.images,
           contact_phone: saleData.contactPhone,
+          contact_phone_cn: saleData.contactPhoneCN,
           contact_email: saleData.contactEmail,
           contact_person: saleData.contactPerson,
           company: saleData.company,
@@ -283,6 +284,7 @@ class Sale {
       specifications: sale.specifications,
       images: sale.images ? (sale.images.includes('|||') ? sale.images.split('|||').filter(img => img.trim()) : [sale.images]) : [],
       contactPhone: sale.contact_phone,
+      contactPhoneCN: sale.contact_phone_cn,
       contactEmail: sale.contact_email,
       contactPerson: sale.contact_person,
       company: sale.company,
@@ -303,7 +305,8 @@ class Sale {
       contact: {
         name: sale.contact_person,
         company: sale.company,
-        phone: sale.contact_phone
+        phone: sale.contact_phone,
+        phoneCN: sale.contact_phone_cn
       }
     };
   }

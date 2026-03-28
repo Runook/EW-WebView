@@ -506,7 +506,8 @@ const Jobs = () => {
                   <h4>联系方式</h4>
                   <div className="detail-contact">
                     {detailItem.contactPerson && <div className="contact-row"><User size={16} /> {detailItem.contactPerson}</div>}
-                    {detailItem.contactPhone && <div className="contact-row"><Phone size={16} /> <a href={`tel:${detailItem.contactPhone}`}>{detailItem.contactPhone}</a></div>}
+                    {detailItem.contactPhone && <div className="contact-row"><Phone size={16} /> 美国: <a href={`tel:${detailItem.contactPhone}`}>{detailItem.contactPhone}</a></div>}
+                    {detailItem.contactPhoneCN && <div className="contact-row"><Phone size={16} /> 中国: {detailItem.contactPhoneCN}</div>}
                     {detailItem.contactEmail && <div className="contact-row"><Mail size={16} /> <a href={`mailto:${detailItem.contactEmail}`}>{detailItem.contactEmail}</a></div>}
                   </div>
                 </div>
@@ -542,8 +543,9 @@ const Jobs = () => {
                 <div className="detail-section">
                   <h4>联系方式</h4>
                   <div className="detail-contact">
-                    <div className="contact-row"><Phone size={16} /> <a href={`tel:${detailItem.phone}`}>{detailItem.phone}</a></div>
-                    <div className="contact-row"><Mail size={16} /> <a href={`mailto:${detailItem.email}`}>{detailItem.email}</a></div>
+                    {detailItem.phone && <div className="contact-row"><Phone size={16} /> 美国: <a href={`tel:${detailItem.phone}`}>{detailItem.phone}</a></div>}
+                    {detailItem.phoneCN && <div className="contact-row"><Phone size={16} /> 中国: {detailItem.phoneCN}</div>}
+                    {detailItem.email && <div className="contact-row"><Mail size={16} /> <a href={`mailto:${detailItem.email}`}>{detailItem.email}</a></div>}
                   </div>
                 </div>
                 <div className="detail-meta"><Eye size={14} /> {detailItem.views} 次查看 &nbsp;&bull;&nbsp; <Calendar size={14} /> {detailItem.posted}</div>
@@ -587,7 +589,10 @@ const Jobs = () => {
                   <div className="form-group"><label>职位描述</label><textarea name="description" defaultValue={editItem.description} rows={5} required /></div>
                   <div className="form-row">
                     <div className="form-group"><label>联系人</label><input name="contactPerson" defaultValue={editItem.contactPerson} /></div>
-                    <div className="form-group"><label>联系电话</label><input name="contactPhone" defaultValue={editItem.contactPhone} /></div>
+                    <div className="form-group"><label>联系电话(美国)</label><input name="contactPhone" defaultValue={editItem.contactPhone} placeholder="选填" /></div>
+                  </div>
+                  <div className="form-row">
+                    <div className="form-group"><label>联系电话(中国)</label><input name="contactPhoneCN" defaultValue={editItem.contactPhoneCN} placeholder="选填" /></div>
                   </div>
                   <div className="form-group"><label>联系邮箱</label><input name="contactEmail" defaultValue={editItem.contactEmail} type="text" placeholder="选填" /></div>
                 </>
@@ -604,7 +609,10 @@ const Jobs = () => {
                     <EditStateMultiSelect selected={editStates} onChange={setEditStates} label="期望州" />
                   </div>
                   <div className="form-row">
-                    <div className="form-group"><label>联系电话</label><input name="phone" defaultValue={editItem.phone} required /></div>
+                    <div className="form-group"><label>联系电话(美国)</label><input name="phone" defaultValue={editItem.phone} placeholder="选填" /></div>
+                    <div className="form-group"><label>联系电话(中国)</label><input name="phoneCN" defaultValue={editItem.phoneCN} placeholder="选填" /></div>
+                  </div>
+                  <div className="form-row">
                     <div className="form-group"><label>邮箱</label><input name="email" defaultValue={editItem.email} type="text" placeholder="选填" /></div>
                   </div>
                   <div className="form-group"><label>技能专长</label><input name="skills" defaultValue={editItem.skills?.join(', ')} /></div>
