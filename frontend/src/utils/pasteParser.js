@@ -209,7 +209,7 @@ total: 16778`;
   console.log('验证结果:', validation);
 };
 
-export default {
+const pasteParser = {
   parseWeightList,
   parseDimensionsList,
   calculateTotalVolume,
@@ -218,4 +218,6 @@ export default {
   validateWeightDimensionMatch,
   testParser
 };
+
+export default pasteParser;
 

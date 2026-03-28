@@ -42,9 +42,11 @@ const Payments = () => {
   const [vendorSuggestions, setVendorSuggestions] = useState([]);
   const [selectedVendor, setSelectedVendor] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadPayments();
     loadStatistics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters, pagination.page]);
 
   const loadPayments = async () => {

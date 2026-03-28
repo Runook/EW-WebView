@@ -108,7 +108,7 @@ export default function KgcmConverter() {
     // 第二列
     let col2Arr = [];
     grouped.forEach(g => {
-      const [kg, l, w, h] = g.values;
+      const [, l, w, h] = g.values;
       const p = g.count;
       const lin = Math.ceil(l / 2.54);
       const win = Math.ceil(w / 2.54);

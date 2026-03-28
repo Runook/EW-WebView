@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: S3 bucket and IAM task role for EW Logistics file uploads
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: ew-logistics-uploads
+    Description: Name of the S3 bucket for file uploads
+  DeployUserName:
+    Type: String
+    Default: ew-logistics-deploy
+    Description: IAM user name used for CI/CD deployments
+
+Resources:
+  UploadBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT, POST]
+            AllowedOrigins:
+              - 'https://welogx.com'
+              - 'http://localhost:3000'
+            MaxAge: 3600
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref UploadBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${UploadBucket.Arn}/*'
+
+  EcsTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ecsTaskRole-logistics
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3UploadAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:DeleteObject
+                Resource: !Sub '${UploadBucket.Arn}/*'
+
+  DeployUserS3Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: ew-deploy-s3-access
+      Users:
+        - !Ref DeployUserName
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+              - s3:DeleteObject
+              - s3:ListBucket
+            Resource:
+              - !GetAtt UploadBucket.Arn
+              - !Sub '${UploadBucket.Arn}/*'
+
+Outputs:
+  BucketURL:
+    Description: S3 bucket URL for uploaded files
+    Value: !Sub 'https://${BucketName}.s3.${AWS::Region}.amazonaws.com'
+  TaskRoleArn:
+    Description: ARN of the ECS task role (use this in ECS task definition)
+    Value: !GetAtt EcsTaskRole.Arn

@@ -1,5 +1,5 @@
 // 直接Cognito认证工具（绕过Amplify）
-import { CLIENT_ID, CLIENT_SECRET, USER_POOL_ID } from '../config/amplify';
+import { CLIENT_ID, CLIENT_SECRET } from '../config/amplify';
 
 // 计算SECRET_HASH（使用Web Crypto API）
 export async function calculateSecretHash(username) {
@@ -150,7 +150,7 @@ export async function confirmSignUp(username, code) {
     const secretHash = await calculateSecretHash(username);
     
     // 调用ConfirmSignUp
-    const result = await cognitoRequest('ConfirmSignUp', {
+    await cognitoRequest('ConfirmSignUp', {
       ClientId: CLIENT_ID,
       Username: username,
       ConfirmationCode: code,
@@ -220,7 +220,7 @@ export async function confirmForgotPassword(username, code, newPassword) {
     const secretHash = await calculateSecretHash(username);
     
     // 调用ConfirmForgotPassword
-    const result = await cognitoRequest('ConfirmForgotPassword', {
+    await cognitoRequest('ConfirmForgotPassword', {
       ClientId: CLIENT_ID,
       Username: username,
       ConfirmationCode: code,

@@ -25,7 +25,6 @@ export const processLocationData = (rawData) => {
     .map((item, index) => {
       try {
         // 尝试从混乱的数据中提取有用信息
-        const keys = Object.keys(item);
         const values = Object.values(item).filter(v => v !== null && v !== undefined && v !== '');
         
         if (values.length < 2) return null;
@@ -103,44 +102,43 @@ const processGroupedData = (groupedData) => {
 
   // 遍历每个州的数据
   for (const [stateName, stateLocations] of Object.entries(groupedData)) {
-    if (Array.isArray(stateLocations)) {
-      stateLocations.forEach(location => {
-        try {
-          // 直接使用新格式的数据，无需复杂的解析
-          const processedLocation = {
-            id: location.code || generateUniqueId(stateName, location.code || `LOC${index}`, index),
-            state: stateName,
-            city: location.city || 'Unknown City',
-            code: location.code || `LOC${index}`,
-            type: location.type || 'FC',
-            address: location.address || 'Address not available',
-            stateCode: stateName, // 使用州名作为代码
-            zipCode: location.zip || location.zip_code || 'N/A',
-            county: null, // 新格式中没有县信息
-            description: location.description || generateDescription(location.type || 'FC', location.city, stateName),
-            coordinates: {
-              latitude: location.latitude,
-              longitude: location.longitude
-            },
-            // 保持与原有格式的兼容性
-            operatingHours: '24/7',
-            capacity: getCapacityByType(location.type || 'FC'),
-            services: getServicesByType(location.type || 'FC'),
-            contact: getContactInfo(),
-            features: getFeaturesbyType(location.type || 'FC', location.city || 'Unknown City'),
-            lastUpdated: new Date().toISOString(),
-            isActive: location.is_active !== false,
-            // 新格式特有的字段
-            name: location.name || `${location.code} - ${location.city}`,
-            country: location.country || 'US'
-          };
+    if (!Array.isArray(stateLocations)) continue;
+    for (const location of stateLocations) {
+      try {
+        // 直接使用新格式的数据，无需复杂的解析
+        const processedLocation = {
+          id: location.code || generateUniqueId(stateName, location.code || `LOC${index}`, index),
+          state: stateName,
+          city: location.city || 'Unknown City',
+          code: location.code || `LOC${index}`,
+          type: location.type || 'FC',
+          address: location.address || 'Address not available',
+          stateCode: stateName, // 使用州名作为代码
+          zipCode: location.zip || location.zip_code || 'N/A',
+          county: null, // 新格式中没有县信息
+          description: location.description || generateDescription(location.type || 'FC', location.city, stateName),
+          coordinates: {
+            latitude: location.latitude,
+            longitude: location.longitude
+          },
+          // 保持与原有格式的兼容性
+          operatingHours: '24/7',
+          capacity: getCapacityByType(location.type || 'FC'),
+          services: getServicesByType(location.type || 'FC'),
+          contact: getContactInfo(),
+          features: getFeaturesbyType(location.type || 'FC', location.city || 'Unknown City'),
+          lastUpdated: new Date().toISOString(),
+          isActive: location.is_active !== false,
+          // 新格式特有的字段
+          name: location.name || `${location.code} - ${location.city}`,
+          country: location.country || 'US'
+        };
 
-          allLocations.push(processedLocation);
-          index++;
-        } catch (error) {
-          console.warn(`处理位置数据时出错 (${stateName}):`, error, location);
-        }
-      });
+        allLocations.push(processedLocation);
+        index++;
+      } catch (error) {
+        console.warn(`处理位置数据时出错 (${stateName}):`, error, location);
+      }
     }
   }
 

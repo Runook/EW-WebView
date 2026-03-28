@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   MapPin, Calendar, Eye, DollarSign, Phone, User, Building, Package,
-  ChevronRight, ChevronLeft, Share2, Check, Heart, Bookmark, BookMarked,
-  Tag, Settings, Image as ImageIcon, Camera
+  ChevronRight, ChevronLeft, Share2, Check, Bookmark, BookMarked,
+  Tag, Settings, Image as ImageIcon
 } from 'lucide-react';
 import { apiClient } from '../utils/apiClient';
 import { useSEO } from '../hooks/useSEO';

@@ -16,7 +16,6 @@ const saleCategories = [
   '卡车出售', '叉车货架', '仓库/海外仓', '配件零件', '车架', '海柜干柜', '特殊设备',
   '公司MC DOT', '清库存', '生意买卖/转让', '地区分站加盟', '出FBA预约'
 ];
-const locations = ['洛杉矶', '纽约', '旧金山', '芝加哥', '休斯顿', '凤凰城'];
 const conditions = ['全新', '9成新', '8成新', '7成新', '6成新', '5成新', '4成新', '3成新', '2成新', '1成新'];
 const US_STATES = [
   'Alabama (AL)', 'Alaska (AK)', 'Arizona (AZ)', 'Arkansas (AR)', 'California (CA)',

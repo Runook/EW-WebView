@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Truck, MapPin, Calendar, Clock, Trash2, Eye, Plus, AlertTriangle, RefreshCw
+  Truck, MapPin, Calendar, Clock, Trash2, Eye, Plus, AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import './MyQuotes.css';

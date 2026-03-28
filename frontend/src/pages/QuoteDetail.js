@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   MapPin, Clock, Phone, ChevronDown, ChevronUp,
-  RefreshCw, List, AlertTriangle, ArrowLeft, Package
+  RefreshCw, AlertTriangle, ArrowLeft, Package
 } from 'lucide-react';
 import './GetQuote.css';
 

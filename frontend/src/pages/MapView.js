@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { orderApi } from '../config/employeeApi';
 import { loadGoogleMapsScript } from '../config/googleMaps';
 import './MapView.css';
@@ -25,7 +24,6 @@ const coordsCache = new Map();
 
 const MapView = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersRef = useRef([]);
@@ -139,10 +137,12 @@ const MapView = () => {
     }
   }, [orders, mapLoaded, geocodeOrders]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (mapInstanceRef.current && ordersWithCoords.length > 0) {
       drawOrderRoutes();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ordersWithCoords, filter]);
 
   const loadOrders = async () => {

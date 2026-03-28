@@ -91,7 +91,7 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     setIsSubmitting
   } = useForm(initialFormData);
 
-  const [calculatingDistance, setCalculatingDistance] = React.useState(false);
+  const [, setCalculatingDistance] = React.useState(false);
   const [selectedPlaces, setSelectedPlaces] = React.useState({
     origin: null,
     destination: null

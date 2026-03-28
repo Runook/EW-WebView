@@ -4,27 +4,11 @@ const path = require('path');
 const fs = require('fs');
 const { db } = require('../config/database');
 const { auth, requireEmployee } = require('../middleware/auth');
+const { uploadToS3, deleteFromS3, getS3Stream, isS3Url } = require('../utils/s3Upload');
 const router = express.Router();
 
-// 确保 uploads/pods 目录存在
-const podUploadDir = path.join(__dirname, '../../uploads/pods');
-if (!fs.existsSync(podUploadDir)) {
-  fs.mkdirSync(podUploadDir, { recursive: true });
-}
+const storage = multer.memoryStorage();
 
-// 配置 multer 存储
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, podUploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, `pod-${req.params.orderId}-${uniqueSuffix}${ext}`);
-  }
-});
-
-// 文件过滤器 - 允许 PDF、图片和常见文档
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|gif|webp|pdf|doc|docx|xls|xlsx|tiff|tif/;
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -39,17 +23,11 @@ const fileFilter = (req, file, cb) => {
 };
 
 const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 20 * 1024 * 1024 // 20MB
-  },
-  fileFilter: fileFilter
+  storage,
+  limits: { fileSize: 20 * 1024 * 1024 },
+  fileFilter
 });
 
-/**
- * POST /api/orders/:orderId/pods
- * 上传 POD 文件
- */
 router.post('/:orderId/pods', auth, requireEmployee, upload.single('pod'), async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -58,20 +36,18 @@ router.post('/:orderId/pods', auth, requireEmployee, upload.single('pod'), async
       return res.status(400).json({ success: false, message: '没有上传文件' });
     }
 
-    // 检查订单是否存在
     const order = await db('employee_orders').where('id', orderId).where('is_deleted', false).first();
     if (!order) {
-      // 删除已上传的文件
-      fs.unlinkSync(req.file.path);
       return res.status(404).json({ success: false, message: '订单不存在' });
     }
 
-    // 保存到数据库
+    const { url } = await uploadToS3(req.file, `pods/${orderId}`);
+
     const [pod] = await db('order_pods').insert({
       order_id: parseInt(orderId),
       original_filename: req.file.originalname,
-      stored_filename: req.file.filename,
-      file_path: req.file.path,
+      stored_filename: path.basename(url),
+      file_path: url,
       mime_type: req.file.mimetype,
       file_size: req.file.size,
       uploaded_by: req.user.id
@@ -94,10 +70,6 @@ router.post('/:orderId/pods', auth, requireEmployee, upload.single('pod'), async
   }
 });
 
-/**
- * GET /api/orders/:orderId/pods
- * 获取订单的所有 POD 文件列表
- */
 router.get('/:orderId/pods', auth, requireEmployee, async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -123,60 +95,41 @@ router.get('/:orderId/pods', auth, requireEmployee, async (req, res) => {
   }
 });
 
-/**
- * GET /api/orders/:orderId/pods/:podId/download
- * 下载 POD 文件
- */
 router.get('/:orderId/pods/:podId/download', auth, requireEmployee, async (req, res) => {
   try {
     const { orderId, podId } = req.params;
 
-    const pod = await db('order_pods')
-      .where('id', podId)
-      .where('order_id', orderId)
-      .first();
+    const pod = await db('order_pods').where('id', podId).where('order_id', orderId).first();
+    if (!pod) return res.status(404).json({ success: false, message: 'POD 文件不存在' });
 
-    if (!pod) {
-      return res.status(404).json({ success: false, message: 'POD 文件不存在' });
+    if (isS3Url(pod.file_path)) {
+      const s3Response = await getS3Stream(pod.file_path);
+      res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(pod.original_filename)}"`);
+      res.setHeader('Content-Type', pod.mime_type || 'application/octet-stream');
+      s3Response.Body.pipe(res);
+    } else {
+      if (!fs.existsSync(pod.file_path)) return res.status(404).json({ success: false, message: 'POD 文件已被删除' });
+      res.download(pod.file_path, pod.original_filename);
     }
-
-    // 检查文件是否存在
-    if (!fs.existsSync(pod.file_path)) {
-      return res.status(404).json({ success: false, message: 'POD 文件已被删除' });
-    }
-
-    res.download(pod.file_path, pod.original_filename);
   } catch (error) {
     console.error('下载 POD 失败:', error);
     res.status(500).json({ success: false, message: '下载 POD 失败', error: error.message });
   }
 });
 
-/**
- * DELETE /api/orders/:orderId/pods/:podId
- * 删除 POD 文件
- */
 router.delete('/:orderId/pods/:podId', auth, requireEmployee, async (req, res) => {
   try {
     const { orderId, podId } = req.params;
 
-    const pod = await db('order_pods')
-      .where('id', podId)
-      .where('order_id', orderId)
-      .first();
+    const pod = await db('order_pods').where('id', podId).where('order_id', orderId).first();
+    if (!pod) return res.status(404).json({ success: false, message: 'POD 文件不存在' });
 
-    if (!pod) {
-      return res.status(404).json({ success: false, message: 'POD 文件不存在' });
-    }
-
-    // 删除物理文件
-    if (fs.existsSync(pod.file_path)) {
+    if (isS3Url(pod.file_path)) {
+      await deleteFromS3(pod.file_path);
+    } else if (fs.existsSync(pod.file_path)) {
       fs.unlinkSync(pod.file_path);
     }
-
-    // 删除数据库记录
     await db('order_pods').where('id', podId).delete();
-
     res.json({ success: true, message: 'POD 文件已删除' });
   } catch (error) {
     console.error('删除 POD 失败:', error);
@@ -184,7 +137,6 @@ router.delete('/:orderId/pods/:podId', auth, requireEmployee, async (req, res) =
   }
 });
 
-// 错误处理中间件
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {

@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Phone, Heart, Building, Package, Search, Filter, ChevronDown, ImageIcon, Camera, MapPin, Calendar, Eye, Plus } from 'lucide-react';
+import { Phone, Building, Package, Search, Filter, ChevronDown, ImageIcon, Camera, MapPin, Calendar, Eye, Plus } from 'lucide-react';
 import { generateRentalSlug } from './RentalDetail';
 import './LogisticsRental.css';
 import { PATH_LOGISTICS_RENTAL, PATH_LOGISTICS_RENTAL_ONLY, PATH_LOGISTICS_SALE_ONLY } from '../constants/servicePaths';
 import { useNotification } from '../components/common/Notification';
 import { apiClient } from '../utils/apiClient';
-import { useLocation } from 'react-router-dom';
-
 const LogisticsRental = ({ defaultTab }) => {
 
-  const location = useLocation();
   const [activeTab, setActiveTab] = useState(defaultTab || 'rental');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);

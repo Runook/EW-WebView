@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState, useEffect, useCallback } from 'react';
 import { vendorApi, employeeUtils } from '../config/employeeApi';
 import './Vendors.css';
 
 const Vendors = () => {
-  const { user } = useAuth();
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,16 +17,16 @@ const Vendors = () => {
     tax_id: '', w9_on_file: false, is_active: true
   });
 
-  useEffect(() => { loadVendors(); }, [searchTerm]);
-
-  const loadVendors = async () => {
+  const loadVendors = useCallback(async () => {
     try {
       setLoading(true);
       const response = await vendorApi.getAll({ search: searchTerm });
       setVendors(response.data || []);
     } catch (error) { console.error('Failed to load vendors:', error); }
     finally { setLoading(false); }
-  };
+  }, [searchTerm]);
+
+  useEffect(() => { loadVendors(); }, [loadVendors]);
 
   const handleCreate = () => {
     setEditingVendor(null);
