@@ -186,7 +186,7 @@ router.get('/:id', async (req, res) => {
 // 创建新销售项（需要认证）
 router.post('/', auth, [
   body('title').notEmpty().withMessage('标题不能为空'),
-  body('category').notEmpty().withMessage('分类不能为空'),
+  body('category').optional().isString(),
   body('location').notEmpty().withMessage('地点不能为空'),
   body('price').notEmpty().withMessage('价格不能为空'),
   body('condition').notEmpty().withMessage('设备状态不能为空'),
@@ -236,7 +236,7 @@ router.post('/', auth, [
     const saleData = {
       userId: req.user.userId,
       title: req.body.title,
-      category: req.body.category,
+      category: req.body.category || null,
       sub_category: req.body.sub_category || null,
       brand: req.body.brand || null,
       location: req.body.location,

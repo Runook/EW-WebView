@@ -217,8 +217,8 @@ const LogisticsRentalPostPage = () => {
             </div>
 
             <div className="form-group"><label>标题 *</label><input type="text" name="title" required placeholder="如：重型冷藏车出租" /></div>
-            <div className="form-group"><label>分类 *</label>
-              <select name="category" required><option value="">请选择分类</option>{getCurrentCategories().map(c => <option key={c} value={c}>{c}</option>)}</select>
+            <div className="form-group"><label>分类</label>
+              <select name="category"><option value="">请选择分类（选填）</option>{getCurrentCategories().map(c => <option key={c} value={c}>{c}</option>)}</select>
             </div>
             <div className="form-group"><label>子分类</label><input type="text" name="subCategory" placeholder="如：重型卡车、中型卡车等" /></div>
             <div className="form-row">
