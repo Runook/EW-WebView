@@ -63,7 +63,7 @@ const JOB_CATEGORIES = [
   '出单出货 点数', '物流销售', '货运代理', '卡车修理技工', '货运经纪', '报关师'
 ];
 const WORK_TYPES = ['全职', '兼职', '合同工', '临时工'];
-const EXPERIENCE_OPTIONS = ['经验不限', '1年以内', '1-3年', '3-5年', '5-10年', '10年以上'];
+const EXPERIENCE_OPTIONS = ['经验不限', '1年以内', '一年以上', '1-3年', '3-5年', '5-10年', '10年以上'];
 
 const UserProfile = () => {
   const navigate = useNavigate();

@@ -19,4 +19,4 @@ export const LOCATIONS = [
 ];
 
 export const WORK_TYPES = ['全职', '兼职', '合同工', '临时工'];
-export const EXPERIENCE_OPTIONS = ['经验不限', '1年以内', '1-3年', '3-5年', '5-10年', '10年以上'];
+export const EXPERIENCE_OPTIONS = ['经验不限', '1年以内', '一年以上', '1-3年', '3-5年', '5-10年', '10年以上'];
