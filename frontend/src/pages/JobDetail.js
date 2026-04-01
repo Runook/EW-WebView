@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   MapPin, Clock, BookOpen, Calendar, Eye, DollarSign,
   Building2, Phone, Mail, User, Send, Bookmark, BookMarked,
-  Briefcase, ChevronRight, Share2, Check
+  Briefcase, ChevronRight, Share2, Check, MessageCircle
 } from 'lucide-react';
 import { apiClient } from '../utils/apiClient';
 import { useSEO } from '../hooks/useSEO';
@@ -184,6 +184,7 @@ const JobDetail = () => {
               {job.contactPerson && <div className="jd-contact-item"><User size={18} /><div><div className="contact-label">联系人</div><div className="contact-value">{job.contactPerson}</div></div></div>}
               {job.contactPhone && <div className="jd-contact-item"><Phone size={18} /><div><div className="contact-label">电话(美国)</div><a href={`tel:${job.contactPhone}`} className="contact-value">{job.contactPhone}</a></div></div>}
               {job.contactPhoneCN && <div className="jd-contact-item"><Phone size={18} /><div><div className="contact-label">电话(中国)</div><div className="contact-value">{job.contactPhoneCN}</div></div></div>}
+              {job.wechat && <div className="jd-contact-item"><MessageCircle size={18} /><div><div className="contact-label">微信</div><div className="contact-value">{job.wechat}</div></div></div>}
               {job.contactEmail && <div className="jd-contact-item"><Mail size={18} /><div><div className="contact-label">邮箱</div><a href={`mailto:${job.contactEmail}`} className="contact-value">{job.contactEmail}</a></div></div>}
             </div>
           </section>

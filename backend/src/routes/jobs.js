@@ -196,7 +196,8 @@ router.post('/', auth, [
   body('contactPhone').optional(),
   body('contactEmail').optional().isString(),
   body('contactPerson').optional().isString(),
-  body('contactPhoneCN').optional().isString()
+  body('contactPhoneCN').optional().isString(),
+  body('wechat').optional().isString()
 ], async (req, res) => {
   try {
     // 验证输入
@@ -238,7 +239,8 @@ router.post('/', auth, [
       contactPhone: req.body.contactPhone,
       contactPhoneCN: req.body.contactPhoneCN || null,
       contactEmail: req.body.contactEmail,
-      contactPerson: req.body.contactPerson
+      contactPerson: req.body.contactPerson,
+      wechat: req.body.wechat || null
     };
 
     const job = await Job.createJob(jobData);
@@ -309,7 +311,8 @@ router.put('/:id', auth, [
   body('contactPhone').optional(),
   body('contactEmail').optional().isString(),
   body('contactPerson').optional().isString(),
-  body('contactPhoneCN').optional().isString()
+  body('contactPhoneCN').optional().isString(),
+  body('wechat').optional().isString()
 ], async (req, res) => {
   try {
     // 验证输入
@@ -343,7 +346,8 @@ router.put('/:id', auth, [
       contactPhone: req.body.contactPhone,
       contactPhoneCN: req.body.contactPhoneCN,
       contactEmail: req.body.contactEmail,
-      contactPerson: req.body.contactPerson
+      contactPerson: req.body.contactPerson,
+      wechat: req.body.wechat
     };
 
     const updatedJob = await Job.updateJob(jobId, jobData, req.user.userId);

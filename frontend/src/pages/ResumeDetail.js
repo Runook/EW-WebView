@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   MapPin, Clock, BookOpen, Calendar, Eye, DollarSign,
-  Phone, Mail, User, Bookmark, BookMarked, ChevronRight, Share2, Check, Briefcase
+  Phone, Mail, User, Bookmark, BookMarked, ChevronRight, Share2, Check, Briefcase, MessageCircle
 } from 'lucide-react';
 import { apiClient } from '../utils/apiClient';
 import { useSEO } from '../hooks/useSEO';
@@ -149,6 +149,7 @@ const ResumeDetail = () => {
             <div className="jd-contact-grid">
               {resume.phone && <div className="jd-contact-item"><Phone size={18} /><div><div className="contact-label">电话(美国)</div><a href={`tel:${resume.phone}`} className="contact-value">{resume.phone}</a></div></div>}
               {resume.phoneCN && <div className="jd-contact-item"><Phone size={18} /><div><div className="contact-label">电话(中国)</div><div className="contact-value">{resume.phoneCN}</div></div></div>}
+              {resume.wechat && <div className="jd-contact-item"><MessageCircle size={18} /><div><div className="contact-label">微信</div><div className="contact-value">{resume.wechat}</div></div></div>}
               {resume.email && <div className="jd-contact-item"><Mail size={18} /><div><div className="contact-label">邮箱</div><a href={`mailto:${resume.email}`} className="contact-value">{resume.email}</a></div></div>}
             </div>
           </section>

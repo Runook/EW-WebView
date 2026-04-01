@@ -202,7 +202,10 @@ const JobPostPage = () => {
                 <div className="form-group"><label>联系电话(美国)</label><input name="contactPhone" placeholder="如：(323) 888-1001（选填）" defaultValue={currentFormData?.contactPhone || ''} /></div>
                 <div className="form-group"><label>联系电话(中国)</label><input name="contactPhoneCN" placeholder="如：138-0000-0000（选填）" defaultValue={currentFormData?.contactPhoneCN || ''} /></div>
               </div>
-              <div className="form-group"><label>联系邮箱</label><input name="contactEmail" type="text" placeholder="如：hr@company.com（选填）" defaultValue={currentFormData?.contactEmail || ''} /></div>
+              <div className="form-row">
+                <div className="form-group"><label>联系邮箱</label><input name="contactEmail" type="text" placeholder="如：hr@company.com（选填）" defaultValue={currentFormData?.contactEmail || ''} /></div>
+                <div className="form-group"><label>微信</label><input name="wechat" placeholder="如：welogx123（选填）" defaultValue={currentFormData?.wechat || ''} /></div>
+              </div>
             </>
           ) : (
             <>
@@ -218,7 +221,10 @@ const JobPostPage = () => {
                 <div className="form-group"><label>联系电话(美国)</label><input name="phone" placeholder="(123) 456-7890（选填）" defaultValue={currentFormData?.phone || ''} /></div>
                 <div className="form-group"><label>联系电话(中国)</label><input name="phoneCN" placeholder="138-0000-0000（选填）" defaultValue={currentFormData?.phoneCN || ''} /></div>
               </div>
-              <div className="form-group"><label>邮箱</label><input name="email" type="text" placeholder="zhangsan@email.com（选填）" defaultValue={currentFormData?.email || ''} /></div>
+              <div className="form-row">
+                <div className="form-group"><label>邮箱</label><input name="email" type="text" placeholder="zhangsan@email.com（选填）" defaultValue={currentFormData?.email || ''} /></div>
+                <div className="form-group"><label>微信</label><input name="wechat" placeholder="如：welogx123（选填）" defaultValue={currentFormData?.wechat || ''} /></div>
+              </div>
               <div className="form-group"><label>技能专长 *</label><input name="skills" required placeholder="用逗号分隔，如：CDL-A驾照, 长途运输" defaultValue={currentFormData?.skills || ''} /></div>
               <div className="form-row">
                 <div className="form-group"><label>期望薪资</label><input name="expectedSalary" placeholder="如：$4000-5000/月" defaultValue={currentFormData?.expectedSalary || ''} /></div>

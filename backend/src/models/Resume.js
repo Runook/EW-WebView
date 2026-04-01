@@ -83,6 +83,7 @@ class Resume {
           location: resumeData.location,
           phone: resumeData.phone,
           phone_cn: resumeData.phoneCN,
+          wechat: resumeData.wechat,
           email: resumeData.email,
           skills: JSON.stringify(resumeData.skills || []),
           summary: resumeData.summary,
@@ -127,6 +128,7 @@ class Resume {
       if (resumeData.summary) updateData.summary = resumeData.summary;
       if (resumeData.expectedSalary) updateData.expected_salary = resumeData.expectedSalary;
       if (resumeData.workTypePreference) updateData.work_type_preference = resumeData.workTypePreference;
+      if (resumeData.wechat !== undefined) updateData.wechat = resumeData.wechat;
 
       const [updatedResume] = await query
         .update(updateData)
@@ -263,6 +265,7 @@ class Resume {
       location: resume.location,
       phone: resume.phone,
       phoneCN: resume.phone_cn,
+      wechat: resume.wechat,
       email: resume.email,
       skills: skills,
       summary: resume.summary,

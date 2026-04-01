@@ -508,6 +508,7 @@ const Jobs = () => {
                     {detailItem.contactPerson && <div className="contact-row"><User size={16} /> {detailItem.contactPerson}</div>}
                     {detailItem.contactPhone && <div className="contact-row"><Phone size={16} /> 美国: <a href={`tel:${detailItem.contactPhone}`}>{detailItem.contactPhone}</a></div>}
                     {detailItem.contactPhoneCN && <div className="contact-row"><Phone size={16} /> 中国: {detailItem.contactPhoneCN}</div>}
+                    {detailItem.wechat && <div className="contact-row"><span style={{fontWeight:500}}>微信:</span> {detailItem.wechat}</div>}
                     {detailItem.contactEmail && <div className="contact-row"><Mail size={16} /> <a href={`mailto:${detailItem.contactEmail}`}>{detailItem.contactEmail}</a></div>}
                   </div>
                 </div>
@@ -545,6 +546,7 @@ const Jobs = () => {
                   <div className="detail-contact">
                     {detailItem.phone && <div className="contact-row"><Phone size={16} /> 美国: <a href={`tel:${detailItem.phone}`}>{detailItem.phone}</a></div>}
                     {detailItem.phoneCN && <div className="contact-row"><Phone size={16} /> 中国: {detailItem.phoneCN}</div>}
+                    {detailItem.wechat && <div className="contact-row"><span style={{fontWeight:500}}>微信:</span> {detailItem.wechat}</div>}
                     {detailItem.email && <div className="contact-row"><Mail size={16} /> <a href={`mailto:${detailItem.email}`}>{detailItem.email}</a></div>}
                   </div>
                 </div>
@@ -594,7 +596,10 @@ const Jobs = () => {
                   <div className="form-row">
                     <div className="form-group"><label>联系电话(中国)</label><input name="contactPhoneCN" defaultValue={editItem.contactPhoneCN} placeholder="选填" /></div>
                   </div>
-                  <div className="form-group"><label>联系邮箱</label><input name="contactEmail" defaultValue={editItem.contactEmail} type="text" placeholder="选填" /></div>
+                  <div className="form-row">
+                    <div className="form-group"><label>联系邮箱</label><input name="contactEmail" defaultValue={editItem.contactEmail} type="text" placeholder="选填" /></div>
+                    <div className="form-group"><label>微信</label><input name="wechat" defaultValue={editItem.wechat} placeholder="选填" /></div>
+                  </div>
                 </>
               ) : (
                 <>
@@ -614,6 +619,7 @@ const Jobs = () => {
                   </div>
                   <div className="form-row">
                     <div className="form-group"><label>邮箱</label><input name="email" defaultValue={editItem.email} type="text" placeholder="选填" /></div>
+                    <div className="form-group"><label>微信</label><input name="wechat" defaultValue={editItem.wechat} placeholder="选填" /></div>
                   </div>
                   <div className="form-group"><label>技能专长</label><input name="skills" defaultValue={editItem.skills?.join(', ')} /></div>
                   <div className="form-row">

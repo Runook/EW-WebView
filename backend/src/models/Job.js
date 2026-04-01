@@ -88,6 +88,7 @@ class Job {
           contact_phone_cn: jobData.contactPhoneCN,
           contact_email: jobData.contactEmail,
           contact_person: jobData.contactPerson,
+          wechat: jobData.wechat,
           is_active: true,
           created_at: new Date(),
           updated_at: new Date()
@@ -128,6 +129,7 @@ class Job {
       if (jobData.contactPhoneCN !== undefined) updateData.contact_phone_cn = jobData.contactPhoneCN;
       if (jobData.contactEmail) updateData.contact_email = jobData.contactEmail;
       if (jobData.contactPerson) updateData.contact_person = jobData.contactPerson;
+      if (jobData.wechat !== undefined) updateData.wechat = jobData.wechat;
 
       const [updatedJob] = await query
         .update(updateData)
@@ -263,6 +265,7 @@ class Job {
       contactPhoneCN: job.contact_phone_cn,
       contactEmail: job.contact_email,
       contactPerson: job.contact_person,
+      wechat: job.wechat,
       views: job.views || 0,
       isActive: job.is_active,
       isFeatured: job.is_featured,

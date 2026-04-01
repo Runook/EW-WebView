@@ -195,7 +195,8 @@ router.post('/', auth, [
   body('summary').optional().isString(),
   body('expectedSalary').optional().isString(),
   body('workTypePreference').optional().isString(),
-  body('phoneCN').optional().isString()
+  body('phoneCN').optional().isString(),
+  body('wechat').optional().isString()
 ], async (req, res) => {
   try {
     // 验证输入
@@ -244,7 +245,8 @@ router.post('/', auth, [
       summary: req.body.summary,
       expectedSalary: req.body.expectedSalary,
       workTypePreference: req.body.workTypePreference,
-      phoneCN: req.body.phoneCN || null
+      phoneCN: req.body.phoneCN || null,
+      wechat: req.body.wechat || null
     };
 
     const resume = await Resume.createResume(resumeData);
@@ -313,7 +315,8 @@ router.put('/:id', auth, [
   body('skills').optional(),
   body('summary').optional().isString(),
   body('expectedSalary').optional().isString(),
-  body('workTypePreference').optional().isString()
+  body('workTypePreference').optional().isString(),
+  body('wechat').optional().isString()
 ], async (req, res) => {
   try {
     // 验证输入
@@ -355,7 +358,8 @@ router.put('/:id', auth, [
       skills: skills,
       summary: req.body.summary,
       expectedSalary: req.body.expectedSalary,
-      workTypePreference: req.body.workTypePreference
+      workTypePreference: req.body.workTypePreference,
+      wechat: req.body.wechat
     };
 
     const updatedResume = await Resume.updateResume(resumeId, resumeData, req.user.userId);
