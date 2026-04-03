@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { orderApi, truckContactApi } from '../config/employeeApi';
+import { orderApi, truckContactApi, guestQuoteApi } from '../config/employeeApi';
 import EditableCell from '../components/EditableCell';
 import CompanyEditableCell from '../components/CompanyEditableCell';
 import ConfirmOrderModal from '../components/ConfirmOrderModal';
@@ -53,6 +53,10 @@ const BrokerOrdersNew = () => {
   
   const currentStatus = searchParams.get('status') || 'quote';
   
+  const [guestSessions, setGuestSessions] = useState([]);
+  const [guestLoading, setGuestLoading] = useState(false);
+  const [guestImporting, setGuestImporting] = useState({});
+  
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
     employee: searchParams.get('employee') || 'all'
@@ -90,13 +94,20 @@ const BrokerOrdersNew = () => {
     };
 
     initGoogleMaps();
+    loadGuestSessions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    loadOrders();
-    if (currentStatus === 'ordered') {
-      loadStats();
+    if (currentStatus === 'guest_quotes') {
+      loadGuestSessions();
+    } else {
+      loadOrders();
+      if (currentStatus === 'ordered') {
+        loadStats();
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStatus, filters]);
 
   const loadOrders = async () => {
@@ -109,7 +120,6 @@ const BrokerOrdersNew = () => {
       
       if (response.success) {
         setOrders(response.data || []);
-        // 已完成订单自动加载文档状态
         if (currentStatus === 'completed' && response.data) {
           response.data.forEach(o => loadDocs(o.id));
         }
@@ -118,6 +128,39 @@ const BrokerOrdersNew = () => {
       console.error('加载订单失败:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadGuestSessions = async () => {
+    try {
+      setGuestLoading(true);
+      const response = await guestQuoteApi.getGuestSessions();
+      if (response.success) {
+        setGuestSessions(response.sessions || []);
+      }
+    } catch (error) {
+      console.error('加载客人报价失败:', error);
+    } finally {
+      setGuestLoading(false);
+    }
+  };
+
+  const handleImportGuest = async (sessionId) => {
+    if (!window.confirm('确定将此客人报价导入报价单？')) return;
+    try {
+      setGuestImporting(prev => ({ ...prev, [sessionId]: true }));
+      const response = await guestQuoteApi.importSession(sessionId);
+      if (response.success) {
+        alert(`导入成功！WE单号: ${response.data.orderNumber}`);
+        setGuestSessions(prev => prev.filter(s => s.session_id !== sessionId));
+        if (currentStatus === 'quote') loadOrders();
+      } else {
+        alert(response.message || '导入失败');
+      }
+    } catch (error) {
+      alert('导入失败: ' + error.message);
+    } finally {
+      setGuestImporting(prev => ({ ...prev, [sessionId]: false }));
     }
   };
 
@@ -811,6 +854,14 @@ const BrokerOrdersNew = () => {
         
         <nav className="sidebar-nav">
           <button
+            className={`nav-item ${currentStatus === 'guest_quotes' ? 'active' : ''}`}
+            onClick={() => handleStatusChange('guest_quotes')}
+            style={currentStatus === 'guest_quotes' ? {} : { color: '#e67e22', fontWeight: 600 }}
+          >
+            🔔 客人Quote {guestSessions.length > 0 && `(${guestSessions.length})`}
+          </button>
+
+          <button
             className={`nav-item ${currentStatus === 'quote' ? 'active' : ''}`}
             onClick={() => handleStatusChange('quote')}
           >
@@ -973,6 +1024,69 @@ const BrokerOrdersNew = () => {
 
       {/* 主内容区 */}
       <div className="main-content">
+        {currentStatus === 'guest_quotes' ? (
+          <div className="guest-quotes-view">
+            <div className="toolbar">
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>客人报价（未进入报价单）</h3>
+              <button className="btn-create" onClick={loadGuestSessions} disabled={guestLoading}>
+                {guestLoading ? '加载中...' : '🔄 刷新'}
+              </button>
+            </div>
+            {guestLoading ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>加载中...</div>
+            ) : guestSessions.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#888' }}>暂无客人报价</div>
+            ) : (
+              <div className="table-wrapper">
+                <table className="orders-table">
+                  <thead>
+                    <tr>
+                      <th>日期</th>
+                      <th>客人邮箱</th>
+                      <th>发货地</th>
+                      <th>收货地</th>
+                      <th>重量(lbs)</th>
+                      <th>托盘数</th>
+                      <th>运输商数</th>
+                      <th>最低报价</th>
+                      <th>状态</th>
+                      <th>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {guestSessions.map(s => {
+                      const isExpired = new Date(s.expires_at) < new Date();
+                      return (
+                        <tr key={s.session_id} style={isExpired ? { opacity: 0.5 } : {}}>
+                          <td>{new Date(s.created_at).toLocaleDateString('zh-CN')}</td>
+                          <td style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.user_email}</td>
+                          <td>{[s.origin_city, s.origin_state].filter(Boolean).join(', ') || s.origin_zip || '—'}</td>
+                          <td>{[s.destination_city, s.destination_state].filter(Boolean).join(', ') || s.destination_zip || '—'}</td>
+                          <td>{s.total_weight ? Number(s.total_weight).toLocaleString() : '—'}</td>
+                          <td>{s.total_pallets || '—'}</td>
+                          <td>{s.quote_count || 0}</td>
+                          <td style={{ fontWeight: 600, color: '#16a34a' }}>{s.lowest_price ? `$${Number(s.lowest_price).toFixed(2)}` : '—'}</td>
+                          <td>{isExpired ? <span style={{ color: '#ef4444' }}>已过期</span> : <span style={{ color: '#16a34a' }}>有效</span>}</td>
+                          <td>
+                            <button
+                              className="btn-create"
+                              style={{ fontSize: '0.8rem', padding: '4px 12px', whiteSpace: 'nowrap' }}
+                              onClick={() => handleImportGuest(s.session_id)}
+                              disabled={guestImporting[s.session_id] || isExpired}
+                            >
+                              {guestImporting[s.session_id] ? '导入中...' : '加入报价单'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : (
+        <>
         {/* 工具栏 */}
         <div className="toolbar">
           <input
@@ -1924,6 +2038,8 @@ const BrokerOrdersNew = () => {
             </table>
           </div>
         )}
+      </>
+      )}
       </div>
 
       {/* 确认下单模态框 */}

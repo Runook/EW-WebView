@@ -447,6 +447,20 @@ const customerApi = {
 };
 
 // ==========================================
+// 客人报价 API
+// ==========================================
+
+export const guestQuoteApi = {
+  getGuestSessions: (params = {}) => {
+    const queryParams = new URLSearchParams(params).toString();
+    return request(`/ltl-quotes/sessions/guest?${queryParams}`);
+  },
+  importSession: (sessionId) => {
+    return request(`/ltl-quotes/sessions/${sessionId}/import`, 'POST');
+  }
+};
+
+// ==========================================
 // 卡车联系簿 API (旧版兼容)
 // ==========================================
 

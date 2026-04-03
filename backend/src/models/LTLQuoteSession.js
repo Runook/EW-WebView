@@ -103,6 +103,38 @@ class LTLQuoteSession {
     };
   }
 
+  static async findGuestSessions(options = {}) {
+    const { page = 1, limit = 50 } = options;
+    const offset = (page - 1) * limit;
+
+    const query = db('ltl_quote_sessions')
+      .whereNull('employee_order_id')
+      .where('status', 'active');
+
+    const total = await query.clone().count('* as count').first();
+    const rows = await query.clone().orderBy('created_at', 'desc').offset(offset).limit(limit);
+
+    return {
+      sessions: rows.map(r => ({
+        ...r,
+        items: typeof r.items === 'string' ? JSON.parse(r.items) : r.items,
+        pickup_services: typeof r.pickup_services === 'string' ? JSON.parse(r.pickup_services) : r.pickup_services,
+        delivery_services: typeof r.delivery_services === 'string' ? JSON.parse(r.delivery_services) : r.delivery_services,
+        quote_results: typeof r.quote_results === 'string' ? JSON.parse(r.quote_results) : r.quote_results,
+        is_expired: new Date(r.expires_at) < new Date()
+      })),
+      total: parseInt(total?.count || 0),
+      page,
+      limit
+    };
+  }
+
+  static async linkToOrder(sessionId, orderId) {
+    return db('ltl_quote_sessions')
+      .where('session_id', sessionId)
+      .update({ employee_order_id: orderId, status: 'booked', updated_at: new Date() });
+  }
+
   static async updateStatus(sessionId, status) {
     return db('ltl_quote_sessions')
       .where('session_id', sessionId)
