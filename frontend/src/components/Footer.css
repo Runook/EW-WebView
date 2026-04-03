@@ -261,6 +261,7 @@
   gap: var(--space-2);
 }
 
+.footer-legal a,
 .footer-legal button {
   background: none;
   border: none;
@@ -270,8 +271,10 @@
   cursor: pointer;
   transition: color 0.2s ease;
   font-family: inherit;
+  text-decoration: none;
 }
 
+.footer-legal a:hover,
 .footer-legal button:hover {
   color: rgba(255, 255, 255, 0.7);
 }
