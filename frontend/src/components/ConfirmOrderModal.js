@@ -55,6 +55,7 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
     } catch { setSuggestions([]); setShowSuggestions(false); }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- stable debounced search; empty deps intentional
   const debouncedSearchSuggestions = useCallback(
     debounce((value, field) => searchSuggestions(value, field), 300),
     []

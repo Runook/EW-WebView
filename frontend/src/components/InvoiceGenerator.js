@@ -1,7 +1,6 @@
 // Version: 5.0 - Multi-order combined invoice with QBO sync
 import React, { useState, useEffect, useMemo } from 'react';
 import { orderApi, qboApi } from '../config/employeeApi';
-import { useAuth } from '../contexts/AuthContext';
 import './DocumentGenerator.css';
 
 const API_BASE = process.env.REACT_APP_EMPLOYEE_API_URL || process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
@@ -14,7 +13,6 @@ const InvoiceGenerator = ({ isOpen, onClose, orders }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const { user } = useAuth();
 
   const [generatedInvoiceNumber, setGeneratedInvoiceNumber] = useState(null);
   const [qboConnected, setQboConnected] = useState(false);

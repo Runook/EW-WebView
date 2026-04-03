@@ -1,22 +1,15 @@
-import React, { useEffect, useCallback, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   MapPin, 
   Calendar, 
   Package, 
-  Scale,
-  Layers,
   Hash,
-  Building,
   Info,
   Phone,
-  Navigation,
   Plus,
   Minus,
-  Calculator,
   Clock,
-  Home,
-  Shield,
   ChevronDown,
   ChevronUp,
   RefreshCw,
@@ -24,14 +17,11 @@ import {
 } from 'lucide-react';
 import './GetQuote.css';
 import { GoogleMapsAddressInput, calculateDistance } from '../components/GoogleMapsAddressInput';
-import { useForm, useToggle } from '../hooks';
+import { useForm } from '../hooks';
 import { Button } from '../components/common';
-import { geocodeAddress as geocodeUtil } from '../config/googleMaps';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../components/common/Notification';
-import { apiServices } from '../utils/apiClient';
 import { orderApi } from '../config/employeeApi';
-import { apiLogger } from '../utils/logger';
 import ProgressSteps from '../components/ltl/ProgressSteps';
 import ShipmentSummary from '../components/ltl/ShipmentSummary';
 import ShipmentDetailsForm from '../components/ltl/ShipmentDetailsForm';

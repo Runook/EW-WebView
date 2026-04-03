@@ -184,18 +184,6 @@ const BrokerOrdersNew = () => {
     setExpandedRow(null);
   };
 
-  const handleEdit = (orderId) => {
-    // 不再跳转到表单页面，直接展开行编辑
-    setExpandedRow(orderId);
-    // 滚动到该行
-    setTimeout(() => {
-      const row = document.querySelector(`tr[data-order-id="${orderId}"]`);
-      if (row) {
-        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
-  };
-
   // 获取纽约时间的 YYYY-MM-DD 格式日期
   const getNYDate = () => {
     const now = new Date();

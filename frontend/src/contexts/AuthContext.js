@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { signOut, getCurrentUser, fetchUserProfile } from '../utils/cognitoAuth'; // 使用直接API
-import { isMockMode, autoMockLogin, getMockUser, getMockToken } from '../utils/mockAuth';
+import { isMockMode, autoMockLogin, getMockUser } from '../utils/mockAuth';
 
 const AuthContext = createContext();
 

@@ -118,11 +118,9 @@ const Footer = () => {
               © {currentYear} WELOGX TECHNOLOGY INC. All Rights Reserved.
             </p>
             <div className="footer-legal">
-              <button type="button">隐私政策</button>
+              <Link to="/privacy">隐私政策</Link>
               <span className="legal-divider">·</span>
-              <button type="button">服务条款</button>
-              <span className="legal-divider">·</span>
-              <button type="button">Cookie 政策</button>
+              <Link to="/terms">使用协议</Link>
             </div>
           </div>
         </div>

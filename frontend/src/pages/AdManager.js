@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiServices } from '../utils/apiClient';
-import { useAuth } from '../contexts/AuthContext';
 
 const POSITIONS = [
   { value: 'home-banner', label: '首页横幅' },
@@ -12,7 +11,6 @@ const POSITIONS = [
 
 const AdManager = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

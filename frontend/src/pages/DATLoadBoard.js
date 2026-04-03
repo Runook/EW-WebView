@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { datLoadBoardApi } from '../config/employeeApi';
 import DATAttribution from '../components/DATAttribution';
 import {
-  ArrowLeft, Search, Plus, RefreshCw, Trash2, Edit, Truck, Package,
+  ArrowLeft, Search, RefreshCw, Trash2, Truck, Package,
   MapPin, DollarSign, Calendar, Loader, AlertTriangle, CheckCircle,
-  Send, Filter, ChevronDown, ChevronUp
+  Send
 } from 'lucide-react';
 import './DATLoadBoard.css';
 
@@ -65,6 +65,7 @@ const DATLoadBoard = () => {
 
   useEffect(() => {
     if (activeTab === 'my-posts') fetchMyPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, postsFilter]);
 
   const fetchMyPosts = useCallback(async () => {

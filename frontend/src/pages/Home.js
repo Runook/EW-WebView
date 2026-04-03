@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -7,14 +7,117 @@ import {
   Truck,
   Globe,
   Zap,
-  Package
+  Package,
+  X,
+  Gift,
+  Sparkles,
+  MessageCircle,
+  HeartHandshake
 } from 'lucide-react';
 
 import AdSlot from '../components/AdSlot';
 import './Home.css';
 
+const WELCOME_MODAL_KEY = 'welogx_welcome_dismissed';
+
+const WelcomeModal = ({ onClose }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    requestAnimationFrame(() => setIsVisible(true));
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setIsClosing(true);
+    const today = new Date().toISOString().slice(0, 10);
+    localStorage.setItem(WELCOME_MODAL_KEY, today);
+    setTimeout(onClose, 300);
+  }, [onClose]);
+
+  return (
+    <div
+      className={`welcome-overlay ${isVisible ? 'welcome-overlay--visible' : ''} ${isClosing ? 'welcome-overlay--closing' : ''}`}
+      onClick={handleClose}
+    >
+      <div className="welcome-modal" onClick={e => e.stopPropagation()}>
+        <button className="welcome-close" onClick={handleClose} aria-label="关闭">
+          <X size={20} />
+        </button>
+
+        <div className="welcome-glow" />
+
+        <div className="welcome-badge">
+          <Sparkles size={14} />
+          <span>试运营中</span>
+        </div>
+
+        <h2 className="welcome-title">
+          欢迎来到 <span className="welcome-brand">Welogx</span>
+        </h2>
+
+        <p className="welcome-subtitle">
+          一站式数字化物流服务平台，正在试运营阶段
+        </p>
+
+        <div className="welcome-features">
+          <div className="welcome-feature">
+            <div className="welcome-feature-icon" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+              <MessageCircle size={20} />
+            </div>
+            <div>
+              <h4>欢迎指正</h4>
+              <p>如您在使用中发现任何问题或有改进建议，我们非常期待您的反馈</p>
+            </div>
+          </div>
+          <div className="welcome-feature">
+            <div className="welcome-feature-icon" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
+              <HeartHandshake size={20} />
+            </div>
+            <div>
+              <h4>诚邀合作</h4>
+              <p>无论您是货主、承运商还是物流服务商，我们期待与您建立合作伙伴关系</p>
+            </div>
+          </div>
+          <div className="welcome-feature">
+            <div className="welcome-feature-icon" style={{ background: 'linear-gradient(135deg, #10b981, #06b6d4)' }}>
+              <Gift size={20} />
+            </div>
+            <div>
+              <h4>积分奖励</h4>
+              <p>注册即赠充值积分，参与平台活动还可获得额外积分奖励</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="welcome-actions">
+          <button className="welcome-btn-primary" onClick={handleClose}>
+            开始探索
+            <ArrowRight size={16} />
+          </button>
+          <button className="welcome-btn-secondary" onClick={() => { handleClose(); window.location.href = '/contact'; }}>
+            联系我们
+          </button>
+        </div>
+
+        <p className="welcome-footer-note">感谢您的支持与信任，我们将持续优化体验</p>
+      </div>
+    </div>
+  );
+};
+
 const Home = () => {
   const navigate = useNavigate();
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem(WELCOME_MODAL_KEY);
+    const today = new Date().toISOString().slice(0, 10);
+    if (dismissed !== today) {
+      const timer = setTimeout(() => setShowWelcome(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const handleNavigateToForum = () => {
     navigate('/forum-logistics-driver-community-freight-talk-物流卡车司机论坛交流平台-经验分享与行业资讯讨论区');
@@ -32,6 +135,7 @@ const Home = () => {
 
   return (
     <div className="home">
+      {showWelcome && <WelcomeModal onClose={() => setShowWelcome(false)} />}
       <Helmet>
         <title>Welogx物流平台 - 美国陆运/海运/空运一站式物流服务 | 数字AI智慧物流 | welogx.com</title>
         <meta name="description" content="Welogx物流平台（welogx.com）- 专业的美国物流运输服务平台，提供陆运、海运、空运及多式联运的一站式数字化物流解决方案。DOT全美检查站路检点查询、物流语言、物流执照、物流知识、查车型、查trucking、专线物流、回笼回程车、拳头产品、搭顺风车、load match、求助吐槽、数字AI物流、智慧物流。" />

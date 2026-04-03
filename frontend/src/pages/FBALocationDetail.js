@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Building, Package, Truck, Clock, Phone, Mail } from 'lucide-react';
+import { ArrowLeft, MapPin, Building, Truck, Clock } from 'lucide-react';
 import './FBALocationDetail.css';
 import fbaLocationsData from '../data/fba-locations.json';
 import { processLocationData } from '../utils/fbaDataProcessor';

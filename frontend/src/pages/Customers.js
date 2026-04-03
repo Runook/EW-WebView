@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../contexts/AuthContext';
 import employeeApiExports from '../config/employeeApi';
 import './Customers.css';
 
-const { customerApi, employeeUtils } = employeeApiExports;
+const { customerApi } = employeeApiExports;
 
 const Customers = () => {
-  const { user } = useAuth();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,6 +34,7 @@ const Customers = () => {
 
   useEffect(() => {
     loadCustomers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
 
   const loadCustomers = async () => {

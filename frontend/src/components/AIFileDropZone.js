@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import {
-  Upload, FileText, Loader, CheckCircle, AlertCircle, X,
-  MapPin, Package, Scale, Ruler, Truck, Clock, ChevronDown, ChevronUp
+  Upload, Loader, CheckCircle, AlertCircle, X,
+  MapPin, Package, Truck, Clock
 } from 'lucide-react';
 import { freightApi } from '../config/freightApi';
 import './AIFileDropZone.css';

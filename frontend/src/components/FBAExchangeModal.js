@@ -98,6 +98,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
     } else if (isOpen && activeTab === 'my-posts') {
       fetchMyExchanges();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch fns close over user; tab/open drive refresh
   }, [isOpen, activeTab, location]); // 移除filters依赖，因为不再发送到后端
 
   useEffect(() => {
@@ -343,8 +344,7 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
   // 移动端专用的"我的发布"项目渲染函数
   const renderMobileMyExchangeItem = (exchange) => {
     const isUrgent = exchange.pricing_strategy === '急需';
-    const isSupply = exchange.exchange_type === '出让预约';
-    
+
     return (
       <div key={exchange.id} className="exchange-item my-exchange-item">
         {/* 移动端徽章区域 - 第一行（仓库代码改为醒目徽章） */}
@@ -550,7 +550,6 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
               let filteredExchanges = exchanges;
 
               const allExchangeTypes = ['出让预约', '寻求预约'];
-              const allPricingStrategies = ['急需'];
 
               if (filters.exchange_type.length > 0 && filters.exchange_type.length < allExchangeTypes.length) {
                 filteredExchanges = filteredExchanges.filter(ex => 
@@ -588,7 +587,6 @@ const FBAExchangeModal = ({ isOpen, onClose, location, onSuccess }) => {
 
                   // 所有可能的选项
                   const allExchangeTypes = ['出让预约', '寻求预约'];
-                  const allPricingStrategies = ['急需'];
 
                   // 按交换类型筛选 - 只有在选择了部分选项时才筛选
                   if (filters.exchange_type.length > 0 && filters.exchange_type.length < allExchangeTypes.length) {

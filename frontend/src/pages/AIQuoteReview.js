@@ -4,7 +4,7 @@ import { agentApi, orderApi } from '../config/employeeApi';
 import {
   Bot, FileText, CheckCircle, XCircle, Send, RefreshCw, Clock,
   ChevronDown, ChevronUp, AlertTriangle, Package, MapPin, DollarSign,
-  Truck, Eye, ArrowLeft
+  Eye, ArrowLeft
 } from 'lucide-react';
 import './AIQuoteReview.css';
 

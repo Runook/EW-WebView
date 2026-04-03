@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Book, Trash2 } from 'lucide-react';
+import { Book } from 'lucide-react';
 import AddressBookModal from './AddressBookModal';
 
 const ShipmentDetailsForm = ({ 
@@ -144,14 +144,6 @@ const ShipmentDetailsForm = ({
         item.id === itemId ? { ...item, [field]: value } : item
       )
     );
-  };
-
-  const handleRemoveItem = (itemId) => {
-    if (itemDetails.length <= 1) {
-      alert('至少需要保留一个货物项目');
-      return;
-    }
-    setItemDetails(prev => prev.filter(item => item.id !== itemId));
   };
 
   const handleFormSubmit = (e) => {
@@ -852,7 +844,8 @@ const ShipmentDetailsForm = ({
           <p className="terms-text">
             提交货物即表示您确认并理解TOL的零担运输条款和条件，并自愿同意这些条款和条件。
           </p>
-          <a href="#" className="terms-link">General Terms and Conditions - 通用条款和条件</a>
+          {/* eslint-disable-next-line jsx-a11y/anchor-is-valid -- placeholder until terms URL is finalized */}
+          <a href="#terms" className="terms-link" onClick={(e) => e.preventDefault()}>General Terms and Conditions - 通用条款和条件</a>
         </div>
 
         <div className="form-actions">

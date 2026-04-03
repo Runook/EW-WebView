@@ -146,6 +146,7 @@ const BrokerOrderForm = () => {
     if (isEditMode) {
       loadOrder();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId]);
 
   // 重量输入处理

@@ -49,6 +49,7 @@ const FBAComments = ({ locationCode }) => {
 
   useEffect(() => {
     fetchComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- refetch when location/auth changes; fetchComments is stable enough for this screen
   }, [locationCode, isAuthenticated]);
 
   // 处理文件选择
@@ -120,7 +121,7 @@ const FBAComments = ({ locationCode }) => {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         if (isReply) {
           setReplyContent('');
           setReplyingTo(null);

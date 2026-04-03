@@ -104,6 +104,7 @@ const CargoItemsList = ({
       setItems([]);
       setEditText('');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- sync from props; updateEditText/useMetric intentionally excluded to avoid loops
   }, [weightList, dimensionsList]);
 
   // 更新编辑文本 - 格式：板数, 重量, 尺寸（不包含CLASS，自动计算）
@@ -133,6 +134,7 @@ const CargoItemsList = ({
   // 单位切换时更新编辑文本
   useEffect(() => {
     updateEditText(items, useMetric);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-sync edit text when unit toggle changes
   }, [useMetric]);
 
   // 计算总计

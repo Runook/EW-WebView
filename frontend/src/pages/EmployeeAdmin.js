@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { employeeApi, employeeUtils } from '../config/employeeApi';
+import { employeeApi } from '../config/employeeApi';
 import './EmployeeAdmin.css';
 
 const EmployeeAdmin = () => {
@@ -51,6 +51,7 @@ const EmployeeAdmin = () => {
 
   useEffect(() => {
     if (selectedEmployeeForStats) loadDetailedStats(selectedEmployeeForStats);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statsPeriod, statsDateFrom, statsDateTo, selectedEmployeeForStats]);
 
   const handleSearchUsers = async (query) => {

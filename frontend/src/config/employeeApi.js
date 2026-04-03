@@ -836,7 +836,7 @@ export const datLoadBoardApi = {
   },
 };
 
-export default {
+const employeeApiModule = {
   employeeApi,
   orderApi,
   customerApi,
@@ -849,4 +849,6 @@ export default {
   agentApi,
   datLoadBoardApi,
 };
+
+export default employeeApiModule;
 

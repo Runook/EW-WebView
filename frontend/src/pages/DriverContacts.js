@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Search, Truck, Phone, Building, Hash, Plus, Edit, Trash2, X, ChevronDown, ChevronRight,
-  MapPin, Package, Calendar, DollarSign, FileText, Save, Loader, User, Mail, ShieldCheck
+  MapPin, Package, Calendar, DollarSign, FileText, Save, Loader, User, Mail
 } from 'lucide-react';
 import { truckContactApi } from '../config/employeeApi';
 import { useAuth } from '../contexts/AuthContext';
