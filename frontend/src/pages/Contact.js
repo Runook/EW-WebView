@@ -203,7 +203,7 @@ const Contact = () => {
               {/* Company Info */}
               <div className="ct-info-card ct-info-brand">
                 <p className="ct-brand-name">WELOGX TECHNOLOGY INC</p>
-                <p className="ct-brand-slogan">连接世界 · 智慧物流</p>
+                <p className="ct-brand-slogan">连接美亚 · 智慧物流</p>
               </div>
             </div>
           </div>

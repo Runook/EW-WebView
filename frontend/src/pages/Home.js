@@ -166,7 +166,7 @@ const Home = () => {
 
             <h1 className="hero-prime-title">
               <span className="title-line">Welogx</span>
-              <span className="title-gradient">连接世界</span>
+              <span className="title-gradient">连接美亚</span>
             </h1>
 
             <p className="hero-prime-desc">

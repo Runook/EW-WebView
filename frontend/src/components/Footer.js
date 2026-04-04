@@ -40,7 +40,7 @@ const Footer = () => {
                 </div>
                 <div className="footer-logo-text">
                   <span className="footer-logo-main">Welogx</span>
-                  <span className="footer-logo-sub">连接世界 · 智慧物流</span>
+                  <span className="footer-logo-sub">连接美亚 · 智慧物流</span>
                 </div>
               </Link>
               <p className="footer-brand-desc">
