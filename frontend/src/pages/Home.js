@@ -47,9 +47,10 @@ const WelcomeModal = ({ onClose }) => {
 
         <div className="welcome-glow" />
 
-        <div className="welcome-badge">
-          <Sparkles size={14} />
-          <span>试运营中</span>
+        <div className="welcome-trial-banner">
+          <Sparkles size={20} />
+          <span>试 运 营 中</span>
+          <Sparkles size={20} />
         </div>
 
         <h2 className="welcome-title">
@@ -57,7 +58,7 @@ const WelcomeModal = ({ onClose }) => {
         </h2>
 
         <p className="welcome-subtitle">
-          一站式数字化物流服务平台，正在试运营阶段
+          一站式数字化物流服务平台，感谢您在试运营期间的支持与包容
         </p>
 
         <div className="welcome-features">
