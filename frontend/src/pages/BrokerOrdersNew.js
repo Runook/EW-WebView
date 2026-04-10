@@ -56,6 +56,7 @@ const BrokerOrdersNew = () => {
   const [guestSessions, setGuestSessions] = useState([]);
   const [guestLoading, setGuestLoading] = useState(false);
   const [guestImporting, setGuestImporting] = useState({});
+  const [expandedGuestRow, setExpandedGuestRow] = useState(null);
   
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
@@ -1029,8 +1030,9 @@ const BrokerOrdersNew = () => {
                 <table className="orders-table">
                   <thead>
                     <tr>
+                      <th style={{ width: 36 }}></th>
                       <th>日期</th>
-                      <th>客人邮箱</th>
+                      <th>客人信息</th>
                       <th>发货地</th>
                       <th>收货地</th>
                       <th>重量(lbs)</th>
@@ -1044,12 +1046,35 @@ const BrokerOrdersNew = () => {
                   <tbody>
                     {guestSessions.map(s => {
                       const isExpired = new Date(s.expires_at) < new Date();
+                      const userName = [s.user_first_name, s.user_last_name].filter(Boolean).join(' ');
+                      const isExpanded = expandedGuestRow === s.session_id;
+                      const items = Array.isArray(s.items) ? s.items : [];
+                      const quotes = Array.isArray(s.quote_results) ? s.quote_results : [];
+                      const pickupSvc = Array.isArray(s.pickup_services) ? s.pickup_services : [];
+                      const deliverySvc = Array.isArray(s.delivery_services) ? s.delivery_services : [];
                       return (
-                        <tr key={s.session_id} style={isExpired ? { opacity: 0.5 } : {}}>
+                        <React.Fragment key={s.session_id}>
+                        <tr style={isExpired ? { opacity: 0.5 } : { cursor: 'pointer' }} onClick={() => setExpandedGuestRow(isExpanded ? null : s.session_id)}>
+                          <td>
+                            <button className="expand-btn" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', padding: '2px 6px' }}>
+                              {isExpanded ? '▼' : '▶'}
+                            </button>
+                          </td>
                           <td>{new Date(s.created_at).toLocaleDateString('zh-CN')}</td>
-                          <td style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.user_email}</td>
-                          <td>{[s.origin_city, s.origin_state].filter(Boolean).join(', ') || s.origin_zip || '—'}</td>
-                          <td>{[s.destination_city, s.destination_state].filter(Boolean).join(', ') || s.destination_zip || '—'}</td>
+                          <td style={{ maxWidth: 220 }}>
+                            {userName && <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{userName}</div>}
+                            {s.user_company && <div style={{ fontSize: '0.75rem', color: '#666' }}>{s.user_company}</div>}
+                            <div style={{ fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.user_email}</div>
+                            {s.user_phone && <div style={{ fontSize: '0.8rem', color: '#2563eb', fontWeight: 500 }}>📞 {s.user_phone}</div>}
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 500 }}>{[s.origin_city, s.origin_state].filter(Boolean).join(', ')}</div>
+                            {s.origin_zip && <div style={{ fontSize: '0.75rem', color: '#666' }}>ZIP: {s.origin_zip}</div>}
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 500 }}>{[s.destination_city, s.destination_state].filter(Boolean).join(', ')}</div>
+                            {s.destination_zip && <div style={{ fontSize: '0.75rem', color: '#666' }}>ZIP: {s.destination_zip}</div>}
+                          </td>
                           <td>{s.total_weight ? Number(s.total_weight).toLocaleString() : '—'}</td>
                           <td>{s.total_pallets || '—'}</td>
                           <td>{s.quote_count || 0}</td>
@@ -1059,13 +1084,155 @@ const BrokerOrdersNew = () => {
                             <button
                               className="btn-create"
                               style={{ fontSize: '0.8rem', padding: '4px 12px', whiteSpace: 'nowrap' }}
-                              onClick={() => handleImportGuest(s.session_id)}
+                              onClick={(e) => { e.stopPropagation(); handleImportGuest(s.session_id); }}
                               disabled={guestImporting[s.session_id] || isExpired}
                             >
                               {guestImporting[s.session_id] ? '导入中...' : '加入报价单'}
                             </button>
                           </td>
                         </tr>
+                        {isExpanded && (
+                          <tr className="expanded-row">
+                            <td colSpan="100%">
+                              <div className="expanded-content">
+                                {/* 路线与基本信息 */}
+                                <div className="detail-grid" style={{ marginBottom: 16 }}>
+                                  <div className="detail-item">
+                                    <label>发货地:</label>
+                                    <span>{[s.origin_city, s.origin_state, s.origin_zip].filter(Boolean).join(', ') || '—'}</span>
+                                  </div>
+                                  <div className="detail-item">
+                                    <label>收货地:</label>
+                                    <span>{[s.destination_city, s.destination_state, s.destination_zip].filter(Boolean).join(', ') || '—'}</span>
+                                  </div>
+                                  <div className="detail-item">
+                                    <label>发货地址类型:</label>
+                                    <span>{s.origin_location_type || '—'}</span>
+                                  </div>
+                                  <div className="detail-item">
+                                    <label>收货地址类型:</label>
+                                    <span>{s.destination_location_type || '—'}</span>
+                                  </div>
+                                  <div className="detail-item">
+                                    <label>距离:</label>
+                                    <span>{s.distance_miles ? `${Number(s.distance_miles).toLocaleString()} miles` : '—'}</span>
+                                  </div>
+                                  <div className="detail-item">
+                                    <label>取货日期:</label>
+                                    <span>{s.pickup_date ? new Date(s.pickup_date).toLocaleDateString('zh-CN') : '—'}</span>
+                                  </div>
+                                  <div className="detail-item">
+                                    <label>送货日期:</label>
+                                    <span>{s.delivery_date ? new Date(s.delivery_date).toLocaleDateString('zh-CN') : '—'}</span>
+                                  </div>
+                                  <div className="detail-item">
+                                    <label>报价过期:</label>
+                                    <span>{s.expires_at ? new Date(s.expires_at).toLocaleString('zh-CN') : '—'}</span>
+                                  </div>
+                                </div>
+
+                                {/* 附加服务 */}
+                                {(pickupSvc.length > 0 || deliverySvc.length > 0) && (
+                                  <div style={{ marginBottom: 16 }}>
+                                    <h4 style={{ margin: '0 0 8px', fontSize: '0.95rem' }}>附加服务</h4>
+                                    <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+                                      {pickupSvc.length > 0 && (
+                                        <div><strong>取货:</strong> {pickupSvc.join(', ')}</div>
+                                      )}
+                                      {deliverySvc.length > 0 && (
+                                        <div><strong>送货:</strong> {deliverySvc.join(', ')}</div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* 客人联系信息 */}
+                                <div style={{ marginBottom: 16, padding: '10px 14px', background: '#f0f7ff', borderRadius: 8, border: '1px solid #dbeafe' }}>
+                                  <h4 style={{ margin: '0 0 8px', fontSize: '0.95rem' }}>客人联系信息</h4>
+                                  <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: '0.9rem' }}>
+                                    {userName && <div><strong>姓名:</strong> {userName}</div>}
+                                    {s.user_company && <div><strong>公司:</strong> {s.user_company}</div>}
+                                    <div><strong>邮箱:</strong> {s.user_email}</div>
+                                    {s.user_phone && <div><strong>电话:</strong> <a href={`tel:${s.user_phone}`} style={{ color: '#2563eb' }}>{s.user_phone}</a></div>}
+                                  </div>
+                                </div>
+
+                                {/* 货物明细 */}
+                                {items.length > 0 && (
+                                  <div style={{ marginBottom: 16 }}>
+                                    <h4 style={{ margin: '0 0 8px', fontSize: '0.95rem' }}>货物明细 ({items.length} 项)</h4>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                                      <thead>
+                                        <tr style={{ background: '#f1f5f9' }}>
+                                          <th style={{ padding: '6px 10px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>#</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>描述</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>托盘</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>重量(lbs)</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>长(in)</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>宽(in)</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>高(in)</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>Class</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>可叠</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>危险品</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {items.map((item, idx) => (
+                                          <tr key={item.id || idx} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                            <td style={{ padding: '6px 10px' }}>{idx + 1}</td>
+                                            <td style={{ padding: '6px 10px' }}>{item.description || '—'}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center' }}>{item.pallets || '—'}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center', fontWeight: 500 }}>{item.weight ? Number(item.weight).toLocaleString() : '—'}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center' }}>{item.length || '—'}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center' }}>{item.width || '—'}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center' }}>{item.height || '—'}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center' }}>{item.freightClass || '—'}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center' }}>{item.stackable ? '✅' : '—'}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center' }}>{item.hazmat ? '⚠️' : '—'}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+
+                                {/* 各承运商报价 */}
+                                {quotes.length > 0 && (
+                                  <div>
+                                    <h4 style={{ margin: '0 0 8px', fontSize: '0.95rem' }}>承运商报价 ({quotes.length} 家)</h4>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                                      <thead>
+                                        <tr style={{ background: '#f1f5f9' }}>
+                                          <th style={{ padding: '6px 10px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>承运商</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>报价</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>时效(天)</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>服务</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>保障</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>Quote ID</th>
+                                          <th style={{ padding: '6px 10px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>有效期</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {quotes.sort((a, b) => (a.price || Infinity) - (b.price || Infinity)).map((q, idx) => (
+                                          <tr key={q.id || idx} style={{ borderBottom: '1px solid #f1f5f9', background: idx === 0 ? '#f0fdf4' : 'transparent' }}>
+                                            <td style={{ padding: '6px 10px', fontWeight: 500 }}>{q.carrier || q.carrierCode || '—'}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center', fontWeight: 600, color: idx === 0 ? '#16a34a' : '#333' }}>${Number(q.price || 0).toFixed(2)}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center' }}>{q.transitDays || '—'}</td>
+                                            <td style={{ padding: '6px 10px', fontSize: '0.8rem' }}>{q.serviceType || q.serviceLevel || '—'}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center' }}>{q.isGuaranteed ? '✅' : '—'}</td>
+                                            <td style={{ padding: '6px 10px', fontSize: '0.75rem', color: '#666' }}>{q.quoteId || '—'}</td>
+                                            <td style={{ padding: '6px 10px', textAlign: 'center', fontSize: '0.8rem' }}>{q.expDate ? new Date(q.expDate).toLocaleDateString('zh-CN') : '—'}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                        </React.Fragment>
                       );
                     })}
                   </tbody>

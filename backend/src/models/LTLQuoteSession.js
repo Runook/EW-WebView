@@ -107,12 +107,18 @@ class LTLQuoteSession {
     const { page = 1, limit = 50 } = options;
     const offset = (page - 1) * limit;
 
-    const query = db('ltl_quote_sessions')
-      .whereNull('employee_order_id')
-      .where('status', 'active');
+    const baseQuery = db('ltl_quote_sessions')
+      .whereNull('ltl_quote_sessions.employee_order_id')
+      .where('ltl_quote_sessions.status', 'active');
 
-    const total = await query.clone().count('* as count').first();
-    const rows = await query.clone().orderBy('created_at', 'desc').offset(offset).limit(limit);
+    const total = await baseQuery.clone().count('* as count').first();
+
+    const rows = await baseQuery.clone()
+      .leftJoin('users', 'ltl_quote_sessions.user_email', 'users.email')
+      .select('ltl_quote_sessions.*', 'users.phone as user_phone', 'users.first_name as user_first_name', 'users.last_name as user_last_name', 'users.company_name as user_company')
+      .orderBy('ltl_quote_sessions.created_at', 'desc')
+      .offset(offset)
+      .limit(limit);
 
     return {
       sessions: rows.map(r => ({
