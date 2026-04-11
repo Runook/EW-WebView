@@ -57,6 +57,8 @@ class Order {
         dat_sales_2: orderData.dat_sales_2 || null,
         dat_sales_3: orderData.dat_sales_3 || null,
         profit: orderData.profit || null,
+        transport_distance: orderData.transport_distance || null,
+        cargo_type: orderData.cargo_type || null,
         
         // 地址信息
         origin_address: orderData.origin_address || null,

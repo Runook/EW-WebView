@@ -3,6 +3,8 @@ const router = express.Router();
 const LTLQuoteSession = require('../models/LTLQuoteSession');
 const { auth, requireEmployee } = require('../middleware/auth');
 const Order = require('../models/EmployeeOrder');
+const Customer = require('../models/Customer');
+const { db } = require('../config/database');
 
 /**
  * GET /api/ltl-quotes/sessions/guest
@@ -37,34 +39,80 @@ router.post('/sessions/:sessionId/import', auth, requireEmployee, async (req, re
     }
 
     const items = session.items || [];
-    const cargoDesc = items.map(i =>
-      `${i.quantity || 1}x ${i.packageType || 'Pallet'} ${i.weight || ''}lbs ${i.freightClass ? 'Class' + i.freightClass : ''}`
-    ).join('; ') || 'LTL货物';
-
     const quoteResults = session.quote_results || [];
     const lowestQuote = quoteResults.length > 0
-      ? quoteResults.reduce((min, q) => (q.totalPrice || Infinity) < (min.totalPrice || Infinity) ? q : min, quoteResults[0])
+      ? quoteResults.reduce((min, q) => ((q.totalPrice || q.price || Infinity) < (min.totalPrice || min.price || Infinity)) ? q : min, quoteResults[0])
       : null;
+
+    // Build weight_list and dimensions_list from item details
+    const weights = items.map(i => Math.round(parseFloat(i.weight || 0)));
+    const dimensions = items.map(i => ({
+      length: Math.round(parseFloat(i.length || 0)),
+      width: Math.round(parseFloat(i.width || 0)),
+      height: Math.round(parseFloat(i.height || 0)),
+      pieces: parseInt(i.pallets || 1),
+      volume: (parseFloat(i.length || 0) * parseFloat(i.width || 0) * parseFloat(i.height || 0) / 1728)
+    }));
+
+    const cargoDesc = items.map((item, idx) =>
+      `货物${idx + 1}: ${item.pallets || 1}托盘, ${item.weight || 0}lbs, ${item.length || 0}×${item.width || 0}×${item.height || 0}in${item.freightClass ? ' Class' + item.freightClass : ''}`
+    ).join('; ') || 'LTL货物';
+
+    // Look up user info for name, phone, company
+    const userRecord = await db('users').where('email', session.user_email).first();
+    const userName = userRecord
+      ? [userRecord.first_name, userRecord.last_name].filter(Boolean).join(' ')
+      : null;
+    const userCompany = userRecord?.company_name || null;
+    const userPhone = userRecord?.phone || null;
+
+    // Auto-create customer record if company exists and not already in customers table
+    if (userCompany) {
+      try {
+        const existing = await Customer.getByName(userCompany);
+        if (!existing) {
+          await Customer.createCustomer({
+            company_name: userCompany,
+            contact_person: userName || null,
+            contact_email: session.user_email,
+            contact_phone: userPhone || null,
+          }, req.user.id);
+          console.log(`✅ Auto-created customer: ${userCompany}`);
+        }
+      } catch (custErr) {
+        console.warn('Auto-create customer skipped:', custErr.message);
+      }
+    }
+
+    const lowestPrice = lowestQuote ? (lowestQuote.totalPrice || lowestQuote.price) : session.lowest_price;
 
     const orderData = {
       order_type: 'land_freight',
       status: 'quote',
-      customer_name: session.user_email,
+      customer_name: userName || userCompany || session.user_email,
       customer_email: session.user_email,
+      customer_phone: userPhone,
+      inquiry_company: userCompany || session.user_email,
       cargo_description: `LTL报价(客人) - ${quoteResults.length}家运输商`,
       cargo_description_detailed: cargoDesc,
+      weight_list: JSON.stringify(weights),
+      dimensions_list: JSON.stringify(dimensions),
+      total_weight_lbs: session.total_weight ? String(session.total_weight) : null,
+      total_volume: dimensions.reduce((sum, d) => sum + (d.volume || 0), 0) || null,
+      actual_pallets: session.total_pallets,
       origin_city: session.origin_city,
       origin_state: session.origin_state,
       origin_zipcode: session.origin_zip,
       destination_city: session.destination_city,
       destination_state: session.destination_state,
       destination_zipcode: session.destination_zip,
-      total_weight_lbs: session.total_weight ? String(session.total_weight) : null,
-      actual_pallets: session.total_pallets,
+      address_type: session.destination_location_type || 'Commercial',
+      transport_distance: session.distance_miles || null,
       pickup_date: session.pickup_date,
       delivery_date: session.delivery_date,
       quoted_price: session.lowest_price,
-      ew_quote_price: lowestQuote ? lowestQuote.totalPrice : session.lowest_price,
+      ew_quote_price: lowestPrice,
+      cargo_type: `LTL报价 - ${quoteResults.length}家运输商`,
       notes: `客人报价导入 | ${quoteResults.length} carriers | 最低 $${session.lowest_price}`,
       internal_notes: `来源: 客人LTL报价 ${session.session_id}\n邮箱: ${session.user_email}`,
     };

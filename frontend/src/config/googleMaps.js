@@ -158,7 +158,7 @@ export const loadGoogleMapsScript = () => {
     console.log('📝 创建回调函数:', callbackName);
     
     // 构建完整的 API URL
-    const apiUrl = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_CONFIG.API_KEY}&libraries=${GOOGLE_MAPS_CONFIG.LIBRARIES.join(',')}&callback=${callbackName}`;
+    const apiUrl = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_CONFIG.API_KEY}&libraries=${GOOGLE_MAPS_CONFIG.LIBRARIES.join(',')}&language=en&callback=${callbackName}`;
     console.log('🔗 API URL:', apiUrl.replace(GOOGLE_MAPS_CONFIG.API_KEY, 'AIza****'));
     
     // 创建新的脚本标签
