@@ -5,6 +5,7 @@ import {
   RefreshCw, AlertTriangle, ArrowLeft, Package
 } from 'lucide-react';
 import ShipmentDetailsForm from '../components/ltl/ShipmentDetailsForm';
+import PaymentCheckoutForm from '../components/ltl/PaymentCheckoutForm';
 import ProgressSteps from '../components/ltl/ProgressSteps';
 import { orderApi } from '../config/employeeApi';
 import { useAuth } from '../contexts/AuthContext';
@@ -110,7 +111,9 @@ const QuoteDetail = () => {
     setShipmentDetails(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleFinalSubmit = async (e) => {
+  const [checkoutStep, setCheckoutStep] = useState('shipment');
+
+  const handleFinalSubmit = async (e, paymentMethod) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
@@ -134,6 +137,10 @@ const QuoteDetail = () => {
         ].filter(Boolean).join('\n'),
         ew_quote_price: selectedQuote?.price || null,
         workflow_stage: 'quote_confirmed',
+        custom_fields: JSON.stringify({
+          selected_carrier: selectedQuote ? { carrier: selectedQuote.carrier, price: selectedQuote.price, transitDays: selectedQuote.transitDays } : null,
+          payment_method: paymentMethod || null,
+        }),
       };
 
       if (session.employee_order_id) {
@@ -168,18 +175,30 @@ const QuoteDetail = () => {
       <div className="get-quote-page">
         <div className="get-quote-container">
           <div className="quote-results-section">
-            <ProgressSteps currentStep={3} />
-            <ShipmentDetailsForm
-              selectedQuote={selectedQuote}
-              shipmentDetails={shipmentDetails}
-              formData={formDataFromSession}
-              selectedPlaces={{}}
-              onChange={handleShipmentDetailChange}
-              onSubmit={handleFinalSubmit}
-              onBack={() => setSelectedQuote(null)}
-              isSubmitting={isSubmitting}
-              setShipmentDetails={setShipmentDetails}
-            />
+            <ProgressSteps currentStep={checkoutStep === 'payment' ? 4 : 3} />
+            {checkoutStep === 'shipment' && (
+              <ShipmentDetailsForm
+                selectedQuote={selectedQuote}
+                shipmentDetails={shipmentDetails}
+                formData={formDataFromSession}
+                selectedPlaces={{}}
+                onChange={handleShipmentDetailChange}
+                onSubmit={(e) => { e.preventDefault(); setCheckoutStep('payment'); }}
+                onBack={() => { setSelectedQuote(null); setCheckoutStep('shipment'); }}
+                isSubmitting={false}
+                setShipmentDetails={setShipmentDetails}
+              />
+            )}
+            {checkoutStep === 'payment' && (
+              <PaymentCheckoutForm
+                selectedQuote={selectedQuote}
+                formData={formDataFromSession}
+                shipmentDetails={shipmentDetails}
+                onSubmit={handleFinalSubmit}
+                onBack={() => setCheckoutStep('shipment')}
+                isSubmitting={isSubmitting}
+              />
+            )}
           </div>
         </div>
       </div>

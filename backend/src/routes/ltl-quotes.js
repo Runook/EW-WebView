@@ -115,6 +115,18 @@ router.post('/sessions/:sessionId/import', auth, requireEmployee, async (req, re
       cargo_type: `LTL报价 - ${quoteResults.length}家运输商`,
       notes: `客人报价导入 | ${quoteResults.length} carriers | 最低 $${session.lowest_price}`,
       internal_notes: `来源: 客人LTL报价 ${session.session_id}\n邮箱: ${session.user_email}`,
+      custom_fields: JSON.stringify({
+        carrier_quotes: quoteResults.map(q => ({
+          carrier: q.carrier || q.carrierCode,
+          price: q.totalPrice || q.price,
+          transitDays: q.transitDays,
+          serviceType: q.serviceType || q.serviceLevel,
+          isGuaranteed: q.isGuaranteed,
+          quoteId: q.quoteId,
+          expDate: q.expDate,
+        })),
+        quote_session_id: session.session_id,
+      }),
     };
 
     const order = await Order.createOrder(orderData, req.user.id);

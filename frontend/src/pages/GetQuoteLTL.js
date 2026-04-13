@@ -25,6 +25,7 @@ import { orderApi } from '../config/employeeApi';
 import ProgressSteps from '../components/ltl/ProgressSteps';
 import ShipmentSummary from '../components/ltl/ShipmentSummary';
 import ShipmentDetailsForm from '../components/ltl/ShipmentDetailsForm';
+import PaymentCheckoutForm from '../components/ltl/PaymentCheckoutForm';
 import { freightApi } from '../config/freightApi';
 
 const GetQuoteLTL = ({ fbaDestination }) => {
@@ -463,19 +464,8 @@ const GetQuoteLTL = ({ fbaDestination }) => {
   };
 
   // 提交最终订单 — 更新已创建的 employee_order 并推进 workflow
-  const handleFinalSubmit = async (e) => {
+  const handleFinalSubmit = async (e, paymentMethod) => {
     e.preventDefault();
-
-    const requiredFields = [
-      'companyName', 'contactPhone',
-      'pickupContactName', 'pickupContactPhone', 'pickupAddress',
-      'deliveryContactName', 'deliveryContactPhone', 'deliveryAddress'
-    ];
-    const missingFields = requiredFields.filter(field => !shipmentDetails[field]);
-    if (missingFields.length > 0) {
-      showError('请填写所有必填字段');
-      return;
-    }
 
     try {
       setIsSubmitting(true);
@@ -500,6 +490,11 @@ const GetQuoteLTL = ({ fbaDestination }) => {
         ].filter(Boolean).join('\n'),
         ew_quote_price: selectedQuote?.price || null,
         workflow_stage: 'quote_confirmed',
+        custom_fields: JSON.stringify({
+          ...((() => { try { const cf = linkedOrderId ? {} : {}; return cf; } catch { return {}; } })()),
+          selected_carrier: selectedQuote ? { carrier: selectedQuote.carrier, price: selectedQuote.price, transitDays: selectedQuote.transitDays, serviceLevel: selectedQuote.serviceLevel } : null,
+          payment_method: paymentMethod || null,
+        }),
       };
 
       if (linkedOrderId) {
@@ -781,7 +776,18 @@ const GetQuoteLTL = ({ fbaDestination }) => {
             ew_quote_price: quotes[0]?.price || 0,
             cargo_type: `LTL报价 - ${quotes.length}家运输商`,
             pickup_date: formData.pickupDate,
-            delivery_date: formData.deliveryDate
+            delivery_date: formData.deliveryDate,
+            custom_fields: JSON.stringify({
+              carrier_quotes: quotes.map(q => ({
+                carrier: q.carrier || q.carrierCode,
+                price: q.price,
+                transitDays: q.transitDays,
+                serviceType: q.serviceType || q.serviceLevel,
+                isGuaranteed: q.isGuaranteed,
+                quoteId: q.quoteId,
+                expDate: q.expDate,
+              })),
+            }),
           };
           
           console.log('📋 创建报价单到员工系统:', orderData);
@@ -1622,10 +1628,22 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                 formData={formData}
                 selectedPlaces={selectedPlaces}
                 onChange={handleShipmentDetailChange}
-                onSubmit={handleFinalSubmit}
+                onSubmit={(e) => { e.preventDefault(); setCurrentStep(4); }}
                 onBack={() => setCurrentStep(2)}
-                isSubmitting={isSubmitting}
+                isSubmitting={false}
                 setShipmentDetails={setShipmentDetails}
+              />
+            )}
+
+            {/* Step 4: Payment & Checkout */}
+            {currentStep === 4 && selectedQuote && (
+              <PaymentCheckoutForm
+                selectedQuote={selectedQuote}
+                formData={formData}
+                shipmentDetails={shipmentDetails}
+                onSubmit={handleFinalSubmit}
+                onBack={() => setCurrentStep(3)}
+                isSubmitting={isSubmitting}
               />
             )}
           </div>

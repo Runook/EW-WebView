@@ -1811,6 +1811,42 @@ const BrokerOrdersNew = () => {
                               </div>
                             )}
 
+                            {/* Carrier Quotes from custom_fields */}
+                            {(() => {
+                              try {
+                                const cf = typeof order.custom_fields === 'string' ? JSON.parse(order.custom_fields) : order.custom_fields;
+                                const cq = cf?.carrier_quotes;
+                                if (!cq || cq.length === 0) return null;
+                                return (
+                                  <div style={{ marginBottom: 16, padding: '10px 14px', background: '#fffbeb', borderRadius: 8, border: '1px solid #fde68a' }}>
+                                    <h4 style={{ margin: '0 0 8px', fontSize: '0.9rem' }}>Carrier Quotes ({cq.length})</h4>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                                      <thead>
+                                        <tr style={{ background: '#fef3c7' }}>
+                                          <th style={{ padding: '4px 8px', textAlign: 'left', borderBottom: '1px solid #fde68a' }}>Carrier</th>
+                                          <th style={{ padding: '4px 8px', textAlign: 'center', borderBottom: '1px solid #fde68a' }}>Price</th>
+                                          <th style={{ padding: '4px 8px', textAlign: 'center', borderBottom: '1px solid #fde68a' }}>Transit</th>
+                                          <th style={{ padding: '4px 8px', textAlign: 'left', borderBottom: '1px solid #fde68a' }}>Service</th>
+                                          <th style={{ padding: '4px 8px', textAlign: 'center', borderBottom: '1px solid #fde68a' }}>Guaranteed</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {cq.sort((a, b) => (a.price || Infinity) - (b.price || Infinity)).map((q, idx) => (
+                                          <tr key={idx} style={{ borderBottom: '1px solid #fef3c7', background: idx === 0 ? '#f0fdf4' : 'transparent' }}>
+                                            <td style={{ padding: '4px 8px', fontWeight: idx === 0 ? 600 : 400 }}>{q.carrier || '—'}</td>
+                                            <td style={{ padding: '4px 8px', textAlign: 'center', fontWeight: 600, color: idx === 0 ? '#16a34a' : '#333' }}>${Number(q.price || 0).toFixed(2)}</td>
+                                            <td style={{ padding: '4px 8px', textAlign: 'center' }}>{q.transitDays || '—'}</td>
+                                            <td style={{ padding: '4px 8px', fontSize: '0.75rem' }}>{q.serviceType || '—'}</td>
+                                            <td style={{ padding: '4px 8px', textAlign: 'center' }}>{q.isGuaranteed ? '✓' : '—'}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                );
+                              } catch { return null; }
+                            })()}
+
                             {/* Order Loads Panel */}
                             <div style={{ marginBottom: 16 }}>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
