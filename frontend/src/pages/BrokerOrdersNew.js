@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { orderApi, truckContactApi, guestQuoteApi } from '../config/employeeApi';
+import { orderApi, truckContactApi, guestQuoteApi, orderLoadApi, sourcingChannelApi } from '../config/employeeApi';
 import EditableCell from '../components/EditableCell';
 import CompanyEditableCell from '../components/CompanyEditableCell';
 import ConfirmOrderModal from '../components/ConfirmOrderModal';
@@ -57,6 +57,11 @@ const BrokerOrdersNew = () => {
   const [guestLoading, setGuestLoading] = useState(false);
   const [guestImporting, setGuestImporting] = useState({});
   const [expandedGuestRow, setExpandedGuestRow] = useState(null);
+
+  // Order loads + workflow
+  const [orderLoads, setOrderLoads] = useState({});
+  const [loadsLoading, setLoadsLoading] = useState({});
+  const [sourcingChannels, setSourcingChannels] = useState([]);
   
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
@@ -145,6 +150,22 @@ const BrokerOrdersNew = () => {
       setGuestLoading(false);
     }
   };
+
+  const loadOrderLoads = async (orderId) => {
+    if (loadsLoading[orderId]) return;
+    setLoadsLoading(prev => ({ ...prev, [orderId]: true }));
+    try {
+      const res = await orderLoadApi.getLoads(orderId);
+      if (res.success) setOrderLoads(prev => ({ ...prev, [orderId]: res.data || [] }));
+    } catch (e) { console.error('Load loads failed:', e); }
+    finally { setLoadsLoading(prev => ({ ...prev, [orderId]: false })); }
+  };
+
+  useEffect(() => {
+    sourcingChannelApi.getAll().then(res => {
+      if (res.success) setSourcingChannels(res.data || []);
+    }).catch(() => {});
+  }, []);
 
   const handleImportGuest = async (sessionId) => {
     if (!window.confirm('确定将此客人报价导入报价单？')) return;
@@ -945,6 +966,17 @@ const BrokerOrdersNew = () => {
           司机联系簿
         </button>
 
+        {/* Shipments */}
+        <button
+          className="nav-item"
+          onClick={() => {
+            const count = prompt('Shipments management is available via API.\n\nPOST /api/shipments to create\nGET /api/shipments to list\n\nFull UI coming in next update.');
+          }}
+          style={{ fontSize: '0.85rem' }}
+        >
+          Shipments
+        </button>
+
         {/* 广告管理 */}
         <button
           className="nav-item"
@@ -1699,6 +1731,169 @@ const BrokerOrdersNew = () => {
                       <tr className="expanded-row">
                         <td colSpan="100%">
                           <div className="expanded-content">
+                            {/* Workflow Stage Indicator */}
+                            {order.workflow_stage && (
+                              <div style={{ marginBottom: 16, padding: '10px 14px', background: '#fafbfc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                  <h4 style={{ margin: 0, fontSize: '0.9rem' }}>Workflow Stage</h4>
+                                  <select
+                                    value={order.workflow_stage}
+                                    onChange={async (e) => {
+                                      try {
+                                        await orderApi.advanceWorkflowStage(order.id, e.target.value);
+                                        loadOrders();
+                                      } catch (err) { alert('Stage update failed: ' + err.message); }
+                                    }}
+                                    style={{ fontSize: '0.8rem', padding: '3px 8px', borderRadius: 4, border: '1px solid #d1d5db' }}
+                                  >
+                                    {['inquiry','quoting','quote_confirmed','pre_bol','bol_issued','carrier_sourcing','pickup','in_transit','delivered','invoicing','settlement','completed','cancelled'].map(s => (
+                                      <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div style={{ display: 'flex', gap: 2 }}>
+                                  {['inquiry','quoting','quote_confirmed','pre_bol','bol_issued','carrier_sourcing','pickup','in_transit','delivered','invoicing','settlement','completed'].map((stage, idx) => {
+                                    const stageOrder = ['inquiry','quoting','quote_confirmed','pre_bol','bol_issued','carrier_sourcing','pickup','in_transit','delivered','invoicing','settlement','completed'];
+                                    const currentIdx = stageOrder.indexOf(order.workflow_stage);
+                                    const isActive = idx <= currentIdx;
+                                    const isCurrent = stage === order.workflow_stage;
+                                    return (
+                                      <div key={stage} style={{
+                                        flex: 1, height: 6, borderRadius: 3,
+                                        background: order.workflow_stage === 'cancelled' ? '#fca5a5' : isActive ? '#22c55e' : '#e5e7eb',
+                                        border: isCurrent ? '1px solid #16a34a' : 'none',
+                                      }} title={stage.replace(/_/g, ' ')} />
+                                    );
+                                  })}
+                                </div>
+                                <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: '0.78rem', color: '#6b7280', flexWrap: 'wrap' }}>
+                                  {order.bol_number && <span>BOL: <strong>{order.bol_number}</strong></span>}
+                                  {order.sourcing_channel_id && sourcingChannels.length > 0 && (
+                                    <span>Channel: <strong>{sourcingChannels.find(c => c.id === order.sourcing_channel_id)?.name || '—'}</strong></span>
+                                  )}
+                                  {order.delivered_at && <span>Delivered: {new Date(order.delivered_at).toLocaleDateString('zh-CN')}</span>}
+                                  {order.invoiced_at && <span>Invoiced: {new Date(order.invoiced_at).toLocaleDateString('zh-CN')}</span>}
+                                  {order.settled_at && <span>Settled: {new Date(order.settled_at).toLocaleDateString('zh-CN')}</span>}
+                                  {order.cancelled_at && <span style={{ color: '#ef4444' }}>Cancelled: {new Date(order.cancelled_at).toLocaleDateString('zh-CN')}{order.cancel_reason ? ` (${order.cancel_reason})` : ''}</span>}
+                                </div>
+                                <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                                  <div style={{ flex: 1, minWidth: 100 }}>
+                                    <label style={{ fontSize: '0.75rem', color: '#6b7280' }}>BOL#</label>
+                                    <EditableCell value={order.bol_number} orderId={order.id} field="bol_number" type="text" onSave={handleCellUpdate} />
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 100 }}>
+                                    <label style={{ fontSize: '0.75rem', color: '#6b7280' }}>Sourcing Channel</label>
+                                    <EditableCell
+                                      value={order.sourcing_channel_id}
+                                      orderId={order.id}
+                                      field="sourcing_channel_id"
+                                      type="select"
+                                      options={[{ value: '', label: '—' }, ...sourcingChannels.map(c => ({ value: String(c.id), label: c.name }))]}
+                                      onSave={handleCellUpdate}
+                                    />
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 150 }}>
+                                    <label style={{ fontSize: '0.75rem', color: '#6b7280' }}>Consignee Contact</label>
+                                    <EditableCell value={order.consignee_contact} orderId={order.id} field="consignee_contact" type="text" onSave={handleCellUpdate} />
+                                  </div>
+                                  <div style={{ flex: 1, minWidth: 120 }}>
+                                    <label style={{ fontSize: '0.75rem', color: '#6b7280' }}>Delivery Type</label>
+                                    <EditableCell
+                                      value={order.delivery_type_detail}
+                                      orderId={order.id}
+                                      field="delivery_type_detail"
+                                      type="select"
+                                      options={[{ value: '', label: '—' }, { value: 'Warehouse', label: 'Warehouse' }, { value: 'Residential', label: 'Residential' }, { value: 'Commercial', label: 'Commercial' }, { value: 'Commercial+Lift', label: 'Commercial+Lift' }]}
+                                      onSave={handleCellUpdate}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Order Loads Panel */}
+                            <div style={{ marginBottom: 16 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                                <h4 style={{ margin: 0, fontSize: '0.9rem' }}>Loads (Individual Cargo)</h4>
+                                <div style={{ display: 'flex', gap: 6 }}>
+                                  {!orderLoads[order.id] && (
+                                    <button
+                                      style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: 4, border: '1px solid #d1d5db', background: '#fff', cursor: 'pointer' }}
+                                      onClick={() => loadOrderLoads(order.id)}
+                                      disabled={loadsLoading[order.id]}
+                                    >
+                                      {loadsLoading[order.id] ? 'Loading...' : 'Load Details'}
+                                    </button>
+                                  )}
+                                  {orderLoads[order.id] && orderLoads[order.id].length === 0 && (
+                                    <button
+                                      style={{ fontSize: '0.75rem', padding: '3px 10px', borderRadius: 4, border: '1px solid #d1d5db', background: '#f0f7ff', cursor: 'pointer' }}
+                                      onClick={async () => {
+                                        try {
+                                          const dims = order.dimensions_list ? JSON.parse(order.dimensions_list) : [];
+                                          const wts = order.weight_list ? JSON.parse(order.weight_list) : [];
+                                          const items = dims.map((d, i) => ({
+                                            description: order.cargo_description_detailed || '',
+                                            weight: wts[i] || 0,
+                                            length: d.length || 0,
+                                            width: d.width || 0,
+                                            height: d.height || 0,
+                                            pallets: d.pieces || 1,
+                                            freightClass: '',
+                                          }));
+                                          if (items.length === 0 && order.total_weight_lbs) {
+                                            items.push({ description: order.cargo_description_detailed || 'Cargo', weight: order.total_weight_lbs, pallets: order.actual_pallets || 1 });
+                                          }
+                                          if (items.length > 0) {
+                                            await orderLoadApi.bulkCreate(order.id, items);
+                                            loadOrderLoads(order.id);
+                                          }
+                                        } catch (e) { alert('Failed to create loads: ' + e.message); }
+                                      }}
+                                    >
+                                      Auto-Create from Dimensions
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              {orderLoads[order.id] && orderLoads[order.id].length > 0 && (
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                                  <thead>
+                                    <tr style={{ background: '#f1f5f9' }}>
+                                      <th style={{ padding: '5px 8px', textAlign: 'left', borderBottom: '1px solid #e2e8f0' }}>#</th>
+                                      <th style={{ padding: '5px 8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>Pallets</th>
+                                      <th style={{ padding: '5px 8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>Weight</th>
+                                      <th style={{ padding: '5px 8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>L x W x H</th>
+                                      <th style={{ padding: '5px 8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>Class</th>
+                                      <th style={{ padding: '5px 8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>Status</th>
+                                      <th style={{ padding: '5px 8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>Quote</th>
+                                      <th style={{ padding: '5px 8px', textAlign: 'center', borderBottom: '1px solid #e2e8f0' }}>Driver $</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {orderLoads[order.id].map((ld, idx) => (
+                                      <tr key={ld.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                        <td style={{ padding: '5px 8px' }}>{ld.load_number || idx + 1}</td>
+                                        <td style={{ padding: '5px 8px', textAlign: 'center' }}>{ld.pallet_count || '—'}</td>
+                                        <td style={{ padding: '5px 8px', textAlign: 'center', fontWeight: 500 }}>{ld.weight_lbs ? `${Number(ld.weight_lbs).toLocaleString()} lbs` : '—'}</td>
+                                        <td style={{ padding: '5px 8px', textAlign: 'center' }}>{ld.length_in && ld.width_in && ld.height_in ? `${ld.length_in}x${ld.width_in}x${ld.height_in}` : '—'}</td>
+                                        <td style={{ padding: '5px 8px', textAlign: 'center' }}>{ld.freight_class || '—'}</td>
+                                        <td style={{ padding: '5px 8px', textAlign: 'center' }}>
+                                          <span style={{
+                                            padding: '1px 6px', borderRadius: 4, fontSize: '0.72rem', fontWeight: 500,
+                                            background: ld.status === 'delivered' ? '#dcfce7' : ld.status === 'in_transit' ? '#dbeafe' : ld.status === 'damaged' || ld.status === 'lost' ? '#fee2e2' : '#f3f4f6',
+                                            color: ld.status === 'delivered' ? '#16a34a' : ld.status === 'in_transit' ? '#2563eb' : ld.status === 'damaged' || ld.status === 'lost' ? '#ef4444' : '#6b7280',
+                                          }}>{ld.status}</span>
+                                        </td>
+                                        <td style={{ padding: '5px 8px', textAlign: 'center' }}>{ld.customer_quote ? `$${Number(ld.customer_quote).toFixed(0)}` : '—'}</td>
+                                        <td style={{ padding: '5px 8px', textAlign: 'center' }}>{ld.driver_price ? `$${Number(ld.driver_price).toFixed(0)}` : '—'}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              )}
+                            </div>
+
                             {/* 货物明细列表（板数、重量、尺寸）*/}
                             <CargoItemsList
                               orderId={order.id}

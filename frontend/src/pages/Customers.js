@@ -12,6 +12,7 @@ const Customers = () => {
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [showBilling, setShowBilling] = useState(false);
   const [customerBalances, setCustomerBalances] = useState({});
+  const [aliasInput, setAliasInput] = useState('');
   const [formData, setFormData] = useState({
     company_name: '',
     billing_address: '',
@@ -29,7 +30,8 @@ const Customers = () => {
     tax_id: '',
     late_fee_rate: 0,
     late_fee_fixed: 0,
-    is_active: true
+    is_active: true,
+    aliases: []
   });
 
   useEffect(() => {
@@ -66,8 +68,10 @@ const Customers = () => {
       billing_city: '', billing_state: '', billing_zipcode: '', billing_country: 'USA',
       contact_person: '', contact_phone: '', contact_email: '',
       wechat_group_name: '', notes: '',
-      payment_terms: 'Net 7', tax_id: '', late_fee_rate: 0, late_fee_fixed: 0, is_active: true
+      payment_terms: 'Net 7', tax_id: '', late_fee_rate: 0, late_fee_fixed: 0, is_active: true,
+      aliases: []
     });
+    setAliasInput('');
     setShowBilling(false);
     setShowModal(true);
   };
@@ -91,8 +95,10 @@ const Customers = () => {
       tax_id: customer.tax_id || '',
       late_fee_rate: customer.late_fee_rate || 0,
       late_fee_fixed: customer.late_fee_fixed || 0,
-      is_active: customer.is_active !== false
+      is_active: customer.is_active !== false,
+      aliases: Array.isArray(customer.aliases) ? customer.aliases : (typeof customer.aliases === 'string' ? JSON.parse(customer.aliases || '[]') : [])
     });
+    setAliasInput('');
     setShowBilling(!!customer.tax_id || !!customer.late_fee_rate || !!customer.late_fee_fixed);
     setShowModal(true);
   };
@@ -163,6 +169,7 @@ const Customers = () => {
             <thead>
               <tr>
                 <th>Company</th>
+                <th>Aliases</th>
                 <th>Contact</th>
                 <th>Phone / Email</th>
                 <th>Address</th>
@@ -176,6 +183,16 @@ const Customers = () => {
               {customers.map((customer) => (
                 <tr key={customer.id} className={!customer.is_active ? 'inactive' : ''}>
                   <td className="company-name">{customer.company_name}</td>
+                  <td style={{ fontSize: 11, maxWidth: 150 }}>
+                    {(() => {
+                      const aliases = Array.isArray(customer.aliases) ? customer.aliases : [];
+                      return aliases.length > 0
+                        ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                            {aliases.map((a, i) => <span key={i} style={{ background: '#e0e7ff', color: '#3730a3', borderRadius: 3, padding: '1px 5px', fontSize: 10 }}>{a}</span>)}
+                          </div>
+                        : '-';
+                    })()}
+                  </td>
                   <td>{customer.contact_person || '-'}</td>
                   <td>
                     <div className="contact-info">
@@ -291,6 +308,37 @@ const Customers = () => {
                     <label>WeChat Group</label>
                     <input type="text" name="wechat_group_name" value={formData.wechat_group_name}
                       onChange={handleInputChange} />
+                  </div>
+                </div>
+
+                <div className="form-group full-width">
+                  <label>Aliases (name variations)</label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 6 }}>
+                    {(formData.aliases || []).map((alias, idx) => (
+                      <span key={idx} style={{ background: '#e0e7ff', color: '#3730a3', borderRadius: 4, padding: '2px 8px', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        {alias}
+                        <button type="button" onClick={() => setFormData(prev => ({ ...prev, aliases: prev.aliases.filter((_, i) => i !== idx) }))}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6366f1', fontWeight: 700, fontSize: 14, lineHeight: 1, padding: 0 }}>&times;</button>
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input type="text" value={aliasInput} onChange={(e) => setAliasInput(e.target.value)}
+                      placeholder="Type alias and press Enter or Add"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && aliasInput.trim()) {
+                          e.preventDefault();
+                          setFormData(prev => ({ ...prev, aliases: [...(prev.aliases || []), aliasInput.trim()] }));
+                          setAliasInput('');
+                        }
+                      }}
+                      style={{ flex: 1 }} />
+                    <button type="button" onClick={() => {
+                      if (aliasInput.trim()) {
+                        setFormData(prev => ({ ...prev, aliases: [...(prev.aliases || []), aliasInput.trim()] }));
+                        setAliasInput('');
+                      }
+                    }} style={{ padding: '6px 12px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Add</button>
                   </div>
                 </div>
 

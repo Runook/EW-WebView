@@ -99,22 +99,61 @@ const DriverContacts = () => {
     }
   };
 
-  // Driver CRUD
+  // Driver CRUD (with role + email)
+  const [newDriverRole, setNewDriverRole] = useState('driver');
+  const [newDriverEmail, setNewDriverEmail] = useState('');
+  const [editDriverRole, setEditDriverRole] = useState('driver');
+  const [editDriverEmail, setEditDriverEmail] = useState('');
+
+  // Vehicle state
+  const [vehicleData, setVehicleData] = useState({});
+  const [vehiclesLoading, setVehiclesLoading] = useState(null);
+  const [addVehicleFor, setAddVehicleFor] = useState(null);
+  const [newVehicle, setNewVehicle] = useState({ vin: '', description: '', vehicle_type: '' });
+  const [vehicleSaving, setVehicleSaving] = useState(false);
+
+  const ROLE_OPTIONS = ['driver', 'dispatcher', 'boss', 'manager'];
+  const VEHICLE_TYPES = ['sprinter', '26ft_box', '53_dry_van', 'flatbed', 'reefer', 'other'];
+  const ROLE_COLORS = { driver: '#3b82f6', dispatcher: '#8b5cf6', boss: '#ef4444', manager: '#f59e0b' };
+
+  const loadVehicles = async (contactId) => {
+    setVehiclesLoading(contactId);
+    try {
+      const res = await truckContactApi.getVehicles(contactId);
+      if (res.success) setVehicleData(prev => ({ ...prev, [contactId]: res.data || [] }));
+    } catch { setVehicleData(prev => ({ ...prev, [contactId]: [] })); }
+    finally { setVehiclesLoading(null); }
+  };
+
+  const handleAddVehicle = async (contactId) => {
+    setVehicleSaving(true);
+    try {
+      const res = await truckContactApi.addVehicle(contactId, newVehicle);
+      if (res.success) { setNewVehicle({ vin: '', description: '', vehicle_type: '' }); setAddVehicleFor(null); loadVehicles(contactId); }
+    } catch (e) { alert('Failed: ' + e.message); }
+    finally { setVehicleSaving(false); }
+  };
+
+  const handleDeleteVehicle = async (contactId, vehicleId) => {
+    if (!window.confirm('Delete this vehicle?')) return;
+    try { await truckContactApi.deleteVehicle(contactId, vehicleId); loadVehicles(contactId); } catch (e) { alert('Failed: ' + e.message); }
+  };
+
   const handleAddDriver = async (contactId) => {
     if (!newDriverName.trim()) return;
     setDriverSaving(true);
     try {
-      const res = await truckContactApi.addDriver(contactId, { driver_name: newDriverName, driver_phone: newDriverPhone });
-      if (res.success) { setNewDriverName(''); setNewDriverPhone(''); setAddDriverFor(null); fetchContacts(); }
+      const res = await truckContactApi.addDriver(contactId, { driver_name: newDriverName, driver_phone: newDriverPhone, role: newDriverRole, email: newDriverEmail });
+      if (res.success) { setNewDriverName(''); setNewDriverPhone(''); setNewDriverRole('driver'); setNewDriverEmail(''); setAddDriverFor(null); fetchContacts(); }
     } catch (e) { alert('添加司机失败: ' + e.message); }
     finally { setDriverSaving(false); }
   };
 
-  const startEditDriver = (d) => { setEditingDriver(d.id); setEditDriverName(d.driver_name); setEditDriverPhone(d.driver_phone || ''); };
+  const startEditDriver = (d) => { setEditingDriver(d.id); setEditDriverName(d.driver_name); setEditDriverPhone(d.driver_phone || ''); setEditDriverRole(d.role || 'driver'); setEditDriverEmail(d.email || ''); };
   const saveEditDriver = async (contactId, driverId) => {
     if (!editDriverName.trim()) return;
     try {
-      await truckContactApi.updateDriver(contactId, driverId, { driver_name: editDriverName, driver_phone: editDriverPhone });
+      await truckContactApi.updateDriver(contactId, driverId, { driver_name: editDriverName, driver_phone: editDriverPhone, role: editDriverRole, email: editDriverEmail });
       setEditingDriver(null); fetchContacts();
     } catch (e) { alert('修改司机失败: ' + e.message); }
   };
@@ -241,14 +280,19 @@ const DriverContacts = () => {
                                         <div className="dc-driver-edit-inline">
                                           <input value={editDriverName} onChange={(e) => setEditDriverName(e.target.value)} placeholder="姓名" className="dc-driver-input" />
                                           <input value={editDriverPhone} onChange={(e) => setEditDriverPhone(e.target.value)} placeholder="电话" className="dc-driver-input" />
+                                          <select value={editDriverRole} onChange={(e) => setEditDriverRole(e.target.value)} className="dc-driver-input" style={{ width: 90 }}>
+                                            {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                                          </select>
+                                          <input value={editDriverEmail} onChange={(e) => setEditDriverEmail(e.target.value)} placeholder="email" className="dc-driver-input" style={{ width: 130 }} />
                                           <button className="dc-act save" onClick={() => saveEditDriver(c.id, d.id)}><Save size={12} /></button>
                                           <button className="dc-act cancel" onClick={() => setEditingDriver(null)}><X size={12} /></button>
                                         </div>
                                       ) : (
                                         <>
-                                          <span className="dc-driver-label">司机{idx + 1}</span>
+                                          <span style={{ background: ROLE_COLORS[d.role] || '#6b7280', color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: '0.68rem', fontWeight: 600, marginRight: 4, textTransform: 'uppercase' }}>{d.role || 'driver'}</span>
                                           <span className="dc-driver-name">{d.driver_name}</span>
                                           {d.driver_phone && <span className="dc-driver-phone"><Phone size={11} /> {d.driver_phone}</span>}
+                                          {d.email && <span className="dc-driver-phone"><Mail size={11} /> {d.email}</span>}
                                           {isAdmin && (
                                             <span className="dc-driver-acts">
                                               <button onClick={() => startEditDriver(d)} title="修改"><Edit size={11} /></button>
@@ -263,13 +307,63 @@ const DriverContacts = () => {
                               )}
                               {addDriverFor === c.id ? (
                                 <div className="dc-add-driver-inline">
-                                  <input value={newDriverName} onChange={(e) => setNewDriverName(e.target.value)} placeholder="司机姓名 *" className="dc-driver-input" />
+                                  <input value={newDriverName} onChange={(e) => setNewDriverName(e.target.value)} placeholder="姓名 *" className="dc-driver-input" />
                                   <input value={newDriverPhone} onChange={(e) => setNewDriverPhone(e.target.value)} placeholder="电话" className="dc-driver-input" />
+                                  <select value={newDriverRole} onChange={(e) => setNewDriverRole(e.target.value)} className="dc-driver-input" style={{ width: 90 }}>
+                                    {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                                  </select>
+                                  <input value={newDriverEmail} onChange={(e) => setNewDriverEmail(e.target.value)} placeholder="email" className="dc-driver-input" style={{ width: 130 }} />
                                   <button className="dc-act save" onClick={() => handleAddDriver(c.id)} disabled={driverSaving}>{driverSaving ? <Loader size={12} className="spin" /> : <Save size={12} />}</button>
-                                  <button className="dc-act cancel" onClick={() => { setAddDriverFor(null); setNewDriverName(''); setNewDriverPhone(''); }}><X size={12} /></button>
+                                  <button className="dc-act cancel" onClick={() => { setAddDriverFor(null); setNewDriverName(''); setNewDriverPhone(''); setNewDriverRole('driver'); setNewDriverEmail(''); }}><X size={12} /></button>
                                 </div>
                               ) : (
-                                <button className="dc-add-driver-btn" onClick={() => setAddDriverFor(c.id)}><Plus size={13} /> 添加司机</button>
+                                <button className="dc-add-driver-btn" onClick={() => setAddDriverFor(c.id)}><Plus size={13} /> 添加联系人</button>
+                              )}
+                            </div>
+
+                            {/* Vehicles section */}
+                            <div className="dc-drivers-section" style={{ marginTop: 12, borderTop: '1px solid #e5e7eb', paddingTop: 12 }}>
+                              <h4><Truck size={14} /> 车辆信息
+                                {!vehicleData[c.id] && (
+                                  <button className="dc-add-driver-btn" style={{ marginLeft: 8, fontSize: '0.72rem' }}
+                                    onClick={() => loadVehicles(c.id)} disabled={vehiclesLoading === c.id}>
+                                    {vehiclesLoading === c.id ? 'Loading...' : 'Load'}
+                                  </button>
+                                )}
+                              </h4>
+                              {vehicleData[c.id] && (
+                                <>
+                                  {vehicleData[c.id].length > 0 && (
+                                    <div className="dc-drivers-list">
+                                      {vehicleData[c.id].map(v => (
+                                        <div key={v.id} className="dc-driver-chip">
+                                          <span style={{ background: '#059669', color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: '0.68rem', fontWeight: 600, marginRight: 4 }}>{v.vehicle_type || 'vehicle'}</span>
+                                          <span className="dc-driver-name">{v.description || 'No description'}</span>
+                                          {v.vin && <span className="dc-driver-phone">VIN: {v.vin}</span>}
+                                          {isAdmin && (
+                                            <span className="dc-driver-acts">
+                                              <button onClick={() => handleDeleteVehicle(c.id, v.id)} title="Delete"><Trash2 size={11} /></button>
+                                            </span>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {addVehicleFor === c.id ? (
+                                    <div className="dc-add-driver-inline" style={{ marginTop: 6 }}>
+                                      <input value={newVehicle.vin} onChange={(e) => setNewVehicle(p => ({ ...p, vin: e.target.value }))} placeholder="VIN#" className="dc-driver-input" style={{ width: 130 }} />
+                                      <input value={newVehicle.description} onChange={(e) => setNewVehicle(p => ({ ...p, description: e.target.value }))} placeholder="Description" className="dc-driver-input" />
+                                      <select value={newVehicle.vehicle_type} onChange={(e) => setNewVehicle(p => ({ ...p, vehicle_type: e.target.value }))} className="dc-driver-input" style={{ width: 110 }}>
+                                        <option value="">Type</option>
+                                        {VEHICLE_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
+                                      </select>
+                                      <button className="dc-act save" onClick={() => handleAddVehicle(c.id)} disabled={vehicleSaving}>{vehicleSaving ? <Loader size={12} className="spin" /> : <Save size={12} />}</button>
+                                      <button className="dc-act cancel" onClick={() => { setAddVehicleFor(null); setNewVehicle({ vin: '', description: '', vehicle_type: '' }); }}><X size={12} /></button>
+                                    </div>
+                                  ) : (
+                                    <button className="dc-add-driver-btn" onClick={() => setAddVehicleFor(c.id)}><Plus size={13} /> Add Vehicle</button>
+                                  )}
+                                </>
                               )}
                             </div>
 
