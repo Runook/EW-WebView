@@ -867,7 +867,14 @@ const GetQuoteLTL = ({ fbaDestination }) => {
           });
           const saveData = await saveRes.json();
           if (saveRes.ok && saveData.success) {
-            console.log('✅ Quote session saved:', saveData.data?.session_id);
+            const savedSessionId = saveData.data?.session_id;
+            console.log('✅ Quote session saved:', savedSessionId);
+            if (employeeOrderId && savedSessionId) {
+              try {
+                await orderApi.updateOrder(employeeOrderId, { ew_quote_number: savedSessionId });
+                console.log('✅ ew_quote_number set on order:', savedSessionId);
+              } catch (e) { console.warn('Failed to set ew_quote_number:', e); }
+            }
           } else {
             console.error('❌ Quote session save failed:', saveRes.status, saveData);
           }

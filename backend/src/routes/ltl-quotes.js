@@ -113,6 +113,7 @@ router.post('/sessions/:sessionId/import', auth, requireEmployee, async (req, re
       quoted_price: session.lowest_price,
       ew_quote_price: lowestPrice,
       cargo_type: `LTL报价 - ${quoteResults.length}家运输商`,
+      ew_quote_number: session.session_id,
       notes: `客人报价导入 | ${quoteResults.length} carriers | 最低 $${session.lowest_price}`,
       internal_notes: `来源: 客人LTL报价 ${session.session_id}\n邮箱: ${session.user_email}`,
       custom_fields: JSON.stringify({
