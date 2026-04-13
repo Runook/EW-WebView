@@ -169,17 +169,33 @@ const QuoteDetail = () => {
                       <div className="quote-id-small">#{quote.quoteId?.slice(-8) || 'N/A'}</div>
                     </div>
 
-                    {quote.maxLiability && (
-                      <div className="col-liability">
-                        <div className="liability-title">Max Liability</div>
-                        <div className="liability-amount">
-                          New: ${quote.maxLiability.new?.toLocaleString()}
-                        </div>
-                        <div className="liability-amount used">
-                          Used: ${quote.maxLiability.used?.toLocaleString()}
-                        </div>
-                      </div>
-                    )}
+                    <div className="col-liability">
+                      {quote.maxLiability ? (
+                        <>
+                          <div className="liability-title">Max Liability</div>
+                          <div className="liability-amount">New: ${quote.maxLiability.new?.toLocaleString()}</div>
+                          <div className="liability-amount used">Used: ${quote.maxLiability.used?.toLocaleString()}</div>
+                        </>
+                      ) : (
+                        <div className="liability-title" style={{ color: '#ccc', fontSize: '0.75rem' }}>—</div>
+                      )}
+                    </div>
+
+                    <div className="col-action">
+                      {!isExpired ? (
+                        <button
+                          className="btn-book-it"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/get-quote-ltl?bookSession=${session.session_id}&bookQuoteId=${quote.id}`);
+                          }}
+                        >
+                          立即预订
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Expired</span>
+                      )}
+                    </div>
                   </div>
 
                   {breakdownQuoteId === quote.id && (

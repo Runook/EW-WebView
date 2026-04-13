@@ -859,12 +859,12 @@
   transform: translateY(-1px);
 }
 
-/* 卡片主体 - 横向Grid布局 */
+/* 卡片主体 - 横向flex布局（自适应宽度） */
 .quote-card-main {
-  display: grid;
-  grid-template-columns: 40px 200px 180px 180px 120px 180px 120px;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem 1rem;
   padding: 0.75rem 1rem;
   position: relative;
 }
@@ -898,6 +898,8 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 160px;
+  flex: 1 1 180px;
 }
 
 .carrier-logo {
@@ -941,6 +943,8 @@
   flex-direction: column;
   gap: 0.25rem;
   text-align: center;
+  min-width: 130px;
+  flex: 0 1 160px;
 }
 
 .service-level-badge {
@@ -1005,6 +1009,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  min-width: 120px;
+  flex: 0 1 150px;
 }
 
 .service-type-text {
@@ -1041,6 +1047,8 @@
   flex-direction: column;
   gap: 0.25rem;
   text-align: center;
+  min-width: 90px;
+  flex: 0 1 110px;
 }
 
 .transit-label {
@@ -1070,6 +1078,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  min-width: 100px;
+  flex: 0 1 140px;
 }
 
 .liability-title {
@@ -1095,6 +1105,8 @@
 .col-action {
   display: flex;
   justify-content: center;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .btn-book-it {
@@ -1453,11 +1465,6 @@
 
 /* 响应式设计 */
 @media (max-width: 1400px) {
-  .quote-card-main {
-    grid-template-columns: 35px 180px 160px 160px 100px 160px 100px;
-    gap: 0.75rem;
-  }
-  
   .carrier-logo {
     width: 70px;
     height: 35px;
@@ -1470,7 +1477,6 @@
 
 @media (max-width: 1200px) {
   .quote-card-main {
-    grid-template-columns: 1fr;
     gap: 0.75rem;
     padding: 1rem;
   }
@@ -1481,18 +1487,14 @@
     left: 1rem;
   }
   
-  .col-carrier,
-  .col-price,
-  .col-service,
-  .col-transit,
-  .col-liability,
-  .col-action {
-    justify-self: start;
-    width: 100%;
+  .col-carrier {
+    padding-left: 2rem;
+    flex: 1 1 100%;
   }
   
-  .col-carrier {
-    padding-left: 3rem;
+  .col-action {
+    margin-left: 0;
+    flex: 1 1 100%;
   }
   
   .terminals-container {
@@ -1586,6 +1588,19 @@
   
   .col-carrier {
     padding-left: 2.5rem;
+    flex: 1 1 100%;
+  }
+  
+  .col-price,
+  .col-service,
+  .col-transit,
+  .col-liability {
+    flex: 1 1 45%;
+  }
+  
+  .col-action {
+    flex: 1 1 100%;
+    margin-left: 0;
   }
   
   .carrier-logo {
