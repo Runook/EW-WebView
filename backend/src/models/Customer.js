@@ -9,7 +9,8 @@ class Customer {
           this.where('company_name', 'ilike', `%${search}%`)
             .orWhere('wechat_group_name', 'ilike', `%${search}%`)
             .orWhere('contact_email', 'ilike', `%${search}%`)
-            .orWhere('contact_phone', 'ilike', `%${search}%`);
+            .orWhere('contact_phone', 'ilike', `%${search}%`)
+            .orWhereRaw("aliases::text ILIKE ?", [`%${search}%`]);
         });
       }
       return await query;
@@ -24,10 +25,11 @@ class Customer {
       return await db('customers')
         .where(function() {
           this.where('company_name', 'ilike', `%${keyword}%`)
-            .orWhere('wechat_group_name', 'ilike', `%${keyword}%`);
+            .orWhere('wechat_group_name', 'ilike', `%${keyword}%`)
+            .orWhereRaw("aliases::text ILIKE ?", [`%${keyword}%`]);
         })
         .select('id', 'company_name', 'wechat_group_name', 'contact_phone', 'contact_email',
-                'billing_address', 'billing_address2', 'billing_city', 'billing_state')
+                'billing_address', 'billing_address2', 'billing_city', 'billing_state', 'aliases')
         .limit(10);
     } catch (error) {
       console.error('Failed to search customers:', error);
@@ -37,9 +39,15 @@ class Customer {
 
   static async getByName(companyName) {
     try {
-      return await db('customers')
+      let customer = await db('customers')
         .whereRaw('LOWER(company_name) = LOWER(?)', [companyName])
         .first();
+      if (!customer) {
+        customer = await db('customers')
+          .whereRaw("EXISTS (SELECT 1 FROM jsonb_array_elements_text(COALESCE(aliases, '[]'::jsonb)) a WHERE LOWER(a) = LOWER(?))", [companyName])
+          .first();
+      }
+      return customer;
     } catch (error) {
       console.error('Failed to get customer by name:', error);
       throw error;
@@ -65,6 +73,7 @@ class Customer {
           tax_id: customerData.tax_id || null,
           late_fee_rate: customerData.late_fee_rate || null,
           late_fee_fixed: customerData.late_fee_fixed || null,
+          aliases: customerData.aliases ? JSON.stringify(customerData.aliases) : '[]',
           notes: customerData.notes || null,
           is_active: customerData.is_active !== false,
           created_by: createdBy,

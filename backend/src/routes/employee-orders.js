@@ -706,4 +706,29 @@ router.get('/customer-balance/:companyName', auth, requireEmployee, async (req, 
   }
 });
 
+/**
+ * PATCH /api/orders/:id/workflow-stage
+ * Advance order through the 12-step lifecycle.
+ */
+router.patch('/:id/workflow-stage', auth, requireEmployee, async (req, res) => {
+  try {
+    const { stage, cancel_reason, cancel_cost } = req.body;
+    if (!stage) return res.status(400).json({ success: false, message: 'stage is required' });
+
+    const result = await Order.advanceWorkflowStage(parseInt(req.params.id), stage, req.user.id);
+
+    if (stage === 'cancelled' && (cancel_reason || cancel_cost)) {
+      const updates = {};
+      if (cancel_reason) updates.cancel_reason = cancel_reason;
+      if (cancel_cost !== undefined) updates.cancel_cost = cancel_cost;
+      await Order.updateOrder(parseInt(req.params.id), updates, req.user.id);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('Failed to advance workflow stage:', error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;

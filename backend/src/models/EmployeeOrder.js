@@ -59,6 +59,13 @@ class Order {
         profit: orderData.profit || null,
         transport_distance: orderData.transport_distance || null,
         cargo_type: orderData.cargo_type || null,
+        // Workflow & sourcing (028 upgrade)
+        workflow_stage: orderData.workflow_stage || 'inquiry',
+        bol_number: orderData.bol_number || null,
+        sourcing_channel_id: orderData.sourcing_channel_id || null,
+        sourcing_notes: orderData.sourcing_notes || null,
+        consignee_contact: orderData.consignee_contact || null,
+        delivery_type_detail: orderData.delivery_type_detail || null,
         
         // 地址信息
         origin_address: orderData.origin_address || null,
@@ -441,7 +448,12 @@ class Order {
         // 其他
         'pickup_date', 'delivery_date', 'estimated_delivery',
         'quoted_price', 'final_price', 'currency', 'paid_amount', 'payment_status',
-        'assigned_to', 'notes', 'internal_notes', 'tracking_info', 'custom_fields'
+        'assigned_to', 'notes', 'internal_notes', 'tracking_info', 'custom_fields',
+        // Workflow & sourcing (028 upgrade)
+        'workflow_stage', 'bol_number', 'sourcing_channel_id', 'sourcing_notes',
+        'consignee_contact', 'delivery_type_detail',
+        'cancel_reason', 'cancel_cost',
+        'delivered_at', 'invoiced_at', 'settled_at', 'customer_paid_at', 'driver_paid_at'
       ];
       
       const filteredData = {};
@@ -814,6 +826,82 @@ class Order {
     }
   }
   
+  /**
+   * Advance workflow_stage (12-step lifecycle).
+   * Also keeps status/sub_status in sync for backward compatibility.
+   */
+  static async advanceWorkflowStage(orderId, newStage, userId) {
+    const STAGES = [
+      'inquiry', 'quoting', 'quote_confirmed', 'pre_bol',
+      'bol_issued', 'carrier_sourcing', 'pickup', 'in_transit',
+      'delivered', 'invoicing', 'settlement', 'completed',
+    ];
+
+    const STAGE_TO_STATUS = {
+      inquiry: { status: 'quote', sub_status: null },
+      quoting: { status: 'quote', sub_status: null },
+      quote_confirmed: { status: 'quote', sub_status: null },
+      pre_bol: { status: 'quote', sub_status: null },
+      bol_issued: { status: 'ordered', sub_status: 'waiting_driver' },
+      carrier_sourcing: { status: 'ordered', sub_status: 'waiting_driver' },
+      pickup: { status: 'ordered', sub_status: 'driver_found' },
+      in_transit: { status: 'ordered', sub_status: 'in_transit' },
+      delivered: { status: 'ordered', sub_status: 'in_transit' },
+      invoicing: { status: 'completed', sub_status: null },
+      settlement: { status: 'completed', sub_status: null },
+      completed: { status: 'completed', sub_status: null },
+      cancelled: { status: 'quote', sub_status: null },
+    };
+
+    if (newStage !== 'cancelled' && !STAGES.includes(newStage)) {
+      throw new Error(`Invalid workflow stage: ${newStage}`);
+    }
+
+    const trx = await db.transaction();
+    try {
+      const order = await trx('employee_orders').where('id', orderId).where('is_deleted', false).first();
+      if (!order) throw new Error('Order not found');
+
+      const oldStage = order.workflow_stage || 'inquiry';
+      const mapping = STAGE_TO_STATUS[newStage] || {};
+
+      const updates = {
+        workflow_stage: newStage,
+        updated_by: userId,
+        updated_at: new Date(),
+      };
+      if (mapping.status) updates.status = mapping.status;
+      if (mapping.sub_status !== undefined) updates.sub_status = mapping.sub_status;
+
+      if (newStage === 'delivered') updates.delivered_at = new Date();
+      if (newStage === 'invoicing') updates.invoiced_at = new Date();
+      if (newStage === 'settlement') updates.settled_at = new Date();
+      if (newStage === 'cancelled') {
+        updates.cancelled_at = new Date();
+        updates.cancelled_by = userId;
+      }
+
+      await trx('employee_orders').where('id', orderId).update(updates);
+
+      await trx('employee_order_logs').insert({
+        order_id: orderId,
+        user_id: userId,
+        action_type: 'workflow_stage_changed',
+        old_value: oldStage,
+        new_value: newStage,
+        description: `Workflow: ${oldStage} → ${newStage}`,
+      });
+
+      await trx.commit();
+
+      const updated = await db('employee_orders').where('id', orderId).first();
+      return { success: true, order: updated };
+    } catch (error) {
+      await trx.rollback();
+      throw error;
+    }
+  }
+
   /**
    * 更新子状态
    * @param {number} orderId - 订单ID

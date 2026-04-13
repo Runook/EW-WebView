@@ -189,6 +189,11 @@ export const orderApi = {
   cancelOrder: (id) => {
     return request(`/orders/${id}/cancel`, 'POST');
   },
+
+  // Advance workflow stage (12-step lifecycle)
+  advanceWorkflowStage: (id, stage, extras = {}) => {
+    return request(`/orders/${id}/workflow-stage`, 'PATCH', { stage, ...extras });
+  },
   
   // 申请索赔
   requestClaim: (id, claimReason) => {
@@ -517,6 +522,20 @@ export const truckContactApi = {
   deleteDriver: (contactId, driverId) => {
     return request(`/truck-contacts/${contactId}/drivers/${driverId}`, 'DELETE');
   },
+
+  // Vehicles
+  getVehicles: (contactId) => {
+    return request(`/truck-contacts/${contactId}/vehicles`);
+  },
+  addVehicle: (contactId, vehicleData) => {
+    return request(`/truck-contacts/${contactId}/vehicles`, 'POST', vehicleData);
+  },
+  updateVehicle: (contactId, vehicleId, vehicleData) => {
+    return request(`/truck-contacts/${contactId}/vehicles/${vehicleId}`, 'PUT', vehicleData);
+  },
+  deleteVehicle: (contactId, vehicleId) => {
+    return request(`/truck-contacts/${contactId}/vehicles/${vehicleId}`, 'DELETE');
+  },
 };
 
 // ==========================================
@@ -836,6 +855,86 @@ export const datLoadBoardApi = {
   },
 };
 
+// ==========================================
+// Order Loads API (per-load cargo items)
+// ==========================================
+
+export const orderLoadApi = {
+  getLoads: (orderId) => {
+    return request(`/orders/${orderId}/loads`);
+  },
+  createLoad: (orderId, loadData) => {
+    return request(`/orders/${orderId}/loads`, 'POST', loadData);
+  },
+  bulkCreate: (orderId, items) => {
+    return request(`/orders/${orderId}/loads/bulk`, 'POST', { items });
+  },
+  updateLoad: (orderId, loadId, data) => {
+    return request(`/orders/${orderId}/loads/${loadId}`, 'PUT', data);
+  },
+  updateLoadStatus: (orderId, loadId, status) => {
+    return request(`/orders/${orderId}/loads/${loadId}/status`, 'PATCH', { status });
+  },
+  assignToShipment: (orderId, loadId, shipmentId) => {
+    return request(`/orders/${orderId}/loads/${loadId}/shipment`, 'PATCH', { shipment_id: shipmentId });
+  },
+  deleteLoad: (orderId, loadId) => {
+    return request(`/orders/${orderId}/loads/${loadId}`, 'DELETE');
+  },
+};
+
+// ==========================================
+// Shipments API (driver trips)
+// ==========================================
+
+export const shipmentApi = {
+  getAll: (filters = {}) => {
+    const queryParams = new URLSearchParams(filters).toString();
+    return request(`/shipments?${queryParams}`);
+  },
+  getById: (id) => {
+    return request(`/shipments/${id}`);
+  },
+  create: (data) => {
+    return request('/shipments', 'POST', data);
+  },
+  update: (id, data) => {
+    return request(`/shipments/${id}`, 'PUT', data);
+  },
+  updateStatus: (id, status) => {
+    return request(`/shipments/${id}/status`, 'PATCH', { status });
+  },
+  addLoad: (shipmentId, loadId) => {
+    return request(`/shipments/${shipmentId}/loads/${loadId}`, 'POST');
+  },
+  removeLoad: (shipmentId, loadId) => {
+    return request(`/shipments/${shipmentId}/loads/${loadId}`, 'DELETE');
+  },
+  delete: (id) => {
+    return request(`/shipments/${id}`, 'DELETE');
+  },
+};
+
+// ==========================================
+// Sourcing Channels API
+// ==========================================
+
+export const sourcingChannelApi = {
+  getAll: (includeInactive = false) => {
+    const params = includeInactive ? '?includeInactive=true' : '';
+    return request(`/sourcing-channels${params}`);
+  },
+  create: (data) => {
+    return request('/sourcing-channels', 'POST', data);
+  },
+  update: (id, data) => {
+    return request(`/sourcing-channels/${id}`, 'PUT', data);
+  },
+  delete: (id) => {
+    return request(`/sourcing-channels/${id}`, 'DELETE');
+  },
+};
+
 const employeeApiModule = {
   employeeApi,
   orderApi,
@@ -848,6 +947,9 @@ const employeeApiModule = {
   qboApi,
   agentApi,
   datLoadBoardApi,
+  orderLoadApi,
+  shipmentApi,
+  sourcingChannelApi,
 };
 
 export default employeeApiModule;

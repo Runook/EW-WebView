@@ -269,15 +269,23 @@ router.delete('/:id', auth, requireEmployee, async (req, res) => {
  */
 router.post('/:id/drivers', auth, requireEmployee, async (req, res) => {
   try {
-    const { driver_name, driver_phone } = req.body;
+    const { driver_name, driver_phone, role, email } = req.body;
     if (!driver_name || !driver_name.trim()) {
       return res.status(400).json({ success: false, message: '司机姓名不能为空' });
     }
     const contact = await db('truck_contacts').where('id', parseInt(req.params.id)).where('is_deleted', false).first();
     if (!contact) return res.status(404).json({ success: false, message: '联系人不存在' });
 
+    const insertData = {
+      truck_contact_id: contact.id,
+      driver_name: driver_name.trim(),
+      driver_phone: driver_phone?.trim() || null,
+      role: role?.trim() || 'driver',
+      email: email?.trim() || null,
+      created_by: req.user.id,
+    };
     const [driver] = await db('contact_drivers')
-      .insert({ truck_contact_id: contact.id, driver_name: driver_name.trim(), driver_phone: driver_phone?.trim() || null, created_by: req.user.id })
+      .insert(insertData)
       .returning('*');
 
     res.status(201).json({ success: true, data: driver });
@@ -293,14 +301,21 @@ router.post('/:id/drivers', auth, requireEmployee, async (req, res) => {
  */
 router.put('/:id/drivers/:driverId', auth, requireRole(['admin']), async (req, res) => {
   try {
-    const { driver_name, driver_phone } = req.body;
+    const { driver_name, driver_phone, role, email } = req.body;
     if (!driver_name || !driver_name.trim()) {
       return res.status(400).json({ success: false, message: '司机姓名不能为空' });
     }
+    const updateData = {
+      driver_name: driver_name.trim(),
+      driver_phone: driver_phone?.trim() || null,
+      updated_at: new Date(),
+    };
+    if (role !== undefined) updateData.role = role?.trim() || 'driver';
+    if (email !== undefined) updateData.email = email?.trim() || null;
     const [updated] = await db('contact_drivers')
       .where('id', parseInt(req.params.driverId))
       .where('truck_contact_id', parseInt(req.params.id))
-      .update({ driver_name: driver_name.trim(), driver_phone: driver_phone?.trim() || null, updated_at: new Date() })
+      .update(updateData)
       .returning('*');
 
     if (!updated) return res.status(404).json({ success: false, message: '司机不存在' });
@@ -327,6 +342,91 @@ router.delete('/:id/drivers/:driverId', auth, requireRole(['admin']), async (req
   } catch (error) {
     console.error('删除司机失败:', error);
     res.status(500).json({ success: false, message: '删除司机失败', error: error.message });
+  }
+});
+
+// ===== Carrier Vehicles (sub-resource) =====
+
+/**
+ * GET /api/truck-contacts/:id/vehicles
+ */
+router.get('/:id/vehicles', auth, requireEmployee, async (req, res) => {
+  try {
+    const vehicles = await db('carrier_vehicles')
+      .where('truck_contact_id', parseInt(req.params.id))
+      .orderBy('created_at', 'desc');
+    res.json({ success: true, data: vehicles });
+  } catch (error) {
+    console.error('Failed to get vehicles:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * POST /api/truck-contacts/:id/vehicles
+ */
+router.post('/:id/vehicles', auth, requireEmployee, async (req, res) => {
+  try {
+    const contact = await db('truck_contacts')
+      .where('id', parseInt(req.params.id)).where('is_deleted', false).first();
+    if (!contact) return res.status(404).json({ success: false, message: '联系人不存在' });
+
+    const { vin, description, vehicle_type } = req.body;
+    const [vehicle] = await db('carrier_vehicles')
+      .insert({
+        truck_contact_id: contact.id,
+        vin: vin?.trim() || null,
+        description: description?.trim() || null,
+        vehicle_type: vehicle_type?.trim() || null,
+      })
+      .returning('*');
+    res.status(201).json({ success: true, data: vehicle });
+  } catch (error) {
+    console.error('Failed to add vehicle:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * PUT /api/truck-contacts/:id/vehicles/:vehicleId
+ */
+router.put('/:id/vehicles/:vehicleId', auth, requireEmployee, async (req, res) => {
+  try {
+    const { vin, description, vehicle_type, is_active } = req.body;
+    const updates = { updated_at: new Date() };
+    if (vin !== undefined) updates.vin = vin?.trim() || null;
+    if (description !== undefined) updates.description = description?.trim() || null;
+    if (vehicle_type !== undefined) updates.vehicle_type = vehicle_type?.trim() || null;
+    if (is_active !== undefined) updates.is_active = is_active;
+
+    const [vehicle] = await db('carrier_vehicles')
+      .where('id', parseInt(req.params.vehicleId))
+      .where('truck_contact_id', parseInt(req.params.id))
+      .update(updates)
+      .returning('*');
+
+    if (!vehicle) return res.status(404).json({ success: false, message: 'Vehicle not found' });
+    res.json({ success: true, data: vehicle });
+  } catch (error) {
+    console.error('Failed to update vehicle:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * DELETE /api/truck-contacts/:id/vehicles/:vehicleId
+ */
+router.delete('/:id/vehicles/:vehicleId', auth, requireRole(['admin']), async (req, res) => {
+  try {
+    const deleted = await db('carrier_vehicles')
+      .where('id', parseInt(req.params.vehicleId))
+      .where('truck_contact_id', parseInt(req.params.id))
+      .del();
+    if (!deleted) return res.status(404).json({ success: false, message: 'Vehicle not found' });
+    res.json({ success: true, message: 'Vehicle deleted' });
+  } catch (error) {
+    console.error('Failed to delete vehicle:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
