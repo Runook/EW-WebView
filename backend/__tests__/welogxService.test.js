@@ -6,6 +6,9 @@ const {
   calculateDeficitOptimized,
   calculateAccessorials,
   estimateTransitDays,
+  calculateOverlengthSurcharge,
+  calculateCubicCapacitySurcharge,
+  checkCarrierEligibility,
 } = require('../src/services/welogxService');
 
 describe('welogxService', () => {
@@ -49,6 +52,17 @@ describe('welogxService', () => {
       ]);
       expect(result.totalWeight).toBe(1500);
     });
+
+    it('tracks totalPallets, maxDimension, maxPalletWeight, linearFeet', () => {
+      const result = calculateDensityAndClass([
+        { weight: 3000, length: 48, width: 40, height: 72, pallets: 2 },
+        { weight: 800, length: 120, width: 40, height: 48, pallets: 1 },
+      ]);
+      expect(result.totalPallets).toBe(3);
+      expect(result.maxDimension).toBe(120);
+      expect(result.maxPalletWeight).toBe(1500);
+      expect(result.totalLinearFeet).toBeGreaterThan(0);
+    });
   });
 
   describe('getDistanceFactor', () => {
@@ -80,6 +94,82 @@ describe('welogxService', () => {
     });
   });
 
+  describe('calculateOverlengthSurcharge', () => {
+    it('returns 0 for standard pallet (48")', () => {
+      expect(calculateOverlengthSurcharge(48)).toBe(0);
+    });
+
+    it('returns $90 for >96" items', () => {
+      expect(calculateOverlengthSurcharge(100)).toBe(90);
+    });
+
+    it('returns $125 for >144" items', () => {
+      expect(calculateOverlengthSurcharge(150)).toBe(125);
+    });
+
+    it('returns $195 for >240" items', () => {
+      expect(calculateOverlengthSurcharge(250)).toBe(195);
+    });
+  });
+
+  describe('calculateCubicCapacitySurcharge', () => {
+    it('returns 0 for normal shipments', () => {
+      expect(calculateCubicCapacitySurcharge(200, 10)).toBe(0);
+    });
+
+    it('returns $100 for 350-749 cuft with <4 PCF', () => {
+      expect(calculateCubicCapacitySurcharge(500, 3)).toBe(100);
+    });
+
+    it('returns $200 for >=750 cuft with <6 PCF', () => {
+      expect(calculateCubicCapacitySurcharge(800, 5)).toBe(200);
+    });
+
+    it('returns 0 if density is sufficient', () => {
+      expect(calculateCubicCapacitySurcharge(500, 5)).toBe(0);
+      expect(calculateCubicCapacitySurcharge(800, 7)).toBe(0);
+    });
+  });
+
+  describe('checkCarrierEligibility', () => {
+    it('returns warnings for heavy shipment', () => {
+      const warnings = checkCarrierEligibility({
+        totalWeight: 15000, totalPallets: 3, totalLinearFeet: 10,
+        totalCuFt: 200, density: 15, maxPalletWeight: 5000, maxDimension: 48, hasHazmat: false,
+      });
+      const rlWarning = warnings.find(w => w.carrier === 'R&L Carriers');
+      expect(rlWarning).toBeTruthy();
+      expect(rlWarning.issues[0]).toContain('12000');
+    });
+
+    it('flags hazmat for carriers that prohibit it', () => {
+      const warnings = checkCarrierEligibility({
+        totalWeight: 1000, totalPallets: 1, totalLinearFeet: 4,
+        totalCuFt: 50, density: 20, maxPalletWeight: 1000, maxDimension: 48, hasHazmat: true,
+      });
+      const ediWarning = warnings.find(w => w.carrier === 'EDI Express');
+      expect(ediWarning).toBeTruthy();
+      expect(ediWarning.issues).toContain('hazmat prohibited');
+    });
+
+    it('flags >6 pallets for SAIA/STG/EDI', () => {
+      const warnings = checkCarrierEligibility({
+        totalWeight: 5000, totalPallets: 8, totalLinearFeet: 16,
+        totalCuFt: 400, density: 12.5, maxPalletWeight: 625, maxDimension: 48, hasHazmat: false,
+      });
+      expect(warnings.some(w => w.carrier === 'SAIA' && w.issues.some(i => i.includes('pallet')))).toBe(true);
+      expect(warnings.some(w => w.carrier === 'STG' && w.issues.some(i => i.includes('pallet')))).toBe(true);
+    });
+
+    it('returns empty for standard shipment', () => {
+      const warnings = checkCarrierEligibility({
+        totalWeight: 2000, totalPallets: 2, totalLinearFeet: 8,
+        totalCuFt: 100, density: 20, maxPalletWeight: 1000, maxDimension: 48, hasHazmat: false,
+      });
+      expect(warnings.length).toBe(0);
+    });
+  });
+
   describe('calculateAccessorials', () => {
     it('returns 0 when no services selected', () => {
       const result = calculateAccessorials([], [], 'commercial', 'commercial', 1000);
@@ -87,10 +177,11 @@ describe('welogxService', () => {
       expect(result.details).toHaveLength(0);
     });
 
-    it('adds residential delivery for residential destination', () => {
+    it('adds residential delivery + auto-liftgate for residential destination', () => {
       const result = calculateAccessorials([], [], 'commercial', 'residential', 1000);
       expect(result.total).toBeGreaterThan(0);
       expect(result.details.some(d => d.name === 'residential_delivery')).toBe(true);
+      expect(result.details.some(d => d.name === 'liftgate_delivery')).toBe(true);
     });
 
     it('scales weight-based charges', () => {
@@ -189,6 +280,55 @@ describe('welogxService', () => {
 
       expect(result.breakdown.accessorials).toBeGreaterThan(0);
       expect(result.breakdown.accessorialDetails.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('adds overlength surcharge for >96" items', () => {
+      const result = calculateQuote({
+        originZip: '10001',
+        destinationZip: '20001',
+        distanceMiles: 200,
+        items: [{ weight: 500, length: 120, width: 40, height: 48, freightClass: '70', pallets: 1 }],
+        pickupServices: [],
+        deliveryServices: [],
+        originType: 'commercial',
+        destinationType: 'commercial',
+      });
+
+      expect(result.maxDimension).toBe(120);
+      expect(result.breakdown.accessorialDetails.some(d => d.name === 'overlength')).toBe(true);
+      expect(result.shipmentWarnings.some(w => w.includes('Overlength'))).toBe(true);
+    });
+
+    it('includes carrier warnings for heavy per-pallet shipment', () => {
+      const result = calculateQuote({
+        originZip: '10001',
+        destinationZip: '20001',
+        distanceMiles: 500,
+        items: [{ weight: 3000, length: 48, width: 40, height: 72, freightClass: '65', pallets: 1 }],
+        pickupServices: [],
+        deliveryServices: [],
+        originType: 'commercial',
+        destinationType: 'commercial',
+      });
+
+      expect(result.carrierWarnings.length).toBeGreaterThan(0);
+      expect(result.carrierWarnings.some(w => w.carrier === 'AAA Cooper')).toBe(true);
+    });
+
+    it('returns totalPallets and totalLinearFeet in output', () => {
+      const result = calculateQuote({
+        originZip: '10001',
+        destinationZip: '20001',
+        distanceMiles: 300,
+        items: [{ weight: 2000, length: 48, width: 40, height: 48, freightClass: '70', pallets: 2 }],
+        pickupServices: [],
+        deliveryServices: [],
+        originType: 'commercial',
+        destinationType: 'commercial',
+      });
+
+      expect(result.totalPallets).toBe(2);
+      expect(result.totalLinearFeet).toBeGreaterThan(0);
     });
   });
 });

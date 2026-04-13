@@ -1,17 +1,17 @@
 /**
- * Welogx LTL Freight Pricing Service
+ * Welogx LTL Freight Pricing Service — V4
  *
- * Ported from generate_ltl_calculator.py V3.
  * Implements: NMFC class lookup, CWT rate table, distance factor,
- * deficit weight optimization, FSC, and accessorial charges.
+ * deficit weight optimization, FSC, accessorial charges,
+ * overlength surcharges, cubic capacity rules, per-pallet weight caps,
+ * linear-foot pricing triggers, carrier eligibility warnings,
+ * and auto-liftgate for residential destinations.
  */
 
-// No external API dependencies -- distance is provided by the frontend
-// (Google Distance Matrix is already called in GetQuoteLTL.js)
+const { CARRIER_RULES, getCarrierRules } = require('../config/carrierRules');
 
 // ---------------------------------------------------------------------------
 // NMFC Density-to-Class table (18 classes, sorted descending by density min)
-// Each entry: [class, densityMin, densityMax]
 // ---------------------------------------------------------------------------
 const NMFC_CLASS_TABLE = [
   { cls: 50,   dMin: 50,   dMax: Infinity },
@@ -59,7 +59,6 @@ const CWT_RATES = {
   500:  [150, 65.00, 46.00, 36.00, 26.00, 18.50, 13.50,  9.90],
 };
 
-// Weight-break minimum weights (index 0 = minCharge, 1 = <500, etc.)
 const WB_MINS = [0, 0, 500, 1000, 2000, 5000, 10000, 20000];
 
 // ---------------------------------------------------------------------------
@@ -77,7 +76,7 @@ const DIST_BANDS = [
 ];
 
 // ---------------------------------------------------------------------------
-// FSC lookup by DOE diesel price ($/gal)
+// FSC
 // ---------------------------------------------------------------------------
 const DEFAULT_FSC_PCT = 0.2975;
 
@@ -97,25 +96,35 @@ const FSC_LOOKUP = [
 ];
 
 // ---------------------------------------------------------------------------
-// Accessorial rates: [name, low, high, default, per, scaleByWeight]
+// Overlength surcharge tiers (any single dimension exceeding threshold)
+// ---------------------------------------------------------------------------
+const OVERLENGTH_TIERS = [
+  { minInches: 240, surcharge: 195 },
+  { minInches: 144, surcharge: 125 },
+  { minInches: 96,  surcharge: 90  },
+];
+
+// ---------------------------------------------------------------------------
+// Accessorial rates
 // ---------------------------------------------------------------------------
 const ACCESSORIAL_RATES = {
-  residential_pickup:   { low: 35,  high: 85,  dflt: 35,  per: 'shipment', scale: true },
-  residential_delivery: { low: 35,  high: 85,  dflt: 35,  per: 'shipment', scale: true },
-  liftgate_pickup:      { low: 35,  high: 75,  dflt: 35,  per: 'shipment', scale: true },
-  liftgate_delivery:    { low: 35,  high: 75,  dflt: 35,  per: 'shipment', scale: true },
-  inside_pickup:        { low: 75,  high: 125, dflt: 75,  per: 'shipment', scale: true },
-  inside_delivery:      { low: 75,  high: 125, dflt: 75,  per: 'shipment', scale: true },
-  limited_access_pickup:  { low: 75,  high: 150, dflt: 75,  per: 'shipment', scale: true },
-  limited_access_delivery:{ low: 75,  high: 150, dflt: 75,  per: 'shipment', scale: true },
-  appointment:          { low: 15,  high: 50,  dflt: 25,  per: 'shipment', scale: false },
-  hazmat:               { low: 50,  high: 200, dflt: 100, per: 'shipment', scale: false },
-  notify:               { low: 10,  high: 35,  dflt: 15,  per: 'shipment', scale: false },
-  construction_site:    { low: 75,  high: 150, dflt: 75,  per: 'shipment', scale: true },
-  trade_show:           { low: 75,  high: 150, dflt: 75,  per: 'shipment', scale: true },
+  residential_pickup:       { low: 35,  high: 85,  dflt: 35,  per: 'shipment', scale: true },
+  residential_delivery:     { low: 35,  high: 85,  dflt: 35,  per: 'shipment', scale: true },
+  liftgate_pickup:          { low: 35,  high: 75,  dflt: 35,  per: 'shipment', scale: true },
+  liftgate_delivery:        { low: 35,  high: 75,  dflt: 35,  per: 'shipment', scale: true },
+  inside_pickup:            { low: 75,  high: 125, dflt: 75,  per: 'shipment', scale: true },
+  inside_delivery:          { low: 75,  high: 125, dflt: 75,  per: 'shipment', scale: true },
+  limited_access_pickup:    { low: 75,  high: 150, dflt: 75,  per: 'shipment', scale: true },
+  limited_access_delivery:  { low: 75,  high: 150, dflt: 75,  per: 'shipment', scale: true },
+  appointment:              { low: 15,  high: 50,  dflt: 25,  per: 'shipment', scale: false },
+  hazmat:                   { low: 50,  high: 200, dflt: 100, per: 'shipment', scale: false },
+  notify:                   { low: 10,  high: 35,  dflt: 15,  per: 'shipment', scale: false },
+  construction_site:        { low: 75,  high: 150, dflt: 75,  per: 'shipment', scale: true },
+  trade_show:               { low: 75,  high: 150, dflt: 75,  per: 'shipment', scale: true },
+  overlength:               { low: 90,  high: 195, dflt: 90,  per: 'shipment', scale: false },
+  cubic_capacity_surcharge: { low: 75,  high: 200, dflt: 100, per: 'shipment', scale: false },
 };
 
-// Map from frontend service codes to our accessorial keys
 const SERVICE_CODE_MAP = {
   'lift_gate':           'liftgate',
   'liftgate':            'liftgate',
@@ -135,9 +144,6 @@ const SERVICE_CODE_MAP = {
 // Core calculation functions
 // ---------------------------------------------------------------------------
 
-/**
- * Determine NMFC freight class from density (lbs/ft³)
- */
 function densityToClass(density) {
   for (const entry of NMFC_CLASS_TABLE) {
     if (density >= entry.dMin) return entry.cls;
@@ -145,14 +151,13 @@ function densityToClass(density) {
   return 500;
 }
 
-/**
- * Calculate total density and auto-class from a list of cargo items.
- * Each item: { weight, length, width, height, pallets, freightClass }
- * weight = total weight for this line item (all pallets combined), dimensions = per pallet
- */
 function calculateDensityAndClass(items) {
   let totalWeight = 0;
   let totalCuFt = 0;
+  let totalPallets = 0;
+  let maxDimension = 0;
+  let maxPalletWeight = 0;
+  let totalLinearFeet = 0;
 
   for (const item of items) {
     const pallets = parseInt(item.pallets) || 1;
@@ -163,21 +168,32 @@ function calculateDensityAndClass(items) {
 
     const cuFtPerUnit = (l * w * h) / 1728;
     const itemTotalCuFt = cuFtPerUnit * pallets;
+    const weightPerPallet = pallets > 0 ? itemWeight / pallets : itemWeight;
 
     totalWeight += itemWeight;
     totalCuFt += itemTotalCuFt;
+    totalPallets += pallets;
+    maxDimension = Math.max(maxDimension, l, w, h);
+    maxPalletWeight = Math.max(maxPalletWeight, weightPerPallet);
+
+    // Linear feet: pallets side-by-side if <=48"W, else single file
+    if (w <= 48) {
+      totalLinearFeet += Math.ceil(pallets / 2) * (l / 12);
+    } else {
+      totalLinearFeet += pallets * (l / 12);
+    }
   }
 
   const density = totalCuFt > 0 ? totalWeight / totalCuFt : 0;
   const autoClass = densityToClass(density);
 
-  return { totalWeight, totalCuFt, density, autoClass };
+  return {
+    totalWeight, totalCuFt, density, autoClass,
+    totalPallets, maxDimension, maxPalletWeight,
+    totalLinearFeet: Math.round(totalLinearFeet * 10) / 10,
+  };
 }
 
-/**
- * Determine the weight-break tier index (1-7) for a given total weight.
- * Index 0 = minCharge (handled separately), 1 = <500, 2 = 500, ... 7 = 20M
- */
 function getWeightBreakIndex(totalWeight) {
   if (totalWeight < 500) return 1;
   if (totalWeight < 1000) return 2;
@@ -188,18 +204,12 @@ function getWeightBreakIndex(totalWeight) {
   return 7;
 }
 
-/**
- * Look up CWT rate for a given class and weight-break index
- */
 function lookupCWTRate(freightClass, tierIndex) {
   const rates = CWT_RATES[freightClass];
   if (!rates) return null;
   return rates[tierIndex];
 }
 
-/**
- * Get distance factor from miles
- */
 function getDistanceFactor(miles) {
   for (const band of DIST_BANDS) {
     if (miles >= band.lo && miles <= band.hi) return band.factor;
@@ -207,10 +217,6 @@ function getDistanceFactor(miles) {
   return 1.0;
 }
 
-/**
- * Deficit weight optimization: test all 7 weight-break tiers and pick the
- * one that yields the lowest total linehaul cost.
- */
 function calculateDeficitOptimized(freightClass, totalWeight, distFactor) {
   const rates = CWT_RATES[freightClass];
   if (!rates) return { cost: 0, tierUsed: -1, billableCWT: 0 };
@@ -219,7 +225,6 @@ function calculateDeficitOptimized(freightClass, totalWeight, distFactor) {
   let bestTier = -1;
   let bestCWT = 0;
 
-  // Tier indices 1..7 (skip 0 = minCharge, that's checked separately)
   for (let ti = 1; ti <= 7; ti++) {
     const tierMinWeight = WB_MINS[ti];
     const effectiveWeight = Math.max(totalWeight, tierMinWeight);
@@ -237,9 +242,6 @@ function calculateDeficitOptimized(freightClass, totalWeight, distFactor) {
   return { cost: bestCost, tierUsed: bestTier, billableCWT: bestCWT };
 }
 
-/**
- * Estimate transit days from distance
- */
 function estimateTransitDays(miles) {
   if (miles <= 250) return 2;
   if (miles <= 500) return 3;
@@ -251,16 +253,31 @@ function estimateTransitDays(miles) {
 }
 
 /**
- * Calculate accessorial charges based on selected services and total weight.
- * Accepts pickup/delivery services from the frontend and location types.
+ * Calculate overlength surcharge based on max dimension across all items.
  */
+function calculateOverlengthSurcharge(maxDimension) {
+  for (const tier of OVERLENGTH_TIERS) {
+    if (maxDimension > tier.minInches) return tier.surcharge;
+  }
+  return 0;
+}
+
+/**
+ * Cubic capacity surcharge (SAIA-style rule adopted as industry standard):
+ * - 350-749 cuft with density < 4 PCF
+ * - >= 750 cuft with density < 6 PCF
+ */
+function calculateCubicCapacitySurcharge(totalCuFt, density) {
+  if (totalCuFt >= 750 && density < 6) return 200;
+  if (totalCuFt >= 350 && density < 4) return 100;
+  return 0;
+}
+
 function calculateAccessorials(pickupServices, deliveryServices, originType, destinationType, totalWeight) {
   let total = 0;
   const details = [];
-
   const allServices = new Set();
 
-  // Map frontend service codes
   if (pickupServices) {
     for (const svc of pickupServices) {
       const mapped = SERVICE_CODE_MAP[svc];
@@ -274,9 +291,12 @@ function calculateAccessorials(pickupServices, deliveryServices, originType, des
     }
   }
 
-  // Auto-add residential based on location types
   if (originType === 'residential') allServices.add('residential_pickup');
-  if (destinationType === 'residential') allServices.add('residential_delivery');
+  if (destinationType === 'residential') {
+    allServices.add('residential_delivery');
+    // Auto-liftgate for residential (TForce/SAIA industry standard)
+    allServices.add('liftgate_delivery');
+  }
 
   for (const key of allServices) {
     const rate = ACCESSORIAL_RATES[key];
@@ -298,9 +318,31 @@ function calculateAccessorials(pickupServices, deliveryServices, originType, des
   return { total: Math.round(total * 100) / 100, details };
 }
 
+/**
+ * Check shipment against carrier rules and generate warnings.
+ */
+function checkCarrierEligibility(shipmentInfo) {
+  const warnings = [];
+  const { totalWeight, totalPallets, totalLinearFeet, totalCuFt, density, maxPalletWeight, maxDimension, hasHazmat } = shipmentInfo;
+
+  for (const [name, rules] of Object.entries(CARRIER_RULES)) {
+    const issues = [];
+    if (rules.maxWeight && totalWeight > rules.maxWeight) issues.push(`exceeds ${rules.maxWeight} lb max`);
+    if (rules.maxPallets && totalPallets > rules.maxPallets) issues.push(`exceeds ${rules.maxPallets} pallet max`);
+    if (rules.maxLinearFeet && totalLinearFeet > rules.maxLinearFeet) issues.push(`exceeds ${rules.maxLinearFeet}ft max`);
+    if (rules.maxPalletWeight && maxPalletWeight > rules.maxPalletWeight) issues.push(`pallet over ${rules.maxPalletWeight} lbs`);
+    if (hasHazmat && rules.prohibited?.includes('hazmat')) issues.push('hazmat prohibited');
+
+    if (issues.length > 0) {
+      warnings.push({ carrier: name, issues });
+    }
+  }
+
+  return warnings;
+}
+
 // ---------------------------------------------------------------------------
-// Distance fallback — rough estimate from ZIP prefix when frontend doesn't
-// provide the Google-calculated distance
+// Distance fallback
 // ---------------------------------------------------------------------------
 
 function estimateDistanceFromZips(originZip, destZip) {
@@ -326,18 +368,18 @@ function calculateQuote(quoteData) {
     destinationType,
   } = quoteData;
 
-  // 1. Calculate totals, density, auto class
-  const { totalWeight, totalCuFt, density, autoClass } = calculateDensityAndClass(items);
+  const {
+    totalWeight, totalCuFt, density, autoClass,
+    totalPallets, maxDimension, maxPalletWeight, totalLinearFeet,
+  } = calculateDensityAndClass(items);
 
   if (totalWeight <= 0) {
     throw new Error('Total weight must be greater than 0');
   }
 
-  // Use the freight class from items if provided, otherwise auto-calculated
   const firstItemClass = parseFloat(items[0]?.freightClass);
   const freightClass = firstItemClass && CWT_RATES[firstItemClass] ? firstItemClass : autoClass;
 
-  // 2. Distance — use the value already calculated by Google Maps on the frontend
   let distanceMiles = frontendDistance;
   if (!distanceMiles || distanceMiles <= 0) {
     distanceMiles = estimateDistanceFromZips(originZip, destinationZip);
@@ -346,34 +388,62 @@ function calculateQuote(quoteData) {
 
   const distFactor = getDistanceFactor(distanceMiles);
 
-  // 3. Deficit-optimized linehaul
+  // Deficit-optimized linehaul
   const { cost: optimizedLinehaul, tierUsed, billableCWT } =
     calculateDeficitOptimized(freightClass, totalWeight, distFactor);
 
-  // Minimum charge
   const minCharge = CWT_RATES[freightClass]?.[0] || 65;
-
-  // Base linehaul = max of optimized cost and minimum charge
   const baseLinehaul = Math.max(optimizedLinehaul, minCharge);
 
-  // 4. FSC
+  // FSC
   const fscPct = DEFAULT_FSC_PCT;
   const fuelSurcharge = Math.round(baseLinehaul * fscPct * 100) / 100;
 
-  // 5. Accessorials
+  // Accessorials
   const accessorials = calculateAccessorials(
     pickupServices, deliveryServices, originType, destinationType, totalWeight
   );
 
-  // 6. Grand total
+  // Overlength surcharge
+  const overlengthCharge = calculateOverlengthSurcharge(maxDimension);
+  if (overlengthCharge > 0) {
+    accessorials.total += overlengthCharge;
+    accessorials.details.push({ name: 'overlength', charge: overlengthCharge });
+  }
+
+  // Cubic capacity surcharge
+  const cubicCharge = calculateCubicCapacitySurcharge(totalCuFt, density);
+  if (cubicCharge > 0) {
+    accessorials.total += cubicCharge;
+    accessorials.details.push({ name: 'cubic_capacity_surcharge', charge: cubicCharge });
+  }
+
+  accessorials.total = Math.round(accessorials.total * 100) / 100;
+
+  // Grand total
   const grandTotal = Math.round((baseLinehaul + fuelSurcharge + accessorials.total) * 100) / 100;
 
-  // 7. Transit estimate
+  // Transit estimate
   const transitDays = estimateTransitDays(distanceMiles);
 
-  // Actual CWT rate used (for the chosen tier)
   const baseCWTRate = lookupCWTRate(freightClass, tierUsed) || 0;
   const adjustedCWTRate = Math.round(baseCWTRate * distFactor * 100) / 100;
+
+  // Carrier eligibility check
+  const hasHazmat = items.some(i => i.hazmat);
+  const carrierWarnings = checkCarrierEligibility({
+    totalWeight, totalPallets, totalLinearFeet, totalCuFt,
+    density, maxPalletWeight, maxDimension, hasHazmat,
+  });
+
+  // Shipment-level warnings
+  const shipmentWarnings = [];
+  if (totalLinearFeet > 12) shipmentWarnings.push(`Linear feet (${totalLinearFeet}ft) exceeds 12ft — linear foot pricing may apply at some carriers.`);
+  if (totalCuFt > 750 && density < 6) shipmentWarnings.push(`Cubic capacity rule: ${Math.round(totalCuFt)} cuft at ${density.toFixed(1)} PCF — surcharge applied.`);
+  if (totalCuFt >= 350 && totalCuFt < 750 && density < 4) shipmentWarnings.push(`Low density: ${Math.round(totalCuFt)} cuft at ${density.toFixed(1)} PCF — surcharge applied.`);
+  if (maxDimension > 96) shipmentWarnings.push(`Overlength: max dimension ${Math.round(maxDimension)}" — $${overlengthCharge} surcharge applied.`);
+  if (maxPalletWeight > 2500) shipmentWarnings.push(`Heavy pallet: ${Math.round(maxPalletWeight)} lbs — some carriers (AAA Cooper, SAIA, ABF) cap at 2500 lbs.`);
+  if (totalWeight > 10000) shipmentWarnings.push(`Near FTL threshold (${Math.round(totalWeight)} lbs) — consider full truckload.`);
 
   return {
     carrier: 'EW Logistics',
@@ -389,6 +459,10 @@ function calculateQuote(quoteData) {
     totalWeight: Math.round(totalWeight),
     totalCuFt: Math.round(totalCuFt * 100) / 100,
     density: Math.round(density * 100) / 100,
+    totalPallets,
+    totalLinearFeet,
+    maxDimension: Math.round(maxDimension),
+    maxPalletWeight: Math.round(maxPalletWeight),
     breakdown: {
       baseCWT: baseCWTRate,
       adjustedCWT: adjustedCWTRate,
@@ -401,6 +475,8 @@ function calculateQuote(quoteData) {
       minimumCharge: minCharge,
       grandTotal,
     },
+    carrierWarnings,
+    shipmentWarnings,
   };
 }
 
@@ -413,4 +489,7 @@ module.exports = {
   calculateAccessorials,
   estimateTransitDays,
   estimateDistanceFromZips,
+  calculateOverlengthSurcharge,
+  calculateCubicCapacitySurcharge,
+  checkCarrierEligibility,
 };
