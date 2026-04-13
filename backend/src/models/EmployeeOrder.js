@@ -471,6 +471,27 @@ class Order {
         }
       });
       
+      // Auto-sync workflow_stage when status/sub_status changes via generic update
+      if (filteredData.status || filteredData.sub_status) {
+        const STATUS_WORKFLOW_MAP = {
+          quote: 'inquiry',
+          ordered: 'bol_issued',
+          completed: 'completed',
+          cancelled: 'cancelled',
+        };
+        const SUBSTATUS_WORKFLOW_MAP = {
+          waiting_driver: 'carrier_sourcing',
+          driver_found: 'pickup',
+          in_transit: 'in_transit',
+          sent_to_3pl: 'carrier_sourcing',
+        };
+        if (filteredData.sub_status && SUBSTATUS_WORKFLOW_MAP[filteredData.sub_status]) {
+          filteredData.workflow_stage = SUBSTATUS_WORKFLOW_MAP[filteredData.sub_status];
+        } else if (filteredData.status && STATUS_WORKFLOW_MAP[filteredData.status]) {
+          filteredData.workflow_stage = STATUS_WORKFLOW_MAP[filteredData.status];
+        }
+      }
+
       if (Object.keys(filteredData).length === 0 && !changeOperator) {
         throw new Error('没有可更新的字段');
       }
@@ -749,9 +770,10 @@ class Order {
         .update({
           status: 'ordered',
           sub_status: subStatus,
+          workflow_stage: subStatus === 'waiting_driver' ? 'carrier_sourcing' : subStatus === 'driver_found' ? 'pickup' : 'bol_issued',
           confirmed_by: confirmedBy,
           confirmed_at: new Date(),
-          quote_date: nyDate  // 下单时更新为当天美东日期
+          quote_date: nyDate
         })
         .returning('*');
       
@@ -797,6 +819,7 @@ class Order {
         .update({
           status: 'completed',
           sub_status: null,
+          workflow_stage: 'completed',
           completed_by: completedBy,
           completed_at: new Date(),
           quote_date: nyDate
@@ -922,10 +945,17 @@ class Order {
         throw new Error('只有已下单的订单可以更新子状态');
       }
       
+      const SUB_TO_WORKFLOW = {
+        waiting_driver: 'carrier_sourcing',
+        driver_found: 'pickup',
+        in_transit: 'in_transit',
+        sent_to_3pl: 'carrier_sourcing',
+      };
       const [order] = await trx('employee_orders')
         .where('id', orderId)
         .update({
           sub_status: subStatus,
+          workflow_stage: SUB_TO_WORKFLOW[subStatus] || existingOrder.workflow_stage,
           updated_by: updatedBy
         })
         .returning('*');
@@ -1077,6 +1107,7 @@ class Order {
         .where('id', orderId)
         .update({
           status: 'cancelled',
+          workflow_stage: 'cancelled',
           cancelled_by: cancelledBy,
           cancelled_at: new Date(),
           updated_by: cancelledBy,
