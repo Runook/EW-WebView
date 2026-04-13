@@ -96,8 +96,9 @@ const GetQuoteLTL = ({ fbaDestination }) => {
   const [sortBy, setSortBy] = React.useState('price'); // 'price', 'time', 'name'
   
   // 步骤状态管理
-  const [currentStep, setCurrentStep] = React.useState(1); // 1: Quote Details, 2: Carrier Selection, 3: Shipment Details
+  const [currentStep, setCurrentStep] = React.useState(1);
   const [selectedQuote, setSelectedQuote] = React.useState(null);
+  const [linkedOrderId, setLinkedOrderId] = React.useState(null);
   const [shipmentDetails, setShipmentDetails] = React.useState({
     companyName: '',
     contactPhone: '',
@@ -461,41 +462,70 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     }));
   };
 
-  // 提交最终订单
+  // 提交最终订单 — 更新已创建的 employee_order 并推进 workflow
   const handleFinalSubmit = async (e) => {
     e.preventDefault();
-    
-    // 验证必填字段
+
     const requiredFields = [
       'companyName', 'contactPhone',
       'pickupContactName', 'pickupContactPhone', 'pickupAddress',
       'deliveryContactName', 'deliveryContactPhone', 'deliveryAddress'
     ];
-    
     const missingFields = requiredFields.filter(field => !shipmentDetails[field]);
     if (missingFields.length > 0) {
       showError('请填写所有必填字段');
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
-      
-      // 这里调用API保存订单
-      // const orderData = {
-      //   ...formData,
-      //   selectedQuote,
-      //   shipmentDetails
-      // };
-      // await apiServices.orders.create(orderData);
-      
-      success('订单已提交！我们会尽快与您联系。');
-      
-      // 重置并返回首页
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
-      
+
+      const updatePayload = {
+        customer_name: shipmentDetails.companyName,
+        customer_phone: shipmentDetails.contactPhone,
+        customer_email: shipmentDetails.contactEmail || user?.email || '',
+        inquiry_company: shipmentDetails.companyName,
+        origin_address: shipmentDetails.pickupAddress,
+        origin_city: shipmentDetails.pickupCity || '',
+        origin_state: shipmentDetails.pickupState || '',
+        origin_zipcode: shipmentDetails.pickupZip || '',
+        destination_address: shipmentDetails.deliveryAddress,
+        destination_city: shipmentDetails.deliveryCity || '',
+        destination_state: shipmentDetails.deliveryState || '',
+        destination_zipcode: shipmentDetails.deliveryZip || '',
+        consignee_contact: [shipmentDetails.deliveryContactName, shipmentDetails.deliveryContactPhone, shipmentDetails.deliveryContactEmail].filter(Boolean).join(' | '),
+        notes: [
+          selectedQuote ? `Selected: ${selectedQuote.carrier} $${(selectedQuote.price || 0).toFixed(2)} (${selectedQuote.serviceLevel || 'Standard'})` : '',
+          shipmentDetails.specialInstructions || ''
+        ].filter(Boolean).join('\n'),
+        ew_quote_price: selectedQuote?.price || null,
+        workflow_stage: 'quote_confirmed',
+      };
+
+      if (linkedOrderId) {
+        await orderApi.updateOrder(linkedOrderId, updatePayload);
+        console.log('✅ Order updated with shipment details, ID:', linkedOrderId);
+      } else {
+        const totals = calculateTotals();
+        const createPayload = {
+          ...updatePayload,
+          order_type: 'land_freight',
+          status: 'quote',
+          cargo_description: selectedQuote ? `${selectedQuote.carrier} LTL` : 'LTL Booking',
+          total_weight_lbs: parseFloat(totals.totalWeight) || null,
+          actual_pallets: totals.totalPallets || null,
+          pickup_date: formData.pickupDate || null,
+          delivery_date: formData.deliveryDate || null,
+        };
+        const res = await orderApi.createOrder(createPayload);
+        if (res.success) {
+          console.log('✅ New order created with shipment details, ID:', res.data?.id);
+        }
+      }
+
+      success('下单成功！员工会尽快处理您的订单。');
+      setTimeout(() => navigate('/my-quotes'), 2000);
+
     } catch (error) {
       console.error('订单提交失败:', error);
       showError('订单提交失败: ' + error.message);
@@ -758,6 +788,7 @@ const GetQuoteLTL = ({ fbaDestination }) => {
           if (createResponse.success) {
             console.log('✅ 报价单已同步到员工系统:', createResponse.data);
             employeeOrderId = createResponse.data?.id;
+            setLinkedOrderId(employeeOrderId);
           }
         } catch (syncError) {
           console.error('⚠️ 同步报价单到员工系统失败:', syncError);

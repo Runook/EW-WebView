@@ -6,11 +6,14 @@ import {
 } from 'lucide-react';
 import ShipmentDetailsForm from '../components/ltl/ShipmentDetailsForm';
 import ProgressSteps from '../components/ltl/ProgressSteps';
+import { orderApi } from '../config/employeeApi';
+import { useAuth } from '../contexts/AuthContext';
 import './GetQuote.css';
 
 const QuoteDetail = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [expandedQuoteId, setExpandedQuoteId] = useState(null);
@@ -111,10 +114,50 @@ const QuoteDetail = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      alert('Booking submitted! We will contact you shortly to confirm.\n\nCarrier: ' + (selectedQuote?.carrier || '') + '\nPrice: $' + (selectedQuote?.price || 0).toFixed(2));
+      const updatePayload = {
+        customer_name: shipmentDetails.companyName,
+        customer_phone: shipmentDetails.contactPhone,
+        customer_email: shipmentDetails.contactEmail || user?.email || '',
+        inquiry_company: shipmentDetails.companyName,
+        origin_address: shipmentDetails.pickupAddress,
+        origin_city: shipmentDetails.pickupCity || session.origin_city || '',
+        origin_state: shipmentDetails.pickupState || session.origin_state || '',
+        origin_zipcode: shipmentDetails.pickupZip || session.origin_zip || '',
+        destination_address: shipmentDetails.deliveryAddress,
+        destination_city: shipmentDetails.deliveryCity || session.destination_city || '',
+        destination_state: shipmentDetails.deliveryState || session.destination_state || '',
+        destination_zipcode: shipmentDetails.deliveryZip || session.destination_zip || '',
+        consignee_contact: [shipmentDetails.deliveryContactName, shipmentDetails.deliveryContactPhone, shipmentDetails.deliveryContactEmail].filter(Boolean).join(' | '),
+        notes: [
+          selectedQuote ? `Selected: ${selectedQuote.carrier} $${(selectedQuote.price || 0).toFixed(2)} (${selectedQuote.serviceLevel || 'Standard'})` : '',
+          shipmentDetails.specialInstructions || ''
+        ].filter(Boolean).join('\n'),
+        ew_quote_price: selectedQuote?.price || null,
+        workflow_stage: 'quote_confirmed',
+      };
+
+      if (session.employee_order_id) {
+        await orderApi.updateOrder(session.employee_order_id, updatePayload);
+      } else {
+        const createPayload = {
+          ...updatePayload,
+          order_type: 'land_freight',
+          status: 'quote',
+          cargo_description: selectedQuote ? `${selectedQuote.carrier} LTL` : 'LTL Booking',
+          total_weight_lbs: totalWeight || null,
+          actual_pallets: totalPallets || null,
+          pickup_date: session.pickup_date || null,
+          delivery_date: session.delivery_date || null,
+          transport_distance: session.distance_miles || null,
+        };
+        await orderApi.createOrder(createPayload);
+      }
+
+      alert('下单成功！员工会尽快处理您的订单。');
       setSelectedQuote(null);
+      navigate('/my-quotes');
     } catch (err) {
-      alert('Submission failed: ' + err.message);
+      alert('提交失败: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }
