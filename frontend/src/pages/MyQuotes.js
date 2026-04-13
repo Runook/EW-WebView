@@ -64,9 +64,14 @@ const MyQuotes = () => {
       <div className="myquotes-container">
         <div className="myquotes-header">
           <h1>All Quotes</h1>
-          <button className="btn-new-quote-primary" onClick={() => navigate('/get-quote-ltl')}>
-            <Plus size={16} /> New Quote
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn-new-quote-primary" style={{ background: '#1d4ed8' }} onClick={() => navigate('/my-orders')}>
+              <Eye size={16} /> My Orders
+            </button>
+            <button className="btn-new-quote-primary" onClick={() => navigate('/get-quote-ltl')}>
+              <Plus size={16} /> New Quote
+            </button>
+          </div>
         </div>
 
         {loading ? (

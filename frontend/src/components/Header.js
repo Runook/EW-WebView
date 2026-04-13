@@ -142,6 +142,7 @@ const Header = () => {
       type: 'dropdown',
       items: [
         { path: '/profile', label: '个人中心' },
+        { path: '/my-orders', label: '我的订单' },
         { path: '/profile/myJobs', label: '我的招聘' },
         { path: '/profile/myResumes', label: '我的求职' },
         { path: '/profile/articles', label: '我的文章' },

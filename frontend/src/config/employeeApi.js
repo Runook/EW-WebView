@@ -935,6 +935,15 @@ export const sourcingChannelApi = {
   },
 };
 
+// ==========================================
+// User Order Tracking API (customer-facing)
+// ==========================================
+
+export const userOrderApi = {
+  getMyOrders: () => request('/orders/my'),
+  getMyOrderDetail: (id) => request(`/orders/my/${id}`),
+};
+
 const employeeApiModule = {
   employeeApi,
   orderApi,
@@ -950,6 +959,7 @@ const employeeApiModule = {
   orderLoadApi,
   shipmentApi,
   sourcingChannelApi,
+  userOrderApi,
 };
 
 export default employeeApiModule;

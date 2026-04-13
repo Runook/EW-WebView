@@ -40,6 +40,7 @@ import AIQuoteReview from './pages/AIQuoteReview';
 import DATLoadBoard from './pages/DATLoadBoard';
 import DriverContacts from './pages/DriverContacts';
 import MyQuotes from './pages/MyQuotes';
+import MyOrders from './pages/MyOrders';
 import QuoteDetail from './pages/QuoteDetail';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
@@ -112,6 +113,7 @@ function App() {
               {/* 陆运服务 */}
               <Route path="/get-quote-ltl" element={<GetQuoteLTL />} />
               <Route path="/my-quotes" element={<MyQuotes />} />
+              <Route path="/my-orders" element={<MyOrders />} />
               <Route path="/quote/:sessionId" element={<QuoteDetail />} />
 
               {/* FBA 仓库查询 */}

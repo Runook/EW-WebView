@@ -89,6 +89,71 @@ router.get('/statistics', auth, requireEmployee, async (req, res) => {
 });
 
 /**
+ * GET /api/orders/my
+ * User-facing: get the logged-in customer's own orders by email.
+ */
+router.get('/my', auth, async (req, res) => {
+  try {
+    const email = req.user.email;
+    if (!email) return res.status(400).json({ success: false, message: 'User email not found' });
+
+    const { db } = require('../config/database');
+    const orders = await db('employee_orders')
+      .where('customer_email', email)
+      .where('is_deleted', false)
+      .orderBy('created_at', 'desc')
+      .select(
+        'id', 'order_number', 'status', 'sub_status', 'workflow_stage',
+        'customer_name', 'inquiry_company',
+        'origin_city', 'origin_state', 'origin_zipcode', 'origin_address',
+        'destination_city', 'destination_state', 'destination_zipcode', 'destination_address',
+        'cargo_description_detailed', 'total_weight_lbs', 'actual_pallets',
+        'transport_distance', 'ew_quote_price', 'ew_final_price',
+        'truck_company_name', 'driver_name', 'driver_phone',
+        'pickup_date', 'delivery_date',
+        'delivered_at', 'invoiced_at', 'settled_at', 'cancelled_at', 'cancel_reason',
+        'consignee_contact', 'bol_number', 'notes',
+        'created_at', 'updated_at'
+      );
+
+    res.json({ success: true, data: orders });
+  } catch (error) {
+    console.error('Failed to get user orders:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * GET /api/orders/my/:id
+ * User-facing: get a single order detail (only if it belongs to the user).
+ */
+router.get('/my/:id', auth, async (req, res) => {
+  try {
+    const email = req.user.email;
+    if (!email) return res.status(400).json({ success: false, message: 'User email not found' });
+
+    const { db } = require('../config/database');
+    const order = await db('employee_orders')
+      .where('id', parseInt(req.params.id))
+      .where('customer_email', email)
+      .where('is_deleted', false)
+      .first();
+
+    if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+
+    let loads = [];
+    try {
+      loads = await db('order_loads').where('order_id', order.id).orderBy('load_number', 'asc');
+    } catch { /* table may not exist */ }
+
+    res.json({ success: true, data: { ...order, loads } });
+  } catch (error) {
+    console.error('Failed to get user order detail:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
  * GET /api/orders/:id
  * 获取订单详情
  */

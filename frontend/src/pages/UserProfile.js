@@ -876,6 +876,9 @@ const UserProfile = () => {
         <div className="articles-tab-header">
           <h3>我的报价</h3>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="new-article-btn" onClick={() => navigate('/my-orders')}>
+              <ExternalLink size={16} /> My Orders
+            </button>
             <button className="new-article-btn" onClick={() => navigate('/my-quotes')}>
               <ExternalLink size={16} /> All Quotes
             </button>
