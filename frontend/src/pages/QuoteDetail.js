@@ -23,6 +23,7 @@ const QuoteDetail = () => {
 
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState('shipment');
   const [shipmentDetails, setShipmentDetails] = useState({
     companyName: '', contactPhone: '', contactEmail: '',
     pickupContactName: '', pickupContactPhone: '', pickupContactEmail: '',
@@ -110,8 +111,6 @@ const QuoteDetail = () => {
     const { name, value } = e.target;
     setShipmentDetails(prev => ({ ...prev, [name]: value }));
   };
-
-  const [checkoutStep, setCheckoutStep] = useState('shipment');
 
   const handleFinalSubmit = async (e, paymentMethod) => {
     e.preventDefault();
