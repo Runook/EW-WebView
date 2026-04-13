@@ -4,6 +4,8 @@ import {
   MapPin, Clock, Phone, ChevronDown, ChevronUp,
   RefreshCw, AlertTriangle, ArrowLeft, Package
 } from 'lucide-react';
+import ShipmentDetailsForm from '../components/ltl/ShipmentDetailsForm';
+import ProgressSteps from '../components/ltl/ProgressSteps';
 import './GetQuote.css';
 
 const QuoteDetail = () => {
@@ -14,6 +16,17 @@ const QuoteDetail = () => {
   const [expandedQuoteId, setExpandedQuoteId] = useState(null);
   const [breakdownQuoteId, setBreakdownQuoteId] = useState(null);
   const [sortBy, setSortBy] = useState('price');
+
+  const [selectedQuote, setSelectedQuote] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shipmentDetails, setShipmentDetails] = useState({
+    companyName: '', contactPhone: '', contactEmail: '',
+    pickupContactName: '', pickupContactPhone: '', pickupContactEmail: '',
+    pickupAddress: '', pickupCity: '', pickupState: '', pickupZip: '',
+    deliveryContactName: '', deliveryContactPhone: '', deliveryContactEmail: '',
+    deliveryAddress: '', deliveryCity: '', deliveryState: '', deliveryZip: '',
+    specialInstructions: ''
+  });
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -65,6 +78,70 @@ const QuoteDetail = () => {
   const items = session.items || [];
   const totalWeight = items.reduce((s, i) => s + parseFloat(i.weight || 0), 0);
   const totalPallets = items.reduce((s, i) => s + parseInt(i.pallets || 0), 0);
+
+  const formDataFromSession = {
+    origin: [session.origin_city, session.origin_state, session.origin_zip].filter(Boolean).join(', '),
+    destination: [session.destination_city, session.destination_state, session.destination_zip].filter(Boolean).join(', '),
+    pickupDate: session.pickup_date || '',
+    deliveryDate: session.delivery_date || '',
+    originLocationType: session.origin_location_type || 'business_with_dock',
+    destinationLocationType: session.destination_location_type || 'business_with_dock',
+    pickupServices: session.pickup_services || [],
+    deliveryServices: session.delivery_services || [],
+    cargoItems: items.map(i => ({
+      id: i.id,
+      description: i.description || '',
+      weight: i.weight || '',
+      length: i.length || '',
+      width: i.width || '',
+      height: i.height || '',
+      pallets: i.pallets || 1,
+      freightClass: i.freightClass || '',
+      stackable: i.stackable || false,
+      hazmat: i.hazmat || false,
+    })),
+  };
+
+  const handleShipmentDetailChange = (e) => {
+    const { name, value } = e.target;
+    setShipmentDetails(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFinalSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      alert('Booking submitted! We will contact you shortly to confirm.\n\nCarrier: ' + (selectedQuote?.carrier || '') + '\nPrice: $' + (selectedQuote?.price || 0).toFixed(2));
+      setSelectedQuote(null);
+    } catch (err) {
+      alert('Submission failed: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (selectedQuote) {
+    return (
+      <div className="get-quote-page">
+        <div className="get-quote-container">
+          <div className="quote-results-section">
+            <ProgressSteps currentStep={3} />
+            <ShipmentDetailsForm
+              selectedQuote={selectedQuote}
+              shipmentDetails={shipmentDetails}
+              formData={formDataFromSession}
+              selectedPlaces={{}}
+              onChange={handleShipmentDetailChange}
+              onSubmit={handleFinalSubmit}
+              onBack={() => setSelectedQuote(null)}
+              isSubmitting={isSubmitting}
+              setShipmentDetails={setShipmentDetails}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="get-quote-page">
@@ -187,7 +264,8 @@ const QuoteDetail = () => {
                           className="btn-book-it"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/get-quote-ltl?bookSession=${session.session_id}&bookQuoteId=${quote.id}`);
+                            setSelectedQuote(quote);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
                           }}
                         >
                           立即预订
