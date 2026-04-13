@@ -901,8 +901,16 @@ const GetQuoteLTL = ({ fbaDestination }) => {
             <ProgressSteps currentStep={1} />
             
             {/* 简化的小标题 */}
-            <div className="page-title-simple">
+            <div className="page-title-simple" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
               <h1>获取LTL报价</h1>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" className="btn-new-quote" onClick={handleNewQuote}>
+                  <RefreshCw size={16} /> New Quote
+                </button>
+                <button type="button" className="btn-all-quotes" onClick={() => navigate('/my-quotes')}>
+                  <List size={16} /> All Quotes
+                </button>
+              </div>
             </div>
 
         <form onSubmit={handleSubmit} className="quote-form">
@@ -1346,18 +1354,22 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                           <div className="quote-id-small">#{quote.quoteId?.slice(-8) || 'N/A'}</div>
                         </div>
 
-                        {/* 第五列：最大责任险 */}
-                        {quote.maxLiability && (
-                          <div className="col-liability">
-                            <div className="liability-title">Max Liability</div>
-                            <div className="liability-amount">
-                              New: ${quote.maxLiability.new?.toLocaleString()}
-                            </div>
-                            <div className="liability-amount used">
-                              Used: ${quote.maxLiability.used?.toLocaleString()}
-                            </div>
-                          </div>
-                        )}
+                        {/* 第五列：最大责任险（始终渲染以保持grid对齐） */}
+                        <div className="col-liability">
+                          {quote.maxLiability ? (
+                            <>
+                              <div className="liability-title">Max Liability</div>
+                              <div className="liability-amount">
+                                New: ${quote.maxLiability.new?.toLocaleString()}
+                              </div>
+                              <div className="liability-amount used">
+                                Used: ${quote.maxLiability.used?.toLocaleString()}
+                              </div>
+                            </>
+                          ) : (
+                            <div className="liability-title" style={{ color: '#ccc', fontSize: '0.75rem' }}>—</div>
+                          )}
+                        </div>
 
                         {/* 预订按钮 */}
                         <div className="col-action">
