@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { vendorApi, employeeUtils } from '../config/employeeApi';
+import { vendorApi, employeeUtils, truckContactApi } from '../config/employeeApi';
 import './Vendors.css';
 
 const Vendors = () => {
@@ -9,8 +9,16 @@ const Vendors = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingVendor, setEditingVendor] = useState(null);
   const [activeTab, setActiveTab] = useState('basic');
+  const [expandedVendor, setExpandedVendor] = useState(null);
+  const [vehicleData, setVehicleData] = useState({});
+  const [vehiclesLoading, setVehiclesLoading] = useState(null);
+  const [addVehicleFor, setAddVehicleFor] = useState(null);
+  const [newVehicle, setNewVehicle] = useState({ vin: '', description: '', vehicle_type: '' });
+  const [vehicleSaving, setVehicleSaving] = useState(false);
+  const VEHICLE_TYPES = ['sprinter', '26ft_box', '53_dry_van', 'flatbed', 'reefer', 'other'];
+
   const [formData, setFormData] = useState({
-    mc_number: '', truck_company_name: '', truck_contact: '', notes: '',
+    mc_number: '', dot_number: '', truck_company_name: '', truck_contact: '', carrier_email: '', notes: '',
     company_address: '', company_city: '', company_state: '', company_zipcode: '', company_country: 'USA',
     payment_method: '', bank_name: '', account_number: '', routing_number: '',
     zelle_info: '', check_payable_to: '', check_mailing_address: '',
@@ -31,7 +39,7 @@ const Vendors = () => {
   const handleCreate = () => {
     setEditingVendor(null);
     setFormData({
-      mc_number: '', truck_company_name: '', truck_contact: '', notes: '',
+      mc_number: '', dot_number: '', truck_company_name: '', truck_contact: '', carrier_email: '', notes: '',
       company_address: '', company_city: '', company_state: '', company_zipcode: '', company_country: 'USA',
       payment_method: '', bank_name: '', account_number: '', routing_number: '',
       zelle_info: '', check_payable_to: '', check_mailing_address: '',
@@ -44,8 +52,10 @@ const Vendors = () => {
   const handleEdit = (vendor) => {
     setEditingVendor(vendor);
     setFormData({
-      mc_number: vendor.mc_number || '', truck_company_name: vendor.truck_company_name || '',
-      truck_contact: vendor.truck_contact || '', notes: vendor.notes || '',
+      mc_number: vendor.mc_number || '', dot_number: vendor.dot_number || '',
+      truck_company_name: vendor.truck_company_name || '',
+      truck_contact: vendor.truck_contact || '', carrier_email: vendor.carrier_email || '',
+      notes: vendor.notes || '',
       company_address: vendor.company_address || '', company_city: vendor.company_city || '',
       company_state: vendor.company_state || '', company_zipcode: vendor.company_zipcode || '',
       company_country: vendor.company_country || 'USA',
@@ -80,6 +90,35 @@ const Vendors = () => {
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
+  const loadVehicles = async (contactId) => {
+    setVehiclesLoading(contactId);
+    try {
+      const res = await truckContactApi.getVehicles(contactId);
+      if (res.success) setVehicleData(prev => ({ ...prev, [contactId]: res.data || [] }));
+    } catch { setVehicleData(prev => ({ ...prev, [contactId]: [] })); }
+    finally { setVehiclesLoading(null); }
+  };
+
+  const handleAddVehicle = async (contactId) => {
+    setVehicleSaving(true);
+    try {
+      const res = await truckContactApi.addVehicle(contactId, newVehicle);
+      if (res.success) { setNewVehicle({ vin: '', description: '', vehicle_type: '' }); setAddVehicleFor(null); loadVehicles(contactId); }
+    } catch (e) { alert('Failed: ' + e.message); }
+    finally { setVehicleSaving(false); }
+  };
+
+  const handleDeleteVehicle = async (contactId, vehicleId) => {
+    if (!window.confirm('Delete this vehicle?')) return;
+    try { await truckContactApi.deleteVehicle(contactId, vehicleId); loadVehicles(contactId); } catch (e) { alert('Failed: ' + e.message); }
+  };
+
+  const toggleExpand = (vendor) => {
+    if (expandedVendor === vendor.id) { setExpandedVendor(null); return; }
+    setExpandedVendor(vendor.id);
+    if (!vehicleData[vendor.id]) loadVehicles(vendor.id);
   };
 
   const usStates = [
@@ -117,9 +156,12 @@ const Vendors = () => {
           <table className="vendors-table">
             <thead>
               <tr>
-                <th>MC Number</th>
+                <th style={{ width: 30 }}></th>
+                <th>MC#</th>
+                <th>DOT#</th>
                 <th>Company</th>
                 <th>Contact</th>
+                <th>Email</th>
                 <th>Location</th>
                 <th>Payment</th>
                 <th>W9</th>
@@ -129,21 +171,80 @@ const Vendors = () => {
             </thead>
             <tbody>
               {vendors.map((vendor) => (
-                <tr key={vendor.id} className={!vendor.is_active ? 'inactive' : ''}>
+                <React.Fragment key={vendor.id}>
+                <tr className={!vendor.is_active ? 'inactive' : ''} style={{ cursor: 'pointer' }} onClick={() => toggleExpand(vendor)}>
+                  <td>
+                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', padding: '2px 4px' }}>
+                      {expandedVendor === vendor.id ? '▼' : '▶'}
+                    </button>
+                  </td>
                   <td className="mc-number">{vendor.mc_number}</td>
+                  <td style={{ fontSize: '0.85rem', color: '#6b7280' }}>{vendor.dot_number || '-'}</td>
                   <td>{vendor.truck_company_name}</td>
                   <td>{vendor.truck_contact}</td>
+                  <td style={{ fontSize: '0.85rem' }}>{vendor.carrier_email || '-'}</td>
                   <td>{vendor.company_city && vendor.company_state ? `${vendor.company_city}, ${vendor.company_state}` : '-'}</td>
                   <td>{vendor.payment_method ? employeeUtils.getPaymentMethodLabel(vendor.payment_method) : '-'}</td>
                   <td><span className={`w9-badge ${vendor.w9_on_file ? 'yes' : 'no'}`}>{vendor.w9_on_file ? '✓' : '✗'}</span></td>
                   <td><span className={`status-badge ${vendor.is_active ? 'active' : 'inactive'}`}>{vendor.is_active ? 'Active' : 'Inactive'}</span></td>
                   <td>
                     <div className="action-buttons">
-                      <button className="btn-edit" onClick={() => handleEdit(vendor)}>Edit</button>
-                      <button className="btn-delete" onClick={() => handleDelete(vendor.id)}>Delete</button>
+                      <button className="btn-edit" onClick={(e) => { e.stopPropagation(); handleEdit(vendor); }}>Edit</button>
+                      <button className="btn-delete" onClick={(e) => { e.stopPropagation(); handleDelete(vendor.id); }}>Delete</button>
                     </div>
                   </td>
                 </tr>
+                {expandedVendor === vendor.id && (
+                  <tr>
+                    <td colSpan="11" style={{ background: '#f9fafb', padding: '12px 20px' }}>
+                      <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', fontSize: '0.85rem', marginBottom: 12 }}>
+                        {vendor.company_address && <div><strong>Address:</strong> {vendor.company_address}{vendor.company_city ? `, ${vendor.company_city}` : ''}{vendor.company_state ? `, ${vendor.company_state}` : ''} {vendor.company_zipcode || ''}</div>}
+                        {vendor.tax_id && <div><strong>Tax ID:</strong> {vendor.tax_id}</div>}
+                        {vendor.notes && <div><strong>Notes:</strong> {vendor.notes}</div>}
+                      </div>
+
+                      <h4 style={{ margin: '0 0 8px', fontSize: '0.9rem' }}>Vehicles</h4>
+                      {vehiclesLoading === vendor.id ? (
+                        <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>Loading vehicles...</div>
+                      ) : (vehicleData[vendor.id] || []).length > 0 ? (
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+                          {vehicleData[vendor.id].map(v => (
+                            <div key={v.id} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 6, padding: '6px 10px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span style={{ background: '#059669', color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: '0.68rem', fontWeight: 600 }}>{v.vehicle_type || 'vehicle'}</span>
+                              <span>{v.description || 'No description'}</span>
+                              {v.vin && <span style={{ color: '#6b7280' }}>VIN: {v.vin}</span>}
+                              <button onClick={() => handleDeleteVehicle(vendor.id, v.id)}
+                                style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 14, fontWeight: 700, padding: 0, lineHeight: 1 }}>&times;</button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: '0.8rem', color: '#9ca3af', marginBottom: 8 }}>No vehicles registered</div>
+                      )}
+
+                      {addVehicleFor === vendor.id ? (
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                          <input value={newVehicle.vin} onChange={(e) => setNewVehicle(p => ({ ...p, vin: e.target.value }))} placeholder="VIN#" style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: 4, fontSize: '0.8rem', width: 130 }} />
+                          <input value={newVehicle.description} onChange={(e) => setNewVehicle(p => ({ ...p, description: e.target.value }))} placeholder="Description" style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: 4, fontSize: '0.8rem', flex: 1, minWidth: 120 }} />
+                          <select value={newVehicle.vehicle_type} onChange={(e) => setNewVehicle(p => ({ ...p, vehicle_type: e.target.value }))} style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: 4, fontSize: '0.8rem' }}>
+                            <option value="">Type</option>
+                            {VEHICLE_TYPES.map(t => <option key={t} value={t}>{t.replace(/_/g, ' ')}</option>)}
+                          </select>
+                          <button onClick={() => handleAddVehicle(vendor.id)} disabled={vehicleSaving}
+                            style={{ padding: '4px 12px', background: '#059669', color: '#fff', border: 'none', borderRadius: 4, fontSize: '0.8rem', cursor: 'pointer' }}>
+                            {vehicleSaving ? '...' : 'Add'}
+                          </button>
+                          <button onClick={() => { setAddVehicleFor(null); setNewVehicle({ vin: '', description: '', vehicle_type: '' }); }}
+                            style={{ padding: '4px 8px', background: '#fff', border: '1px solid #d1d5db', borderRadius: 4, fontSize: '0.8rem', cursor: 'pointer' }}>Cancel</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setAddVehicleFor(vendor.id)}
+                          style={{ padding: '4px 12px', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 4, fontSize: '0.8rem', cursor: 'pointer', color: '#059669', fontWeight: 500 }}>+ Add Vehicle</button>
+                      )}
+                    </td>
+                  </tr>
+                )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
@@ -171,12 +272,18 @@ const Vendors = () => {
                     <div className="form-row">
                       <div className="form-group"><label>MC Number *</label>
                         <input type="text" name="mc_number" value={formData.mc_number} onChange={handleInputChange} required placeholder="MC123456" /></div>
-                      <div className="form-group"><label>Company Name *</label>
-                        <input type="text" name="truck_company_name" value={formData.truck_company_name} onChange={handleInputChange} required /></div>
+                      <div className="form-group"><label>DOT Number</label>
+                        <input type="text" name="dot_number" value={formData.dot_number} onChange={handleInputChange} placeholder="7654321" /></div>
                     </div>
                     <div className="form-row">
-                      <div className="form-group"><label>Contact *</label>
-                        <input type="text" name="truck_contact" value={formData.truck_contact} onChange={handleInputChange} required placeholder="Phone / Email" /></div>
+                      <div className="form-group"><label>Company Name *</label>
+                        <input type="text" name="truck_company_name" value={formData.truck_company_name} onChange={handleInputChange} required /></div>
+                      <div className="form-group"><label>Contact Phone *</label>
+                        <input type="text" name="truck_contact" value={formData.truck_contact} onChange={handleInputChange} required placeholder="Phone" /></div>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group"><label>Carrier Email</label>
+                        <input type="email" name="carrier_email" value={formData.carrier_email} onChange={handleInputChange} placeholder="carrier@company.com" /></div>
                       <div className="form-group"><label>Tax ID / EIN</label>
                         <input type="text" name="tax_id" value={formData.tax_id} onChange={handleInputChange} placeholder="XX-XXXXXXX" /></div>
                     </div>
