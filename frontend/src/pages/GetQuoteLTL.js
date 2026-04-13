@@ -756,6 +756,7 @@ const GetQuoteLTL = ({ fbaDestination }) => {
         try {
           const orderData = {
             customer_name: userEmail,
+            customer_email: userEmail,
             inquiry_company: userEmail,
             cargo_description: formData.cargoItems[0]?.description || 'LTL货物',
             cargo_description_detailed: formData.cargoItems.map((item, idx) => 

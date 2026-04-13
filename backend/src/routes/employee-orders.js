@@ -99,8 +99,14 @@ router.get('/my', auth, async (req, res) => {
 
     const { db } = require('../config/database');
     const orders = await db('employee_orders')
-      .where('customer_email', email)
       .where('is_deleted', false)
+      .where(function() {
+        this.where('customer_email', email)
+          .orWhere('customer_email', email.toUpperCase())
+          .orWhere('customer_email', email.toLowerCase())
+          .orWhere('customer_name', email)
+          .orWhere('customer_name', email.toLowerCase());
+      })
       .orderBy('created_at', 'desc')
       .select(
         'id', 'order_number', 'status', 'sub_status', 'workflow_stage',
@@ -135,8 +141,14 @@ router.get('/my/:id', auth, async (req, res) => {
     const { db } = require('../config/database');
     const order = await db('employee_orders')
       .where('id', parseInt(req.params.id))
-      .where('customer_email', email)
       .where('is_deleted', false)
+      .where(function() {
+        this.where('customer_email', email)
+          .orWhere('customer_email', email.toUpperCase())
+          .orWhere('customer_email', email.toLowerCase())
+          .orWhere('customer_name', email)
+          .orWhere('customer_name', email.toLowerCase());
+      })
       .first();
 
     if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
