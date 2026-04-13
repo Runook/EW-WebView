@@ -6,6 +6,7 @@
 const { GoogleGenAI } = require('@google/genai');
 const XLSX = require('xlsx');
 
+const { getCarrierRulesPromptText } = require('../config/carrierRules');
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 const PARSE_PROMPT = `You are a senior US LTL freight logistics analyst and NMFC classification specialist. Parse customer shipment documents and produce structured JSON for LTL carrier quoting. You must apply professional palletization, classification, and surcharge rules.
@@ -186,6 +187,15 @@ If 2 pallets fit side-by-side (each ≤ 48"W, total ≤ 96"W trailer): linear_fe
 If total linear feet > 12: note "Exceeds 12 LF — linear foot pricing may apply."
 If total cubic feet > 750 AND density < 6 PCF: note "Cubic capacity rule may apply."
 If total weight > 10000 lbs: note "Near FTL threshold — consider full truckload pricing."
+
+══════════════════════════════════════════════════
+SECTION 5B: CARRIER-SPECIFIC VALIDATION
+══════════════════════════════════════════════════
+When generating notes for a shipment, check these carrier rules and flag potential issues:
+${getCarrierRulesPromptText()}
+
+If a shipment has characteristics that would violate specific carrier rules (e.g. >2500 lbs per pallet for SAIA, hazmat for EDI Express, >6 pallets for STG), include a warning in the "notes" field like:
+"⚠️ Exceeds SAIA max 6 pallets. ⚠️ Hazmat — EDI Express/WARP cannot handle."
 
 ══════════════════════════════════════════════════
 SECTION 6: ADDRESS RULES

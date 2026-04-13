@@ -94,7 +94,16 @@ const GetQuoteLTL = ({ fbaDestination }) => {
   const [quoteResults, setQuoteResults] = React.useState([]);
   const [expandedQuoteId, setExpandedQuoteId] = React.useState(null);
   const [breakdownQuoteId, setBreakdownQuoteId] = React.useState(null);
-  const [sortBy, setSortBy] = React.useState('price'); // 'price', 'time', 'name'
+  const [sortBy, setSortBy] = React.useState('price');
+  const [carrierRules, setCarrierRules] = React.useState(null);
+  const [showRulesFor, setShowRulesFor] = React.useState(null);
+
+  React.useEffect(() => {
+    fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001/api'}/agent/carrier-rules`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setCarrierRules(d.data); })
+      .catch(() => {});
+  }, []);
   
   // 步骤状态管理
   const [currentStep, setCurrentStep] = React.useState(1);
@@ -1356,7 +1365,9 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                           <img src={quote.logo} alt={quote.carrier} className="carrier-logo" />
                           <div className="carrier-details">
                             <div className="carrier-name">{quote.carrier}</div>
-                            <a href="#restrictions" className="view-restrictions">View Restrictions</a>
+                            <button type="button" className="view-restrictions" onClick={(e) => { e.stopPropagation(); setShowRulesFor(showRulesFor === quote.id ? null : quote.id); }}>
+                              {showRulesFor === quote.id ? 'Hide Rules' : 'View Restrictions'}
+                            </button>
                           </div>
                         </div>
 
@@ -1429,6 +1440,37 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                           </button>
                         </div>
                       </div>
+
+                      {/* Carrier restrictions */}
+                      {showRulesFor === quote.id && carrierRules && (() => {
+                        const name = quote.carrier || quote.carrierCode || '';
+                        const matchKey = Object.keys(carrierRules).find(k => name.toLowerCase().includes(k.toLowerCase()) || k.toLowerCase().includes(name.toLowerCase().split(' ')[0]));
+                        const rules = matchKey ? carrierRules[matchKey] : null;
+                        return (
+                          <div style={{ padding: '0.75rem 1rem', background: '#fefce8', borderTop: '1px solid #fde68a', fontSize: '0.82rem', lineHeight: 1.6 }}>
+                            {rules ? (
+                              <>
+                                <div style={{ fontWeight: 700, marginBottom: 4 }}>{matchKey} — Rules & Restrictions</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 16px' }}>
+                                  <span><strong>Rating:</strong> {rules.ratingType}</span>
+                                  {rules.quoteValidity && <span><strong>Quote valid:</strong> {rules.quoteValidity}</span>}
+                                  {rules.maxPalletWeight && <span><strong>Max pallet:</strong> {rules.maxPalletWeight} lbs</span>}
+                                  {rules.maxWeight && <span><strong>Max weight:</strong> {rules.maxWeight.toLocaleString()} lbs</span>}
+                                  {rules.maxLinearFeet && <span><strong>Max LF:</strong> {rules.maxLinearFeet} ft</span>}
+                                  {rules.maxPallets && <span><strong>Max pallets:</strong> {rules.maxPallets}</span>}
+                                  {rules.liabilityPerLb && <span><strong>Liability:</strong> ${rules.liabilityPerLb}/lb</span>}
+                                  {rules.amazonApproved && <span style={{ color: '#16a34a' }}><strong>Amazon approved</strong></span>}
+                                  {rules.dropTrailer && <span><strong>Drop trailer:</strong> Yes</span>}
+                                </div>
+                                {rules.prohibited?.length > 0 && <div style={{ color: '#dc2626', marginTop: 4 }}><strong>Prohibited:</strong> {rules.prohibited.join(', ')}</div>}
+                                <div style={{ color: '#6b7280', marginTop: 4 }}>{rules.notes}</div>
+                              </>
+                            ) : (
+                              <div style={{ color: '#9ca3af' }}>No specific rules on file for {name}.</div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* 价格明细 - 点击显示 */}
                       {breakdownQuoteId === quote.id && (

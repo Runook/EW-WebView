@@ -401,4 +401,18 @@ router.get('/status', async (req, res) => {
   });
 });
 
+/**
+ * GET /api/agent/carrier-rules
+ * Return all carrier rules (public, no auth needed — used by quote UI).
+ */
+router.get('/carrier-rules', async (req, res) => {
+  const { CARRIER_RULES, getCarrierRules } = require('../config/carrierRules');
+  const { carrier } = req.query;
+  if (carrier) {
+    const rules = getCarrierRules(carrier);
+    return res.json({ success: true, data: rules });
+  }
+  res.json({ success: true, data: CARRIER_RULES });
+});
+
 module.exports = router;
