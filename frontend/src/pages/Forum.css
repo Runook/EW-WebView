@@ -104,6 +104,8 @@
 /* Main */
 .forum-main {
   min-height: 60vh;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Toolbar */
@@ -231,6 +233,7 @@
   box-shadow: 0 1px 3px rgba(0,0,0,0.05);
   overflow: hidden;
   border: 1px solid #f0f0f0;
+  min-width: 0;
 }
 
 .post-row {
