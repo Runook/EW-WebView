@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CreditCard, Building, Zap, FileText, ChevronDown, ChevronRight, Download, CheckCircle } from 'lucide-react';
+import { CreditCard, Building, Zap, FileText, ChevronDown, ChevronRight, Download, CheckCircle, Mail, MessageCircle, Gift } from 'lucide-react';
 
 const RECHARGE_TIERS = [
   { amount: 2000, bonus: 2, total: 2040 },
@@ -125,8 +125,8 @@ const PaymentCheckoutForm = ({ selectedQuote, formData, shipmentDetails, onSubmi
       {/* Prepaid Recharge Tiers */}
       <div style={{ marginBottom: '1.25rem', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
         <button type="button" onClick={() => setShowRecharge(!showRecharge)}
-          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1.25rem', background: '#f9fafb', border: 'none', cursor: 'pointer', fontSize: '0.92rem', fontWeight: 600, color: '#374151' }}>
-          <span>Prepaid Recharge — Save Up to 4%</span>
+          style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1.25rem', background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)', border: 'none', cursor: 'pointer', fontSize: '0.92rem', fontWeight: 600, color: '#15803d' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Gift size={18} /> Prepaid Recharge — Save Up to 4%</span>
           {showRecharge ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
         </button>
         {showRecharge && (
@@ -147,7 +147,7 @@ const PaymentCheckoutForm = ({ selectedQuote, formData, shipmentDetails, onSubmi
                     <td style={{ padding: '6px 10px', textAlign: 'center', color: '#16a34a', fontWeight: 600 }}>+{tier.bonus}%</td>
                     <td style={{ padding: '6px 10px', textAlign: 'center' }}>${(tier.amount * tier.bonus / 100).toLocaleString()}</td>
                     <td style={{ padding: '6px 10px', textAlign: 'right', fontWeight: 700, color: '#1d4ed8' }}>
-                      {tier.total ? `$${tier.total.toLocaleString()}` : `$${(tier.amount * (1 + tier.bonus / 100)).toLocaleString()}+`}
+                      ${tier.total.toLocaleString()}
                     </td>
                   </tr>
                 ))}
@@ -163,11 +163,35 @@ const PaymentCheckoutForm = ({ selectedQuote, formData, shipmentDetails, onSubmi
         )}
       </div>
 
+      {/* After Payment Notice */}
+      <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, padding: '1rem 1.25rem', marginBottom: '1.25rem' }}>
+        <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.95rem', color: '#92400e', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Mail size={16} /> After Payment
+        </h4>
+        <p style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: '#78350f', lineHeight: 1.6 }}>
+          Please send your payment confirmation (screenshot or receipt) to:
+        </p>
+        <div style={{ padding: '0.5rem 0.75rem', background: '#fff', borderRadius: 6, border: '1px solid #fde68a', marginBottom: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <Mail size={14} style={{ color: '#d97706' }} />
+          <a href="mailto:ltl.ftl@ewftl.com" style={{ fontWeight: 700, fontSize: '0.95rem', color: '#92400e', textDecoration: 'none' }}>ltl.ftl@ewftl.com</a>
+        </div>
+        <div style={{ fontSize: '0.78rem', color: '#78350f', lineHeight: 1.6, marginTop: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+            <CheckCircle size={12} style={{ color: '#16a34a', flexShrink: 0 }} />
+            <span>Our team will verify and confirm within <strong>1–3 business days</strong>.</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <MessageCircle size={12} style={{ color: '#2563eb', flexShrink: 0 }} />
+            <span>For any questions, email us at <a href="mailto:ltl.ftl@ewftl.com" style={{ color: '#1d4ed8', fontWeight: 600 }}>ltl.ftl@ewftl.com</a></span>
+          </div>
+        </div>
+      </div>
+
       {/* W9 & Company Info */}
       <div style={{ marginBottom: '1.25rem', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
         <button type="button" onClick={() => setShowWireDetails(!showWireDetails)}
           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1.25rem', background: '#f9fafb', border: 'none', cursor: 'pointer', fontSize: '0.92rem', fontWeight: 600, color: '#374151' }}>
-          <span>W9 & Company Information</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><FileText size={18} /> W9 & Company Information</span>
           {showWireDetails ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
         </button>
         {showWireDetails && (

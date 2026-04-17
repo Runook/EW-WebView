@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, Zap, Building, CreditCard, CheckCircle, Coins,
-  Mail, Clock, MessageCircle, ChevronRight, Gift
+  Mail, Clock, MessageCircle, ChevronRight, Gift, Download, FileText
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../utils/apiClient';
@@ -127,6 +127,7 @@ const CreditRechargePage = () => {
             <p style={{ margin: '0 0 4px' }}>New customer first order: <strong style={{ color: '#16a34a' }}>$50 discount</strong></p>
             <p style={{ margin: '0 0 4px' }}>Credits never expire. Can offset freight, warehouse, and FBA delivery fees.</p>
             <p style={{ margin: 0 }}>Contact: <strong>Amy</strong> | WeChat: EWlogistics | Cell: 718-750-9888</p>
+            <p style={{ margin: '2px 0 0' }}>Email: hauppauge.receiver@smithtowntransportation.com</p>
           </div>
         </div>
       </div>
@@ -221,6 +222,26 @@ const CreditRechargePage = () => {
             <MessageCircle size={16} style={{ color: '#2563eb', flexShrink: 0, marginTop: 2 }} />
             <span>For any questions or inquiries, please email us directly at <a href="mailto:ltl.ftl@ewftl.com" style={{ color: '#1d4ed8', fontWeight: 600 }}>ltl.ftl@ewftl.com</a>.</span>
           </div>
+        </div>
+      </div>
+
+      {/* W9 & Company Information */}
+      <div style={{ marginBottom: '1.5rem', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ padding: '0.85rem 1.25rem', background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <FileText size={18} /> W9 & Company Information
+          </h3>
+        </div>
+        <div style={{ padding: '1rem 1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem 1.5rem', fontSize: '0.88rem', marginBottom: '0.75rem' }}>
+            <div><strong>Mail to: EW LOGISTICS GROUP INC</strong></div>
+            <div>135-10 35th Ave Apt213, Flushing NY 11354</div>
+            <div>Tel: (347) 201-6888 / (646) 529-8575</div>
+          </div>
+          <a href="/EW-W9.pdf" target="_blank" rel="noopener noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '0.5rem 1rem', background: '#1d4ed8', color: '#fff', borderRadius: 6, textDecoration: 'none', fontSize: '0.85rem', fontWeight: 600 }}>
+            <Download size={14} /> Download W9 (PDF)
+          </a>
         </div>
       </div>
 
