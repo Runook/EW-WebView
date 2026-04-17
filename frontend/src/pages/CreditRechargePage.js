@@ -2,10 +2,18 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, Zap, Building, CreditCard, CheckCircle, Coins,
-  Mail, Clock, MessageCircle, ChevronRight
+  Mail, Clock, MessageCircle, ChevronRight, Gift
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../utils/apiClient';
+
+const RECHARGE_TIERS = [
+  { amount: 2000, bonus: 2, total: 2040 },
+  { amount: 5000, bonus: 2.5, total: 5125 },
+  { amount: 7500, bonus: 3, total: 7725 },
+  { amount: 10000, bonus: 3.5, total: 10350 },
+  { amount: 15000, bonus: 4, total: 15600 },
+];
 
 const CreditRechargePage = () => {
   const navigate = useNavigate();
@@ -83,6 +91,45 @@ const CreditRechargePage = () => {
           </div>
         </div>
       ) : null}
+
+      {/* Prepaid Recharge Tiers */}
+      <div style={{ marginBottom: '1.5rem', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ padding: '0.85rem 1.25rem', background: 'linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%)', borderBottom: '1px solid #bbf7d0' }}>
+          <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#15803d', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Gift size={20} /> Prepaid Recharge — Save Up to 4%
+          </h3>
+          <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#6b7280' }}>充值越多，优惠越大 / The more you recharge, the bigger the bonus</p>
+        </div>
+        <div style={{ padding: '1rem 1.25rem' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem', marginBottom: '0.75rem' }}>
+            <thead>
+              <tr style={{ background: '#f3f4f6' }}>
+                <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: '#374151' }}>Recharge Amount</th>
+                <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 600, color: '#374151' }}>Bonus %</th>
+                <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 600, color: '#374151' }}>Bonus Value</th>
+                <th style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: '#374151' }}>Total Credit</th>
+              </tr>
+            </thead>
+            <tbody>
+              {RECHARGE_TIERS.map(tier => (
+                <tr key={tier.amount} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                  <td style={{ padding: '8px 12px', fontWeight: 600 }}>${tier.amount.toLocaleString()}</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'center', color: '#16a34a', fontWeight: 700 }}>+{tier.bonus}%</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'center' }}>${(tier.amount * tier.bonus / 100).toLocaleString()}</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#1d4ed8' }}>
+                    ${tier.total.toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{ fontSize: '0.82rem', color: '#6b7280', lineHeight: 1.7 }}>
+            <p style={{ margin: '0 0 4px' }}>New customer first order: <strong style={{ color: '#16a34a' }}>$50 discount</strong></p>
+            <p style={{ margin: '0 0 4px' }}>Credits never expire. Can offset freight, warehouse, and FBA delivery fees.</p>
+            <p style={{ margin: 0 }}>Contact: <strong>Amy</strong> | WeChat: EWlogistics | Cell: 718-750-9888</p>
+          </div>
+        </div>
+      </div>
 
       {/* Payment Method Selection */}
       <div style={{ marginBottom: '1.5rem' }}>
