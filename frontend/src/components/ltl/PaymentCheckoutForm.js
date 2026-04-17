@@ -3,10 +3,10 @@ import { CreditCard, Building, Zap, FileText, ChevronDown, ChevronRight, Downloa
 
 const RECHARGE_TIERS = [
   { amount: 2000, bonus: 2, total: 2040 },
-  { amount: 5000, bonus: 3, total: 5150 },
-  { amount: 7500, bonus: 4, total: 7800 },
-  { amount: 10000, bonus: 5, total: 10500 },
-  { amount: 15000, bonus: 6, total: null },
+  { amount: 5000, bonus: 2.5, total: 5125 },
+  { amount: 7500, bonus: 3, total: 7725 },
+  { amount: 10000, bonus: 3.5, total: 10350 },
+  { amount: 15000, bonus: 4, total: 15600 },
 ];
 
 const PaymentCheckoutForm = ({ selectedQuote, formData, shipmentDetails, onSubmit, onBack, isSubmitting }) => {
@@ -81,8 +81,14 @@ const PaymentCheckoutForm = ({ selectedQuote, formData, shipmentDetails, onSubmi
           <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.95rem', color: '#7c3aed' }}>Zelle Payment</h4>
           <p style={{ margin: 0, fontSize: '0.9rem' }}>Send payment to:</p>
           <div style={{ marginTop: 8, padding: '0.75rem 1rem', background: '#fff', borderRadius: 8, border: '1px solid #e9d5ff' }}>
-            <div style={{ fontWeight: 700, fontSize: '1rem', color: '#5b21b6' }}>ceo.ewlogistics@gmail.com</div>
-            <div style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: 2 }}>EW Logistics Group Inc</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 4 }}>
+              <span style={{ fontSize: '0.78rem', color: '#9ca3af', whiteSpace: 'nowrap' }}>Company Name:</span>
+              <span style={{ fontWeight: 700, fontSize: '1rem', color: '#5b21b6' }}>EW Logistics Group Inc</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontSize: '0.78rem', color: '#9ca3af', whiteSpace: 'nowrap' }}>Zelle Email:</span>
+              <span style={{ fontWeight: 700, fontSize: '1rem', color: '#5b21b6' }}>ceo.ewlogistics@gmail.com</span>
+            </div>
           </div>
           <p style={{ margin: '0.5rem 0 0', fontSize: '0.78rem', color: '#9ca3af' }}>Please include your order number in the memo.</p>
         </div>
@@ -120,7 +126,7 @@ const PaymentCheckoutForm = ({ selectedQuote, formData, shipmentDetails, onSubmi
       <div style={{ marginBottom: '1.25rem', border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden' }}>
         <button type="button" onClick={() => setShowRecharge(!showRecharge)}
           style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1.25rem', background: '#f9fafb', border: 'none', cursor: 'pointer', fontSize: '0.92rem', fontWeight: 600, color: '#374151' }}>
-          <span>Prepaid Recharge — Save Up to 6%</span>
+          <span>Prepaid Recharge — Save Up to 4%</span>
           {showRecharge ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
         </button>
         {showRecharge && (
@@ -167,9 +173,8 @@ const PaymentCheckoutForm = ({ selectedQuote, formData, shipmentDetails, onSubmi
         {showWireDetails && (
           <div style={{ padding: '1rem 1.25rem' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem 1.5rem', fontSize: '0.88rem', marginBottom: '0.75rem' }}>
-              <div><strong>EW Logistics Service Inc</strong></div>
-              <div>MC# 1094635 | DOT# 3398106</div>
-              <div>55 Kennedy Dr, Hauppauge, NY 11788</div>
+              <div><strong>Mail to: EW LOGISTICS GROUP INC</strong></div>
+              <div>135-10 35th Ave Apt213, Flushing NY 11354</div>
               <div>Tel: (347) 201-6888 / (646) 529-8575</div>
             </div>
             <a href="/EW-W9.pdf" target="_blank" rel="noopener noreferrer"
