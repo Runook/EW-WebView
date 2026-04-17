@@ -162,6 +162,7 @@ const EmployeeAdmin = () => {
                       style={{ padding: '3px 6px', border: '1px solid #ddd', borderRadius: 4, fontSize: 12, background: '#fff' }}>
                       <option value="employee">Employee</option>
                       <option value="manager">Manager</option>
+                      <option value="accountant">Accountant</option>
                       <option value="admin">Admin</option>
                     </select>
                   </td>
@@ -307,6 +308,7 @@ const EmployeeAdmin = () => {
                 <select required value={newEmployee.role} onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value})}>
                   <option value="employee">Employee</option>
                   <option value="manager">Manager</option>
+                  <option value="accountant">Accountant</option>
                   <option value="admin">Admin</option>
                 </select>
               </div>

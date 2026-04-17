@@ -46,6 +46,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import AccountingGuide from './pages/AccountingGuide';
 import CreditRechargePage from './pages/CreditRechargePage';
+import CreditsAdmin from './pages/CreditsAdmin';
 import { diagnoseGoogleMapsIssues } from './config/googleMaps';
 import './App.css';
 import './config/amplify';
@@ -209,6 +210,7 @@ function App() {
               <Route path="/employee/ai-review" element={<AIQuoteReview />} />
               <Route path="/employee/dat-loadboard" element={<DATLoadBoard />} />
               <Route path="/employee/driver-contacts" element={<DriverContacts />} />
+              <Route path="/employee/credits-admin" element={<CreditsAdmin />} />
               
               {/* 我们 */}
               <Route path="/my-points" element={

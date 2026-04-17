@@ -384,6 +384,7 @@ export const employeeUtils = {
     const labels = {
       employee: '员工',
       manager: '经理',
+      accountant: '会计',
       admin: '管理员'
     };
     return labels[role] || role;

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const UserManagement = require('../models/UserManagement');
 const { auth } = require('../middleware');
+const { requirePermission } = require('../middleware/auth');
 
 /**
  * GET /api/user-management/profile
@@ -358,6 +359,153 @@ router.post('/recharge', auth, async (req, res) => {
       message: '充值失败',
       error: error.message
     });
+  }
+});
+
+// ============================================================
+// Admin Credits Management (requires credits.manage permission)
+// ============================================================
+
+/**
+ * GET /api/user-management/admin/credits/users
+ * Search/list users with credit balances
+ */
+router.get('/admin/credits/users', auth, requirePermission('credits.manage'), async (req, res) => {
+  try {
+    const { db } = require('../config/database');
+    const { search, limit = 50, offset = 0 } = req.query;
+
+    let query = db('users')
+      .select('id', 'email', 'first_name', 'last_name', 'company_name', 'credits', 'total_credits_earned', 'total_credits_spent', 'is_employee', 'employee_role', 'created_at')
+      .orderBy('created_at', 'desc')
+      .limit(Math.min(parseInt(limit), 100))
+      .offset(parseInt(offset));
+
+    if (search) {
+      query = query.where(function() {
+        this.where('email', 'ilike', `%${search}%`)
+          .orWhere('first_name', 'ilike', `%${search}%`)
+          .orWhere('last_name', 'ilike', `%${search}%`)
+          .orWhere('company_name', 'ilike', `%${search}%`);
+      });
+    }
+
+    const users = await query;
+    const countQuery = db('users').count('* as total');
+    if (search) {
+      countQuery.where(function() {
+        this.where('email', 'ilike', `%${search}%`)
+          .orWhere('first_name', 'ilike', `%${search}%`)
+          .orWhere('last_name', 'ilike', `%${search}%`)
+          .orWhere('company_name', 'ilike', `%${search}%`);
+      });
+    }
+    const [{ total }] = await countQuery;
+
+    res.json({
+      success: true,
+      data: users.map(u => ({
+        id: u.id,
+        email: u.email,
+        name: [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email,
+        company: u.company_name || '',
+        credits: u.credits || 0,
+        totalEarned: u.total_credits_earned || 0,
+        totalSpent: u.total_credits_spent || 0,
+        isEmployee: u.is_employee,
+        employeeRole: u.employee_role,
+        createdAt: u.created_at
+      })),
+      total: parseInt(total)
+    });
+  } catch (error) {
+    console.error('Admin credits user list failed:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * GET /api/user-management/admin/credits/users/:userId
+ * Get specific user credits + history
+ */
+router.get('/admin/credits/users/:userId', auth, requirePermission('credits.manage'), async (req, res) => {
+  try {
+    const { db } = require('../config/database');
+    const { userId } = req.params;
+    const { limit = 50, offset = 0 } = req.query;
+
+    const user = await db('users')
+      .select('id', 'email', 'first_name', 'last_name', 'company_name', 'credits', 'total_credits_earned', 'total_credits_spent')
+      .where('id', userId)
+      .first();
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const history = await db('user_credits_log')
+      .where('user_id', userId)
+      .orderBy('created_at', 'desc')
+      .limit(parseInt(limit))
+      .offset(parseInt(offset));
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: [user.first_name, user.last_name].filter(Boolean).join(' ') || user.email,
+          company: user.company_name || '',
+          credits: user.credits || 0,
+          totalEarned: user.total_credits_earned || 0,
+          totalSpent: user.total_credits_spent || 0
+        },
+        history
+      }
+    });
+  } catch (error) {
+    console.error('Admin get user credits failed:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * POST /api/user-management/admin/credits/adjust
+ * Admin adjust user credits (add or deduct)
+ */
+router.post('/admin/credits/adjust', auth, requirePermission('credits.manage'), async (req, res) => {
+  try {
+    const { userId, amount, description } = req.body;
+
+    if (!userId || amount === undefined || amount === 0) {
+      return res.status(400).json({ success: false, message: 'userId, amount (non-zero), and description are required' });
+    }
+
+    if (!description || !description.trim()) {
+      return res.status(400).json({ success: false, message: 'A description/reason is required for admin adjustments' });
+    }
+
+    const adminName = [req.user.first_name, req.user.last_name].filter(Boolean).join(' ') || req.user.email;
+    const fullDescription = `[Admin: ${adminName}] ${description.trim()}`;
+
+    const result = await UserManagement.creditTransaction(
+      parseInt(userId),
+      'admin_adjust',
+      parseFloat(amount),
+      fullDescription,
+      'admin_adjust',
+      req.user.id
+    );
+
+    res.json({
+      success: true,
+      data: result,
+      message: amount > 0 ? `Successfully added ${amount} credits` : `Successfully deducted ${Math.abs(amount)} credits`
+    });
+  } catch (error) {
+    console.error('Admin credits adjust failed:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

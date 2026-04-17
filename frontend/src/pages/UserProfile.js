@@ -457,7 +457,7 @@ const UserProfile = () => {
 
   // Shortcuts
   const isEmployee = !!profile.employee_id;
-  const isAdmin = user?.employeeRole === 'admin' || user?.employee_role === 'admin' || profile?.employee_role === 'admin';
+  const isAdmin = ['admin', 'accountant'].includes(user?.employeeRole) || ['admin', 'accountant'].includes(user?.employee_role) || ['admin', 'accountant'].includes(profile?.employee_role);
   const recentArticles = profile.recentArticles || [];
   const bookmarks = profile.bookmarks || [];
 

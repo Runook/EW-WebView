@@ -1031,14 +1031,22 @@ const BrokerOrdersNew = () => {
         )}
 
         {/* 系统管理 */}
-        {user?.employeeRole === 'admin' && (
+        {['admin', 'accountant'].includes(user?.employeeRole) && (
           <div className="sidebar-footer">
             <button
               className="nav-item nav-admin"
-              onClick={() => navigate('/employee/admin')}
+              onClick={() => navigate('/employee/credits-admin')}
             >
-              ⚙️ 系统管理
+              💰 Credits Management
             </button>
+            {user?.employeeRole === 'admin' && (
+              <button
+                className="nav-item nav-admin"
+                onClick={() => navigate('/employee/admin')}
+              >
+                ⚙️ 系统管理
+              </button>
+            )}
           </div>
         )}
       </div>

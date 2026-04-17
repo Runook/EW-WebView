@@ -136,7 +136,7 @@ router.post('/set', auth, requirePermission('employee.manage'), async (req, res)
       });
     }
     
-    const validRoles = ['employee', 'manager', 'admin'];
+    const validRoles = ['employee', 'manager', 'accountant', 'admin'];
     if (role && !validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
