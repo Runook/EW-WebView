@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft, Zap, Building, CreditCard, CheckCircle, Coins,
-  Mail, Clock, MessageCircle, ChevronRight, Gift, Download, FileText
+  Mail, Clock, MessageCircle, ChevronRight, Gift, Download, FileText, Lock
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiClient } from '../utils/apiClient';
@@ -45,6 +45,7 @@ const CreditRechargePage = () => {
     { id: 'zelle', label: 'Zelle', icon: <Zap size={20} />, desc: 'Instant transfer / 即时转账' },
     { id: 'wire', label: 'Wire Transfer', icon: <Building size={20} />, desc: 'Bank wire (domestic/intl) / 银行电汇' },
     { id: 'ach', label: 'ACH Transfer', icon: <CreditCard size={20} />, desc: 'US bank transfer / 美国银行转账' },
+    { id: 'stripe', label: 'Credit / Debit Card', icon: <Lock size={20} />, desc: 'Visa, Mastercard, Amex' },
   ];
 
   return (
@@ -181,7 +182,7 @@ const CreditRechargePage = () => {
           </h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem 1.5rem', fontSize: '0.88rem', padding: '0.85rem 1rem', background: '#fff', borderRadius: 8, border: '1px solid #bae6fd' }}>
             <div><span style={{ color: '#6b7280' }}>Beneficiary:</span><br /><strong>EW LOGISTICS GROUP INC</strong></div>
-            <div><span style={{ color: '#6b7280' }}>Address:</span><br /><strong>55 Kennedy Dr, Hauppauge NY 11788, USA</strong></div>
+            <div><span style={{ color: '#6b7280' }}>Beneficiary Address:</span><br /><strong>55 Kennedy Dr, Hauppauge NY 11788, USA</strong></div>
             <div><span style={{ color: '#6b7280' }}>Bank:</span><br /><strong>JP Morgan Chase</strong></div>
             <div><span style={{ color: '#6b7280' }}>Bank Address:</span><br /><strong>200 Motor Pkwy, Hauppauge, NY 11788</strong></div>
             <div><span style={{ color: '#6b7280' }}>Account #:</span><br /><strong style={{ fontSize: '1rem', letterSpacing: 1 }}>620585999</strong></div>
@@ -190,6 +191,26 @@ const CreditRechargePage = () => {
               <div><span style={{ color: '#6b7280' }}>SWIFT:</span><br /><strong style={{ fontSize: '1rem', letterSpacing: 1 }}>CHASUS33</strong></div>
             )}
             <div><span style={{ color: '#6b7280' }}>Tel:</span><br /><strong>(646) 529-8575 / (347) 201-6888</strong></div>
+          </div>
+        </div>
+      )}
+
+      {paymentMethod === 'stripe' && (
+        <div style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', borderRadius: 12, padding: '1.25rem', marginBottom: '1.5rem' }}>
+          <h4 style={{ margin: '0 0 0.75rem', fontSize: '1rem', color: '#6d28d9', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Lock size={18} /> Credit / Debit Card (Stripe)
+          </h4>
+          <div style={{ padding: '0.85rem 1rem', background: '#fff', borderRadius: 8, border: '1px solid #ddd6fe', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: '1.2rem' }}>💳</span>
+              <span style={{ fontWeight: 600, color: '#374151' }}>Visa, Mastercard, American Express, Discover</span>
+            </div>
+            <div style={{ fontSize: '0.88rem', color: '#6b7280', lineHeight: 1.6 }}>
+              Secure payment powered by <strong style={{ color: '#6d28d9' }}>Stripe</strong>. Your card information is encrypted and never stored on our servers.
+            </div>
+          </div>
+          <div style={{ background: '#fefce8', border: '1px solid #fde68a', borderRadius: 8, padding: '0.75rem 1rem', fontSize: '0.85rem', color: '#92400e' }}>
+            <strong>Coming Soon</strong> — Credit and debit card payments will be available shortly. In the meantime, please use Zelle, Wire Transfer, or ACH to complete your recharge.
           </div>
         </div>
       )}
