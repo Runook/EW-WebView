@@ -457,6 +457,7 @@ const UserProfile = () => {
 
   // Shortcuts
   const isEmployee = !!profile.employee_id;
+  const isAdmin = user?.employeeRole === 'admin' || user?.employee_role === 'admin' || profile?.employee_role === 'admin';
   const recentArticles = profile.recentArticles || [];
   const bookmarks = profile.bookmarks || [];
 
@@ -667,11 +668,17 @@ const UserProfile = () => {
                   key={credits}
                   className="credits-recharge-item"
                   disabled={rechargingAmount !== null}
-                  onClick={() => handleRecharge(price)}
+                  onClick={() => {
+                    if (isAdmin) {
+                      handleRecharge(price);
+                    } else {
+                      navigate(`/credit-recharge?credits=${credits}&price=${price}`);
+                    }
+                  }}
                 >
                   <div className="recharge-credits"><Coins size={16} /> {credits} 积分</div>
                   <div className="recharge-price">${price}</div>
-                  {rechargingAmount === price && <span className="recharge-loading">处理中...</span>}
+                  {isAdmin && rechargingAmount === price && <span className="recharge-loading">处理中...</span>}
                 </button>
               ))}
             </div>

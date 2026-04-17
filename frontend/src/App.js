@@ -45,6 +45,7 @@ import QuoteDetail from './pages/QuoteDetail';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import AccountingGuide from './pages/AccountingGuide';
+import CreditRechargePage from './pages/CreditRechargePage';
 import { diagnoseGoogleMapsIssues } from './config/googleMaps';
 import './App.css';
 import './config/amplify';
@@ -191,6 +192,7 @@ function App() {
               {/* 用户管理 */}
               <Route path="/profile" element={<UserProfile />} />
               <Route path="/profile/:section" element={<UserProfile />} />
+              <Route path="/credit-recharge" element={<CreditRechargePage />} />
               <Route path="/user/:userId" element={<UserProfile />} />
               
               {/* 员工系统 - Broker订单系统（简化导航）*/}
