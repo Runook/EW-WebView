@@ -242,6 +242,7 @@
   transition: background 0.15s;
   border-bottom: 1px solid #f5f5f5;
   gap: 12px;
+  overflow: hidden;
 }
 
 .post-row:last-child {
@@ -258,6 +259,7 @@
   gap: 8px;
   min-width: 0;
   flex: 1;
+  overflow: hidden;
 }
 
 .category-badge-sm {
@@ -284,7 +286,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
-  display: block;
+  flex: 1;
 }
 
 .post-row:hover .post-row-title {
