@@ -1,5 +1,6 @@
 const { db } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const Customer = require('./Customer');
 
 class Order {
   /**
@@ -17,10 +18,21 @@ class Order {
       
       // 获取美东时间的今日日期 (YYYY-MM-DD格式) 作为默认报价日期
       const nyDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-      
+
+      // 把 inquiry_company 同步到 customers 表：存在就复用，不存在就新建
+      let resolvedCustomerId = orderData.customer_id || null;
+      if (!resolvedCustomerId && orderData.inquiry_company) {
+        const customer = await Customer.ensureByName(orderData.inquiry_company, {
+          contact_person: orderData.customer_name || null,
+          contact_email: orderData.customer_email || null,
+          contact_phone: orderData.customer_phone || null,
+        }, createdBy);
+        if (customer) resolvedCustomerId = customer.id;
+      }
+
       const insertData = {
         order_number: orderNumber,
-        customer_id: orderData.customer_id || null,
+        customer_id: resolvedCustomerId,
         customer_name: orderData.customer_name,
         customer_email: orderData.customer_email || null,
         customer_phone: orderData.customer_phone || null,
@@ -471,6 +483,20 @@ class Order {
         }
       });
       
+      // 若本次修改包含 inquiry_company（例如员工双击编辑 Company 列），
+      // 同步把 customer_id 指向对应客户；客户不存在就自动创建一条。
+      if (filteredData.inquiry_company !== undefined
+          && filteredData.inquiry_company !== existingOrder.inquiry_company) {
+        const customer = await Customer.ensureByName(filteredData.inquiry_company, {
+          contact_person: filteredData.customer_name || existingOrder.customer_name || null,
+          contact_email: filteredData.customer_email || existingOrder.customer_email || null,
+          contact_phone: filteredData.customer_phone || existingOrder.customer_phone || null,
+        }, updatedBy);
+        if (customer) {
+          filteredData.customer_id = customer.id;
+        }
+      }
+
       // Auto-sync workflow_stage when status/sub_status changes via generic update
       if (filteredData.status || filteredData.sub_status) {
         const STATUS_WORKFLOW_MAP = {
