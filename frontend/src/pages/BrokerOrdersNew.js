@@ -1260,6 +1260,34 @@ const BrokerOrdersNew = () => {
           >
             {loading ? '创建中...' : '+ 新建报价单'}
           </button>
+
+          {/* 已下单：批量生成 BOL / RC 按钮（原本在表头，挪到工具栏给文档列让出空间）*/}
+          {currentStatus === 'ordered' && (
+            <>
+              <button
+                className="btn-header btn-bol-header"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDocumentType('BOL');
+                  setShowDocGenerator(true);
+                }}
+                title="批量生成BOL"
+              >
+                BOL
+              </button>
+              <button
+                className="btn-header btn-rc-header"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDocumentType('RC');
+                  setShowDocGenerator(true);
+                }}
+                title="批量生成RC"
+              >
+                RC
+              </button>
+            </>
+          )}
         </div>
 
         {/* AI 文件解析区域 - 仅在 quote tab 显示 */}
@@ -1314,35 +1342,7 @@ const BrokerOrdersNew = () => {
                     </th>
                   )}
                   {currentStatus === 'ordered' && (
-                    <>
-                      <th>
-                        <button 
-                          className="btn-header btn-bol-header"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDocumentType('BOL');
-                            setShowDocGenerator(true);
-                          }}
-                          title="批量生成BOL"
-                        >
-                          BOL
-                        </button>
-                      </th>
-                      <th>
-                        <button 
-                          className="btn-header btn-rc-header"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDocumentType('RC');
-                            setShowDocGenerator(true);
-                          }}
-                          title="批量生成RC"
-                        >
-                          RC
-                        </button>
-                      </th>
-                      <th>文档</th>
-                    </>
+                    <th>文档</th>
                   )}
                   {currentStatus === 'completed' && (
                     <>
@@ -1625,43 +1625,39 @@ const BrokerOrdersNew = () => {
                       </td>
                       {currentStatus === 'quote' && <td></td>}
                       {currentStatus === 'ordered' && (
-                        <>
-                          <td></td>
-                          <td></td>
-                          {/* 文档 - 和已完成一致的多种类型链接 */}
-                          <td onClick={(e) => e.stopPropagation()}>
-                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', fontSize: 11 }}>
-                              {DOC_TYPES.map(dt => {
-                                const doc = orderDocs[order.id]?.[dt.key];
-                                const uploading = docUploading[`${order.id}-${dt.key}`];
-                                if (uploading) return <span key={dt.key} style={{ color: '#9ca3af' }}>...</span>;
-                                if (doc) {
-                                  return (
-                                    <span key={dt.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
-                                      <span
-                                        style={{ color: '#1565C0', cursor: 'pointer', textDecoration: 'underline' }}
-                                        onClick={() => handleDocDownload(order.id, doc.id, doc.original_filename)}
-                                      >{dt.label}</span>
-                                      <span
-                                        style={{ color: '#ccc', cursor: 'pointer', fontSize: 10 }}
-                                        onClick={() => handleDocDelete(order.id, doc.id, dt.key)}
-                                      >x</span>
-                                    </span>
-                                  );
-                                }
+                        /* 文档 - 和已完成一致的多种类型链接 */
+                        <td onClick={(e) => e.stopPropagation()}>
+                          <div style={{ display: 'flex', gap: '4px 8px', flexWrap: 'wrap', fontSize: 11, minWidth: 180 }}>
+                            {DOC_TYPES.map(dt => {
+                              const doc = orderDocs[order.id]?.[dt.key];
+                              const uploading = docUploading[`${order.id}-${dt.key}`];
+                              if (uploading) return <span key={dt.key} style={{ color: '#9ca3af' }}>...</span>;
+                              if (doc) {
                                 return (
-                                  <label key={dt.key} style={{ color: '#ccc', cursor: 'pointer' }}>
-                                    {dt.label}
-                                    <input type="file" style={{ display: 'none' }}
-                                      accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.tiff,.tif"
-                                      onChange={(e) => { if (e.target.files[0]) { handleDocUpload(order.id, e.target.files[0], dt.key); e.target.value = ''; } }}
-                                    />
-                                  </label>
+                                  <span key={dt.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, whiteSpace: 'nowrap' }}>
+                                    <span
+                                      style={{ color: '#1565C0', cursor: 'pointer', textDecoration: 'underline', fontWeight: 500 }}
+                                      onClick={() => handleDocDownload(order.id, doc.id, doc.original_filename)}
+                                    >{dt.label}</span>
+                                    <span
+                                      style={{ color: '#94a3b8', cursor: 'pointer', fontSize: 10 }}
+                                      onClick={() => handleDocDelete(order.id, doc.id, dt.key)}
+                                    >x</span>
+                                  </span>
                                 );
-                              })}
-                            </div>
-                          </td>
-                        </>
+                              }
+                              return (
+                                <label key={dt.key} style={{ color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }} title="点击上传">
+                                  {dt.label}
+                                  <input type="file" style={{ display: 'none' }}
+                                    accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.tiff,.tif"
+                                    onChange={(e) => { if (e.target.files[0]) { handleDocUpload(order.id, e.target.files[0], dt.key); e.target.value = ''; } }}
+                                  />
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </td>
                       )}
                       {currentStatus === 'completed' && (
                         <>
@@ -1683,29 +1679,29 @@ const BrokerOrdersNew = () => {
                               <option value="paid">已付</option>
                             </select>
                           </td>
-                          {/* 文档 - 6个紧凑文字链接 */}
+                          {/* 文档 - 多类型紧凑文字链接 */}
                           <td onClick={(e) => e.stopPropagation()}>
-                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', fontSize: 11 }}>
+                            <div style={{ display: 'flex', gap: '4px 8px', flexWrap: 'wrap', fontSize: 11, minWidth: 180 }}>
                               {DOC_TYPES.map(dt => {
                                 const doc = orderDocs[order.id]?.[dt.key];
                                 const uploading = docUploading[`${order.id}-${dt.key}`];
                                 if (uploading) return <span key={dt.key} style={{ color: '#9ca3af' }}>...</span>;
                                 if (doc) {
                                   return (
-                                    <span key={dt.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                                    <span key={dt.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, whiteSpace: 'nowrap' }}>
                                       <span
-                                        style={{ color: '#1565C0', cursor: 'pointer', textDecoration: 'underline' }}
+                                        style={{ color: '#1565C0', cursor: 'pointer', textDecoration: 'underline', fontWeight: 500 }}
                                         onClick={() => handleDocDownload(order.id, doc.id, doc.original_filename)}
                                       >{dt.label}</span>
                                       <span
-                                        style={{ color: '#ccc', cursor: 'pointer', fontSize: 10 }}
+                                        style={{ color: '#94a3b8', cursor: 'pointer', fontSize: 10 }}
                                         onClick={() => handleDocDelete(order.id, doc.id, dt.key)}
                                       >x</span>
                                     </span>
                                   );
                                 }
                                 return (
-                                  <label key={dt.key} style={{ color: '#ccc', cursor: 'pointer' }}>
+                                  <label key={dt.key} style={{ color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }} title="点击上传">
                                     {dt.label}
                                     <input type="file" style={{ display: 'none' }}
                                       accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.tiff,.tif"
