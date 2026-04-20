@@ -199,7 +199,7 @@ router.get('/:id', auth, requireEmployee, async (req, res) => {
  * POST /api/orders
  * 创建新订单
  */
-router.post('/', auth, requirePermission('order.create'), async (req, res) => {
+router.post('/', auth, async (req, res) => {
   try {
     const orderData = req.body;
     

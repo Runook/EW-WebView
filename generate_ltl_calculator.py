@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-LTL Freight Pricing Calculator Generator V3
-- Deficit weight optimization (auto weight-break bump)
-- Dual pricing mode: Market Rate / Tariff+Discount
-- Cubic capacity rule warning
-- FSC linked to Fuel sheet lookup
-- Multi-carrier quick comparison
+LTL Freight Pricing Calculator Generator V4
+- All V3 features: deficit weight optimization, dual pricing, cubic capacity warning
+- Overlength tiers: $90 (>96") / $125 (>144") / $195 (>240")
+- Cubic capacity surcharge accessorial ($100 for 350-749cuft <4PCF, $200 for ≥750cuft <6PCF)
+- Auto-liftgate for residential delivery
+- Carrier Rules sheet (from carrierRules.js)
+- Carrier Eligibility Warnings section in calculator
 - Corrected formula chain per XPO/ODFL/FedEx/Roadrunner industry standard
 """
 
@@ -136,9 +137,11 @@ ACCESSORIAL_DATA = [
     ("Limited Access Pickup","受限取货",75,150,75,"shipment","Scale by weight 按比例75-150","按比例 按重量浮动"),
     ("Limited Access Delivery","受限送货",75,150,75,"shipment","Scale by weight 按比例75-150","按比例 按重量浮动"),
     ("Appointment / Notify","预约/通知费",15,50,25,"shipment","Fixed fee 固定费用","固定费用"),
-    ("Overlength 50in-8ft","超长50寸-8尺",30,75,50,"piece","Per piece 50in-8ft","单件50英寸-8英尺"),
-    ("Overlength 8-12ft","超长8-12英尺",75,150,100,"piece","Per piece >8ft","单件超过8英尺"),
-    ("Overlength 12-20ft","超长12-20英尺",150,250,150,"piece","Scale 按比例150-250","按比例 150-250"),
+    ("Overlength >96\" (>8ft)","超长>96寸(>8尺)",60,130,90,"piece","Per piece >96\"","单件超过96英寸"),
+    ("Overlength >144\" (>12ft)","超长>144寸(>12尺)",85,180,125,"piece","Per piece >144\"","单件超过144英寸"),
+    ("Overlength >240\" (>20ft)","超长>240寸(>20尺)",130,280,195,"piece","Per piece >240\"","单件超过240英寸"),
+    ("Cubic Cap 350-749cuft <4PCF","立方附加350-749<4PCF",100,100,100,"shipment","Auto: 350-749cuft & density<4","自动：350-749立方英尺且密度<4"),
+    ("Cubic Cap ≥750cuft <6PCF","立方附加≥750<6PCF",200,200,200,"shipment","Auto: ≥750cuft & density<6","自动：≥750立方英尺且密度<6"),
     ("Reweigh / Reinspect","复称/复检",25,75,50,"shipment","Fixed fee 固定费用","固定费用"),
     ("After Hours","非工作时间",75,150,75,"shipment","Scale by OT hrs 按比例75-150","按比例 OT时间 75-150"),
     ("Hazardous Materials","危险品",50,200,100,"shipment","Fixed fee 固定费用","固定费用"),
@@ -195,6 +198,44 @@ DIST_BANDS = [
     (2001,2500,1.35,"Coast / 沿海长途"),
     (2501,3000,1.50,"Cross-country / 横跨大陆"),
     (3001,9999,1.65,"Coast-to-coast / 东西海岸"),
+]
+
+# Carrier rules data (from backend/src/config/carrierRules.js)
+# (name, ratingType, maxPalletWt, maxShipmentWt, maxLinFt, maxPallets, quoteValidity, amazonApproved, dropTrailer, prohibited, notes)
+CARRIER_RULES_DATA = [
+    ("AAA Cooper", "NMFC", 2500, None, None, None, None, False, False,
+     "firearms, tobacco, vapes",
+     "NMFC required. Liability $1/lb; overlength $0.50/lb."),
+    ("ABF LTL", "density", None, None, None, None, None, True, False,
+     "vaping, tobacco, guns/ammo (CA)",
+     "Dynamic density rating. Amazon approved (live-unload)."),
+    ("ABF Volume", "NMFC", 2500, 15000, 27, None, None, True, False,
+     "vaping, tobacco, guns/ammo (CA)",
+     "Dim >95\" surcharge. Max 27ft / 15,000 lbs."),
+    ("R&L Carriers", "NMFC", None, 12000, 12, None, None, False, False,
+     "", "Max 12,000 lbs and 12ft trailer space."),
+    ("RRTS LTL", "NMFC", None, None, None, None, None, False, True,
+     "", "Class by total shipment density. Drop trailer."),
+    ("RRTS Spot", "density", None, None, None, None, None, False, False,
+     "", "Density based. Cubic ft cap limits."),
+    ("TForce", "density", 3500, 20000, 15, None, None, True, True,
+     "firearms, vaping",
+     "Max 20k lbs / 15ft. Auto-liftgate residential. Amazon FBA."),
+    ("SAIA", "NMFC", 2500, None, 10, 6, "2 days", True, True,
+     "hemp, THC, CBD",
+     "Quote valid 2 days. Max 6 plts / 10ft. Cubic cap surcharge."),
+    ("STG", "NMFC", None, 12000, 12, 6, None, False, False,
+     "", "Max 6 pallets, 12ft, 12k lbs."),
+    ("EDI Express", "density", None, None, 12, 6, "5 biz days", False, False,
+     "hazmat",
+     "Residential needs appt. Max liftgate 48x72x72 2k lbs. No Amazon."),
+    ("WARP", "flat rate", 2000, None, None, None, "72 hours", False, False,
+     "",
+     "Flat/pallet. Incl appt/resi/liftgate/limited. Max 48x48x85\" 2k lbs."),
+    ("Estes", "NMFC", None, None, None, None, None, True, False,
+     "", "Amazon approved. Not giving broker accounts currently."),
+    ("Forward Air", "", None, None, None, None, None, False, False,
+     "", "Requires $5000 credit line deposit."),
 ]
 
 
@@ -446,10 +487,13 @@ function resetCalc() {
   ws.getRange('B10').setValue('Commercial 商业');
   ws.getRange('B12').setValue('Market Rate 市场价');
   ws.getRange('B13').setValue(0);
-  ws.getRange('B20:E25').setValue('');
-  ws.getRange('B33').setValue('');
-  for (var r = 54; r <= 72; r++) { ws.getRange('B'+r).setValue('No'); ws.getRange('D'+r).setValue(1); }
-  ws.getRange('B89:C93').setValue('');
+  ws.getRange('B20:F29').setValue('');
+  var autoRows = [61, 70, 71];
+  for (var r = 58; r <= 79; r++) {
+    if (autoRows.indexOf(r) === -1) { ws.getRange('B'+r).setValue('No'); }
+    ws.getRange('D'+r).setValue(1);
+  }
+  ws.getRange('B97:C101').setValue('');
   SpreadsheetApp.getUi().alert('Reset! / 已清空！');
 }'''
     cf = Font(name="Courier New", size=9)
@@ -462,7 +506,7 @@ function resetCalc() {
 
 
 # ===================================================================
-# MAIN: Sheet 1 Calculator (complete rewrite for V3)
+# MAIN: Sheet 1 Calculator (V4)
 # ===================================================================
 
 def build_calculator(wb):
@@ -473,10 +517,11 @@ def build_calculator(wb):
     AS = "'附加费 Accessorials'"
     DS = "'距离系数 Distance'"
     FS = "'燃油附加费 Fuel'"
+    CRS = "'承运商规则 Carrier Rules'"
 
     # ── Title ──
     ws.merge_cells("A1:H1")
-    c = ws["A1"]; c.value = "LTL Freight Rate Calculator V3 / LTL 运费计算器 V3"
+    c = ws["A1"]; c.value = "LTL Freight Rate Calculator V4 / LTL 运费计算器 V4"
     c.font = Font(name="Calibri", bold=True, size=16, color=WHITE); c.fill = TitleFill; c.alignment = CA
 
     ws.merge_cells("A2:H2")
@@ -633,23 +678,37 @@ def build_calculator(wb):
         ("Inside Pickup / 室内取货",9),("Inside Delivery / 室内送货",10),
         ("Limited Access Pickup / 受限取货",11),("Limited Access Delivery / 受限送货",12),
         ("Appointment / 预约费",13),
-        ("Overlength 50in-8ft / 超长50寸-8尺",14),
-        ("Overlength 8-12ft / 超长8-12尺",15),
-        ("Overlength 12-20ft / 超长12-20尺",16),
-        ("Reweigh / 复称",17),
-        ("After Hours / 非工作时间",18),("Hazmat / 危险品",19),
-        ("Sort & Segregate / 分拣(按箱)",20),("Protect Freeze / 防冻",21),
-        ("Notify / 送前通知",22),("Construction Site / 工地",23),("Trade Show / 展会",24),
+        ("Overlength >96\" (>8ft) / 超长>96寸",14),
+        ("Overlength >144\" (>12ft) / 超长>144寸",15),
+        ("Overlength >240\" (>20ft) / 超长>240寸",16),
+        ("Cubic Cap 350-749cuft / 立方附加",17),
+        ("Cubic Cap ≥750cuft / 立方附加",18),
+        ("Reweigh / 复称",19),
+        ("After Hours / 非工作时间",20),("Hazmat / 危险品",21),
+        ("Sort & Segregate / 分拣(按箱)",22),("Protect Freeze / 防冻",23),
+        ("Notify / 送前通知",24),("Construction Site / 工地",25),("Trade Show / 展会",26),
     ]
 
-    weight_scaled_indexes = {0,1,2,3,4,5,6,7,11,13,18,19}
+    weight_scaled_indexes = {0,1,2,3,4,5,6,7,11,15,20,21}
+
+    # Auto-apply formulas: liftgate delivery for residential, cubic capacity by cuft/density
+    AUTO_APPLY = {
+        3: '=IF(ISNUMBER(SEARCH("Residential",$B$10)),"Yes","No")',
+        12: '=IF(AND($B$32>=350,$B$32<750,$B$34<>"",$B$34<4),"Yes","No")',
+        13: '=IF(AND($B$32>=750,$B$34<>"",$B$34<6),"Yes","No")',
+    }
 
     for i, (name, acc_row) in enumerate(acc_items):
         rr = 58+i
         ws.cell(row=rr, column=1, value=name).font = NF
         ws.cell(row=rr, column=1).alignment = LA; ws.cell(row=rr, column=1).border = TB
-        yn = ws.cell(row=rr, column=2, value="No")
-        yn.fill = InFill; yn.border = TB; yn.alignment = CA; dv_yn.add(yn)
+
+        if i in AUTO_APPLY:
+            yn = ws.cell(row=rr, column=2, value=AUTO_APPLY[i])
+            yn.fill = CalcFill; yn.border = TB; yn.alignment = CA
+        else:
+            yn = ws.cell(row=rr, column=2, value="No")
+            yn.fill = InFill; yn.border = TB; yn.alignment = CA; dv_yn.add(yn)
 
         if i in weight_scaled_indexes:
             rate_f = (
@@ -734,22 +793,71 @@ def build_calculator(wb):
                 value=f'=IF(COUNTA(B{cmp_sec+2}:B{cmp_sec+6})=0,"",MIN(B{cmp_sec+2}:B{cmp_sec+6}))')
     c.fill = CalcFill; c.border = TB; c.alignment = CA; c.number_format = MF; c.font = BF
 
-    # ====== SECTION 9: Formula Summary (rows 96+) ======
-    form_sec = best_row + 2  # row 96
+    # ====== SECTION 9: Carrier Eligibility Warnings ======
+    warn_sec = best_row + 2
+    section(ws, warn_sec, "SECTION 9: Carrier Eligibility Warnings / 第九部分：承运商适用性检查")
+    ws.merge_cells(start_row=warn_sec+1, start_column=1, end_row=warn_sec+1, end_column=8)
+    ws.cell(row=warn_sec+1, column=1,
+            value="Auto-checks shipment against carrier limits. Enter weight & pallets above. / 自动检查货物是否符合承运商限制"
+            ).font = Font(name="Calibri", italic=True, size=10)
+    hdr(ws, warn_sec+2, 1, ["Carrier\n承运商","Eligible?\n是否适用","Max Weight\n最大重量",
+                             "Max Pallet Wt\n托盘限重","Max Pallets\n最多托盘",
+                             "Rating\n计费方式","Prohibited\n禁运品","Notes\n备注"])
+
+    for ci in range(len(CARRIER_RULES_DATA)):
+        cr = 5 + ci
+        rr = warn_sec + 3 + ci
+
+        c = ws.cell(row=rr, column=1, value=f'={CRS}!A{cr}')
+        c.font = BF; c.alignment = LA; c.border = TB
+
+        d_ref = f'{CRS}!D{cr}'
+        c_ref = f'{CRS}!C{cr}'
+        f_ref = f'{CRS}!F{cr}'
+        elig_f = (
+            f'=IF(OR($B$33="",$B$9=""),"\u2014",'
+            f'IF(AND({d_ref}<>"",{d_ref}>0,$B$33>{d_ref}),"\u26a0 Over max weight",'
+            f'IF(AND({c_ref}<>"",{c_ref}>0,$B$9>0,$B$33/$B$9>{c_ref}),"\u26a0 Pallet too heavy",'
+            f'IF(AND({f_ref}<>"",{f_ref}>0,$B$9>{f_ref}),"\u26a0 Too many pallets",'
+            f'"\u2713 OK"))))'
+        )
+        c = ws.cell(row=rr, column=2, value=elig_f)
+        c.fill = CalcFill; c.border = TB; c.alignment = CA
+
+        for col, src_col in [(3,'D'),(4,'C'),(5,'F')]:
+            c = ws.cell(row=rr, column=col,
+                        value=f'=IF({CRS}!{src_col}{cr}<>"",{CRS}!{src_col}{cr},"\u2014")')
+            c.border = TB; c.alignment = CA; c.number_format = IF2
+        c = ws.cell(row=rr, column=6, value=f'={CRS}!B{cr}')
+        c.border = TB; c.alignment = CA
+        c = ws.cell(row=rr, column=7, value=f'={CRS}!J{cr}')
+        c.border = TB; c.alignment = LA; c.font = Font(name="Calibri", size=9)
+        c = ws.cell(row=rr, column=8, value=f'={CRS}!K{cr}')
+        c.border = TB; c.alignment = LA; c.font = Font(name="Calibri", size=9)
+
+        if ci % 2 == 0:
+            for cc in [1,3,4,5,6,7,8]: ws.cell(row=rr, column=cc).fill = GrayFill
+
+    last_warn_row = warn_sec + 3 + len(CARRIER_RULES_DATA) - 1
+
+    # ====== SECTION 10: Formula Summary ======
+    form_sec = last_warn_row + 2
     section(ws, form_sec, "FORMULA SUMMARY / 公式总结")
     formulas_text = [
         "1. Per item: CuFt = L x W x H / 1728",
         "2. Per item: Density = Wt_per_unit / CuFt_per_unit",
-        "3. Totals: Total_CuFt = SUM(Qty x CuFt), Total_Wt = SUM(Qty x Wt)",
+        "3. Totals: Total_CuFt = SUM(Qty x CuFt), Total_Wt = SUM(line totals)",
         "4. Overall Density = Total_Wt / Total_CuFt",
         "5. Class = f(Density) via NMFC 18-class table",
         "6. Billable CWT = Total_Wt / 100 [ACTUAL weight, NO DIM!]",
-        "   (ODFL: density penalty is in the class, not DIM weight)",
         "7. CWT Rate = lookup(Class, Weight_Break) from rate table",
         "8. Adjusted Rate = CWT_Rate x Distance_Factor",
         "9. DEFICIT CHECK: test all 7 tiers, pick cheapest total",
         "10. Net = Optimized_Cost x (1 - Discount%)",
-        "11. Total = MAX(Net + FSC + Accessorials, Minimum_Charge)",
+        "11. Cubic Cap: $100 (350-749cuft <4PCF), $200 (>=750cuft <6PCF)",
+        "12. Auto-liftgate: residential delivery -> liftgate auto-applied",
+        "13. Total = MAX(Net + FSC + Accessorials, Minimum_Charge)",
+        "14. Carrier Eligibility = check wt/pallet/count vs carrier rules",
     ]
     for j, txt in enumerate(formulas_text):
         ws.cell(row=form_sec+1+j, column=1, value=txt).font = Font(name="Courier New", size=10)
@@ -758,6 +866,45 @@ def build_calculator(wb):
     for col,w in [("A",50),("B",14),("C",14),("D",14),("E",14),("F",16),("G",14),("H",14),("I",14)]:
         ws.column_dimensions[col].width = w
     ws.sheet_properties.tabColor = "00B050"
+
+
+# ===================================================================
+# Carrier Rules Sheet (from carrierRules.js)
+# ===================================================================
+def build_carrier_rules(wb):
+    ws = wb.create_sheet("承运商规则 Carrier Rules")
+    ws.merge_cells("A1:K1")
+    c = ws["A1"]; c.value = "Carrier Rules & Restrictions / 承运商规则与限制"
+    c.font = TitleFont; c.fill = TitleFill; c.alignment = CA
+    ws.merge_cells("A2:K2")
+    ws["A2"].value = "Source: backend/src/config/carrierRules.js \u2014 Yellow = editable / \u6570\u636e\u6765\u6e90\uff1acarrierRules.js \u2014 \u9ec4\u8272\u53ef\u7f16\u8f91"
+    ws["A2"].font = Font(name="Calibri", italic=True, size=10, color=ACCENT_ORANGE)
+    headers = ["Carrier\n\u627f\u8fd0\u5546","Rating Type\n\u8ba1\u8d39\u65b9\u5f0f","Max Pallet Wt\n\u6258\u76d8\u9650\u91cd",
+               "Max Weight\n\u6700\u5927\u91cd\u91cf","Max Linear Ft\n\u6700\u5927\u7ebf\u6027\u5c3a","Max Pallets\n\u6700\u591a\u6258\u76d8",
+               "Quote Validity\n\u62a5\u4ef7\u6709\u6548\u671f","Amazon\n\u4e9a\u9a6c\u900a","Drop Trailer\n\u7529\u6302",
+               "Prohibited\n\u7981\u8fd0\u54c1","Notes\n\u5907\u6ce8"]
+    hdr(ws, 4, 1, headers)
+
+    for i, (name, rating, mpw, mw, mlf, mp, qv, az, dt, proh, notes) in enumerate(CARRIER_RULES_DATA):
+        r = 5 + i
+        wr(ws, r, 1, [
+            name, rating or "\u2014",
+            mpw if mpw else "", mw if mw else "",
+            mlf if mlf else "", mp if mp else "",
+            qv or "\u2014",
+            "Yes" if az else "No", "Yes" if dt else "No",
+            proh or "\u2014", notes
+        ], font=NF, border=TB, alignment=CA)
+        for cc in [3,4,5,6]:
+            ws.cell(row=r, column=cc).number_format = IF2
+        ws.cell(row=r, column=10).alignment = LA
+        ws.cell(row=r, column=11).alignment = LA
+        if i % 2 == 0: sr(ws, r, r, 1, 11, fill=GrayFill)
+
+    for col, w in [("A",18),("B",14),("C",16),("D",16),("E",14),("F",14),
+                    ("G",16),("H",10),("I",12),("J",30),("K",55)]:
+        ws.column_dimensions[col].width = w
+    ws.sheet_properties.tabColor = "FF6600"
 
 
 # ===================================================================
@@ -920,26 +1067,28 @@ def build_sources(wb):
 # ===================================================================
 def main():
     wb = openpyxl.Workbook()
-    print("Building Calculator (V3 with deficit optimization)...")
+    print("Building Calculator (V4)...")
     build_calculator(wb)
     print("Building NMFC Reference...")
     build_nmfc(wb)
-    print("Building Accessorials...")
+    print("Building Accessorials (with cubic capacity surcharge)...")
     build_accessorials(wb)
     print("Building CWT Rate Table (with tariff section)...")
     build_cwt_rates(wb)
     print("Building Distance Factor...")
     build_distance(wb)
-    print("Building Fuel Surcharge (updated to 29.75%)...")
+    print("Building Fuel Surcharge...")
     build_fuel(wb)
     print("Building Quote Log...")
     build_quote_log(wb)
     print("Building Reset Instructions...")
     build_reset(wb)
+    print("Building Carrier Rules (from carrierRules.js)...")
+    build_carrier_rules(wb)
     print("Building Data Sources...")
     build_sources(wb)
     wb.save(OUTPUT_FILE)
-    print(f"\nDone! Saved: {OUTPUT_FILE}")
+    print(f"\nDone! Saved: {OUTPUT_FILE} (V4)")
 
 if __name__ == "__main__":
     main()

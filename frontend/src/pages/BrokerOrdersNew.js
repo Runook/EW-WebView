@@ -43,10 +43,6 @@ const BrokerOrdersNew = () => {
   // QBO 设置状态
   const [showQBOSettings, setShowQBOSettings] = useState(false);
   
-  // POD 状态
-  const [podData, setPodData] = useState({}); // { orderId: [pods] }
-  const [podUploading, setPodUploading] = useState({});
-  
   // 文档管理状态
   const [orderDocs, setOrderDocs] = useState({}); // { orderId: { byType: {...} } }
   const [docUploading, setDocUploading] = useState({});
@@ -328,9 +324,8 @@ const BrokerOrdersNew = () => {
   const toggleRow = (orderId) => {
     const newExpanded = expandedRow === orderId ? null : orderId;
     setExpandedRow(newExpanded);
-    // 展开完成订单时自动加载 POD 和文档
+    // 展开完成订单时自动加载文档
     if (newExpanded && currentStatus === 'completed') {
-      loadPods(orderId);
       loadDocs(orderId);
     }
   };
@@ -776,54 +771,6 @@ const BrokerOrdersNew = () => {
       await orderApi.markPaid(orderId, { payment_status: status });
       await loadOrders();
     } catch (e) { alert('操作失败: ' + e.message); }
-  };
-
-  // ========== POD 相关 ==========
-  const loadPods = async (orderId) => {
-    try {
-      const response = await orderApi.getPods(orderId);
-      if (response.success) {
-        setPodData(prev => ({ ...prev, [orderId]: response.data }));
-      }
-    } catch (error) {
-      console.error('加载POD失败:', error);
-    }
-  };
-
-  const handlePodUpload = async (orderId, file) => {
-    if (!file) return;
-    setPodUploading(prev => ({ ...prev, [orderId]: true }));
-    try {
-      await orderApi.uploadPod(orderId, file);
-      alert('✅ POD 上传成功');
-      await loadPods(orderId);
-    } catch (error) {
-      console.error('POD 上传失败:', error);
-      alert('上传失败: ' + error.message);
-    } finally {
-      setPodUploading(prev => ({ ...prev, [orderId]: false }));
-    }
-  };
-
-  const handlePodDownload = async (orderId, podId, filename) => {
-    try {
-      await orderApi.downloadPod(orderId, podId, filename);
-    } catch (error) {
-      console.error('POD 下载失败:', error);
-      alert('下载失败: ' + error.message);
-    }
-  };
-
-  const handlePodDelete = async (orderId, podId) => {
-    if (!window.confirm('确定要删除此 POD 文件吗？')) return;
-    try {
-      await orderApi.deletePod(orderId, podId);
-      alert('✅ POD 已删除');
-      await loadPods(orderId);
-    } catch (error) {
-      console.error('POD 删除失败:', error);
-      alert('删除失败: ' + error.message);
-    }
   };
 
   const handleBackToQuote = async (orderId) => {
@@ -2176,62 +2123,6 @@ const BrokerOrdersNew = () => {
                                 />
                               </div>
                             </div>
-
-                            {/* POD 文件列表（已完成订单） */}
-                            {currentStatus === 'completed' && podData[order.id] && (
-                              <div className="pod-section">
-                                <h4>📄 POD (Proof of Delivery) 文件</h4>
-                                {podData[order.id].length === 0 ? (
-                                  <p className="pod-empty">暂无 POD 文件，点击 📤 上传</p>
-                                ) : (
-                                  <div className="pod-list">
-                                    {podData[order.id].map(pod => (
-                                      <div key={pod.id} className="pod-item">
-                                        <div className="pod-info">
-                                          <span className="pod-filename">{pod.original_filename}</span>
-                                          <span className="pod-meta">
-                                            {(pod.file_size / 1024).toFixed(1)} KB
-                                            {pod.uploaded_by_name && ` · ${pod.uploaded_by_name}`}
-                                            {pod.created_at && ` · ${new Date(pod.created_at).toLocaleDateString('zh-CN')}`}
-                                          </span>
-                                        </div>
-                                        <div className="pod-actions">
-                                          <button
-                                            className="btn-pod-download"
-                                            onClick={() => handlePodDownload(order.id, pod.id, pod.original_filename)}
-                                            title="下载"
-                                          >
-                                            ⬇️ 下载
-                                          </button>
-                                          <button
-                                            className="btn-pod-delete"
-                                            onClick={() => handlePodDelete(order.id, pod.id)}
-                                            title="删除"
-                                          >
-                                            🗑️ 删除
-                                          </button>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                                <label className="btn-pod-upload-large">
-                                  {podUploading[order.id] ? '⏳ 上传中...' : '📤 上传 POD 文件'}
-                                  <input
-                                    type="file"
-                                    style={{ display: 'none' }}
-                                    accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.tiff,.tif"
-                                    onChange={(e) => {
-                                      if (e.target.files[0]) {
-                                        handlePodUpload(order.id, e.target.files[0]);
-                                        e.target.value = '';
-                                      }
-                                    }}
-                                    disabled={podUploading[order.id]}
-                                  />
-                                </label>
-                              </div>
-                            )}
 
                             {/* 下单后的卡车信息 */}
                             {currentStatus !== 'quote' && (
