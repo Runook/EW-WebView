@@ -180,7 +180,9 @@
 /* 表格 */
 .table-wrapper {
   flex: 1;
-  overflow: auto;
+  /* 只允许垂直滚动；水平方向要么能放下要么让文档列换行展开 */
+  overflow-x: hidden;
+  overflow-y: auto;
   background: white;
 }
 
@@ -245,6 +247,17 @@
   max-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 文档 cell 独立样式：不截断、允许在 cell 内多行排布；
+   内部的 label / 下载链接靠 whiteSpace:nowrap 保证单个类型名不会被拆开 */
+.orders-table td.td-docs {
+  max-width: 260px;
+  min-width: 180px;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  padding: 6px 8px;
 }
 
 .order-number {

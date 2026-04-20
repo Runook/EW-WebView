@@ -46,6 +46,12 @@ const BrokerOrdersNew = () => {
   // 文档管理状态
   const [orderDocs, setOrderDocs] = useState({}); // { orderId: { byType: {...} } }
   const [docUploading, setDocUploading] = useState({});
+
+  // 无限滚动分页
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const PAGE_SIZE = 50;
   
   const currentStatus = searchParams.get('status') || 'quote';
   
@@ -104,7 +110,10 @@ const BrokerOrdersNew = () => {
     if (currentStatus === 'guest_quotes') {
       loadGuestSessions();
     } else {
-      loadOrders();
+      // 切 tab / 改过滤条件 → 从第 1 页重新加载
+      setPage(1);
+      setHasMore(true);
+      loadOrders(1, false);
       if (currentStatus === 'ordered') {
         loadStats();
       }
@@ -112,25 +121,52 @@ const BrokerOrdersNew = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStatus, filters]);
 
-  const loadOrders = async () => {
+  const loadOrders = async (pageNum = 1, append = false) => {
     try {
-      setLoading(true);
+      if (append) setLoadingMore(true); else setLoading(true);
+      // 重新从第 1 页加载（非 append）时，同步把分页状态归位
+      if (!append) {
+        setPage(1);
+        setHasMore(true);
+      }
       const response = await orderApi.getOrders({
         status: currentStatus,
-        ...filters
+        ...filters,
+        page: pageNum,
+        limit: PAGE_SIZE
       });
       
       if (response.success) {
-        setOrders(response.data || []);
+        const incoming = response.data || [];
+        setOrders(prev => append ? [...prev, ...incoming] : incoming);
+        // 根据 pagination 判断还有没有下一页
+        const pg = response.pagination;
+        if (pg) {
+          setHasMore(pg.page < pg.totalPages);
+        } else {
+          setHasMore(incoming.length === PAGE_SIZE);
+        }
         // 报价单 / 已下单 / 已完成 都需要文档列，列表加载时预取
-        if ((currentStatus === 'quote' || currentStatus === 'ordered' || currentStatus === 'completed') && response.data) {
-          response.data.forEach(o => loadDocs(o.id));
+        if (currentStatus === 'quote' || currentStatus === 'ordered' || currentStatus === 'completed') {
+          incoming.forEach(o => loadDocs(o.id));
         }
       }
     } catch (error) {
       console.error('加载订单失败:', error);
     } finally {
-      setLoading(false);
+      if (append) setLoadingMore(false); else setLoading(false);
+    }
+  };
+
+  // 滚动到接近底部时自动加载下一页
+  const handleTableScroll = (e) => {
+    if (loadingMore || !hasMore) return;
+    const el = e.currentTarget;
+    // 距离底部 < 120px 时触发
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 120) {
+      const next = page + 1;
+      setPage(next);
+      loadOrders(next, true);
     }
   };
 
@@ -772,8 +808,8 @@ const BrokerOrdersNew = () => {
 
   // 文档 cell —— quote / ordered / completed 三个 tab 共用
   const renderDocsCell = (order) => (
-    <td onClick={(e) => e.stopPropagation()}>
-      <div style={{ display: 'flex', gap: '4px 8px', flexWrap: 'wrap', fontSize: 11, minWidth: 180 }}>
+    <td className="td-docs" onClick={(e) => e.stopPropagation()}>
+      <div style={{ display: 'flex', gap: '4px 8px', flexWrap: 'wrap', fontSize: 11 }}>
         {DOC_TYPES.map(dt => {
           const doc = orderDocs[order.id]?.[dt.key];
           const uploading = docUploading[`${order.id}-${dt.key}`];
@@ -1370,7 +1406,7 @@ const BrokerOrdersNew = () => {
             </button>
           </div>
         ) : (
-          <div className="table-wrapper">
+          <div className="table-wrapper" onScroll={handleTableScroll}>
             <table className="orders-table">
               <thead>
                 <tr>
@@ -2327,6 +2363,16 @@ const BrokerOrdersNew = () => {
                 ))}
               </tbody>
             </table>
+            {loadingMore && (
+              <div style={{ textAlign: 'center', padding: '14px 0', color: '#6b7280', fontSize: 12 }}>
+                加载中...
+              </div>
+            )}
+            {!hasMore && orders.length > 0 && (
+              <div style={{ textAlign: 'center', padding: '14px 0', color: '#9ca3af', fontSize: 12 }}>
+                — 已显示全部 {orders.length} 条 —
+              </div>
+            )}
           </div>
         )}
       </>
