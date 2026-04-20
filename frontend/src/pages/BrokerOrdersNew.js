@@ -122,7 +122,8 @@ const BrokerOrdersNew = () => {
       
       if (response.success) {
         setOrders(response.data || []);
-        if (currentStatus === 'completed' && response.data) {
+        // 已下单 / 已完成 都需要文档列，列表加载时预取
+        if ((currentStatus === 'completed' || currentStatus === 'ordered') && response.data) {
           response.data.forEach(o => loadDocs(o.id));
         }
       }
@@ -324,8 +325,8 @@ const BrokerOrdersNew = () => {
   const toggleRow = (orderId) => {
     const newExpanded = expandedRow === orderId ? null : orderId;
     setExpandedRow(newExpanded);
-    // 展开完成订单时自动加载文档
-    if (newExpanded && currentStatus === 'completed') {
+    // 展开已下单 / 已完成订单时自动加载文档
+    if (newExpanded && (currentStatus === 'completed' || currentStatus === 'ordered')) {
       loadDocs(orderId);
     }
   };
@@ -342,7 +343,7 @@ const BrokerOrdersNew = () => {
       totalDat = totalDat * 0.7;
     }
     
-    // 报价参考 = (TOTAL DAT / 车类型) × 总面积板数 + 100
+    // 报价参考 = (TOTAL DAT / 价格系数) × 总面积板数 + 100
     const quoteReference = (totalDat / truckPallets) * totalAreaPallets + 100;
     
     // 参考+10%, +20%, +30%
@@ -735,6 +736,10 @@ const BrokerOrdersNew = () => {
     { key: 'pod', label: 'POD' },
     { key: 'customer_invoice', label: '发票' },
     { key: 'vendor_invoice', label: '司机发票' },
+    { key: 'driver_id', label: '司机ID' },
+    { key: 'vin_pic', label: 'VIN Pic' },
+    { key: 'coi', label: 'COI' },
+    { key: 'w9', label: 'W-9' },
   ];
 
   const loadDocs = async (orderId) => {
@@ -1336,6 +1341,7 @@ const BrokerOrdersNew = () => {
                           RC
                         </button>
                       </th>
+                      <th>文档</th>
                     </>
                   )}
                   {currentStatus === 'completed' && (
@@ -1622,6 +1628,39 @@ const BrokerOrdersNew = () => {
                         <>
                           <td></td>
                           <td></td>
+                          {/* 文档 - 和已完成一致的多种类型链接 */}
+                          <td onClick={(e) => e.stopPropagation()}>
+                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', fontSize: 11 }}>
+                              {DOC_TYPES.map(dt => {
+                                const doc = orderDocs[order.id]?.[dt.key];
+                                const uploading = docUploading[`${order.id}-${dt.key}`];
+                                if (uploading) return <span key={dt.key} style={{ color: '#9ca3af' }}>...</span>;
+                                if (doc) {
+                                  return (
+                                    <span key={dt.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                                      <span
+                                        style={{ color: '#1565C0', cursor: 'pointer', textDecoration: 'underline' }}
+                                        onClick={() => handleDocDownload(order.id, doc.id, doc.original_filename)}
+                                      >{dt.label}</span>
+                                      <span
+                                        style={{ color: '#ccc', cursor: 'pointer', fontSize: 10 }}
+                                        onClick={() => handleDocDelete(order.id, doc.id, dt.key)}
+                                      >x</span>
+                                    </span>
+                                  );
+                                }
+                                return (
+                                  <label key={dt.key} style={{ color: '#ccc', cursor: 'pointer' }}>
+                                    {dt.label}
+                                    <input type="file" style={{ display: 'none' }}
+                                      accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.tiff,.tif"
+                                      onChange={(e) => { if (e.target.files[0]) { handleDocUpload(order.id, e.target.files[0], dt.key); e.target.value = ''; } }}
+                                    />
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </td>
                         </>
                       )}
                       {currentStatus === 'completed' && (
@@ -1988,13 +2027,13 @@ const BrokerOrdersNew = () => {
                                     { value: 'Warehouse', label: 'Warehouse' }
                                   ]}
                                   onSave={async (id, field, newValue) => {
-                                    // 地址类型与车类型联动
+                                    // 地址类型与价格系数联动
                                     const truckType = newValue === 'Residential' ? '13' : '26';
                                     
                                     // 先更新地址类型
                                     await handleCellUpdate(id, field, newValue);
                                     
-                                    // 自动更新车类型
+                                    // 自动更新价格系数
                                     await handleCellUpdate(id, 'truck_pallets', truckType);
                                     
                                     // 获取当前订单并重新计算
@@ -2054,7 +2093,7 @@ const BrokerOrdersNew = () => {
                                 />
                               </div>
                               <div className="detail-item">
-                                <label>车类型:</label>
+                                <label>价格系数:</label>
                                 <EditableCell
                                   value={order.truck_pallets}
                                   orderId={order.id}

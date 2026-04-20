@@ -91,6 +91,13 @@ const EmployeeAdmin = () => {
     setSearchQuery(''); setSelectedUser(null); setSearchResults([]);
   };
 
+  // 点外面 / ESC 关闭前的二次确认：当前有搜索关键词、已选用户或输入了 Employee ID 时视为"有改动"
+  const guardedCloseModal = () => {
+    const dirty = Boolean(searchQuery || selectedUser || newEmployee.employeeId);
+    if (dirty && !window.confirm('有未保存的改动，确定关闭吗？')) return;
+    handleCloseModal();
+  };
+
   const handleUpdateRole = async (employeeId, newRole) => {
     if (!window.confirm(`Change role to ${newRole}?`)) return;
     try { await employeeApi.updateEmployee(employeeId, { employee_role: newRole }); loadEmployees(); }
@@ -271,7 +278,7 @@ const EmployeeAdmin = () => {
 
       {/* Add Employee Modal */}
       {showSetEmployeeModal && (
-        <div className="modal-overlay" onClick={handleCloseModal}>
+        <div className="modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) guardedCloseModal(); }}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2>Add Employee</h2>

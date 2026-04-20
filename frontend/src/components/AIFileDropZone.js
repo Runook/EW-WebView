@@ -428,7 +428,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
 
       {/* Quote Modal */}
       {quoteModalIdx !== null && (
-        <div className="quote-modal-overlay" onClick={() => { setQuoteModalIdx(null); setQuoteResults([]); setDatRate(null); setExpandedBreakdown(null); }}>
+        <div className="quote-modal-overlay">
           <div className="quote-modal" onClick={e => e.stopPropagation()}>
             <div className="quote-modal-header">
               <h3>

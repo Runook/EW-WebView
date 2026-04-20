@@ -30,6 +30,19 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeField, setActiveField] = useState(null);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // 点外面 / ESC 时，如果有改动就二次确认；X 按钮直接关
+  const guardedClose = useCallback(() => {
+    if (isDirty && !window.confirm('有未保存的改动，确定关闭吗？')) return;
+    onClose();
+  }, [isDirty, onClose]);
+
+  useEffect(() => {
+    const handleEsc = (e) => { if (e.key === 'Escape') guardedClose(); };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [guardedClose]);
 
   const debounce = (func, wait) => {
     let timeout;
@@ -62,6 +75,7 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
   );
 
   const handleChange = (field, value) => {
+    setIsDirty(true);
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
     if (['mc_number', 'truck_company_name', 'truck_contact', 'dot_number'].includes(field)) {
@@ -71,6 +85,7 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
   };
 
   const selectContact = (contact) => {
+    setIsDirty(true);
     setFormData(prev => ({
       ...prev,
       mc_number: contact.mc_number || prev.mc_number,
@@ -126,7 +141,9 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
   };
 
   return (
-    <div className="modal-overlay-confirm" onClick={onClose}>
+    <div className="modal-overlay-confirm" onClick={(e) => {
+      if (e.target === e.currentTarget) guardedClose();
+    }}>
       <div className="modal-content-confirm" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header-confirm">
           <h2>确认下单</h2>

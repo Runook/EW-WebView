@@ -7,7 +7,10 @@ const { uploadToS3, deleteFromS3, getS3Stream, isS3Url } = require('../utils/s3U
 const fs = require('fs');
 const router = express.Router();
 
-const VALID_DOC_TYPES = ['quote', 'bol', 'rc', 'pod', 'customer_invoice', 'vendor_invoice'];
+const VALID_DOC_TYPES = [
+  'quote', 'bol', 'rc', 'pod', 'customer_invoice', 'vendor_invoice',
+  'driver_id', 'vin_pic', 'coi', 'w9'
+];
 
 const storage = multer.memoryStorage();
 

@@ -370,7 +370,7 @@ const MapView = () => {
                 <div style="color:#555;">总货值: <strong>${formatMoney(order.cargo_value)}</strong></div>
                 <div style="color:#555;">地址类型: <strong>${order.address_type||'-'}</strong></div>
                 <div style="color:#555;">面积板数: <strong>${order.total_area_pallets||'-'}</strong></div>
-                <div style="color:#555;">车类型: <strong>${order.truck_pallets||'-'}</strong></div>
+                <div style="color:#555;">价格系数: <strong>${order.truck_pallets||'-'}</strong></div>
                 <div style="color:#555;">TOTAL DAT: <strong>${formatMoney(order.total_dat)}</strong></div>
                 <div style="color:#555;">理想报价: <strong>${formatMoney(order.ideal_quote)}</strong></div>
                 <div style="color:#555;">比价Low1: <strong>${formatMoney(order.tql_price_1)}</strong></div>

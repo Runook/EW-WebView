@@ -12,8 +12,18 @@ const EditableCell = ({
   type = 'text', // text, number, date, select
   options = [], // 用于select类型
   onSave,
-  formatDisplay = (v) => v || '-'
+  formatDisplay
 }) => {
+  // select 类型默认按 value 在 options 里查 label 来展示，
+  // 避免 select 的底层 value 是数字/外键 id 时直接显示原始数字。
+  const defaultFormat = type === 'select'
+    ? (v) => {
+        if (v === null || v === undefined || v === '') return '-';
+        const opt = options.find(o => String(o.value) === String(v));
+        return opt?.label ?? v;
+      }
+    : (v) => (v === null || v === undefined || v === '' ? '-' : v);
+  const displayFn = formatDisplay || defaultFormat;
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const [saving, setSaving] = useState(false);
@@ -120,7 +130,7 @@ const EditableCell = ({
       onDoubleClick={handleDoubleClick}
       title="双击编辑"
     >
-      {formatDisplay(value)}
+      {displayFn(value)}
     </div>
   );
 };

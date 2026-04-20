@@ -433,7 +433,11 @@ const AIQuoteReview = () => {
       </div>
 
       {showRejectModal && (
-        <div className="modal-overlay" onClick={() => setShowRejectModal(null)}>
+        <div className="modal-overlay" onClick={(e) => {
+          if (e.target !== e.currentTarget) return;
+          if (rejectReason && !window.confirm('有未保存的改动，确定关闭吗？')) return;
+          setShowRejectModal(null);
+        }}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <h3>拒绝审核</h3>
             <p>请输入拒绝原因（可选）：</p>
