@@ -809,7 +809,7 @@ const BrokerOrdersNew = () => {
   // 文档 cell —— quote / ordered / completed 三个 tab 共用
   const renderDocsCell = (order) => (
     <td className="td-docs" onClick={(e) => e.stopPropagation()}>
-      <div style={{ display: 'flex', gap: '4px 8px', flexWrap: 'wrap', fontSize: 11 }}>
+      <div style={{ display: 'flex', gap: '3px 6px', flexWrap: 'wrap', fontSize: 10.5, lineHeight: 1.5 }}>
         {DOC_TYPES.map(dt => {
           const doc = orderDocs[order.id]?.[dt.key];
           const uploading = docUploading[`${order.id}-${dt.key}`];

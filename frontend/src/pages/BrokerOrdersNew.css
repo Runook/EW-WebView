@@ -2,7 +2,8 @@
 
 .broker-orders-container {
   display: flex;
-  min-height: calc(100vh - 70px);
+  /* 固定高度，配合 .main-content / .table-wrapper 的 overflow 让表格自己滚动 */
+  height: calc(100vh - 70px);
   background: #f5f7fa;
 }
 
@@ -126,7 +127,10 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  /* 让内部 .table-wrapper 成为唯一的滚动容器；
+     这里 overflow: hidden + min-height: 0 是让 flex 子项真正能限高的关键 */
+  overflow: hidden;
+  min-height: 0;
   min-width: 0;
 }
 
@@ -244,7 +248,7 @@
 .orders-table td {
   padding: 8px 8px;
   color: #333;
-  max-width: 160px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -252,13 +256,14 @@
 /* 文档 cell 独立样式：不截断、允许在 cell 内多行排布；
    内部的 label / 下载链接靠 whiteSpace:nowrap 保证单个类型名不会被拆开 */
 .orders-table td.td-docs {
-  max-width: 260px;
-  min-width: 180px;
+  max-width: 220px;
+  min-width: 170px;
   overflow: visible;
   text-overflow: clip;
   white-space: normal;
   padding: 6px 8px;
 }
+
 
 .order-number {
   font-weight: 600;
