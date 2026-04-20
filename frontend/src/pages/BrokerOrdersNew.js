@@ -1297,6 +1297,20 @@ const BrokerOrdersNew = () => {
             {loading ? '创建中...' : '+ 新建报价单'}
           </button>
 
+          {/* 报价单：批量生成报价 */}
+          {currentStatus === 'quote' && (
+            <button
+              className="btn-header btn-quote-header"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowQuoteGenerator(true);
+              }}
+              title="批量生成报价"
+            >
+              📋 报价
+            </button>
+          )}
+
           {/* 报价单 / 已下单：批量生成 BOL / RC 按钮 */}
           {(currentStatus === 'quote' || currentStatus === 'ordered') && (
             <>
@@ -1323,6 +1337,20 @@ const BrokerOrdersNew = () => {
                 RC
               </button>
             </>
+          )}
+
+          {/* 已完成：批量生成 Invoice */}
+          {currentStatus === 'completed' && (
+            <button
+              className="btn-header btn-invoice-header"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowInvoiceGenerator(true);
+              }}
+              title="批量生成Invoice"
+            >
+              📄 Invoice
+            </button>
           )}
         </div>
 
@@ -1363,40 +1391,11 @@ const BrokerOrdersNew = () => {
                   {currentStatus === 'ordered' && <th>卡车信息</th>}
                   <th>操作员工</th>
                   <th>操作</th>
-                  {currentStatus === 'quote' && (
-                    <>
-                      <th>
-                        <button 
-                          className="btn-header btn-quote-header"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowQuoteGenerator(true);
-                          }}
-                          title="批量生成报价"
-                        >
-                          📋 报价
-                        </button>
-                      </th>
-                      <th>文档</th>
-                    </>
-                  )}
-                  {currentStatus === 'ordered' && (
+                  {(currentStatus === 'quote' || currentStatus === 'ordered') && (
                     <th>文档</th>
                   )}
                   {currentStatus === 'completed' && (
                     <>
-                      <th>
-                        <button 
-                          className="btn-header btn-invoice-header"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowInvoiceGenerator(true);
-                          }}
-                          title="批量生成Invoice"
-                        >
-                          Invoice
-                        </button>
-                      </th>
                       <th>付款</th>
                       <th>文档</th>
                     </>
@@ -1529,28 +1528,29 @@ const BrokerOrdersNew = () => {
                         {order.status === 'quote' ? (
                           <div className="quote-actions">
                             <button
-                              className="btn-confirm-order"
+                              className="btn-quote-action btn-quote-confirm"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleConfirmOrder(order.id);
                               }}
+                              title="确认下单"
                             >
                               下单
                             </button>
                             <button
-                              className="btn-navigate-small"
+                              className="btn-quote-action btn-quote-map"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const origin = order.origin_address || `${order.origin_city}, ${order.origin_state} ${order.origin_zipcode}`;
                                 const dest = order.destination_address || `${order.destination_city}, ${order.destination_state} ${order.destination_zipcode}`;
                                 window.open(`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=driving`, '_blank');
                               }}
-                              title="打开Google Maps导航"
+                              title="在 Google Maps 查看路线"
                             >
-                              🗺️
+                              地图
                             </button>
                             <button
-                              className="btn-delete-order"
+                              className="btn-quote-action btn-quote-delete"
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 if (!window.confirm(`确定要删除 ${order.order_number} 吗？`)) return;
@@ -1563,7 +1563,7 @@ const BrokerOrdersNew = () => {
                               }}
                               title="删除订单"
                             >
-                              🗑️
+                              删除
                             </button>
                           </div>
                         ) : order.status === 'ordered' ? (
@@ -1662,16 +1662,9 @@ const BrokerOrdersNew = () => {
                           <span className="no-action">-</span>
                         )}
                       </td>
-                      {currentStatus === 'quote' && (
-                        <>
-                          <td></td>
-                          {renderDocsCell(order)}
-                        </>
-                      )}
-                      {currentStatus === 'ordered' && renderDocsCell(order)}
+                      {(currentStatus === 'quote' || currentStatus === 'ordered') && renderDocsCell(order)}
                       {currentStatus === 'completed' && (
                         <>
-                          <td></td>
                           {/* 付款状态 */}
                           <td onClick={(e) => e.stopPropagation()}>
                             <select
