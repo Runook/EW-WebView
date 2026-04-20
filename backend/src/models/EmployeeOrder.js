@@ -68,6 +68,8 @@ class Order {
         dat_sales_1: orderData.dat_sales_1 || null,
         dat_sales_2: orderData.dat_sales_2 || null,
         dat_sales_3: orderData.dat_sales_3 || null,
+        customer_extra_fee: orderData.customer_extra_fee != null ? orderData.customer_extra_fee : 0,
+        driver_extra_fee: orderData.driver_extra_fee != null ? orderData.driver_extra_fee : 0,
         profit: orderData.profit || null,
         transport_distance: orderData.transport_distance || null,
         cargo_type: orderData.cargo_type || null,
@@ -445,6 +447,7 @@ class Order {
         'ew_quote_price', 'actual_pallets', 'total_area_pallets', 'total_dat', 'driver_payment', 'truck_size',
         'platform_quote_1', 'platform_quote_2', 'pre_quote_price', 'ew_final_price',
         'dat_sales_1', 'dat_sales_2', 'dat_sales_3', 'profit',
+        'customer_extra_fee', 'driver_extra_fee',
         'transport_distance', 'ideal_quote', 'truck_pallets', 
         'tql_price_1', 'tql_price_2', 'other_api_price',
         'quote_reference', 'quote_ref_10', 'quote_ref_20', 'quote_ref_30',
@@ -493,6 +496,23 @@ class Order {
           contact_email: filteredData.customer_email || existingOrder.customer_email || null,
           contact_phone: filteredData.customer_phone || existingOrder.customer_phone || null,
         }, updatedBy);
+      }
+
+      // Profit 自动重算：
+      //   profit = ew_quote_price + customer_extra_fee - truck_payment - driver_extra_fee
+      // 触发条件：ew_quote_price / truck_payment / customer_extra_fee / driver_extra_fee
+      //          里任一字段被本次 update 触及，且用户这次没有直接手填 profit。
+      const profitInputs = ['ew_quote_price', 'truck_payment', 'customer_extra_fee', 'driver_extra_fee'];
+      const profitInputChanged = profitInputs.some(f => filteredData[f] !== undefined);
+      if (profitInputChanged && filteredData.profit === undefined) {
+        const num = (v) => {
+          const n = parseFloat(v);
+          return Number.isFinite(n) ? n : 0;
+        };
+        const pick = (field) => (filteredData[field] !== undefined ? filteredData[field] : existingOrder[field]);
+        const customerSide = num(pick('ew_quote_price')) + num(pick('customer_extra_fee'));
+        const driverSide = num(pick('truck_payment')) + num(pick('driver_extra_fee'));
+        filteredData.profit = Number((customerSide - driverSide).toFixed(2));
       }
 
       // Auto-sync workflow_stage when status/sub_status changes via generic update

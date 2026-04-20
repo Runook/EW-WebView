@@ -305,7 +305,10 @@ const BrokerOrdersNew = () => {
       if (response.success) {
         const truckPayment = parseFloat(formData.truck_payment) || 0;
         const wePrice = parseFloat(selectedOrder.ew_quote_price) || 0;
-        const profit = wePrice - truckPayment;
+        const customerExtra = parseFloat(selectedOrder.customer_extra_fee) || 0;
+        const driverExtra = parseFloat(selectedOrder.driver_extra_fee) || 0;
+        // profit = 客户侧总收入 − 司机侧总支付
+        const profit = (wePrice + customerExtra) - (truckPayment + driverExtra);
 
         await orderApi.updateOrder(selectedOrder.id, {
           quote_date: getNYDate(),
@@ -405,11 +408,14 @@ const BrokerOrdersNew = () => {
       });
       
       if (response.success) {
-        // 更新本地state
+        // 用后端返回的完整订单去同步本地 state —— 这样像 profit 这类后端
+        // 自动重算的字段（ew_quote_price / truck_payment /
+        // customer_extra_fee / driver_extra_fee 变动时）会自动反映出来。
+        const updated = response.data || { [field]: newValue };
         setOrders(prevOrders => 
           prevOrders.map(order => 
             order.id === orderId 
-              ? { ...order, [field]: newValue }
+              ? { ...order, ...updated }
               : order
           )
         );
@@ -2152,6 +2158,28 @@ const BrokerOrdersNew = () => {
                               <div className="detail-item">
                                 <label>参考+30%:</label>
                                 <span>{formatCurrency(order.quote_ref_30)}</span>
+                              </div>
+                              <div className="detail-item">
+                                <label>客户 Extra Fee:</label>
+                                <EditableCell
+                                  value={order.customer_extra_fee}
+                                  orderId={order.id}
+                                  field="customer_extra_fee"
+                                  type="number"
+                                  onSave={handleCellUpdate}
+                                  formatDisplay={(v) => formatCurrency(v)}
+                                />
+                              </div>
+                              <div className="detail-item">
+                                <label>司机 Extra Fee:</label>
+                                <EditableCell
+                                  value={order.driver_extra_fee}
+                                  orderId={order.id}
+                                  field="driver_extra_fee"
+                                  type="number"
+                                  onSave={handleCellUpdate}
+                                  formatDisplay={(v) => formatCurrency(v)}
+                                />
                               </div>
                               <div className="detail-item profit">
                                 <label>利润:</label>

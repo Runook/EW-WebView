@@ -58,9 +58,15 @@ const InvoiceGenerator = ({ isOpen, onClose, orders }) => {
         const r = await orderApi.getOrderById(id); return r.data || r;
       }));
       setOrderDetails(details);
-      // Init empty fees for each order
+      // 初始化费用列表：若订单自带 customer_extra_fee > 0，预填一条
+      // "Extra Fee (from order)"，让员工看到提示并可以编辑/删除
       const fees = {};
-      details.forEach(o => { fees[o.id] = []; });
+      details.forEach(o => {
+        const extra = parseFloat(o.customer_extra_fee) || 0;
+        fees[o.id] = extra > 0
+          ? [{ name: 'Extra Fee', amount: String(extra), autoFromOrder: true }]
+          : [];
+      });
       setOrderFees(fees);
       setStep(2);
     } catch (err) { setError(err.message); }
@@ -447,6 +453,7 @@ const InvoiceGenerator = ({ isOpen, onClose, orders }) => {
             const fees = orderFees[order.id] || [];
             const basePrice = parseFloat(order.ew_quote_price) || 0;
             const feesTotal = fees.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+            const customerExtra = parseFloat(order.customer_extra_fee) || 0;
             return (
               <div key={order.id} style={{ marginBottom: 20, padding: 14, background: '#f9fafb', borderRadius: 8, border: '1px solid #e5e7eb' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -460,8 +467,39 @@ const InvoiceGenerator = ({ isOpen, onClose, orders }) => {
                   </div>
                 </div>
 
+                {/* Extra Fee 检测状态提示 */}
+                {customerExtra > 0 ? (
+                  <div style={{
+                    marginBottom: 10, padding: '8px 10px', borderRadius: 6,
+                    background: '#fef3c7', border: '1px solid #fbbf24',
+                    fontSize: 12, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8
+                  }}>
+                    <span style={{ fontWeight: 700 }}>⚠ 检测到客户 Extra Fee ${customerExtra.toFixed(2)}</span>
+                    <span>— 已自动添加到下方费用项，可修改金额或删除。</span>
+                  </div>
+                ) : (
+                  <div style={{
+                    marginBottom: 10, padding: '6px 10px', borderRadius: 6,
+                    background: '#f3f4f6', border: '1px solid #e5e7eb',
+                    fontSize: 12, color: '#6b7280'
+                  }}>
+                    未检测到 Extra Fee
+                  </div>
+                )}
+
                 {fees.map((fee, fIdx) => (
-                  <div key={fIdx} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'center' }}>
+                  <div key={fIdx} style={{
+                    display: 'flex', gap: 8, marginBottom: 6, alignItems: 'center',
+                    padding: fee.autoFromOrder ? '6px 8px' : 0,
+                    background: fee.autoFromOrder ? '#fffbeb' : 'transparent',
+                    border: fee.autoFromOrder ? '1px dashed #fbbf24' : 'none',
+                    borderRadius: fee.autoFromOrder ? 4 : 0,
+                  }}>
+                    {fee.autoFromOrder && (
+                      <span title="订单里已登记的 Extra Fee" style={{ fontSize: 11, color: '#92400e', fontWeight: 600 }}>
+                        订单
+                      </span>
+                    )}
                     <input
                       type="text" placeholder="费用名称 (如 Liftgate)"
                       value={fee.name} onChange={e => updateFee(order.id, fIdx, 'name', e.target.value)}
