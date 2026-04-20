@@ -1467,7 +1467,7 @@ const BrokerOrdersNew = () => {
                           }}
                         />
                       </td>
-                      <td>
+                      <td className="td-company">
                         <CompanyEditableCell
                           value={order.inquiry_company || order.customer_name}
                           orderId={order.id}

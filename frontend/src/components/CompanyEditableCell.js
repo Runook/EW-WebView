@@ -15,8 +15,10 @@ const CompanyEditableCell = ({ value, orderId, onSave }) => {
     wechat_group_name: ''
   });
   const [saving, setSaving] = useState(false);
+  const [searching, setSearching] = useState(false);
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
+  const searchTimerRef = useRef(null);
 
   useEffect(() => {
     setEditValue(value || '');
@@ -42,23 +44,32 @@ const CompanyEditableCell = ({ value, orderId, onSave }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showCreateModal]);
 
-  const handleInputChange = async (e) => {
+  const handleInputChange = (e) => {
     const newValue = e.target.value;
     setEditValue(newValue);
 
-    if (newValue.trim().length >= 1) {
+    // 200ms 防抖；以最后一次输入为准，避免快打字时结果错位
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    const trimmed = newValue.trim();
+    if (trimmed.length === 0) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setSearching(false);
+      return;
+    }
+    setShowSuggestions(true);
+    setSearching(true);
+    searchTimerRef.current = setTimeout(async () => {
       try {
-        const response = await customerApi.searchCustomers(newValue);
+        const response = await customerApi.searchCustomers(trimmed);
         setSuggestions(response.data || []);
-        setShowSuggestions(true);
       } catch (error) {
         console.error('搜索失败:', error);
         setSuggestions([]);
+      } finally {
+        setSearching(false);
       }
-    } else {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
+    }, 200);
   };
 
   const handleSelectSuggestion = async (customer) => {
@@ -149,24 +160,45 @@ const CompanyEditableCell = ({ value, orderId, onSave }) => {
         className="editable-input"
       />
 
-      {showSuggestions && (suggestions.length > 0 || editValue.trim()) && (
+      {showSuggestions && editValue.trim() && (
         <div className="suggestions-dropdown-small">
-          {suggestions.map((customer) => (
-            <div
-              key={customer.id}
-              className="suggestion-item-small"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleSelectSuggestion(customer);
-              }}
-            >
-              <div className="suggestion-company-small">{customer.company_name}</div>
-              {customer.wechat_group_name && (
-                <div className="suggestion-wechat-small">微信: {customer.wechat_group_name}</div>
-              )}
-            </div>
-          ))}
-          {editValue.trim() && (
+          {searching && (
+            <div className="suggestion-status-small">搜索中…</div>
+          )}
+
+          {!searching && suggestions.length > 0 && (
+            <div className="suggestion-header-small">选择已存在的客户：</div>
+          )}
+          {!searching && suggestions.length === 0 && (
+            <div className="suggestion-status-small">未找到匹配的客户</div>
+          )}
+
+          {suggestions.map((customer) => {
+            const exactMatch = customer.company_name.toLowerCase() === editValue.trim().toLowerCase();
+            return (
+              <div
+                key={customer.id}
+                className={`suggestion-item-small${exactMatch ? ' suggestion-exact' : ''}`}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleSelectSuggestion(customer);
+                }}
+              >
+                <div className="suggestion-company-small">
+                  {customer.company_name}
+                  {exactMatch && <span className="suggestion-badge-small">精确匹配</span>}
+                </div>
+                {customer.wechat_group_name && (
+                  <div className="suggestion-wechat-small">微信: {customer.wechat_group_name}</div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* 无精确匹配时才显示"创建新客户" */}
+          {!searching && !suggestions.some(
+            c => c.company_name.toLowerCase() === editValue.trim().toLowerCase()
+          ) && (
             <div
               className="suggestion-create-small"
               onMouseDown={(e) => {
@@ -174,7 +206,7 @@ const CompanyEditableCell = ({ value, orderId, onSave }) => {
                 handleCreateNew();
               }}
             >
-              + 创建新客户 "{editValue}"
+              + 创建新客户 "{editValue.trim()}"
             </div>
           )}
         </div>

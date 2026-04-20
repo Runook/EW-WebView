@@ -264,6 +264,14 @@
   padding: 6px 8px;
 }
 
+/* Company 列：需要让 CompanyEditableCell 里面的自动补全下拉框能弹出
+   td 之外，否则 .orders-table td { overflow: hidden } 会把它整个裁掉。 */
+.orders-table td.td-company {
+  overflow: visible;
+  position: relative;
+  max-width: 180px;
+}
+
 
 .order-number {
   font-weight: 600;

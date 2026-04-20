@@ -29,14 +29,15 @@
   position: absolute;
   top: 100%;
   left: 0;
-  right: 0;
+  min-width: 240px;
+  max-width: 360px;
   background: white;
   border: 1px solid #ddd;
   border-radius: 0 0 4px 4px;
-  max-height: 250px;
+  max-height: 280px;
   overflow-y: auto;
   z-index: 2000;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
 }
 
 .suggestion-item-small {
@@ -73,6 +74,41 @@
 
 .suggestion-create-small:hover {
   background: #c8e6c9;
+}
+
+.suggestion-header-small {
+  padding: 6px 10px;
+  background: #f5f7fa;
+  color: #6b7280;
+  font-size: 0.75em;
+  font-weight: 600;
+  border-bottom: 1px solid #e5e7eb;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.suggestion-status-small {
+  padding: 10px;
+  color: #9ca3af;
+  font-size: 0.85em;
+  text-align: center;
+  font-style: italic;
+}
+
+.suggestion-exact {
+  background: #fffbeb;
+}
+
+.suggestion-badge-small {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  background: #f59e0b;
+  color: white;
+  font-size: 10px;
+  border-radius: 3px;
+  font-weight: 600;
+  vertical-align: middle;
 }
 
 .modal-overlay-inline {
