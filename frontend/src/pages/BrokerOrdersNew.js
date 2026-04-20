@@ -1764,7 +1764,7 @@ const BrokerOrdersNew = () => {
                                   })}
                                 </div>
                                 <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: '0.78rem', color: '#6b7280', flexWrap: 'wrap' }}>
-                                  {order.bol_number && <span>BOL: <strong>{order.bol_number}</strong></span>}
+                                  {order.bol_number && <span>Customer PO#: <strong>{order.bol_number}</strong></span>}
                                   {order.sourcing_channel_id && sourcingChannels.length > 0 && (
                                     <span>Channel: <strong>{sourcingChannels.find(c => c.id === order.sourcing_channel_id)?.name || '—'}</strong></span>
                                   )}
@@ -1775,7 +1775,7 @@ const BrokerOrdersNew = () => {
                                 </div>
                                 <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                                   <div style={{ flex: 1, minWidth: 100 }}>
-                                    <label style={{ fontSize: '0.75rem', color: '#6b7280' }}>BOL#</label>
+                                    <label style={{ fontSize: '0.75rem', color: '#6b7280' }}>Customer PO#</label>
                                     <EditableCell value={order.bol_number} orderId={order.id} field="bol_number" type="text" onSave={handleCellUpdate} />
                                   </div>
                                   <div style={{ flex: 1, minWidth: 100 }}>

@@ -140,6 +140,8 @@ const DocumentGenerator = ({ isOpen, onClose, documentType, orders }) => {
           shipmentNumber: order.shipment_number || '',
           totalPieces: String(order.actual_pallets || order.total_pallets || ''),
           totalWeight: order.total_weight_lbs ? String(order.total_weight_lbs) : '',
+          // Customer PO# —— 实际上是原 bol_number 字段（DB 列名没改，只是 UI/业务语义改了）
+          customerPO: order.bol_number || '',
         };
 
         const setCellValue = (cell, newValue) => {
@@ -151,6 +153,7 @@ const DocumentGenerator = ({ isOpen, onClose, documentType, orders }) => {
         setCellValue(worksheet.getCell('A3'), data.shipFrom);
         setCellValue(worksheet.getCell('A5'), data.shipTo);
         setCellValue(worksheet.getCell('F3'), data.ewNumber);
+        setCellValue(worksheet.getCell('F5'), data.customerPO);
         setCellValue(worksheet.getCell('A13'), data.shipmentNumber);
         setCellValue(worksheet.getCell('D13'), data.totalPieces);
         setCellValue(worksheet.getCell('E13'), data.totalWeight);
