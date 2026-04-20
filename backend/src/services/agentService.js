@@ -102,20 +102,19 @@ async function batchCreateOrders(items, createdBy) {
       }));
       const dimensionsList = JSON.stringify(dimensionsListArr);
 
-      // 把公司名同步到 customers 表：找不到就自动新建；用事务外的连接调用以免影响本事务
-      let resolvedCustomerId = null;
+      // 把公司名同步到 customers 表（找不到就自动新建），不影响本事务。
+      // 同上：不写 customer_id 到订单，employee_orders.customer_id 的 FK
+      // 指向了 users 表（历史遗留），写 customers.id 会 FK 失败。
       if (item.company_name) {
-        const customer = await Customer.ensureByName(item.company_name, {
+        await Customer.ensureByName(item.company_name, {
           contact_person: item.recipient_name || null,
           contact_email: item.email || null,
           contact_phone: item.phone || null,
         }, safeCreatedBy);
-        if (customer) resolvedCustomerId = customer.id;
       }
 
       const insertData = {
         order_number: orderNumber,
-        customer_id: resolvedCustomerId,
         customer_name: item.recipient_name || 'AI Import',
         customer_email: item.email || null,
         customer_phone: item.phone || null,

@@ -95,31 +95,36 @@ class Customer {
 
   static async createCustomer(customerData, createdBy) {
     try {
-      const [customer] = await db('customers')
-        .insert({
-          company_name: customerData.company_name,
-          wechat_group_name: customerData.wechat_group_name || null,
-          contact_person: customerData.contact_person || null,
-          contact_phone: customerData.contact_phone || null,
-          contact_email: customerData.contact_email || null,
-          billing_address: customerData.billing_address || null,
-          billing_address2: customerData.billing_address2 || null,
-          billing_city: customerData.billing_city || null,
-          billing_state: customerData.billing_state || null,
-          billing_zipcode: customerData.billing_zipcode || null,
-          billing_country: customerData.billing_country || 'USA',
-          payment_terms: customerData.payment_terms || 'Net 7',
-          tax_id: customerData.tax_id || null,
-          late_fee_rate: customerData.late_fee_rate || null,
-          late_fee_fixed: customerData.late_fee_fixed || null,
-          aliases: customerData.aliases ? JSON.stringify(customerData.aliases) : '[]',
-          notes: customerData.notes || null,
-          is_active: customerData.is_active !== false,
-          created_by: createdBy,
-          created_at: new Date(),
-          updated_at: new Date()
-        })
-        .returning('*');
+      // 先动态检查列是否存在，避免在某些环境下（迁移未同步）整条 insert 崩
+      const hasBillingAddr2 = await db.schema.hasColumn('customers', 'billing_address2');
+
+      const payload = {
+        company_name: customerData.company_name,
+        wechat_group_name: customerData.wechat_group_name || null,
+        contact_person: customerData.contact_person || null,
+        contact_phone: customerData.contact_phone || null,
+        contact_email: customerData.contact_email || null,
+        billing_address: customerData.billing_address || null,
+        billing_city: customerData.billing_city || null,
+        billing_state: customerData.billing_state || null,
+        billing_zipcode: customerData.billing_zipcode || null,
+        billing_country: customerData.billing_country || 'USA',
+        payment_terms: customerData.payment_terms || 'Net 7',
+        tax_id: customerData.tax_id || null,
+        late_fee_rate: customerData.late_fee_rate || null,
+        late_fee_fixed: customerData.late_fee_fixed || null,
+        aliases: customerData.aliases ? JSON.stringify(customerData.aliases) : '[]',
+        notes: customerData.notes || null,
+        is_active: customerData.is_active !== false,
+        created_by: createdBy,
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      if (hasBillingAddr2) {
+        payload.billing_address2 = customerData.billing_address2 || null;
+      }
+
+      const [customer] = await db('customers').insert(payload).returning('*');
       return customer;
     } catch (error) {
       console.error('Failed to create customer:', error);
