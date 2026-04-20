@@ -122,8 +122,8 @@ const BrokerOrdersNew = () => {
       
       if (response.success) {
         setOrders(response.data || []);
-        // 已下单 / 已完成 都需要文档列，列表加载时预取
-        if ((currentStatus === 'completed' || currentStatus === 'ordered') && response.data) {
+        // 报价单 / 已下单 / 已完成 都需要文档列，列表加载时预取
+        if ((currentStatus === 'quote' || currentStatus === 'ordered' || currentStatus === 'completed') && response.data) {
           response.data.forEach(o => loadDocs(o.id));
         }
       }
@@ -325,8 +325,8 @@ const BrokerOrdersNew = () => {
   const toggleRow = (orderId) => {
     const newExpanded = expandedRow === orderId ? null : orderId;
     setExpandedRow(newExpanded);
-    // 展开已下单 / 已完成订单时自动加载文档
-    if (newExpanded && (currentStatus === 'completed' || currentStatus === 'ordered')) {
+    // 展开报价单 / 已下单 / 已完成订单时自动加载文档
+    if (newExpanded && (currentStatus === 'quote' || currentStatus === 'ordered' || currentStatus === 'completed')) {
       loadDocs(orderId);
     }
   };
@@ -769,6 +769,42 @@ const BrokerOrdersNew = () => {
     try { await orderApi.deleteDocument(orderId, docId); await loadDocs(orderId); }
     catch (e) { alert('删除失败: ' + e.message); }
   };
+
+  // 文档 cell —— quote / ordered / completed 三个 tab 共用
+  const renderDocsCell = (order) => (
+    <td onClick={(e) => e.stopPropagation()}>
+      <div style={{ display: 'flex', gap: '4px 8px', flexWrap: 'wrap', fontSize: 11, minWidth: 180 }}>
+        {DOC_TYPES.map(dt => {
+          const doc = orderDocs[order.id]?.[dt.key];
+          const uploading = docUploading[`${order.id}-${dt.key}`];
+          if (uploading) return <span key={dt.key} style={{ color: '#9ca3af' }}>...</span>;
+          if (doc) {
+            return (
+              <span key={dt.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, whiteSpace: 'nowrap' }}>
+                <span
+                  style={{ color: '#1565C0', cursor: 'pointer', textDecoration: 'underline', fontWeight: 500 }}
+                  onClick={() => handleDocDownload(order.id, doc.id, doc.original_filename)}
+                >{dt.label}</span>
+                <span
+                  style={{ color: '#94a3b8', cursor: 'pointer', fontSize: 10 }}
+                  onClick={() => handleDocDelete(order.id, doc.id, dt.key)}
+                >x</span>
+              </span>
+            );
+          }
+          return (
+            <label key={dt.key} style={{ color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }} title="点击上传">
+              {dt.label}
+              <input type="file" style={{ display: 'none' }}
+                accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.tiff,.tif"
+                onChange={(e) => { if (e.target.files[0]) { handleDocUpload(order.id, e.target.files[0], dt.key); e.target.value = ''; } }}
+              />
+            </label>
+          );
+        })}
+      </div>
+    </td>
+  );
 
   // 快速标记付款
   const handleMarkPaid = async (orderId, status) => {
@@ -1261,8 +1297,8 @@ const BrokerOrdersNew = () => {
             {loading ? '创建中...' : '+ 新建报价单'}
           </button>
 
-          {/* 已下单：批量生成 BOL / RC 按钮（原本在表头，挪到工具栏给文档列让出空间）*/}
-          {currentStatus === 'ordered' && (
+          {/* 报价单 / 已下单：批量生成 BOL / RC 按钮 */}
+          {(currentStatus === 'quote' || currentStatus === 'ordered') && (
             <>
               <button
                 className="btn-header btn-bol-header"
@@ -1328,18 +1364,21 @@ const BrokerOrdersNew = () => {
                   <th>操作员工</th>
                   <th>操作</th>
                   {currentStatus === 'quote' && (
-                    <th>
-                      <button 
-                        className="btn-header btn-quote-header"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowQuoteGenerator(true);
-                        }}
-                        title="批量生成报价"
-                      >
-                        📋 报价
-                      </button>
-                    </th>
+                    <>
+                      <th>
+                        <button 
+                          className="btn-header btn-quote-header"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowQuoteGenerator(true);
+                          }}
+                          title="批量生成报价"
+                        >
+                          📋 报价
+                        </button>
+                      </th>
+                      <th>文档</th>
+                    </>
                   )}
                   {currentStatus === 'ordered' && (
                     <th>文档</th>
@@ -1623,42 +1662,13 @@ const BrokerOrdersNew = () => {
                           <span className="no-action">-</span>
                         )}
                       </td>
-                      {currentStatus === 'quote' && <td></td>}
-                      {currentStatus === 'ordered' && (
-                        /* 文档 - 和已完成一致的多种类型链接 */
-                        <td onClick={(e) => e.stopPropagation()}>
-                          <div style={{ display: 'flex', gap: '4px 8px', flexWrap: 'wrap', fontSize: 11, minWidth: 180 }}>
-                            {DOC_TYPES.map(dt => {
-                              const doc = orderDocs[order.id]?.[dt.key];
-                              const uploading = docUploading[`${order.id}-${dt.key}`];
-                              if (uploading) return <span key={dt.key} style={{ color: '#9ca3af' }}>...</span>;
-                              if (doc) {
-                                return (
-                                  <span key={dt.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, whiteSpace: 'nowrap' }}>
-                                    <span
-                                      style={{ color: '#1565C0', cursor: 'pointer', textDecoration: 'underline', fontWeight: 500 }}
-                                      onClick={() => handleDocDownload(order.id, doc.id, doc.original_filename)}
-                                    >{dt.label}</span>
-                                    <span
-                                      style={{ color: '#94a3b8', cursor: 'pointer', fontSize: 10 }}
-                                      onClick={() => handleDocDelete(order.id, doc.id, dt.key)}
-                                    >x</span>
-                                  </span>
-                                );
-                              }
-                              return (
-                                <label key={dt.key} style={{ color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }} title="点击上传">
-                                  {dt.label}
-                                  <input type="file" style={{ display: 'none' }}
-                                    accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.tiff,.tif"
-                                    onChange={(e) => { if (e.target.files[0]) { handleDocUpload(order.id, e.target.files[0], dt.key); e.target.value = ''; } }}
-                                  />
-                                </label>
-                              );
-                            })}
-                          </div>
-                        </td>
+                      {currentStatus === 'quote' && (
+                        <>
+                          <td></td>
+                          {renderDocsCell(order)}
+                        </>
                       )}
+                      {currentStatus === 'ordered' && renderDocsCell(order)}
                       {currentStatus === 'completed' && (
                         <>
                           <td></td>
@@ -1679,39 +1689,7 @@ const BrokerOrdersNew = () => {
                               <option value="paid">已付</option>
                             </select>
                           </td>
-                          {/* 文档 - 多类型紧凑文字链接 */}
-                          <td onClick={(e) => e.stopPropagation()}>
-                            <div style={{ display: 'flex', gap: '4px 8px', flexWrap: 'wrap', fontSize: 11, minWidth: 180 }}>
-                              {DOC_TYPES.map(dt => {
-                                const doc = orderDocs[order.id]?.[dt.key];
-                                const uploading = docUploading[`${order.id}-${dt.key}`];
-                                if (uploading) return <span key={dt.key} style={{ color: '#9ca3af' }}>...</span>;
-                                if (doc) {
-                                  return (
-                                    <span key={dt.key} style={{ display: 'inline-flex', alignItems: 'center', gap: 2, whiteSpace: 'nowrap' }}>
-                                      <span
-                                        style={{ color: '#1565C0', cursor: 'pointer', textDecoration: 'underline', fontWeight: 500 }}
-                                        onClick={() => handleDocDownload(order.id, doc.id, doc.original_filename)}
-                                      >{dt.label}</span>
-                                      <span
-                                        style={{ color: '#94a3b8', cursor: 'pointer', fontSize: 10 }}
-                                        onClick={() => handleDocDelete(order.id, doc.id, dt.key)}
-                                      >x</span>
-                                    </span>
-                                  );
-                                }
-                                return (
-                                  <label key={dt.key} style={{ color: '#374151', cursor: 'pointer', whiteSpace: 'nowrap' }} title="点击上传">
-                                    {dt.label}
-                                    <input type="file" style={{ display: 'none' }}
-                                      accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx,.xls,.xlsx,.tiff,.tif"
-                                      onChange={(e) => { if (e.target.files[0]) { handleDocUpload(order.id, e.target.files[0], dt.key); e.target.value = ''; } }}
-                                    />
-                                  </label>
-                                );
-                              })}
-                            </div>
-                          </td>
+                          {renderDocsCell(order)}
                         </>
                       )}
                     </tr>
