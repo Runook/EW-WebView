@@ -236,11 +236,26 @@ router.post('/', auth, async (req, res) => {
       message: '订单创建成功'
     });
   } catch (error) {
-    console.error('创建订单失败:', error);
+    // Log full error (stack + pg metadata) so we can see what really broke
+    console.error('创建订单失败:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      column: error.column,
+      table: error.table,
+      constraint: error.constraint,
+      stack: error.stack,
+    });
+    // Surface the actionable bits in the response so the frontend can
+    // display something more useful than a generic "创建订单失败".
     res.status(400).json({
       success: false,
-      message: '创建订单失败',
-      error: error.message
+      message: `创建订单失败: ${error.message || '未知错误'}`,
+      error: error.message,
+      code: error.code || null,
+      detail: error.detail || null,
+      column: error.column || null,
+      constraint: error.constraint || null,
     });
   }
 });

@@ -278,7 +278,12 @@ const BrokerOrdersNew = () => {
       }
     } catch (error) {
       console.error('❌ 创建订单失败:', error);
-      alert('创建失败: ' + error.message);
+      const serverDetail = error.response?.detail
+        || error.response?.error
+        || error.response?.message
+        || '';
+      const serverCode = error.response?.code ? ` [${error.response.code}]` : '';
+      alert(`创建失败: ${error.message}${serverCode}${serverDetail && serverDetail !== error.message ? '\n\n详细: ' + serverDetail : ''}`);
     } finally {
       setLoading(false);
     }

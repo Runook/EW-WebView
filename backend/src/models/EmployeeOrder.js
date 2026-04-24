@@ -2,6 +2,33 @@ const { db } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 const Customer = require('./Customer');
 
+// Cache of existing columns per table so we don't hit information_schema on
+// every write. Invalidated only on process restart — which is fine because
+// schema changes require a redeploy / migration anyway.
+const _columnCache = new Map();
+
+async function getExistingColumns(tableName, trx = null) {
+  if (_columnCache.has(tableName)) return _columnCache.get(tableName);
+  const qb = trx ? trx(tableName) : db(tableName);
+  const info = await qb.columnInfo();
+  const cols = new Set(Object.keys(info || {}));
+  _columnCache.set(tableName, cols);
+  return cols;
+}
+
+function pickExistingColumns(data, existingCols) {
+  const out = {};
+  const dropped = [];
+  for (const [k, v] of Object.entries(data)) {
+    if (existingCols.has(k)) {
+      out[k] = v;
+    } else {
+      dropped.push(k);
+    }
+  }
+  return { out, dropped };
+}
+
 class Order {
   /**
    * 创建新订单
@@ -107,8 +134,18 @@ class Order {
         assigned_to: orderData.assigned_to || createdBy
       };
       
+      // Schema-defensive insert: some environments (e.g. production before
+      // the latest migration has been run) may be missing newly-added columns
+      // like customer_extra_fee / driver_extra_fee (031) or workflow_stage
+      // (028). Strip keys the table doesn't know about instead of 500'ing.
+      const existingCols = await getExistingColumns('employee_orders', trx);
+      const { out: safeInsert, dropped } = pickExistingColumns(insertData, existingCols);
+      if (dropped.length > 0) {
+        console.warn(`⚠️ createOrder: dropping unknown columns (run migrations?): ${dropped.join(', ')}`);
+      }
+
       const [order] = await trx('employee_orders')
-        .insert(insertData)
+        .insert(safeInsert)
         .returning('*');
       
       // 记录创建日志
@@ -551,9 +588,18 @@ class Order {
         };
       }
       
+      // Schema-defensive update: drop any fields the production table
+      // doesn't have yet (pending migrations). Prevents the entire update
+      // from failing because one new column is unknown.
+      const existingCols = await getExistingColumns('employee_orders', trx);
+      const { out: safeUpdate, dropped: droppedCols } = pickExistingColumns(filteredData, existingCols);
+      if (droppedCols.length > 0) {
+        console.warn(`⚠️ updateOrder: dropping unknown columns (run migrations?): ${droppedCols.join(', ')}`);
+      }
+
       const [updatedOrder] = await trx('employee_orders')
         .where('id', orderId)
-        .update(filteredData)
+        .update(safeUpdate)
         .returning('*');
       
       // 记录更新日志
