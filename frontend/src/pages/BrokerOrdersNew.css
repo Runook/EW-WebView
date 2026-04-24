@@ -15,6 +15,28 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  /* Sidebar has grown to 15+ nav buttons + footer; on shorter viewports
+     (laptop screens, Chrome with bookmarks bar, devtools docked) the
+     sidebar-footer with Credits Management / 系统管理 would be pushed
+     off-screen because the flex column had no scroll container. Let the
+     sidebar scroll internally so the admin entries are always reachable. */
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Slim scrollbar so it doesn't eat into the 220px sidebar visually */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .sidebar-header {
