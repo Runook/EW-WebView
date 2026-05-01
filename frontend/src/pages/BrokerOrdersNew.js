@@ -1433,6 +1433,7 @@ const BrokerOrdersNew = () => {
                   <th className="text-right">总体积(ft³)</th>
                   <th className="text-right">总件数</th>
                   <th className="text-right">WE报价</th>
+                  <th className="text-right">司机参考价</th>
                   <th className="text-right">运输距离</th>
                   {currentStatus === 'ordered' && <th>状态</th>}
                   {currentStatus === 'ordered' && <th>卡车信息</th>}
@@ -1536,6 +1537,16 @@ const BrokerOrdersNew = () => {
                           value={order.ew_quote_price}
                           orderId={order.id}
                           field="ew_quote_price"
+                          type="number"
+                          onSave={handleCellUpdate}
+                          formatDisplay={(v) => formatCurrency(v)}
+                        />
+                      </td>
+                      <td className="text-right price">
+                        <EditableCell
+                          value={order.driver_reference_price}
+                          orderId={order.id}
+                          field="driver_reference_price"
                           type="number"
                           onSave={handleCellUpdate}
                           formatDisplay={(v) => formatCurrency(v)}

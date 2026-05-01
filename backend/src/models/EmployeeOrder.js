@@ -84,6 +84,7 @@ class Order {
         cargo_value: orderData.cargo_value || null,
         address_type: orderData.address_type || 'Commercial',
         ew_quote_price: orderData.ew_quote_price || null,
+        driver_reference_price: orderData.driver_reference_price || null,
         actual_pallets: orderData.actual_pallets || null,
         total_dat: orderData.total_dat || null,
         driver_payment: orderData.driver_payment || null,
@@ -488,7 +489,7 @@ class Order {
         'transport_distance', 'ideal_quote', 'truck_pallets', 
         'tql_price_1', 'tql_price_2', 'other_api_price',
         'quote_reference', 'quote_ref_10', 'quote_ref_20', 'quote_ref_30',
-        'truck_payment', 'truck_reference_price', 'mc_number', 'truck_company_name', 'truck_contact',
+        'truck_payment', 'truck_reference_price', 'driver_reference_price', 'mc_number', 'truck_company_name', 'truck_contact',
         'dot_number', 'carrier_email', 'carrier_address', 'driver_name', 'driver_phone',
         // 备用司机信息
         'backup_driver_1_name', 'backup_driver_1_phone',

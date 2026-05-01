@@ -57,6 +57,7 @@ const BrokerOrderForm = () => {
     cargo_type: '',
     cargo_value: '',
     ew_quote_price: '',
+    driver_reference_price: '',
     actual_pallets: '',
     total_area_pallets: '',
     total_dat: '',
@@ -218,6 +219,7 @@ const BrokerOrderForm = () => {
           total_volume: parseFloat(order.total_volume) || 0,
           cargo_value: parseFloat(order.cargo_value) || '',
           ew_quote_price: parseFloat(order.ew_quote_price) || '',
+          driver_reference_price: parseFloat(order.driver_reference_price) || '',
           actual_pallets: parseInt(order.actual_pallets) || '',
           total_dat: parseFloat(order.total_dat) || '',
           driver_payment: parseFloat(order.driver_payment) || '',
@@ -833,6 +835,17 @@ const BrokerOrderForm = () => {
                 placeholder="0.00"
                 value={formData.ew_quote_price}
                 onChange={(e) => handleChange('ew_quote_price', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>司机参考价</label>
+              <input
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={formData.driver_reference_price}
+                onChange={(e) => handleChange('driver_reference_price', e.target.value)}
               />
             </div>
 

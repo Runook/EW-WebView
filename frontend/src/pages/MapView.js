@@ -298,6 +298,7 @@ const MapView = () => {
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;margin-bottom:14px;">
               <div><span style="color:#888;">日期:</span> <strong style="color:#333;">${formatDate(order.quote_date)}</strong></div>
               <div><span style="color:#888;">WE报价:</span> <strong style="color:#2e7d32;">${formatMoney(order.ew_quote_price)}</strong></div>
+              <div><span style="color:#888;">司机参考价:</span> <strong style="color:#1976d2;">${formatMoney(order.driver_reference_price)}</strong></div>
               <div style="grid-column:span 2;"><span style="color:#888;">询价公司:</span> <strong style="color:#333;">${order.inquiry_company||order.customer_name||'-'}</strong></div>
               <div><span style="color:#888;">发货单号:</span> <span style="color:#333;">${order.shipment_number||'-'}</span></div>
               <div><span style="color:#888;">货物备注:</span> <span style="color:#333;">${order.cargo_type||'-'}</span></div>

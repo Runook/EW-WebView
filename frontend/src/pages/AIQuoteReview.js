@@ -28,7 +28,7 @@ const AIQuoteReview = () => {
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(null);
   const [systemStatus, setSystemStatus] = useState(null);
-  const [editingPrices, setEditingPrices] = useState({}); // { orderId: { ew_quote_price, truck_reference_price } }
+  const [editingPrices, setEditingPrices] = useState({}); // { orderId: { ew_quote_price, driver_reference_price, truck_reference_price } }
   const [savingPrice, setSavingPrice] = useState(null);
 
   const fetchTasks = useCallback(async () => {
@@ -145,6 +145,7 @@ const AIQuoteReview = () => {
       const updateData = {};
       if (prices.ew_quote_price !== undefined) updateData.ew_quote_price = parseFloat(prices.ew_quote_price) || null;
       if (prices.truck_reference_price !== undefined) updateData.truck_reference_price = parseFloat(prices.truck_reference_price) || null;
+      if (prices.driver_reference_price !== undefined) updateData.driver_reference_price = parseFloat(prices.driver_reference_price) || null;
       await orderApi.updateOrder(orderId, updateData);
       if (expandedTask) {
         const res = await agentApi.getReviewById(expandedTask);
@@ -340,6 +341,7 @@ const AIQuoteReview = () => {
                                   <th>地址类型</th>
                                   <th>DAT</th>
                                   <th>WE报价</th>
+                                  <th>司机参考价</th>
                                   <th>卡车参考价</th>
                                   <th></th>
                                 </tr>
@@ -349,7 +351,8 @@ const AIQuoteReview = () => {
                                   const ep = editingPrices[order.id] || {};
                                   const ewVal = ep.ew_quote_price !== undefined ? ep.ew_quote_price : (order.ew_quote_price || '');
                                   const trVal = ep.truck_reference_price !== undefined ? ep.truck_reference_price : (order.truck_reference_price || '');
-                                  const isDirty = ep.ew_quote_price !== undefined || ep.truck_reference_price !== undefined;
+                                  const drVal = ep.driver_reference_price !== undefined ? ep.driver_reference_price : (order.driver_reference_price || '');
+                                  const isDirty = ep.ew_quote_price !== undefined || ep.truck_reference_price !== undefined || ep.driver_reference_price !== undefined;
                                   return (
                                   <tr key={order.id || idx}>
                                     <td className="td-tracking">
@@ -392,8 +395,18 @@ const AIQuoteReview = () => {
                                         type="number"
                                         step="0.01"
                                         className="price-input"
+                                        value={drVal}
+                                        placeholder="司机参考价"
+                                        onChange={(e) => handlePriceChange(order.id, 'driver_reference_price', e.target.value)}
+                                      />
+                                    </td>
+                                    <td className="td-price-edit">
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        className="price-input"
                                         value={trVal}
-                                        placeholder="参考价"
+                                        placeholder="卡车参考价"
                                         onChange={(e) => handlePriceChange(order.id, 'truck_reference_price', e.target.value)}
                                       />
                                     </td>
