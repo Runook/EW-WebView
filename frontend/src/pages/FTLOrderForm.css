@@ -1,6 +1,11 @@
-/* FTL Order Form — overrides + new components on top of BrokerOrderForm.css */
+/* FTL Order Form V2 — DAT 风格的精简布局 */
 
-.ftl-form .header-left {
+.ftl-form-v2 {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ftl-form-v2 .header-left {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -8,12 +13,13 @@
 
 .ftl-badge {
   display: inline-block;
-  padding: 4px 12px;
+  padding: 3px 10px;
   background: #2c7be5;
   color: white;
-  border-radius: 12px;
-  font-size: 0.85em;
-  font-weight: 600;
+  border-radius: 4px;
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 
 .btn-dat {
@@ -36,7 +42,101 @@
   cursor: not-allowed;
 }
 
-/* Company autocomplete suggestions */
+/* Card 容器 — 模仿 DAT 的白色 card + 阴影 */
+.ftl-form-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ftl-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.ftl-card-nested {
+  margin-top: 12px;
+  box-shadow: none;
+  background: #f8fafc;
+}
+
+.ftl-section-title {
+  margin: 0 0 14px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  letter-spacing: 0.01em;
+}
+
+.ftl-subsection-title {
+  margin: 0 0 10px 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* 紧凑的行 + 字段 */
+.ftl-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.ftl-row:last-child {
+  margin-bottom: 0;
+}
+
+.ftl-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ftl-field label {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.ftl-field input[type="text"],
+.ftl-field input[type="number"],
+.ftl-field input[type="date"],
+.ftl-field input[type="datetime-local"],
+.ftl-field input[type="email"],
+.ftl-field select,
+.ftl-field textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+}
+
+.ftl-field input:focus,
+.ftl-field select:focus,
+.ftl-field textarea:focus {
+  outline: none;
+  border-color: #2c7be5;
+  box-shadow: 0 0 0 3px rgba(44, 123, 229, 0.12);
+}
+
+.ftl-field textarea {
+  resize: vertical;
+  min-height: 50px;
+}
+
+/* Company autocomplete */
 .company-suggestions {
   position: absolute;
   top: 100%;
@@ -67,94 +167,36 @@
   background: #f0f9ff;
 }
 
-/* Equipment length preset chips */
-.length-row {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.length-preset {
-  padding: 6px 12px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 0.85em;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.length-preset:hover {
-  border-color: #2c7be5;
-}
-
-.length-preset.active {
-  background: #2c7be5;
-  color: white;
-  border-color: #2c7be5;
-  font-weight: 600;
-}
-
-/* Equipment flag toggles */
-.ftl-flags {
-  grid-column: span 2;
-}
-
-.flags-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  padding: 8px 0;
-}
-
-.flag-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  font-size: 0.9em;
-  user-select: none;
-}
-
-.flag-toggle input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-/* Pricing summary row at the bottom of each pricing section */
-.ftl-pricing-section {
-  background: #fafbfd;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+/* 报价 card 强调显示 */
+.ftl-pricing-card {
+  background: linear-gradient(180deg, white 0%, #fafbfd 100%);
+  border-color: #cbd5e1;
 }
 
 .ftl-summary-row {
   display: flex;
   gap: 24px;
-  padding: 12px 16px;
-  background: white;
+  margin-top: 14px;
+  padding-top: 12px;
   border-top: 1px dashed #e2e8f0;
-  margin-top: 12px;
-  border-radius: 0 0 8px 8px;
 }
 
 .summary-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .summary-item .label {
-  font-size: 0.78em;
+  font-size: 0.72rem;
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-weight: 500;
 }
 
 .summary-item .value {
-  font-size: 1.2em;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #1e293b;
 }
@@ -169,7 +211,7 @@
 
 .summary-item .value.profit {
   color: #2c7be5;
-  font-size: 1.4em;
+  font-size: 1.4rem;
 }
 
 .summary-item .value.profit.negative {
@@ -180,21 +222,115 @@
   margin-left: auto;
 }
 
-/* Form grid spans (allowing 4-column on wide screens) */
-.ftl-form .form-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px 16px;
+/* 旗标 */
+.flags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
 }
 
-@media (max-width: 1024px) {
-  .ftl-form .form-grid {
-    grid-template-columns: repeat(2, 1fr);
+.flag-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  user-select: none;
+  color: #334155;
+}
+
+.flag-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #2c7be5;
+}
+
+/* 高级选项折叠面板 */
+.ftl-advanced {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.ftl-advanced > summary {
+  cursor: pointer;
+  padding: 14px 20px;
+  font-weight: 600;
+  color: #475569;
+  background: #f8fafc;
+  list-style: none;
+  user-select: none;
+  font-size: 0.92rem;
+  transition: background 0.15s;
+}
+
+.ftl-advanced > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ftl-advanced > summary:hover {
+  background: #f1f5f9;
+}
+
+.ftl-advanced[open] > summary {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ftl-advanced > *:not(summary) {
+  padding: 0 16px 16px;
+}
+
+.ftl-advanced > *:not(summary):first-of-type {
+  padding-top: 16px;
+}
+
+/* 定价拆分两列 */
+.ftl-pricing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .ftl-pricing-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 600px) {
-  .ftl-form .form-grid {
-    grid-template-columns: 1fr;
+.ftl-pricing-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+  padding: 4px 0;
+  border-bottom: 2px solid;
+}
+
+.ftl-pricing-label.customer {
+  color: #16a34a;
+  border-color: #16a34a;
+}
+
+.ftl-pricing-label.driver {
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+/* 响应式：小屏幕单列 */
+@media (max-width: 768px) {
+  .ftl-row {
+    flex-direction: column;
+  }
+
+  .ftl-summary-row {
+    flex-wrap: wrap;
+  }
+
+  .profit-item {
+    margin-left: 0;
   }
 }

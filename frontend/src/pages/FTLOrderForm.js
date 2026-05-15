@@ -17,7 +17,7 @@ const getNYDate = () => {
   return formatter.format(new Date());
 };
 
-// DAT 设备类型常用 16 种（前端硬编码以减少一次接口调用；与 datEquipmentTypes.js 保持一致）
+// DAT 常用设备类型（与后端 datEquipmentTypes.js 保持一致）
 const EQUIPMENT_OPTIONS = [
   { code: 'V', name: 'Van' },
   { code: 'R', name: 'Reefer' },
@@ -39,12 +39,9 @@ const EQUIPMENT_OPTIONS = [
   { code: 'CN', name: 'Conestoga' },
 ];
 
-// 冷藏类设备（需要温度控制）
 const REEFER_EQUIPMENT_CODES = new Set([
   'R', 'RA', 'R2', 'RZ', 'RN', 'RL', 'RM', 'RP', 'RV', 'CR', 'IR', 'BR', 'SC',
 ]);
-
-const TRUCK_LENGTH_PRESETS = [53, 48, 40, 26, 20];
 
 const num = (v) => {
   const n = parseFloat(v);
@@ -53,6 +50,24 @@ const num = (v) => {
 
 const fmt$ = (n) => `$${(Math.round(n * 100) / 100).toFixed(2)}`;
 
+// Parse "Hauppauge, NY 11788" → { city, state, zip }
+const parseCombinedLocation = (input) => {
+  if (!input) return { city: '', state: '', zip: '' };
+  const s = input.trim();
+  // Try "City, ST ZIP"
+  const m1 = s.match(/^([^,]+),\s*([A-Za-z]{2})\s+(\d{5}(?:-\d{4})?)?\s*$/);
+  if (m1) return { city: m1[1].trim(), state: m1[2].toUpperCase(), zip: m1[3] || '' };
+  // "City, ST"
+  const m2 = s.match(/^([^,]+),\s*([A-Za-z]{2})\s*$/);
+  if (m2) return { city: m2[1].trim(), state: m2[2].toUpperCase(), zip: '' };
+  // just ZIP
+  if (/^\d{5}$/.test(s)) return { city: '', state: '', zip: s };
+  return { city: s, state: '', zip: '' };
+};
+
+const combineLocation = (city, state, zip) =>
+  [city, state && `, ${state}`, zip && ` ${zip}`].filter(Boolean).join('').trim();
+
 const initialState = {
   freight_mode: 'FTL',
   quote_date: getNYDate(),
@@ -60,7 +75,6 @@ const initialState = {
   ew_quote_number: '',
   shipment_number: '',
 
-  // Equipment
   equipment_type: 'V',
   truck_length_ft: 53,
   team_required: false,
@@ -69,7 +83,6 @@ const initialState = {
   tarp_required: false,
   trailer_vin: '',
 
-  // Cargo
   commodity: '',
   cargo_description_detailed: '',
   cargo_value: '',
@@ -79,44 +92,44 @@ const initialState = {
   temperature_min: '',
   temperature_max: '',
 
-  // Lane
-  origin_address: '',
   origin_city: '',
   origin_state: '',
   origin_zipcode: '',
-  destination_address: '',
   destination_city: '',
   destination_state: '',
   destination_zipcode: '',
   transport_distance: '',
 
-  // Time windows + reference
+  pickup_date: '',
+  delivery_date: '',
   pickup_window_start: '',
   pickup_window_end: '',
   pickup_appointment_required: false,
   pickup_reference: '',
+  pickup_hours: '',
   delivery_window_start: '',
   delivery_window_end: '',
   delivery_appointment_required: false,
   delivery_reference: '',
+  delivery_hours: '',
 
-  // Pricing — customer side
+  // 简化的报价
+  ew_quote_price: '',     // 客户总价
+  truck_payment: '',      // 司机总付款
+
+  // 详细拆分（高级）
   line_haul_rate: '',
   fuel_surcharge: '',
   customer_accessorials: '',
   customer_extra_fee: '',
-
-  // Pricing — carrier side
   carrier_line_haul: '',
   carrier_fuel_surcharge: '',
   carrier_accessorials: '',
   driver_extra_fee: '',
 
-  // Auto-derived
   rate_per_mile: '',
   profit: '',
 
-  // Carrier info (filled after confirm)
   mc_number: '',
   dot_number: '',
   truck_company_name: '',
@@ -125,7 +138,6 @@ const initialState = {
   driver_name: '',
   driver_phone: '',
 
-  // Workflow
   status: 'quote',
   sub_status: null,
   notes: '',
@@ -140,41 +152,85 @@ const FTLOrderForm = () => {
   const [loading, setLoading] = useState(false);
   const [posting, setPosting] = useState(false);
 
-  // Company autocomplete
+  // Combined Origin / Destination input
+  const [originText, setOriginText] = useState('');
+  const [destText, setDestText] = useState('');
+
   const [companySuggestions, setCompanySuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const isReefer = REEFER_EQUIPMENT_CODES.has(formData.equipment_type);
 
-  // Derived totals
-  const customerTotal = useMemo(
-    () =>
+  // 计算利润：
+  //   优先用顶层 ew_quote_price / truck_payment（简化报价区填的）
+  //   如果空了，再回退到拆分字段（line_haul + FSC + Accessorials + Extra）
+  const customerTotal = useMemo(() => {
+    const top = num(formData.ew_quote_price);
+    if (top > 0) return top + num(formData.customer_extra_fee);
+    return (
       num(formData.line_haul_rate) +
       num(formData.fuel_surcharge) +
       num(formData.customer_accessorials) +
-      num(formData.customer_extra_fee),
-    [formData.line_haul_rate, formData.fuel_surcharge, formData.customer_accessorials, formData.customer_extra_fee]
-  );
+      num(formData.customer_extra_fee)
+    );
+  }, [
+    formData.ew_quote_price,
+    formData.line_haul_rate,
+    formData.fuel_surcharge,
+    formData.customer_accessorials,
+    formData.customer_extra_fee,
+  ]);
 
-  const driverTotal = useMemo(
-    () =>
+  const driverTotal = useMemo(() => {
+    const top = num(formData.truck_payment);
+    if (top > 0) return top + num(formData.driver_extra_fee);
+    return (
       num(formData.carrier_line_haul) +
       num(formData.carrier_fuel_surcharge) +
       num(formData.carrier_accessorials) +
-      num(formData.driver_extra_fee),
-    [formData.carrier_line_haul, formData.carrier_fuel_surcharge, formData.carrier_accessorials, formData.driver_extra_fee]
-  );
+      num(formData.driver_extra_fee)
+    );
+  }, [
+    formData.truck_payment,
+    formData.carrier_line_haul,
+    formData.carrier_fuel_surcharge,
+    formData.carrier_accessorials,
+    formData.driver_extra_fee,
+  ]);
 
   const derivedProfit = useMemo(() => customerTotal - driverTotal, [customerTotal, driverTotal]);
 
   const derivedRpm = useMemo(() => {
     const dist = num(formData.transport_distance);
     if (dist <= 0) return 0;
-    return (num(formData.line_haul_rate) + num(formData.fuel_surcharge)) / dist;
-  }, [formData.line_haul_rate, formData.fuel_surcharge, formData.transport_distance]);
+    return customerTotal / dist;
+  }, [customerTotal, formData.transport_distance]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // 综合地址输入 → 自动 parse 到 city/state/zip
+  const handleOriginText = (value) => {
+    setOriginText(value);
+    const { city, state, zip } = parseCombinedLocation(value);
+    setFormData((prev) => ({
+      ...prev,
+      origin_city: city || prev.origin_city,
+      origin_state: state || prev.origin_state,
+      origin_zipcode: zip || prev.origin_zipcode,
+    }));
+  };
+
+  const handleDestText = (value) => {
+    setDestText(value);
+    const { city, state, zip } = parseCombinedLocation(value);
+    setFormData((prev) => ({
+      ...prev,
+      destination_city: city || prev.destination_city,
+      destination_state: state || prev.destination_state,
+      destination_zipcode: zip || prev.destination_zipcode,
+    }));
   };
 
   const loadOrder = useCallback(async () => {
@@ -185,7 +241,6 @@ const FTLOrderForm = () => {
         const o = response.data || {};
         const toLocalDt = (v) => {
           if (!v) return '';
-          // datetime-local input expects YYYY-MM-DDTHH:mm (no Z)
           try {
             const d = new Date(v);
             const pad = (n) => String(n).padStart(2, '0');
@@ -194,20 +249,25 @@ const FTLOrderForm = () => {
             return '';
           }
         };
+        const toDate = (v) => (v ? String(v).slice(0, 10) : '');
+
         setFormData({
           ...initialState,
           ...o,
           quote_date: (o.quote_date || '').slice(0, 10) || getNYDate(),
+          pickup_date: toDate(o.pickup_date),
+          delivery_date: toDate(o.delivery_date),
           pickup_window_start: toLocalDt(o.pickup_window_start),
           pickup_window_end: toLocalDt(o.pickup_window_end),
           delivery_window_start: toLocalDt(o.delivery_window_start),
           delivery_window_end: toLocalDt(o.delivery_window_end),
-          // Numerics
           total_weight_lbs: o.total_weight_lbs || '',
           pieces_total: o.pieces_total || '',
           temperature_min: o.temperature_min ?? '',
           temperature_max: o.temperature_max ?? '',
           transport_distance: o.transport_distance || '',
+          ew_quote_price: o.ew_quote_price || '',
+          truck_payment: o.truck_payment || '',
           line_haul_rate: o.line_haul_rate || '',
           fuel_surcharge: o.fuel_surcharge || '',
           customer_accessorials: o.customer_accessorials || '',
@@ -222,6 +282,8 @@ const FTLOrderForm = () => {
           equipment_type: o.equipment_type || 'V',
           freight_mode: o.freight_mode || 'FTL',
         });
+        setOriginText(combineLocation(o.origin_city, o.origin_state, o.origin_zipcode));
+        setDestText(combineLocation(o.destination_city, o.destination_state, o.destination_zipcode));
       }
     } catch (error) {
       console.error('加载订单失败:', error);
@@ -250,7 +312,7 @@ const FTLOrderForm = () => {
   }, []);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e?.preventDefault) e.preventDefault();
     try {
       setLoading(true);
       const submitData = {
@@ -259,12 +321,13 @@ const FTLOrderForm = () => {
         order_type: 'land_freight',
         customer_name: formData.inquiry_company || '未命名客户',
         cargo_description: formData.commodity || formData.cargo_description_detailed || 'FTL 整车',
-        // Convert empty strings to null for numerics
         total_weight_lbs: formData.total_weight_lbs === '' ? null : formData.total_weight_lbs,
         pieces_total: formData.pieces_total === '' ? null : formData.pieces_total,
         temperature_min: formData.temperature_min === '' ? null : formData.temperature_min,
         temperature_max: formData.temperature_max === '' ? null : formData.temperature_max,
         transport_distance: formData.transport_distance === '' ? null : formData.transport_distance,
+        ew_quote_price: formData.ew_quote_price === '' ? null : formData.ew_quote_price,
+        truck_payment: formData.truck_payment === '' ? null : formData.truck_payment,
         line_haul_rate: formData.line_haul_rate === '' ? null : formData.line_haul_rate,
         fuel_surcharge: formData.fuel_surcharge === '' ? null : formData.fuel_surcharge,
         customer_accessorials: formData.customer_accessorials === '' ? null : formData.customer_accessorials,
@@ -300,9 +363,7 @@ const FTLOrderForm = () => {
     if (!window.confirm('确定将此 FTL 订单标记为"已下单"？')) return;
     try {
       const response = await orderApi.confirmOrder(orderId, 'waiting_driver');
-      if (response.success) {
-        navigate('/employee/ftl-orders?status=ordered');
-      }
+      if (response.success) navigate('/employee/ftl-orders?status=ordered');
     } catch (error) {
       alert('操作失败: ' + error.message);
     }
@@ -312,9 +373,7 @@ const FTLOrderForm = () => {
     if (!window.confirm('确定将此 FTL 订单标记为"已完成"？')) return;
     try {
       const response = await orderApi.completeOrder(orderId);
-      if (response.success) {
-        navigate('/employee/ftl-orders?status=completed');
-      }
+      if (response.success) navigate('/employee/ftl-orders?status=completed');
     } catch (error) {
       alert('操作失败: ' + error.message);
     }
@@ -329,9 +388,7 @@ const FTLOrderForm = () => {
     setPosting(true);
     try {
       const res = await datLoadBoardApi.postFromOrder(orderId);
-      if (res.success) {
-        alert(`已 Post 到 DAT，Post ID: ${res.data.datPostId}`);
-      }
+      if (res.success) alert(`已 Post 到 DAT，Post ID: ${res.data.datPostId}`);
     } catch (err) {
       alert(`Post 失败: ${err.message}`);
     } finally {
@@ -340,11 +397,11 @@ const FTLOrderForm = () => {
   };
 
   return (
-    <div className="broker-order-form-container ftl-form">
+    <div className="broker-order-form-container ftl-form-v2">
       <div className="form-header">
         <div className="header-left">
           <h1>{isEditMode ? '编辑 FTL 整车订单' : '新建 FTL 整车订单'}</h1>
-          <span className="ftl-badge">🚚 FTL</span>
+          <span className="ftl-badge">FTL</span>
           {isEditMode && formData.status && (
             <span className={`status-indicator status-${formData.status}`}>
               {formData.status === 'quote' && '报价单'}
@@ -357,17 +414,17 @@ const FTLOrderForm = () => {
         <div className="form-actions-top">
           {isEditMode && (
             <button type="button" className="btn-dat" onClick={handlePostToDAT} disabled={posting}>
-              {posting ? 'Posting...' : '📤 Post to DAT'}
+              {posting ? 'Posting...' : 'Post to DAT'}
             </button>
           )}
           {isEditMode && formData.status === 'quote' && (
             <button type="button" className="btn-confirm" onClick={handleConfirmOrder}>
-              ✓ 确认下单
+              确认下单
             </button>
           )}
           {isEditMode && formData.status === 'ordered' && (
             <button type="button" className="btn-complete" onClick={handleCompleteOrder}>
-              ✓ 标记完成
+              标记完成
             </button>
           )}
           <button type="button" className="btn-secondary" onClick={() => navigate('/employee/ftl-orders')}>
@@ -379,20 +436,12 @@ const FTLOrderForm = () => {
         </div>
       </div>
 
-      <form className="order-form" onSubmit={handleSubmit}>
-        {/* === 基础信息 === */}
-        <div className="form-section">
-          <h3 className="section-title">基础信息</h3>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>报价日期</label>
-              <input
-                type="date"
-                value={formData.quote_date}
-                onChange={(e) => handleChange('quote_date', e.target.value)}
-              />
-            </div>
-            <div className="form-group" style={{ position: 'relative' }}>
+      <form className="order-form ftl-form-compact" onSubmit={handleSubmit}>
+
+        {/* === 基础信息 (一行紧凑) === */}
+        <div className="ftl-card">
+          <div className="ftl-row">
+            <div className="ftl-field" style={{ flex: 2, position: 'relative' }}>
               <label>询价公司 *</label>
               <input
                 type="text"
@@ -421,387 +470,185 @@ const FTLOrderForm = () => {
                 </div>
               )}
             </div>
-            <div className="form-group">
-              <label>EW 报价单号</label>
+            <div className="ftl-field">
+              <label>WE 报价单号</label>
               <input
                 type="text"
                 value={formData.ew_quote_number}
                 onChange={(e) => handleChange('ew_quote_number', e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label>发货单号</label>
+            <div className="ftl-field">
+              <label>报价日期</label>
               <input
-                type="text"
-                value={formData.shipment_number}
-                onChange={(e) => handleChange('shipment_number', e.target.value)}
+                type="date"
+                value={formData.quote_date}
+                onChange={(e) => handleChange('quote_date', e.target.value)}
               />
             </div>
           </div>
         </div>
 
-        {/* === 装备 / Equipment === */}
-        <div className="form-section">
-          <h3 className="section-title">装备 / Equipment</h3>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>设备类型 (DAT) *</label>
+        {/* === Shipment Details (DAT 风格) === */}
+        <div className="ftl-card">
+          <h3 className="ftl-section-title">Shipment Details</h3>
+          <div className="ftl-row">
+            <div className="ftl-field" style={{ flex: 1 }}>
+              <label>Origin (City, ST, ZIP) *</label>
+              <input
+                type="text"
+                placeholder="如：Hauppauge, NY 11788"
+                value={originText}
+                onChange={(e) => handleOriginText(e.target.value)}
+              />
+            </div>
+            <div className="ftl-field" style={{ flex: 1 }}>
+              <label>Destination (City, ST, ZIP) *</label>
+              <input
+                type="text"
+                placeholder="如：Flushing, NY 11354"
+                value={destText}
+                onChange={(e) => handleDestText(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="ftl-row">
+            <div className="ftl-field">
+              <label>Pickup Earliest *</label>
+              <input
+                type="date"
+                value={formData.pickup_date}
+                onChange={(e) => handleChange('pickup_date', e.target.value)}
+              />
+            </div>
+            <div className="ftl-field">
+              <label>Pickup Latest</label>
+              <input
+                type="date"
+                value={formData.delivery_date}
+                onChange={(e) => handleChange('delivery_date', e.target.value)}
+              />
+            </div>
+            <div className="ftl-field">
+              <label>Pickup Hours</label>
+              <input
+                type="text"
+                placeholder="如：08:00-17:00"
+                value={formData.pickup_hours}
+                onChange={(e) => handleChange('pickup_hours', e.target.value)}
+              />
+            </div>
+            <div className="ftl-field">
+              <label>Drop Off Hours</label>
+              <input
+                type="text"
+                placeholder="如：08:00-17:00"
+                value={formData.delivery_hours}
+                onChange={(e) => handleChange('delivery_hours', e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* === Equipment Details (DAT 风格) === */}
+        <div className="ftl-card">
+          <h3 className="ftl-section-title">Equipment Details</h3>
+          <div className="ftl-row">
+            <div className="ftl-field" style={{ flex: 1.2 }}>
+              <label>Equipment Type *</label>
               <select
                 value={formData.equipment_type}
                 onChange={(e) => handleChange('equipment_type', e.target.value)}
               >
                 {EQUIPMENT_OPTIONS.map((eq) => (
                   <option key={eq.code} value={eq.code}>
-                    {eq.code} — {eq.name}
+                    {eq.name} — {eq.code}
                   </option>
                 ))}
               </select>
             </div>
-            <div className="form-group">
-              <label>车长 (ft) *</label>
-              <div className="length-row">
-                {TRUCK_LENGTH_PRESETS.map((l) => (
-                  <button
-                    key={l}
-                    type="button"
-                    className={`length-preset ${parseInt(formData.truck_length_ft, 10) === l ? 'active' : ''}`}
-                    onClick={() => handleChange('truck_length_ft', l)}
-                  >
-                    {l}
-                  </button>
-                ))}
-                <input
-                  type="number"
-                  placeholder="自定义"
-                  value={formData.truck_length_ft}
-                  onChange={(e) => handleChange('truck_length_ft', e.target.value)}
-                  style={{ width: 90 }}
-                />
-              </div>
-            </div>
-            <div className="form-group ftl-flags">
-              <label>需求标志</label>
-              <div className="flags-row">
-                <label className="flag-toggle">
-                  <input
-                    type="checkbox"
-                    checked={formData.hazmat}
-                    onChange={(e) => handleChange('hazmat', e.target.checked)}
-                  />
-                  Hazmat 危险品
-                </label>
-                <label className="flag-toggle">
-                  <input
-                    type="checkbox"
-                    checked={formData.team_required}
-                    onChange={(e) => handleChange('team_required', e.target.checked)}
-                  />
-                  Team 双司机
-                </label>
-                <label className="flag-toggle">
-                  <input
-                    type="checkbox"
-                    checked={formData.oversize}
-                    onChange={(e) => handleChange('oversize', e.target.checked)}
-                  />
-                  Oversize 超尺寸
-                </label>
-                <label className="flag-toggle">
-                  <input
-                    type="checkbox"
-                    checked={formData.tarp_required}
-                    onChange={(e) => handleChange('tarp_required', e.target.checked)}
-                  />
-                  Tarp 篷布
-                </label>
-                <label className="flag-toggle">
-                  <input
-                    type="checkbox"
-                    checked={formData.palletized}
-                    onChange={(e) => handleChange('palletized', e.target.checked)}
-                  />
-                  Palletized 板装
-                </label>
-              </div>
-            </div>
-            {isReefer && (
-              <>
-                <div className="form-group">
-                  <label>温度下限 (°F)</label>
-                  <input
-                    type="number"
-                    placeholder="如 -10"
-                    value={formData.temperature_min}
-                    onChange={(e) => handleChange('temperature_min', e.target.value)}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>温度上限 (°F)</label>
-                  <input
-                    type="number"
-                    placeholder="如 32"
-                    value={formData.temperature_max}
-                    onChange={(e) => handleChange('temperature_max', e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* === 货物 === */}
-        <div className="form-section">
-          <h3 className="section-title">货物 / Commodity</h3>
-          <div className="form-grid">
-            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label>Commodity 货物描述 *</label>
-              <input
-                type="text"
-                placeholder="如：General Freight / Auto Parts / Frozen Food"
-                value={formData.commodity}
-                onChange={(e) => handleChange('commodity', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>总重量 (lbs) *</label>
+            <div className="ftl-field">
+              <label>Length (ft) *</label>
               <input
                 type="number"
-                placeholder="如 40000"
+                placeholder="53"
+                value={formData.truck_length_ft}
+                onChange={(e) => handleChange('truck_length_ft', e.target.value)}
+              />
+            </div>
+            <div className="ftl-field">
+              <label>Weight (lbs) *</label>
+              <input
+                type="number"
+                placeholder="40000"
                 value={formData.total_weight_lbs}
                 onChange={(e) => handleChange('total_weight_lbs', e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label>件数 / Pieces</label>
-              <input
-                type="number"
-                value={formData.pieces_total}
-                onChange={(e) => handleChange('pieces_total', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>货值 (USD)</label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.cargo_value}
-                onChange={(e) => handleChange('cargo_value', e.target.value)}
-              />
-            </div>
-            <div className="form-group" style={{ gridColumn: 'span 4' }}>
-              <label>备注</label>
-              <textarea
-                rows={2}
-                value={formData.cargo_description_detailed}
-                onChange={(e) => handleChange('cargo_description_detailed', e.target.value)}
-              />
-            </div>
           </div>
-        </div>
-
-        {/* === 路线 === */}
-        <div className="form-section">
-          <h3 className="section-title">路线 / Lane</h3>
-          <div className="form-grid">
-            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label>发货地址</label>
+          <div className="ftl-row">
+            <div className="ftl-field" style={{ flex: 1 }}>
+              <label>Commodity 货物</label>
               <input
                 type="text"
-                placeholder="街道地址"
-                value={formData.origin_address}
-                onChange={(e) => handleChange('origin_address', e.target.value)}
+                placeholder="如：General Freight"
+                value={formData.commodity}
+                onChange={(e) => handleChange('commodity', e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label>城市</label>
+            <div className="ftl-field" style={{ flex: 1 }}>
+              <label>Reference ID</label>
               <input
                 type="text"
-                value={formData.origin_city}
-                onChange={(e) => handleChange('origin_city', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>州</label>
-              <input
-                type="text"
-                value={formData.origin_state}
-                onChange={(e) => handleChange('origin_state', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>邮编 *</label>
-              <input
-                type="text"
-                placeholder="ZIP"
-                value={formData.origin_zipcode}
-                onChange={(e) => handleChange('origin_zipcode', e.target.value)}
-              />
-            </div>
-
-            <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label>收货地址</label>
-              <input
-                type="text"
-                placeholder="街道地址"
-                value={formData.destination_address}
-                onChange={(e) => handleChange('destination_address', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>城市</label>
-              <input
-                type="text"
-                value={formData.destination_city}
-                onChange={(e) => handleChange('destination_city', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>州</label>
-              <input
-                type="text"
-                value={formData.destination_state}
-                onChange={(e) => handleChange('destination_state', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>邮编 *</label>
-              <input
-                type="text"
-                placeholder="ZIP"
-                value={formData.destination_zipcode}
-                onChange={(e) => handleChange('destination_zipcode', e.target.value)}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>运输距离 (mi)</label>
-              <input
-                type="number"
-                placeholder="如 800"
-                value={formData.transport_distance}
-                onChange={(e) => handleChange('transport_distance', e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* === 取货 & 送货时间窗 === */}
-        <div className="form-section">
-          <h3 className="section-title">取货 & 送货时间窗</h3>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>取货时间窗 - 起</label>
-              <input
-                type="datetime-local"
-                value={formData.pickup_window_start}
-                onChange={(e) => handleChange('pickup_window_start', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>取货时间窗 - 止</label>
-              <input
-                type="datetime-local"
-                value={formData.pickup_window_end}
-                onChange={(e) => handleChange('pickup_window_end', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>取货 Reference / PO</label>
-              <input
-                type="text"
+                placeholder="PO / Reference"
                 value={formData.pickup_reference}
                 onChange={(e) => handleChange('pickup_reference', e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label className="flag-toggle" style={{ marginTop: 28 }}>
-                <input
-                  type="checkbox"
-                  checked={formData.pickup_appointment_required}
-                  onChange={(e) => handleChange('pickup_appointment_required', e.target.checked)}
-                />
-                取货需要预约
-              </label>
-            </div>
-
-            <div className="form-group">
-              <label>送货时间窗 - 起</label>
-              <input
-                type="datetime-local"
-                value={formData.delivery_window_start}
-                onChange={(e) => handleChange('delivery_window_start', e.target.value)}
+          </div>
+          <div className="ftl-row">
+            <div className="ftl-field" style={{ flex: 1 }}>
+              <label>Comments</label>
+              <textarea
+                rows={2}
+                value={formData.notes}
+                onChange={(e) => handleChange('notes', e.target.value)}
               />
-            </div>
-            <div className="form-group">
-              <label>送货时间窗 - 止</label>
-              <input
-                type="datetime-local"
-                value={formData.delivery_window_end}
-                onChange={(e) => handleChange('delivery_window_end', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>送货 Reference / PO</label>
-              <input
-                type="text"
-                value={formData.delivery_reference}
-                onChange={(e) => handleChange('delivery_reference', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label className="flag-toggle" style={{ marginTop: 28 }}>
-                <input
-                  type="checkbox"
-                  checked={formData.delivery_appointment_required}
-                  onChange={(e) => handleChange('delivery_appointment_required', e.target.checked)}
-                />
-                送货需要预约
-              </label>
             </div>
           </div>
         </div>
 
-        {/* === 定价：客户侧 === */}
-        <div className="form-section ftl-pricing-section">
-          <h3 className="section-title">报价 - 客户侧 (Customer)</h3>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>线运费 Line Haul</label>
+        {/* === 报价（broker 业务核心，简化版）=== */}
+        <div className="ftl-card ftl-pricing-card">
+          <h3 className="ftl-section-title">报价 / Booking & Rate</h3>
+          <div className="ftl-row">
+            <div className="ftl-field">
+              <label>客户报价 (Total)</label>
               <input
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                value={formData.line_haul_rate}
-                onChange={(e) => handleChange('line_haul_rate', e.target.value)}
+                value={formData.ew_quote_price}
+                onChange={(e) => handleChange('ew_quote_price', e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label>油附加 FSC</label>
+            <div className="ftl-field">
+              <label>司机付款 (Total)</label>
               <input
                 type="number"
                 step="0.01"
                 placeholder="0.00"
-                value={formData.fuel_surcharge}
-                onChange={(e) => handleChange('fuel_surcharge', e.target.value)}
+                value={formData.truck_payment}
+                onChange={(e) => handleChange('truck_payment', e.target.value)}
               />
             </div>
-            <div className="form-group">
-              <label>Accessorials 附加费</label>
+            <div className="ftl-field">
+              <label>运输距离 (mi)</label>
               <input
                 type="number"
-                step="0.01"
-                placeholder="Detention / Lumper..."
-                value={formData.customer_accessorials}
-                onChange={(e) => handleChange('customer_accessorials', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>其他费用</label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.customer_extra_fee}
-                onChange={(e) => handleChange('customer_extra_fee', e.target.value)}
+                placeholder="800"
+                value={formData.transport_distance}
+                onChange={(e) => handleChange('transport_distance', e.target.value)}
               />
             </div>
           </div>
@@ -811,59 +658,12 @@ const FTLOrderForm = () => {
               <span className="value customer">{fmt$(customerTotal)}</span>
             </div>
             <div className="summary-item">
-              <span className="label">RPM (Rate / Mile)</span>
-              <span className="value">${derivedRpm.toFixed(3)}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* === 定价：司机侧 === */}
-        <div className="form-section ftl-pricing-section">
-          <h3 className="section-title">付款 - 司机/承运商侧 (Carrier)</h3>
-          <div className="form-grid">
-            <div className="form-group">
-              <label>Carrier Line Haul</label>
-              <input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={formData.carrier_line_haul}
-                onChange={(e) => handleChange('carrier_line_haul', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>Carrier FSC</label>
-              <input
-                type="number"
-                step="0.01"
-                placeholder="0.00"
-                value={formData.carrier_fuel_surcharge}
-                onChange={(e) => handleChange('carrier_fuel_surcharge', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>Carrier Accessorials</label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.carrier_accessorials}
-                onChange={(e) => handleChange('carrier_accessorials', e.target.value)}
-              />
-            </div>
-            <div className="form-group">
-              <label>其他付司机费用</label>
-              <input
-                type="number"
-                step="0.01"
-                value={formData.driver_extra_fee}
-                onChange={(e) => handleChange('driver_extra_fee', e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="ftl-summary-row">
-            <div className="summary-item">
-              <span className="label">司机总付款</span>
+              <span className="label">司机付款</span>
               <span className="value driver">{fmt$(driverTotal)}</span>
+            </div>
+            <div className="summary-item">
+              <span className="label">RPM</span>
+              <span className="value">${derivedRpm.toFixed(2)}</span>
             </div>
             <div className="summary-item profit-item">
               <span className="label">利润 Profit</span>
@@ -874,12 +674,250 @@ const FTLOrderForm = () => {
           </div>
         </div>
 
-        {/* === 卡车信息（下单后填写）=== */}
+        {/* === 高级选项（折叠）=== */}
+        <details className="ftl-advanced">
+          <summary>▶ 高级选项（旗标 / 详细时间窗 / 定价拆分）</summary>
+
+          {/* 旗标 */}
+          <div className="ftl-card ftl-card-nested">
+            <h4 className="ftl-subsection-title">附加旗标</h4>
+            <div className="flags-row">
+              <label className="flag-toggle">
+                <input
+                  type="checkbox"
+                  checked={formData.hazmat}
+                  onChange={(e) => handleChange('hazmat', e.target.checked)}
+                />
+                Hazmat 危险品
+              </label>
+              <label className="flag-toggle">
+                <input
+                  type="checkbox"
+                  checked={formData.team_required}
+                  onChange={(e) => handleChange('team_required', e.target.checked)}
+                />
+                Team 双司机
+              </label>
+              <label className="flag-toggle">
+                <input
+                  type="checkbox"
+                  checked={formData.oversize}
+                  onChange={(e) => handleChange('oversize', e.target.checked)}
+                />
+                Oversize 超尺寸
+              </label>
+              <label className="flag-toggle">
+                <input
+                  type="checkbox"
+                  checked={formData.tarp_required}
+                  onChange={(e) => handleChange('tarp_required', e.target.checked)}
+                />
+                Tarp 篷布
+              </label>
+              <label className="flag-toggle">
+                <input
+                  type="checkbox"
+                  checked={formData.palletized}
+                  onChange={(e) => handleChange('palletized', e.target.checked)}
+                />
+                Palletized 板装
+              </label>
+            </div>
+
+            {/* Reefer 温度 */}
+            {isReefer && (
+              <div className="ftl-row" style={{ marginTop: 12 }}>
+                <div className="ftl-field">
+                  <label>温度下限 (°F)</label>
+                  <input
+                    type="number"
+                    value={formData.temperature_min}
+                    onChange={(e) => handleChange('temperature_min', e.target.value)}
+                  />
+                </div>
+                <div className="ftl-field">
+                  <label>温度上限 (°F)</label>
+                  <input
+                    type="number"
+                    value={formData.temperature_max}
+                    onChange={(e) => handleChange('temperature_max', e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 详细时间窗 */}
+          <div className="ftl-card ftl-card-nested">
+            <h4 className="ftl-subsection-title">详细取货 & 送货</h4>
+            <div className="ftl-row">
+              <div className="ftl-field">
+                <label>取货时间窗 - 起</label>
+                <input
+                  type="datetime-local"
+                  value={formData.pickup_window_start}
+                  onChange={(e) => handleChange('pickup_window_start', e.target.value)}
+                />
+              </div>
+              <div className="ftl-field">
+                <label>取货时间窗 - 止</label>
+                <input
+                  type="datetime-local"
+                  value={formData.pickup_window_end}
+                  onChange={(e) => handleChange('pickup_window_end', e.target.value)}
+                />
+              </div>
+              <div className="ftl-field">
+                <label className="flag-toggle" style={{ marginTop: 24 }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.pickup_appointment_required}
+                    onChange={(e) => handleChange('pickup_appointment_required', e.target.checked)}
+                  />
+                  取货需预约
+                </label>
+              </div>
+            </div>
+            <div className="ftl-row">
+              <div className="ftl-field">
+                <label>送货时间窗 - 起</label>
+                <input
+                  type="datetime-local"
+                  value={formData.delivery_window_start}
+                  onChange={(e) => handleChange('delivery_window_start', e.target.value)}
+                />
+              </div>
+              <div className="ftl-field">
+                <label>送货时间窗 - 止</label>
+                <input
+                  type="datetime-local"
+                  value={formData.delivery_window_end}
+                  onChange={(e) => handleChange('delivery_window_end', e.target.value)}
+                />
+              </div>
+              <div className="ftl-field">
+                <label className="flag-toggle" style={{ marginTop: 24 }}>
+                  <input
+                    type="checkbox"
+                    checked={formData.delivery_appointment_required}
+                    onChange={(e) => handleChange('delivery_appointment_required', e.target.checked)}
+                  />
+                  送货需预约
+                </label>
+              </div>
+            </div>
+            <div className="ftl-row">
+              <div className="ftl-field" style={{ flex: 1 }}>
+                <label>送货 Reference</label>
+                <input
+                  type="text"
+                  value={formData.delivery_reference}
+                  onChange={(e) => handleChange('delivery_reference', e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 定价拆分 */}
+          <div className="ftl-card ftl-card-nested">
+            <h4 className="ftl-subsection-title">定价拆分（覆盖顶层"客户报价/司机付款"）</h4>
+            <div className="ftl-pricing-grid">
+              <div>
+                <div className="ftl-pricing-label customer">客户侧</div>
+                <div className="ftl-row">
+                  <div className="ftl-field">
+                    <label>Line Haul</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.line_haul_rate}
+                      onChange={(e) => handleChange('line_haul_rate', e.target.value)}
+                    />
+                  </div>
+                  <div className="ftl-field">
+                    <label>FSC</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.fuel_surcharge}
+                      onChange={(e) => handleChange('fuel_surcharge', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="ftl-row">
+                  <div className="ftl-field">
+                    <label>Accessorials</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.customer_accessorials}
+                      onChange={(e) => handleChange('customer_accessorials', e.target.value)}
+                    />
+                  </div>
+                  <div className="ftl-field">
+                    <label>其他</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.customer_extra_fee}
+                      onChange={(e) => handleChange('customer_extra_fee', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div className="ftl-pricing-label driver">司机侧</div>
+                <div className="ftl-row">
+                  <div className="ftl-field">
+                    <label>Line Haul</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.carrier_line_haul}
+                      onChange={(e) => handleChange('carrier_line_haul', e.target.value)}
+                    />
+                  </div>
+                  <div className="ftl-field">
+                    <label>FSC</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.carrier_fuel_surcharge}
+                      onChange={(e) => handleChange('carrier_fuel_surcharge', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="ftl-row">
+                  <div className="ftl-field">
+                    <label>Accessorials</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.carrier_accessorials}
+                      onChange={(e) => handleChange('carrier_accessorials', e.target.value)}
+                    />
+                  </div>
+                  <div className="ftl-field">
+                    <label>其他</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.driver_extra_fee}
+                      onChange={(e) => handleChange('driver_extra_fee', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </details>
+
+        {/* === 承运商信息（仅下单后）=== */}
         {isEditMode && (formData.status === 'ordered' || formData.status === 'completed') && (
-          <div className="form-section truck-section">
-            <h3 className="section-title">承运商 / 卡车信息</h3>
-            <div className="form-grid">
-              <div className="form-group">
+          <div className="ftl-card">
+            <h3 className="ftl-section-title">承运商 / 卡车信息</h3>
+            <div className="ftl-row">
+              <div className="ftl-field">
                 <label>MC Number</label>
                 <input
                   type="text"
@@ -887,15 +925,15 @@ const FTLOrderForm = () => {
                   onChange={(e) => handleChange('mc_number', e.target.value)}
                 />
               </div>
-              <div className="form-group">
-                <label>DOT Number</label>
+              <div className="ftl-field">
+                <label>DOT</label>
                 <input
                   type="text"
                   value={formData.dot_number}
                   onChange={(e) => handleChange('dot_number', e.target.value)}
                 />
               </div>
-              <div className="form-group">
+              <div className="ftl-field" style={{ flex: 2 }}>
                 <label>卡车公司</label>
                 <input
                   type="text"
@@ -903,7 +941,9 @@ const FTLOrderForm = () => {
                   onChange={(e) => handleChange('truck_company_name', e.target.value)}
                 />
               </div>
-              <div className="form-group">
+            </div>
+            <div className="ftl-row">
+              <div className="ftl-field">
                 <label>联系人</label>
                 <input
                   type="text"
@@ -911,23 +951,15 @@ const FTLOrderForm = () => {
                   onChange={(e) => handleChange('truck_contact', e.target.value)}
                 />
               </div>
-              <div className="form-group">
-                <label>Carrier Email</label>
+              <div className="ftl-field">
+                <label>Email</label>
                 <input
                   type="email"
                   value={formData.carrier_email}
                   onChange={(e) => handleChange('carrier_email', e.target.value)}
                 />
               </div>
-              <div className="form-group">
-                <label>Trailer VIN</label>
-                <input
-                  type="text"
-                  value={formData.trailer_vin}
-                  onChange={(e) => handleChange('trailer_vin', e.target.value)}
-                />
-              </div>
-              <div className="form-group">
+              <div className="ftl-field">
                 <label>司机姓名</label>
                 <input
                   type="text"
@@ -935,7 +967,7 @@ const FTLOrderForm = () => {
                   onChange={(e) => handleChange('driver_name', e.target.value)}
                 />
               </div>
-              <div className="form-group">
+              <div className="ftl-field">
                 <label>司机电话</label>
                 <input
                   type="text"
@@ -946,16 +978,6 @@ const FTLOrderForm = () => {
             </div>
           </div>
         )}
-
-        {/* === 备注 === */}
-        <div className="form-section">
-          <h3 className="section-title">备注 / Notes</h3>
-          <textarea
-            rows={3}
-            value={formData.notes}
-            onChange={(e) => handleChange('notes', e.target.value)}
-          />
-        </div>
       </form>
     </div>
   );
