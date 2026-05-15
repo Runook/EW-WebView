@@ -131,6 +131,7 @@ const BrokerOrdersNew = () => {
       }
       const response = await orderApi.getOrders({
         status: currentStatus,
+        freight_mode: 'LTL',
         ...filters,
         page: pageNum,
         limit: PAGE_SIZE
@@ -221,7 +222,7 @@ const BrokerOrdersNew = () => {
 
   const loadStats = async () => {
     try {
-      const response = await orderApi.getStatistics({ status: 'ordered' });
+      const response = await orderApi.getStatistics({ status: 'ordered', freight_mode: 'LTL' });
       if (response.success) {
         setStats({
           waiting_driver: response.data.waitingDriverCount || 0,
@@ -256,13 +257,14 @@ const BrokerOrdersNew = () => {
     try {
       setLoading(true);
       
-      // 创建最小必填字段的订单
+      // 创建最小必填字段的订单（默认 LTL 散板模式）
       const response = await orderApi.createOrder({
         customer_name: '新建订单',
         inquiry_company: '新建订单',
         cargo_description: '待填写',
         cargo_description_detailed: '待填写',
         order_type: 'land_freight',
+        freight_mode: 'LTL',
         status: 'quote',
         quote_date: getNYDate()
       });
@@ -896,7 +898,51 @@ const BrokerOrdersNew = () => {
         <div className="sidebar-header">
           <h2>订单管理</h2>
         </div>
-        
+
+        {/* LTL / FTL mode toggle */}
+        <div className="ltl-ftl-toggle" style={{
+          display: 'flex',
+          gap: 4,
+          padding: '10px 12px',
+          background: 'rgba(0,0,0,0.15)',
+          borderBottom: '1px solid rgba(255,255,255,0.05)'
+        }}>
+          <button
+            className="mode-btn active"
+            title="当前页"
+            style={{
+              flex: 1,
+              padding: '8px 6px',
+              background: '#3498db',
+              color: 'white',
+              border: '1px solid #2c7be5',
+              borderRadius: 6,
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            🚛 LTL 散板
+          </button>
+          <button
+            className="mode-btn"
+            onClick={() => navigate('/employee/ftl-orders')}
+            title="切换到 FTL 整车订单"
+            style={{
+              flex: 1,
+              padding: '8px 6px',
+              background: 'rgba(255,255,255,0.05)',
+              color: 'rgba(255,255,255,0.7)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 6,
+              fontSize: '0.8rem',
+              cursor: 'pointer',
+            }}
+          >
+            🚚 FTL 整车
+          </button>
+        </div>
+
         <nav className="sidebar-nav">
           <button
             className={`nav-item ${currentStatus === 'guest_quotes' ? 'active' : ''}`}

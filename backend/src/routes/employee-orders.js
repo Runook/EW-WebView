@@ -14,6 +14,7 @@ router.get('/', auth, requireEmployee, async (req, res) => {
     const filters = {
       status: req.query.status,
       order_type: req.query.order_type,
+      freight_mode: req.query.freight_mode,
       priority: req.query.priority,
       payment_status: req.query.payment_status,
       assigned_to: req.query.assigned_to,
@@ -64,7 +65,9 @@ router.get('/statistics', auth, requireEmployee, async (req, res) => {
     
     const filters = {
       date_from: req.query.date_from,
-      date_to: req.query.date_to
+      date_to: req.query.date_to,
+      freight_mode: req.query.freight_mode,
+      status: req.query.status
     };
     
     // 如果不能查看所有，只统计自己的

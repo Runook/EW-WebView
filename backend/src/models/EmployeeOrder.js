@@ -101,6 +101,35 @@ class Order {
         profit: orderData.profit || null,
         transport_distance: orderData.transport_distance || null,
         cargo_type: orderData.cargo_type || null,
+        // FTL management (033 upgrade) — coexists with existing LTL fields
+        freight_mode: orderData.freight_mode || 'LTL',
+        equipment_type: orderData.equipment_type || null,
+        truck_length_ft: orderData.truck_length_ft || null,
+        team_required: orderData.team_required === true,
+        hazmat: orderData.hazmat === true,
+        oversize: orderData.oversize === true,
+        tarp_required: orderData.tarp_required === true,
+        trailer_vin: orderData.trailer_vin || null,
+        commodity: orderData.commodity || null,
+        palletized: orderData.palletized === true,
+        pieces_total: orderData.pieces_total || null,
+        temperature_min: orderData.temperature_min != null ? orderData.temperature_min : null,
+        temperature_max: orderData.temperature_max != null ? orderData.temperature_max : null,
+        pickup_window_start: orderData.pickup_window_start || null,
+        pickup_window_end: orderData.pickup_window_end || null,
+        delivery_window_start: orderData.delivery_window_start || null,
+        delivery_window_end: orderData.delivery_window_end || null,
+        pickup_appointment_required: orderData.pickup_appointment_required === true,
+        delivery_appointment_required: orderData.delivery_appointment_required === true,
+        pickup_reference: orderData.pickup_reference || null,
+        delivery_reference: orderData.delivery_reference || null,
+        line_haul_rate: orderData.line_haul_rate || null,
+        fuel_surcharge: orderData.fuel_surcharge || null,
+        customer_accessorials: orderData.customer_accessorials || null,
+        rate_per_mile: orderData.rate_per_mile || null,
+        carrier_line_haul: orderData.carrier_line_haul || null,
+        carrier_fuel_surcharge: orderData.carrier_fuel_surcharge || null,
+        carrier_accessorials: orderData.carrier_accessorials || null,
         // Workflow & sourcing (028 upgrade)
         workflow_stage: orderData.workflow_stage || 'inquiry',
         bol_number: orderData.bol_number || null,
@@ -217,6 +246,11 @@ class Order {
       if (filters.order_type) {
         query = query.where('eo.order_type', filters.order_type);
       }
+
+      // FTL/LTL 模式过滤（033 upgrade）
+      if (filters.freight_mode) {
+        query = query.where('eo.freight_mode', filters.freight_mode);
+      }
       
       if (filters.priority) {
         query = query.where('eo.priority', filters.priority);
@@ -270,6 +304,11 @@ class Order {
       
       if (filters.order_type) {
         countQuery = countQuery.where('eo.order_type', filters.order_type);
+      }
+
+      // FTL/LTL 模式过滤（033 upgrade）
+      if (filters.freight_mode) {
+        countQuery = countQuery.where('eo.freight_mode', filters.freight_mode);
       }
       
       if (filters.priority) {
@@ -506,7 +545,20 @@ class Order {
         'workflow_stage', 'bol_number', 'sourcing_channel_id', 'sourcing_notes',
         'consignee_contact', 'delivery_type_detail',
         'cancel_reason', 'cancel_cost',
-        'delivered_at', 'invoiced_at', 'settled_at', 'customer_paid_at', 'driver_paid_at'
+        'delivered_at', 'invoiced_at', 'settled_at', 'customer_paid_at', 'driver_paid_at',
+        // FTL management (033 upgrade)
+        'freight_mode',
+        'equipment_type', 'truck_length_ft', 'team_required', 'hazmat',
+        'oversize', 'tarp_required', 'trailer_vin',
+        'commodity', 'palletized', 'pieces_total',
+        'temperature_min', 'temperature_max',
+        'pickup_window_start', 'pickup_window_end',
+        'delivery_window_start', 'delivery_window_end',
+        'pickup_appointment_required', 'delivery_appointment_required',
+        'pickup_reference', 'delivery_reference',
+        'line_haul_rate', 'fuel_surcharge', 'customer_accessorials',
+        'rate_per_mile', 'carrier_line_haul', 'carrier_fuel_surcharge',
+        'carrier_accessorials'
       ];
       
       const filteredData = {};
@@ -536,21 +588,53 @@ class Order {
         }, updatedBy);
       }
 
-      // Profit 自动重算：
-      //   profit = ew_quote_price + customer_extra_fee - truck_payment - driver_extra_fee
-      // 触发条件：ew_quote_price / truck_payment / customer_extra_fee / driver_extra_fee
-      //          里任一字段被本次 update 触及，且用户这次没有直接手填 profit。
-      const profitInputs = ['ew_quote_price', 'truck_payment', 'customer_extra_fee', 'driver_extra_fee'];
-      const profitInputChanged = profitInputs.some(f => filteredData[f] !== undefined);
-      if (profitInputChanged && filteredData.profit === undefined) {
-        const num = (v) => {
-          const n = parseFloat(v);
-          return Number.isFinite(n) ? n : 0;
-        };
-        const pick = (field) => (filteredData[field] !== undefined ? filteredData[field] : existingOrder[field]);
-        const customerSide = num(pick('ew_quote_price')) + num(pick('customer_extra_fee'));
-        const driverSide = num(pick('truck_payment')) + num(pick('driver_extra_fee'));
-        filteredData.profit = Number((customerSide - driverSide).toFixed(2));
+      // Profit 自动重算：根据 freight_mode 选择公式
+      //   LTL: profit = ew_quote_price + customer_extra_fee - truck_payment - driver_extra_fee
+      //   FTL: profit = (line_haul_rate + fuel_surcharge + customer_accessorials + customer_extra_fee)
+      //              - (carrier_line_haul + carrier_fuel_surcharge + carrier_accessorials + driver_extra_fee)
+      const num = (v) => {
+        const n = parseFloat(v);
+        return Number.isFinite(n) ? n : 0;
+      };
+      const pick = (field) => (filteredData[field] !== undefined ? filteredData[field] : existingOrder[field]);
+      const effectiveMode = filteredData.freight_mode || existingOrder.freight_mode || 'LTL';
+
+      if (effectiveMode === 'FTL') {
+        const ftlProfitInputs = [
+          'line_haul_rate', 'fuel_surcharge', 'customer_accessorials',
+          'carrier_line_haul', 'carrier_fuel_surcharge', 'carrier_accessorials',
+          'customer_extra_fee', 'driver_extra_fee',
+        ];
+        const ftlChanged = ftlProfitInputs.some((f) => filteredData[f] !== undefined);
+        if (ftlChanged && filteredData.profit === undefined) {
+          const customerSide = num(pick('line_haul_rate'))
+            + num(pick('fuel_surcharge'))
+            + num(pick('customer_accessorials'))
+            + num(pick('customer_extra_fee'));
+          const driverSide = num(pick('carrier_line_haul'))
+            + num(pick('carrier_fuel_surcharge'))
+            + num(pick('carrier_accessorials'))
+            + num(pick('driver_extra_fee'));
+          filteredData.profit = Number((customerSide - driverSide).toFixed(2));
+        }
+        // FTL: auto-compute rate_per_mile when line_haul / FSC / distance change
+        const rpmInputs = ['line_haul_rate', 'fuel_surcharge', 'transport_distance'];
+        const rpmChanged = rpmInputs.some((f) => filteredData[f] !== undefined);
+        if (rpmChanged && filteredData.rate_per_mile === undefined) {
+          const dist = num(pick('transport_distance'));
+          if (dist > 0) {
+            const total = num(pick('line_haul_rate')) + num(pick('fuel_surcharge'));
+            filteredData.rate_per_mile = Number((total / dist).toFixed(3));
+          }
+        }
+      } else {
+        const ltlProfitInputs = ['ew_quote_price', 'truck_payment', 'customer_extra_fee', 'driver_extra_fee'];
+        const ltlChanged = ltlProfitInputs.some((f) => filteredData[f] !== undefined);
+        if (ltlChanged && filteredData.profit === undefined) {
+          const customerSide = num(pick('ew_quote_price')) + num(pick('customer_extra_fee'));
+          const driverSide = num(pick('truck_payment')) + num(pick('driver_extra_fee'));
+          filteredData.profit = Number((customerSide - driverSide).toFixed(2));
+        }
       }
 
       // Auto-sync workflow_stage when status/sub_status changes via generic update
@@ -804,7 +888,11 @@ class Order {
       if (filters.status) {
         query = query.where('status', filters.status);
       }
-      
+
+      if (filters.freight_mode) {
+        query = query.where('freight_mode', filters.freight_mode);
+      }
+
       const stats = await query
         .select(
           db.raw('COUNT(*) as total_orders'),

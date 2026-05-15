@@ -194,6 +194,30 @@ router.delete('/posts/loads/:datPostId', auth, requireEmployee, async (req, res)
   }
 });
 
+/**
+ * POST /api/dat/posts/loads/from-order/:orderId
+ * Create a DAT load post directly from an employee_order row. Maps
+ * FTL/LTL freight_mode → fullPartial=FULL/PARTIAL and pulls equipment,
+ * length, weight, lane, dates and reference from the order.
+ */
+router.post('/posts/loads/from-order/:orderId', auth, requireEmployee, async (req, res) => {
+  try {
+    const orderId = parseInt(req.params.orderId, 10);
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: 'Invalid order id' });
+    }
+
+    const result = await datPostingService.postFromEmployeeOrder(req.user.id, orderId);
+    res.status(201).json({ success: true, data: result });
+  } catch (error) {
+    console.error('DAT post-from-order error:', error);
+    res.status(error.statusCode || 500).json({
+      success: false,
+      message: error.message || 'Failed to post order to DAT'
+    });
+  }
+});
+
 // ─── Freight Posting: Trucks ─────────────────────────────────────────
 
 /**

@@ -1,0 +1,200 @@
+/* FTL Order Form — overrides + new components on top of BrokerOrderForm.css */
+
+.ftl-form .header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ftl-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #2c7be5;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+.btn-dat {
+  padding: 8px 16px;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-dat:hover:not(:disabled) {
+  background: #d97706;
+}
+
+.btn-dat:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Company autocomplete suggestions */
+.company-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 220px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-top: 2px;
+}
+
+.suggestion-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background: #f0f9ff;
+}
+
+/* Equipment length preset chips */
+.length-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.length-preset {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.length-preset:hover {
+  border-color: #2c7be5;
+}
+
+.length-preset.active {
+  background: #2c7be5;
+  color: white;
+  border-color: #2c7be5;
+  font-weight: 600;
+}
+
+/* Equipment flag toggles */
+.ftl-flags {
+  grid-column: span 2;
+}
+
+.flags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.flag-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 0.9em;
+  user-select: none;
+}
+
+.flag-toggle input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Pricing summary row at the bottom of each pricing section */
+.ftl-pricing-section {
+  background: #fafbfd;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.ftl-summary-row {
+  display: flex;
+  gap: 24px;
+  padding: 12px 16px;
+  background: white;
+  border-top: 1px dashed #e2e8f0;
+  margin-top: 12px;
+  border-radius: 0 0 8px 8px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-item .label {
+  font-size: 0.78em;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.summary-item .value {
+  font-size: 1.2em;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.summary-item .value.customer {
+  color: #16a34a;
+}
+
+.summary-item .value.driver {
+  color: #dc2626;
+}
+
+.summary-item .value.profit {
+  color: #2c7be5;
+  font-size: 1.4em;
+}
+
+.summary-item .value.profit.negative {
+  color: #dc2626;
+}
+
+.profit-item {
+  margin-left: auto;
+}
+
+/* Form grid spans (allowing 4-column on wide screens) */
+.ftl-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 16px;
+}
+
+@media (max-width: 1024px) {
+  .ftl-form .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .ftl-form .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

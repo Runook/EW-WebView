@@ -813,6 +813,12 @@ export const datLoadBoardApi = {
     return request(`/dat/posts/loads/${datPostId}`, 'DELETE');
   },
 
+  // Create a load post directly from an employee_order row.
+  // Backend maps freight_mode → fullPartial=FULL/PARTIAL automatically.
+  postFromOrder: (orderId) => {
+    return request(`/dat/posts/loads/from-order/${orderId}`, 'POST');
+  },
+
   // --- Truck Posting ---
   createTruckPost: (data) => {
     return request('/dat/posts/trucks', 'POST', data);

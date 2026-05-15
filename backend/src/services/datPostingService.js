@@ -145,6 +145,44 @@ async function deleteTruckPost(employeeId, datPostId) {
   return { datPostId: String(datPostId), deleted: true };
 }
 
+// ─── Post directly from an employee_order row ────────────────────────
+
+/**
+ * Build a DAT load post directly from an employee_order row.
+ * - FTL: fullPartial='FULL', equipment_type from order, length=truck_length_ft
+ * - LTL: fullPartial='PARTIAL'
+ *
+ * Reuses createLoadPost so the post is tracked in dat_posts and linked
+ * back to the employee_order_id (for auto-delete on confirm).
+ */
+async function postFromEmployeeOrder(employeeId, employeeOrderId) {
+  const order = await db('employee_orders').where('id', employeeOrderId).first();
+  if (!order) throw new Error(`Order ${employeeOrderId} not found`);
+
+  const isFtl = (order.freight_mode || 'LTL') === 'FTL';
+
+  const loadData = {
+    fullPartial: isFtl ? 'FULL' : 'PARTIAL',
+    equipmentType: order.equipment_type || (isFtl ? 'V' : null),
+    originZip: order.origin_zipcode,
+    originCity: order.origin_city,
+    originState: order.origin_state,
+    destinationZip: order.destination_zipcode,
+    destinationCity: order.destination_city,
+    destinationState: order.destination_state,
+    weight: order.total_weight_lbs,
+    length: order.truck_length_ft,
+    commodity: order.commodity || order.cargo_type || order.cargo_description_detailed,
+    pickupDate: order.pickup_window_start || order.pickup_date,
+    deliveryDate: order.delivery_window_end || order.delivery_date,
+    referenceId: order.order_number,
+    comment: order.notes,
+    employeeOrderId: order.id,
+  };
+
+  return createLoadPost(employeeId, loadData);
+}
+
 // ─── Auto-delete on order match ──────────────────────────────────────
 
 async function deletePostsForOrder(employeeId, employeeOrderId) {
@@ -292,4 +330,5 @@ module.exports = {
   refreshTruckPost,
   deleteTruckPost,
   deletePostsForOrder,
+  postFromEmployeeOrder,
 };

@@ -31,6 +31,8 @@ import GATest from './pages/GATest';
 import EmployeeAdmin from './pages/EmployeeAdmin';
 import BrokerOrders from './pages/BrokerOrdersNew';
 import BrokerOrderForm from './pages/BrokerOrderForm';
+import FTLOrders from './pages/FTLOrders';
+import FTLOrderForm from './pages/FTLOrderForm';
 import Customers from './pages/Customers';
 import Vendors from './pages/Vendors';
 import Payments from './pages/Payments';
@@ -201,6 +203,10 @@ function App() {
               <Route path="/employee/broker-orders" element={<BrokerOrders />} />
               <Route path="/employee/broker-orders/new" element={<BrokerOrderForm />} />
               <Route path="/employee/broker-orders/:orderId" element={<BrokerOrderForm />} />
+              {/* FTL 整车订单系统 */}
+              <Route path="/employee/ftl-orders" element={<FTLOrders />} />
+              <Route path="/employee/ftl-orders/new" element={<FTLOrderForm />} />
+              <Route path="/employee/ftl-orders/:orderId" element={<FTLOrderForm />} />
               <Route path="/employee/customers" element={<Customers />} />
               <Route path="/employee/vendors" element={<Vendors />} />
               <Route path="/employee/payments" element={<Payments />} />
