@@ -3,12 +3,31 @@ const { v4: uuidv4 } = require('uuid');
 const Customer = require('./Customer');
 
 // Cache of existing columns per table so we don't hit information_schema on
-// every write. Invalidated only on process restart — which is fine because
-// schema changes require a redeploy / migration anyway.
+// every write. Self-heals when migrations add new columns AFTER the process
+// started: if a write drops a "known new" column, we invalidate and re-read.
 const _columnCache = new Map();
 
+// Columns added in 033 (FTL management). If any of these are missing from a
+// cached column set, the cache is stale and must be refreshed before writes.
+const NEW_COLUMN_PROBES = {
+  employee_orders: ['freight_mode', 'equipment_type', 'customer_extra_fee', 'driver_extra_fee'],
+};
+
+function invalidateColumnCache(tableName) {
+  _columnCache.delete(tableName);
+}
+
 async function getExistingColumns(tableName, trx = null) {
-  if (_columnCache.has(tableName)) return _columnCache.get(tableName);
+  // If cached but missing a known-recent column, the cache predates a
+  // migration that ran after this process started → refresh.
+  if (_columnCache.has(tableName)) {
+    const cached = _columnCache.get(tableName);
+    const probes = NEW_COLUMN_PROBES[tableName] || [];
+    const stale = probes.some((c) => !cached.has(c));
+    if (!stale) return cached;
+    console.warn(`⚠️ getExistingColumns: cache for ${tableName} is stale (missing probe column), refreshing`);
+    _columnCache.delete(tableName);
+  }
   const qb = trx ? trx(tableName) : db(tableName);
   const info = await qb.columnInfo();
   const cols = new Set(Object.keys(info || {}));
