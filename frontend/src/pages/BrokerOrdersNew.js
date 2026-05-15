@@ -922,7 +922,7 @@ const BrokerOrdersNew = () => {
               cursor: 'pointer',
             }}
           >
-            🚛 LTL 散板
+            LTL 散板
           </button>
           <button
             className="mode-btn"
@@ -939,7 +939,7 @@ const BrokerOrdersNew = () => {
               cursor: 'pointer',
             }}
           >
-            🚚 FTL 整车
+            FTL 整车
           </button>
         </div>
 

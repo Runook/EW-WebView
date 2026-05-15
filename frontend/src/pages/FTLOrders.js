@@ -273,10 +273,10 @@ const FTLOrders = () => {
             onClick={() => navigate('/employee/broker-orders')}
             title="切换到 LTL 散板订单"
           >
-            🚛 LTL 散板
+            LTL 散板
           </button>
           <button className="mode-btn active" title="当前页">
-            🚚 FTL 整车
+            FTL 整车
           </button>
         </div>
 
