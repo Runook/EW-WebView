@@ -1470,9 +1470,6 @@ const BrokerOrdersNew = () => {
                   <th width="30"></th>
                   <th>日期</th>
                   <th>Company</th>
-                  <th>发货单号</th>
-                  <th>WE单号</th>
-                  <th>货物备注</th>
                   <th>发货地</th>
                   <th>收货地</th>
                   <th className="text-right">总重(lbs)</th>
@@ -1483,6 +1480,9 @@ const BrokerOrdersNew = () => {
                   <th className="text-right">运输距离</th>
                   {currentStatus === 'ordered' && <th>状态</th>}
                   {currentStatus === 'ordered' && <th>卡车信息</th>}
+                  <th className="meta-col">发货单号</th>
+                  <th className="meta-col">WE单号</th>
+                  <th className="meta-col">货物备注</th>
                   <th>操作员工</th>
                   <th>操作</th>
                   {(currentStatus === 'quote' || currentStatus === 'ordered') && (
@@ -1529,29 +1529,6 @@ const BrokerOrdersNew = () => {
                         <CompanyEditableCell
                           value={order.inquiry_company || order.customer_name}
                           orderId={order.id}
-                          onSave={handleCellUpdate}
-                        />
-                      </td>
-                      <td>
-                        <EditableCell
-                          value={order.shipment_number}
-                          orderId={order.id}
-                          field="shipment_number"
-                          type="text"
-                          onSave={handleCellUpdate}
-                        />
-                      </td>
-                      <td className="order-number we-number">
-                        <span className="we-number-display">
-                          {order.order_number || '-'}
-                        </span>
-                      </td>
-                      <td>
-                        <EditableCell
-                          value={order.cargo_type}
-                          orderId={order.id}
-                          field="cargo_type"
-                          type="text"
                           onSave={handleCellUpdate}
                         />
                       </td>
@@ -1621,6 +1598,29 @@ const BrokerOrdersNew = () => {
                           ) : '-'}
                         </td>
                       )}
+                      <td className="meta-col">
+                        <EditableCell
+                          value={order.shipment_number}
+                          orderId={order.id}
+                          field="shipment_number"
+                          type="text"
+                          onSave={handleCellUpdate}
+                        />
+                      </td>
+                      <td className="meta-col order-number we-number">
+                        <span className="we-number-display">
+                          {order.order_number || '-'}
+                        </span>
+                      </td>
+                      <td className="meta-col">
+                        <EditableCell
+                          value={order.cargo_type}
+                          orderId={order.id}
+                          field="cargo_type"
+                          type="text"
+                          onSave={handleCellUpdate}
+                        />
+                      </td>
                       <td>
                         {currentStatus === 'quote' && (order.creator_info?.name || '-')}
                         {currentStatus === 'ordered' && (order.confirmer_info?.name || order.assignee_info?.name || '-')}
@@ -1796,6 +1796,85 @@ const BrokerOrdersNew = () => {
                       <tr className="expanded-row">
                         <td colSpan="100%">
                           <div className="expanded-content">
+
+                            {/* === SUMMARY STRIP === at-a-glance overview */}
+                            {(() => {
+                              const customerTotal = (parseFloat(order.ew_quote_price) || 0) + (parseFloat(order.customer_extra_fee) || 0);
+                              const driverTotal = (parseFloat(order.truck_payment) || parseFloat(order.driver_payment) || 0) + (parseFloat(order.driver_extra_fee) || 0);
+                              const profit = parseFloat(order.profit) || (customerTotal - driverTotal);
+                              return (
+                                <div className="ltl-summary-strip">
+                                  <div className="summary-meta-row">
+                                    <span className="meta-badge we-num">{order.order_number || '—'}</span>
+                                    {order.shipment_number && <span className="meta-badge">发货单号 <strong>{order.shipment_number}</strong></span>}
+                                    {order.bol_number && <span className="meta-badge">Customer PO# <strong>{order.bol_number}</strong></span>}
+                                    {order.cargo_type && <span className="meta-badge cargo-tag">{order.cargo_type}</span>}
+                                  </div>
+
+                                  <div className="summary-cards">
+                                    <div className="summary-card route-card">
+                                      <div className="card-label">路线</div>
+                                      <div className="card-value">
+                                        {order.origin_city || '—'}{order.origin_state ? `, ${order.origin_state}` : ''}
+                                        <span className="route-arrow"> → </span>
+                                        {order.destination_city || '—'}{order.destination_state ? `, ${order.destination_state}` : ''}
+                                      </div>
+                                      <div className="card-sub">
+                                        距离 <strong>{order.transport_distance ? `${formatNumber(order.transport_distance)} mi` : '—'}</strong>
+                                        {order.address_type && <span> · {order.address_type}</span>}
+                                      </div>
+                                    </div>
+
+                                    <div className="summary-card cargo-card">
+                                      <div className="card-label">货物</div>
+                                      <div className="card-value">
+                                        <strong>{order.actual_pallets || '—'}</strong> 板 ·{' '}
+                                        <strong>{order.total_weight_lbs ? formatNumber(order.total_weight_lbs) : '—'}</strong> lbs ·{' '}
+                                        <strong>{order.total_volume ? parseFloat(order.total_volume).toFixed(1) : '—'}</strong> ft³
+                                      </div>
+                                      <div className="card-sub">
+                                        货值 <strong>{order.cargo_value ? formatCurrency(order.cargo_value) : '—'}</strong>
+                                      </div>
+                                    </div>
+
+                                    <div className="summary-card schedule-card">
+                                      <div className="card-label">时间</div>
+                                      <div className="card-value">
+                                        取货{' '}
+                                        <strong>{order.pickup_date ? new Date(order.pickup_date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }) : '—'}</strong>
+                                        {' · '}送货{' '}
+                                        <strong>{order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }) : '—'}</strong>
+                                      </div>
+                                      <div className="card-sub">
+                                        报价日期 {order.quote_date ? new Date(order.quote_date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' }) : '—'}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="summary-money-row">
+                                    <div className="money-card customer">
+                                      <div className="money-label">客户报价</div>
+                                      <div className="money-value">{formatCurrency(customerTotal)}</div>
+                                    </div>
+                                    <div className="money-card driver">
+                                      <div className="money-label">司机付款</div>
+                                      <div className="money-value">{formatCurrency(driverTotal)}</div>
+                                    </div>
+                                    <div className={`money-card profit ${profit < 0 ? 'negative' : ''}`}>
+                                      <div className="money-label">利润</div>
+                                      <div className="money-value">{formatCurrency(profit)}</div>
+                                    </div>
+                                    {order.quote_reference && (
+                                      <div className="money-card reference">
+                                        <div className="money-label">报价参考</div>
+                                        <div className="money-value">{formatCurrency(order.quote_reference)}</div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+
                             {/* Workflow Stage Indicator */}
                             {order.workflow_stage && (
                               <div style={{ marginBottom: 16, padding: '10px 14px', background: '#fafbfc', borderRadius: 8, border: '1px solid #e2e8f0' }}>
@@ -2015,9 +2094,301 @@ const BrokerOrdersNew = () => {
                               readOnly={currentStatus === 'completed' || currentStatus === 'cancelled'}
                             />
 
-                            {/* 详细地址（可编辑） */}
-                            <div className="address-detail-section">
-                              <h4>详细地址（双击编辑）</h4>
+                            {/* === 报价分析 (Pricing Analysis) - 分组显示 === */}
+                            <div className="ltl-pricing-card">
+                              <h4 className="ltl-card-title">报价分析 / Pricing Analysis</h4>
+
+                              <div className="pricing-group">
+                                <div className="group-label">输入参数</div>
+                                <div className="group-fields">
+                                  <div className="pricing-field">
+                                    <label>地址类型</label>
+                                    <EditableCell
+                                      value={order.address_type}
+                                      orderId={order.id}
+                                      field="address_type"
+                                      type="select"
+                                      options={[
+                                        { value: 'Residential', label: 'Residential' },
+                                        { value: 'Commercial+Lift', label: 'Commercial+Lift' },
+                                        { value: 'Commercial', label: 'Commercial' },
+                                        { value: 'Warehouse', label: 'Warehouse' }
+                                      ]}
+                                      onSave={async (id, field, newValue) => {
+                                        const truckType = newValue === 'Residential' ? '13' : '26';
+                                        await handleCellUpdate(id, field, newValue);
+                                        await handleCellUpdate(id, 'truck_pallets', truckType);
+                                        const currentOrder = orders.find(o => o.id === id);
+                                        if (currentOrder) {
+                                          const updatedOrder = { ...currentOrder, address_type: newValue, truck_pallets: truckType };
+                                          const calculations = calculateQuoteReferences(updatedOrder);
+                                          await orderApi.updateOrder(id, calculations);
+                                          setOrders(prevOrders =>
+                                            prevOrders.map(o => o.id === id ? { ...o, ...updatedOrder, ...calculations } : o)
+                                          );
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>总面积板数</label>
+                                    <EditableCell
+                                      value={order.total_area_pallets}
+                                      orderId={order.id}
+                                      field="total_area_pallets"
+                                      type="number"
+                                      onSave={handleCellUpdateWithCalculation}
+                                      formatDisplay={(v) => formatNumber(v)}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>价格系数</label>
+                                    <EditableCell
+                                      value={order.truck_pallets}
+                                      orderId={order.id}
+                                      field="truck_pallets"
+                                      type="select"
+                                      options={[
+                                        { value: '13', label: '13' },
+                                        { value: '18', label: '18' },
+                                        { value: '26', label: '26' }
+                                      ]}
+                                      onSave={handleCellUpdateWithCalculation}
+                                      formatDisplay={(v) => v || '-'}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>TOTAL DAT</label>
+                                    <EditableCell
+                                      value={order.total_dat}
+                                      orderId={order.id}
+                                      field="total_dat"
+                                      type="number"
+                                      onSave={handleCellUpdateWithCalculation}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="pricing-group">
+                                <div className="group-label">平台比价</div>
+                                <div className="group-fields">
+                                  <div className="pricing-field">
+                                    <label>TQL Low 1</label>
+                                    <EditableCell
+                                      value={order.tql_price_1}
+                                      orderId={order.id}
+                                      field="tql_price_1"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>TQL Low 2</label>
+                                    <EditableCell
+                                      value={order.tql_price_2}
+                                      orderId={order.id}
+                                      field="tql_price_2"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>其他 API</label>
+                                    <span className="readonly-value">{formatCurrency(order.other_api_price)}</span>
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>理想报价</label>
+                                    <EditableCell
+                                      value={order.ideal_quote}
+                                      orderId={order.id}
+                                      field="ideal_quote"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="pricing-group">
+                                <div className="group-label">报价参考</div>
+                                <div className="group-fields">
+                                  <div className="pricing-field highlight">
+                                    <label>参考</label>
+                                    <span className="readonly-value strong">{formatCurrency(order.quote_reference)}</span>
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>+10%</label>
+                                    <span className="readonly-value">{formatCurrency(order.quote_ref_10)}</span>
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>+20%</label>
+                                    <span className="readonly-value">{formatCurrency(order.quote_ref_20)}</span>
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>+30%</label>
+                                    <span className="readonly-value">{formatCurrency(order.quote_ref_30)}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="pricing-group pricing-actual">
+                                <div className="group-label">实际报价 & 利润</div>
+                                <div className="group-fields">
+                                  <div className="pricing-field">
+                                    <label>WE 报价</label>
+                                    <EditableCell
+                                      value={order.ew_quote_price}
+                                      orderId={order.id}
+                                      field="ew_quote_price"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>客户 Extra</label>
+                                    <EditableCell
+                                      value={order.customer_extra_fee}
+                                      orderId={order.id}
+                                      field="customer_extra_fee"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>司机参考价</label>
+                                    <EditableCell
+                                      value={order.driver_reference_price}
+                                      orderId={order.id}
+                                      field="driver_reference_price"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>司机 Extra</label>
+                                    <EditableCell
+                                      value={order.driver_extra_fee}
+                                      orderId={order.id}
+                                      field="driver_extra_fee"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                  <div className="pricing-field profit-field">
+                                    <label>利润</label>
+                                    <EditableCell
+                                      value={order.profit}
+                                      orderId={order.id}
+                                      field="profit"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => <span className="profit-value">{formatCurrency(v)}</span>}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>总货值</label>
+                                    <EditableCell
+                                      value={order.cargo_value}
+                                      orderId={order.id}
+                                      field="cargo_value"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* === 承运商 & 司机 === (仅下单后) */}
+                            {currentStatus !== 'quote' && (
+                              <div className="ltl-carrier-card">
+                                <h4 className="ltl-card-title">承运商 & 司机 / Carrier & Driver</h4>
+
+                                <div className="carrier-grid">
+                                  <div className="carrier-field">
+                                    <label>卡车公司</label>
+                                    <EditableCell value={order.truck_company_name} orderId={order.id} field="truck_company_name" type="text" onSave={handleCellUpdate} />
+                                  </div>
+                                  <div className="carrier-field">
+                                    <label>MC #</label>
+                                    <EditableCell value={order.mc_number} orderId={order.id} field="mc_number" type="text" onSave={handleCellUpdate} />
+                                  </div>
+                                  <div className="carrier-field">
+                                    <label>DOT #</label>
+                                    <EditableCell value={order.dot_number} orderId={order.id} field="dot_number" type="text" onSave={handleCellUpdate} />
+                                  </div>
+                                  <div className="carrier-field">
+                                    <label>付卡车价格</label>
+                                    <EditableCell value={order.truck_payment} orderId={order.id} field="truck_payment" type="number" onSave={handleCellUpdate} formatDisplay={(v) => formatCurrency(v)} />
+                                  </div>
+                                  <div className="carrier-field">
+                                    <label>公司联络</label>
+                                    <EditableCell value={order.truck_contact} orderId={order.id} field="truck_contact" type="text" onSave={handleCellUpdate} />
+                                  </div>
+                                  <div className="carrier-field">
+                                    <label>Email</label>
+                                    <EditableCell value={order.carrier_email} orderId={order.id} field="carrier_email" type="text" onSave={handleCellUpdate} />
+                                  </div>
+                                  <div className="carrier-field full">
+                                    <label>Carrier Address</label>
+                                    <EditableCell value={order.carrier_address} orderId={order.id} field="carrier_address" type="text" onSave={handleCellUpdate} />
+                                  </div>
+                                </div>
+
+                                <div className="driver-grid">
+                                  <div className="driver-primary">
+                                    <div className="carrier-field">
+                                      <label>主司机 — 姓名</label>
+                                      <EditableCell value={order.driver_name} orderId={order.id} field="driver_name" type="text" onSave={handleCellUpdate} />
+                                    </div>
+                                    <div className="carrier-field">
+                                      <label>主司机 — 电话</label>
+                                      <EditableCell value={order.driver_phone} orderId={order.id} field="driver_phone" type="text" onSave={handleCellUpdate} />
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* 备用司机 - 折叠 */}
+                                <details className="backup-drivers-collapse">
+                                  <summary>
+                                    备用司机 ({[
+                                      order.backup_driver_1_name,
+                                      order.backup_driver_2_name,
+                                      order.backup_driver_3_name,
+                                    ].filter(Boolean).length || 0} 个已填)
+                                  </summary>
+                                  <div className="backup-drivers-grid">
+                                    {[1, 2, 3].map((n) => (
+                                      <div key={n} className="backup-driver-mini">
+                                        <div className="backup-driver-label">备用 #{n}</div>
+                                        <div className="carrier-field">
+                                          <label>姓名</label>
+                                          <EditableCell value={order[`backup_driver_${n}_name`]} orderId={order.id} field={`backup_driver_${n}_name`} type="text" onSave={handleCellUpdate} />
+                                        </div>
+                                        <div className="carrier-field">
+                                          <label>电话</label>
+                                          <EditableCell value={order[`backup_driver_${n}_phone`]} orderId={order.id} field={`backup_driver_${n}_phone`} type="text" onSave={handleCellUpdate} />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </details>
+                              </div>
+                            )}
+
+                            {/* === 详细地址（可编辑） === 折叠 */}
+                            <details className="address-detail-collapse">
+                              <summary>详细地址（双击编辑，会自动算距离）</summary>
                               <div className="address-detail-grid">
                                 <div className="address-detail-item">
                                   <label>发货详细地址:</label>
@@ -2027,15 +2398,9 @@ const BrokerOrdersNew = () => {
                                     field="origin_address"
                                     type="text"
                                     onSave={async (id, field, newValue) => {
-                                      // 先保存地址
                                       await handleCellUpdate(id, field, newValue);
-                                      
-                                      // 获取最新的订单数据（更新后的）
                                       const updatedOrder = orders.find(o => o.id === id);
                                       const destAddr = updatedOrder?.destination_address || order.destination_address;
-                                      
-                                      // 调用Google Maps计算
-                                      console.log('🗺️ 发货地址已更新，准备计算...', { newValue, destAddr });
                                       if (newValue && destAddr) {
                                         setTimeout(() => {
                                           calculateAddressDetails(id, 'origin', newValue, destAddr);
@@ -2052,15 +2417,9 @@ const BrokerOrdersNew = () => {
                                     field="destination_address"
                                     type="text"
                                     onSave={async (id, field, newValue) => {
-                                      // 先保存地址
                                       await handleCellUpdate(id, field, newValue);
-                                      
-                                      // 获取最新的订单数据
                                       const updatedOrder = orders.find(o => o.id === id);
                                       const originAddr = updatedOrder?.origin_address || order.origin_address;
-                                      
-                                      // 调用Google Maps计算
-                                      console.log('🗺️ 收货地址已更新，准备计算...', { originAddr, newValue });
                                       if (originAddr && newValue) {
                                         setTimeout(() => {
                                           calculateAddressDetails(id, 'destination', originAddr, newValue);
@@ -2070,381 +2429,7 @@ const BrokerOrdersNew = () => {
                                   />
                                 </div>
                               </div>
-                            </div>
-
-                            <div className="detail-grid">
-                              <div className="detail-item">
-                                <label>总货值:</label>
-                                <EditableCell
-                                  value={order.cargo_value}
-                                  orderId={order.id}
-                                  field="cargo_value"
-                                  type="number"
-                                  onSave={handleCellUpdate}
-                                  formatDisplay={(v) => formatCurrency(v)}
-                                />
-                              </div>
-                              <div className="detail-item">
-                                <label>地址类型:</label>
-                                <EditableCell
-                                  value={order.address_type}
-                                  orderId={order.id}
-                                  field="address_type"
-                                  type="select"
-                                  options={[
-                                    { value: 'Residential', label: 'Residential' },
-                                    { value: 'Commercial+Lift', label: 'Commercial+Lift' },
-                                    { value: 'Commercial', label: 'Commercial' },
-                                    { value: 'Warehouse', label: 'Warehouse' }
-                                  ]}
-                                  onSave={async (id, field, newValue) => {
-                                    // 地址类型与价格系数联动
-                                    const truckType = newValue === 'Residential' ? '13' : '26';
-                                    
-                                    // 先更新地址类型
-                                    await handleCellUpdate(id, field, newValue);
-                                    
-                                    // 自动更新价格系数
-                                    await handleCellUpdate(id, 'truck_pallets', truckType);
-                                    
-                                    // 获取当前订单并重新计算
-                                    const currentOrder = orders.find(o => o.id === id);
-                                    if (currentOrder) {
-                                      const updatedOrder = { 
-                                        ...currentOrder, 
-                                        address_type: newValue,
-                                        truck_pallets: truckType 
-                                      };
-                                      const calculations = calculateQuoteReferences(updatedOrder);
-                                      
-                                      // 更新计算结果
-                                      await orderApi.updateOrder(id, calculations);
-                                      
-                                      // 刷新订单列表
-                                      setOrders(prevOrders => 
-                                        prevOrders.map(o => 
-                                          o.id === id ? { ...o, ...updatedOrder, ...calculations } : o
-                                        )
-                                      );
-                                    }
-                                  }}
-                                />
-                              </div>
-                              <div className="detail-item">
-                                <label>总面积板数:</label>
-                                <EditableCell
-                                  value={order.total_area_pallets}
-                                  orderId={order.id}
-                                  field="total_area_pallets"
-                                  type="number"
-                                  onSave={handleCellUpdateWithCalculation}
-                                  formatDisplay={(v) => formatNumber(v)}
-                                />
-                              </div>
-                              <div className="detail-item">
-                                <label>TOTAL DAT:</label>
-                                <EditableCell
-                                  value={order.total_dat}
-                                  orderId={order.id}
-                                  field="total_dat"
-                                  type="number"
-                                  onSave={handleCellUpdateWithCalculation}
-                                  formatDisplay={(v) => formatCurrency(v)}
-                                />
-                              </div>
-                              <div className="detail-item">
-                                <label>理想报价:</label>
-                                <EditableCell
-                                  value={order.ideal_quote}
-                                  orderId={order.id}
-                                  field="ideal_quote"
-                                  type="number"
-                                  onSave={handleCellUpdate}
-                                  formatDisplay={(v) => formatCurrency(v)}
-                                />
-                              </div>
-                              <div className="detail-item">
-                                <label>价格系数:</label>
-                                <EditableCell
-                                  value={order.truck_pallets}
-                                  orderId={order.id}
-                                  field="truck_pallets"
-                                  type="select"
-                                  options={[
-                                    { value: '13', label: '13' },
-                                    { value: '18', label: '18' },
-                                    { value: '26', label: '26' }
-                                  ]}
-                                  onSave={handleCellUpdateWithCalculation}
-                                  formatDisplay={(v) => v || '-'}
-                                />
-                              </div>
-                              <div className="detail-item">
-                                <label>比价平台Low1:</label>
-                                <EditableCell
-                                  value={order.tql_price_1}
-                                  orderId={order.id}
-                                  field="tql_price_1"
-                                  type="number"
-                                  onSave={handleCellUpdate}
-                                  formatDisplay={(v) => formatCurrency(v)}
-                                />
-                              </div>
-                              <div className="detail-item">
-                                <label>比价平台Low2:</label>
-                                <EditableCell
-                                  value={order.tql_price_2}
-                                  orderId={order.id}
-                                  field="tql_price_2"
-                                  type="number"
-                                  onSave={handleCellUpdate}
-                                  formatDisplay={(v) => formatCurrency(v)}
-                                />
-                              </div>
-                              <div className="detail-item">
-                                <label>其他价格(API):</label>
-                                <span>{formatCurrency(order.other_api_price)}</span>
-                              </div>
-                              <div className="detail-item highlight">
-                                <label>报价参考:</label>
-                                <span>{formatCurrency(order.quote_reference)}</span>
-                              </div>
-                              <div className="detail-item">
-                                <label>参考+10%:</label>
-                                <span>{formatCurrency(order.quote_ref_10)}</span>
-                              </div>
-                              <div className="detail-item">
-                                <label>参考+20%:</label>
-                                <span>{formatCurrency(order.quote_ref_20)}</span>
-                              </div>
-                              <div className="detail-item">
-                                <label>参考+30%:</label>
-                                <span>{formatCurrency(order.quote_ref_30)}</span>
-                              </div>
-                              <div className="detail-item">
-                                <label>客户 Extra Fee:</label>
-                                <EditableCell
-                                  value={order.customer_extra_fee}
-                                  orderId={order.id}
-                                  field="customer_extra_fee"
-                                  type="number"
-                                  onSave={handleCellUpdate}
-                                  formatDisplay={(v) => formatCurrency(v)}
-                                />
-                              </div>
-                              <div className="detail-item">
-                                <label>司机 Extra Fee:</label>
-                                <EditableCell
-                                  value={order.driver_extra_fee}
-                                  orderId={order.id}
-                                  field="driver_extra_fee"
-                                  type="number"
-                                  onSave={handleCellUpdate}
-                                  formatDisplay={(v) => formatCurrency(v)}
-                                />
-                              </div>
-                              <div className="detail-item profit">
-                                <label>利润:</label>
-                                <EditableCell
-                                  value={order.profit}
-                                  orderId={order.id}
-                                  field="profit"
-                                  type="number"
-                                  onSave={handleCellUpdate}
-                                  formatDisplay={(v) => <span className="profit-value">{formatCurrency(v)}</span>}
-                                />
-                              </div>
-                            </div>
-
-                            {/* 下单后的卡车信息 */}
-                            {currentStatus !== 'quote' && (
-                              <div className="truck-details">
-                                <h4>承运商信息</h4>
-                                <div className="detail-grid">
-                                  <div className="detail-item">
-                                    <label>付卡车价格:</label>
-                                    <EditableCell
-                                      value={order.truck_payment}
-                                      orderId={order.id}
-                                      field="truck_payment"
-                                      type="number"
-                                      onSave={handleCellUpdate}
-                                      formatDisplay={(v) => formatCurrency(v)}
-                                    />
-                                  </div>
-                                  <div className="detail-item">
-                                    <label>MC#:</label>
-                                    <EditableCell
-                                      value={order.mc_number}
-                                      orderId={order.id}
-                                      field="mc_number"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                    />
-                                  </div>
-                                  <div className="detail-item">
-                                    <label>DOT#:</label>
-                                    <EditableCell
-                                      value={order.dot_number}
-                                      orderId={order.id}
-                                      field="dot_number"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                    />
-                                  </div>
-                                  <div className="detail-item">
-                                    <label>卡车公司:</label>
-                                    <EditableCell
-                                      value={order.truck_company_name}
-                                      orderId={order.id}
-                                      field="truck_company_name"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                    />
-                                  </div>
-                                  <div className="detail-item">
-                                    <label>公司联络方式:</label>
-                                    <EditableCell
-                                      value={order.truck_contact}
-                                      orderId={order.id}
-                                      field="truck_contact"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                    />
-                                  </div>
-                                  <div className="detail-item">
-                                    <label>Carrier Email:</label>
-                                    <EditableCell
-                                      value={order.carrier_email}
-                                      orderId={order.id}
-                                      field="carrier_email"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                    />
-                                  </div>
-                                  <div className="detail-item">
-                                    <label>Carrier Address:</label>
-                                    <EditableCell
-                                      value={order.carrier_address}
-                                      orderId={order.id}
-                                      field="carrier_address"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                    />
-                                  </div>
-                                </div>
-
-                                <h4 style={{ marginTop: 12 }}>司机信息</h4>
-                                <div className="detail-grid">
-                                  <div className="detail-item">
-                                    <label>司机姓名:</label>
-                                    <EditableCell
-                                      value={order.driver_name}
-                                      orderId={order.id}
-                                      field="driver_name"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                    />
-                                  </div>
-                                  <div className="detail-item">
-                                    <label>司机电话:</label>
-                                    <EditableCell
-                                      value={order.driver_phone}
-                                      orderId={order.id}
-                                      field="driver_phone"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                    />
-                                  </div>
-                                </div>
-
-                                {/* 备用司机信息 */}
-                                <div className="backup-drivers-section">
-                                  <h4>备用司机信息</h4>
-                                  
-                                  {/* 备用司机1 */}
-                                  <div className="backup-driver-group">
-                                    <div className="backup-driver-header">备用司机 1</div>
-                                    <div className="detail-grid">
-                                      <div className="detail-item">
-                                        <label>姓名:</label>
-                                        <EditableCell
-                                          value={order.backup_driver_1_name}
-                                          orderId={order.id}
-                                          field="backup_driver_1_name"
-                                          type="text"
-                                          onSave={handleCellUpdate}
-                                        />
-                                      </div>
-                                      <div className="detail-item">
-                                        <label>电话:</label>
-                                        <EditableCell
-                                          value={order.backup_driver_1_phone}
-                                          orderId={order.id}
-                                          field="backup_driver_1_phone"
-                                          type="text"
-                                          onSave={handleCellUpdate}
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* 备用司机2 */}
-                                  <div className="backup-driver-group">
-                                    <div className="backup-driver-header">备用司机 2</div>
-                                    <div className="detail-grid">
-                                      <div className="detail-item">
-                                        <label>姓名:</label>
-                                        <EditableCell
-                                          value={order.backup_driver_2_name}
-                                          orderId={order.id}
-                                          field="backup_driver_2_name"
-                                          type="text"
-                                          onSave={handleCellUpdate}
-                                        />
-                                      </div>
-                                      <div className="detail-item">
-                                        <label>电话:</label>
-                                        <EditableCell
-                                          value={order.backup_driver_2_phone}
-                                          orderId={order.id}
-                                          field="backup_driver_2_phone"
-                                          type="text"
-                                          onSave={handleCellUpdate}
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* 备用司机3 */}
-                                  <div className="backup-driver-group">
-                                    <div className="backup-driver-header">备用司机 3</div>
-                                    <div className="detail-grid">
-                                      <div className="detail-item">
-                                        <label>姓名:</label>
-                                        <EditableCell
-                                          value={order.backup_driver_3_name}
-                                          orderId={order.id}
-                                          field="backup_driver_3_name"
-                                          type="text"
-                                          onSave={handleCellUpdate}
-                                        />
-                                      </div>
-                                      <div className="detail-item">
-                                        <label>电话:</label>
-                                        <EditableCell
-                                          value={order.backup_driver_3_phone}
-                                          orderId={order.id}
-                                          field="backup_driver_3_phone"
-                                          type="text"
-                                          onSave={handleCellUpdate}
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
+                            </details>
                           </div>
                         </td>
                       </tr>

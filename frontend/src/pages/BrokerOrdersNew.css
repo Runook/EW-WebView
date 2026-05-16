@@ -415,6 +415,441 @@
 
 .expanded-content {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ============================================================ */
+/* === LTL 详情卡片重新设计 (Summary / Pricing / Carrier) ===== */
+/* ============================================================ */
+
+/* === Summary Strip (At-a-glance) === */
+.ltl-summary-strip {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.summary-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.meta-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.meta-badge.we-num {
+  background: #ede9fe;
+  border-color: #c4b5fd;
+  color: #5b21b6;
+  font-family: 'SFMono-Regular', 'Menlo', monospace;
+  font-weight: 600;
+}
+
+.meta-badge.cargo-tag {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #92400e;
+}
+
+.meta-badge strong {
+  margin-left: 4px;
+  color: #1e293b;
+}
+
+/* Summary cards (route / cargo / schedule) */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.summary-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.summary-card .card-label {
+  font-size: 0.72rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.summary-card .card-value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.4;
+}
+
+.summary-card .card-value .route-arrow {
+  color: #94a3b8;
+  margin: 0 4px;
+}
+
+.summary-card .card-value strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.summary-card .card-sub {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+/* Money strip — biggest emphasis */
+.summary-money-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.money-card {
+  flex: 1;
+  min-width: 130px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.money-card .money-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.money-card .money-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.money-card.customer {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #047857;
+}
+
+.money-card.driver {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.money-card.profit {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.money-card.profit.negative {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.money-card.profit .money-value {
+  font-size: 1.6rem;
+}
+
+.money-card.reference {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+  color: #6d28d9;
+}
+
+/* === Pricing Card === */
+.ltl-pricing-card,
+.ltl-carrier-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.ltl-card-title {
+  margin: 0 0 14px 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.pricing-group {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed #f1f5f9;
+}
+
+.pricing-group:last-child {
+  border-bottom: none;
+}
+
+.pricing-group .group-label {
+  flex: 0 0 100px;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  align-self: center;
+}
+
+.pricing-group .group-fields {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.pricing-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pricing-field label {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.pricing-field .readonly-value {
+  padding: 4px 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #1e293b;
+}
+
+.pricing-field .readonly-value.strong {
+  font-weight: 700;
+  color: #0f172a;
+  background: #ede9fe;
+  border-color: #c4b5fd;
+}
+
+.pricing-field.highlight .readonly-value {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  font-weight: 600;
+}
+
+.pricing-group.pricing-actual {
+  background: #f8fafc;
+  border-radius: 6px;
+  margin: 6px -8px 0;
+  padding: 12px 8px;
+}
+
+.pricing-field.profit-field label {
+  color: #1d4ed8;
+  font-weight: 700;
+}
+
+.pricing-field.profit-field .profit-value {
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+/* === Carrier Card === */
+.carrier-grid,
+.driver-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.driver-grid {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #f1f5f9;
+}
+
+.driver-primary {
+  display: contents;
+}
+
+.carrier-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.carrier-field.full {
+  grid-column: 1 / -1;
+}
+
+.carrier-field label {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.backup-drivers-collapse {
+  margin-top: 12px;
+  background: #fafbfc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.backup-drivers-collapse > summary {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 600;
+  list-style: none;
+  user-select: none;
+  background: #f1f5f9;
+}
+
+.backup-drivers-collapse > summary::-webkit-details-marker {
+  display: none;
+}
+
+.backup-drivers-collapse > summary::before {
+  content: '▶ ';
+  font-size: 0.7rem;
+  margin-right: 4px;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+
+.backup-drivers-collapse[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.backup-drivers-grid {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.backup-driver-mini {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.backup-driver-label {
+  font-size: 0.78rem;
+  color: #475569;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+/* 详细地址折叠面板 */
+.address-detail-collapse {
+  background: #fafbfc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.address-detail-collapse > summary {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 600;
+  list-style: none;
+  user-select: none;
+  background: #f1f5f9;
+}
+
+.address-detail-collapse > summary::-webkit-details-marker {
+  display: none;
+}
+
+.address-detail-collapse > summary::before {
+  content: '▶ ';
+  font-size: 0.7rem;
+  margin-right: 4px;
+  transition: transform 0.15s;
+  display: inline-block;
+}
+
+.address-detail-collapse[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.address-detail-collapse .address-detail-grid {
+  padding: 12px;
+}
+
+/* === 响应式 === */
+@media (max-width: 768px) {
+  .pricing-group {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pricing-group .group-label {
+    flex: none;
+  }
+  .summary-money-row {
+    flex-direction: column;
+  }
+}
+
+/* Meta columns (发货单号 / WE单号 / 货物备注) — 次要信息，视觉降权 */
+.orders-table th.meta-col,
+.orders-table td.meta-col {
+  font-size: 0.78rem;
+  color: #6b7280;
+  background: #fafbfc;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.orders-table td.meta-col .editable-cell {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.orders-table td.meta-col.we-number {
+  font-family: 'SFMono-Regular', 'Menlo', monospace;
+  letter-spacing: 0.02em;
+}
+
+.orders-table td.meta-col.we-number .we-number-display {
+  color: #6b7280;
+  font-weight: 500;
 }
 
 /* 重量和尺寸列表展示 */
