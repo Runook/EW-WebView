@@ -415,198 +415,130 @@
 
 .expanded-content {
   padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+}
+
+.expanded-content > * {
+  margin-bottom: 14px;
+}
+
+.expanded-content > *:last-child {
+  margin-bottom: 0;
 }
 
 /* ============================================================ */
-/* === LTL 详情卡片重新设计 (Summary / Pricing / Carrier) ===== */
+/* === LTL 订单详情面板 重新设计 v3 (clean & compact) ========== */
 /* ============================================================ */
 
-/* === Summary Strip (At-a-glance) === */
-.ltl-summary-strip {
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 14px 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.summary-meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.meta-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 0.78rem;
-  color: #475569;
-}
-
-.meta-badge.we-num {
-  background: #ede9fe;
-  border-color: #c4b5fd;
-  color: #5b21b6;
-  font-family: 'SFMono-Regular', 'Menlo', monospace;
-  font-weight: 600;
-}
-
-.meta-badge.cargo-tag {
-  background: #fef3c7;
-  border-color: #fcd34d;
-  color: #92400e;
-}
-
-.meta-badge strong {
-  margin-left: 4px;
+.ltl-section-title {
+  margin: 0 0 10px 0;
+  font-size: 0.88rem;
+  font-weight: 700;
   color: #1e293b;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #f1f5f9;
 }
 
-/* Summary cards (route / cargo / schedule) */
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.summary-card {
+/* === 详细地址（最显眼，放在最前面） === */
+.ltl-address-section {
   background: white;
   border: 1px solid #e2e8f0;
+  border-left: 4px solid #2c7be5;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 14px 16px;
 }
 
-.summary-card .card-label {
-  font-size: 0.72rem;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 600;
-  margin-bottom: 4px;
+.address-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 14px;
+  align-items: start;
 }
 
-.summary-card .card-value {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #1e293b;
-  line-height: 1.4;
-}
-
-.summary-card .card-value .route-arrow {
-  color: #94a3b8;
-  margin: 0 4px;
-}
-
-.summary-card .card-value strong {
-  color: #0f172a;
-  font-weight: 700;
-}
-
-.summary-card .card-sub {
-  margin-top: 4px;
-  font-size: 0.78rem;
-  color: #6b7280;
-}
-
-/* Money strip — biggest emphasis */
-.summary-money-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.money-card {
-  flex: 1;
-  min-width: 130px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid;
+.address-field {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  min-width: 0;
 }
 
-.money-card .money-label {
+.address-field > label {
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   font-weight: 600;
-  opacity: 0.75;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.money-card .money-value {
-  font-size: 1.35rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+.address-field .editable-cell {
+  font-size: 0.88rem;
 }
 
-.money-card.customer {
-  background: #ecfdf5;
-  border-color: #a7f3d0;
-  color: #047857;
+.address-meta {
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: #f8fafc;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px dashed #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.money-card.driver {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #b91c1c;
+.address-extras {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
 }
 
-.money-card.profit {
-  background: #eff6ff;
-  border-color: #93c5fd;
-  color: #1d4ed8;
+.address-field-small {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 110px;
 }
 
-.money-card.profit.negative {
-  background: #fef2f2;
-  border-color: #fca5a5;
-  color: #b91c1c;
+.address-field-small > label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.money-card.profit .money-value {
-  font-size: 1.6rem;
+@media (max-width: 900px) {
+  .address-row {
+    grid-template-columns: 1fr;
+  }
+  .address-extras {
+    flex-wrap: wrap;
+  }
 }
 
-.money-card.reference {
-  background: #f5f3ff;
-  border-color: #ddd6fe;
-  color: #6d28d9;
-}
-
-/* === Pricing Card === */
+/* === Pricing & Carrier Card 通用样式 === */
 .ltl-pricing-card,
 .ltl-carrier-card {
   background: white;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  padding: 14px 16px;
 }
 
 .ltl-card-title {
-  margin: 0 0 14px 0;
-  font-size: 0.95rem;
+  margin: 0 0 12px 0;
+  font-size: 0.88rem;
   font-weight: 700;
   color: #1e293b;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   border-bottom: 2px solid #f1f5f9;
 }
 
+/* Pricing 分组 */
 .pricing-group {
   display: flex;
   align-items: stretch;
   gap: 12px;
-  padding: 10px 0;
+  padding: 8px 0;
   border-bottom: 1px dashed #f1f5f9;
 }
 
@@ -615,8 +547,8 @@
 }
 
 .pricing-group .group-label {
-  flex: 0 0 100px;
-  font-size: 0.78rem;
+  flex: 0 0 90px;
+  font-size: 0.72rem;
   color: #64748b;
   font-weight: 600;
   text-transform: uppercase;
@@ -627,29 +559,37 @@
 .pricing-group .group-fields {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(105px, 145px));
+  gap: 8px 12px;
 }
 
 .pricing-field {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  max-width: 145px;
 }
 
 .pricing-field label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #64748b;
   font-weight: 500;
 }
 
+.pricing-field .editable-cell {
+  font-size: 0.85rem;
+}
+
 .pricing-field .readonly-value {
-  padding: 4px 8px;
+  padding: 3px 8px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 4px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: #1e293b;
+  min-height: 22px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .pricing-field .readonly-value.strong {
@@ -668,8 +608,8 @@
 .pricing-group.pricing-actual {
   background: #f8fafc;
   border-radius: 6px;
-  margin: 6px -8px 0;
-  padding: 12px 8px;
+  margin: 4px -8px 0;
+  padding: 10px 8px;
 }
 
 .pricing-field.profit-field label {
@@ -680,44 +620,52 @@
 .pricing-field.profit-field .profit-value {
   font-weight: 700;
   color: #1d4ed8;
+  font-size: 0.95rem;
 }
 
 /* === Carrier Card === */
-.carrier-grid,
-.driver-grid {
+.carrier-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 180px));
+  gap: 8px 12px;
 }
 
 .driver-grid {
-  margin-top: 12px;
-  padding-top: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
   border-top: 1px dashed #f1f5f9;
 }
 
 .driver-primary {
-  display: contents;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 180px));
+  gap: 8px 12px;
 }
 
 .carrier-field {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  max-width: 180px;
 }
 
 .carrier-field.full {
   grid-column: 1 / -1;
+  max-width: none;
 }
 
 .carrier-field label {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #64748b;
   font-weight: 500;
 }
 
+.carrier-field .editable-cell {
+  font-size: 0.85rem;
+}
+
 .backup-drivers-collapse {
-  margin-top: 12px;
+  margin-top: 10px;
   background: #fafbfc;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
@@ -725,9 +673,9 @@
 }
 
 .backup-drivers-collapse > summary {
-  padding: 8px 14px;
+  padding: 7px 12px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #475569;
   font-weight: 600;
   list-style: none;
@@ -741,7 +689,7 @@
 
 .backup-drivers-collapse > summary::before {
   content: '▶ ';
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   margin-right: 4px;
   transition: transform 0.15s;
   display: inline-block;
@@ -752,76 +700,37 @@
 }
 
 .backup-drivers-grid {
-  padding: 12px;
+  padding: 10px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 220px));
+  gap: 10px;
 }
 
 .backup-driver-mini {
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
-  padding: 8px 10px;
+  padding: 6px 10px;
 }
 
 .backup-driver-label {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: #475569;
   font-weight: 700;
-  margin-bottom: 6px;
-}
-
-/* 详细地址折叠面板 */
-.address-detail-collapse {
-  background: #fafbfc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.address-detail-collapse > summary {
-  padding: 8px 14px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  color: #475569;
-  font-weight: 600;
-  list-style: none;
-  user-select: none;
-  background: #f1f5f9;
-}
-
-.address-detail-collapse > summary::-webkit-details-marker {
-  display: none;
-}
-
-.address-detail-collapse > summary::before {
-  content: '▶ ';
-  font-size: 0.7rem;
-  margin-right: 4px;
-  transition: transform 0.15s;
-  display: inline-block;
-}
-
-.address-detail-collapse[open] > summary::before {
-  transform: rotate(90deg);
-}
-
-.address-detail-collapse .address-detail-grid {
-  padding: 12px;
+  margin-bottom: 4px;
 }
 
 /* === 响应式 === */
 @media (max-width: 768px) {
   .pricing-group {
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
   .pricing-group .group-label {
     flex: none;
   }
-  .summary-money-row {
-    flex-direction: column;
+  .pricing-group .group-fields {
+    grid-template-columns: 1fr 1fr;
   }
 }
 

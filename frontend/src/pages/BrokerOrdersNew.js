@@ -1532,8 +1532,52 @@ const BrokerOrdersNew = () => {
                           onSave={handleCellUpdate}
                         />
                       </td>
-                      <td>{order.origin_city}, {order.origin_state}</td>
-                      <td>{order.destination_city}, {order.destination_state}</td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <EditableCell
+                          value={order.origin_address}
+                          orderId={order.id}
+                          field="origin_address"
+                          type="text"
+                          onSave={async (id, field, newValue) => {
+                            await handleCellUpdate(id, field, newValue);
+                            const updatedOrder = orders.find(o => o.id === id);
+                            const destAddr = updatedOrder?.destination_address || order.destination_address;
+                            if (newValue && destAddr) {
+                              setTimeout(() => {
+                                calculateAddressDetails(id, 'origin', newValue, destAddr);
+                              }, 500);
+                            }
+                          }}
+                          formatDisplay={() => {
+                            const cityState = [order.origin_city, order.origin_state].filter(Boolean).join(', ');
+                            const zip = order.origin_zipcode ? ` ${order.origin_zipcode}` : '';
+                            return (cityState + zip) || '-';
+                          }}
+                        />
+                      </td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <EditableCell
+                          value={order.destination_address}
+                          orderId={order.id}
+                          field="destination_address"
+                          type="text"
+                          onSave={async (id, field, newValue) => {
+                            await handleCellUpdate(id, field, newValue);
+                            const updatedOrder = orders.find(o => o.id === id);
+                            const originAddr = updatedOrder?.origin_address || order.origin_address;
+                            if (originAddr && newValue) {
+                              setTimeout(() => {
+                                calculateAddressDetails(id, 'destination', originAddr, newValue);
+                              }, 500);
+                            }
+                          }}
+                          formatDisplay={() => {
+                            const cityState = [order.destination_city, order.destination_state].filter(Boolean).join(', ');
+                            const zip = order.destination_zipcode ? ` ${order.destination_zipcode}` : '';
+                            return (cityState + zip) || '-';
+                          }}
+                        />
+                      </td>
                       <td className="text-right">{formatNumber(order.total_weight_lbs)}</td>
                       <td className="text-right">
                         <EditableCell
@@ -1797,83 +1841,120 @@ const BrokerOrdersNew = () => {
                         <td colSpan="100%">
                           <div className="expanded-content">
 
-                            {/* === SUMMARY STRIP === at-a-glance overview */}
-                            {(() => {
-                              const customerTotal = (parseFloat(order.ew_quote_price) || 0) + (parseFloat(order.customer_extra_fee) || 0);
-                              const driverTotal = (parseFloat(order.truck_payment) || parseFloat(order.driver_payment) || 0) + (parseFloat(order.driver_extra_fee) || 0);
-                              const profit = parseFloat(order.profit) || (customerTotal - driverTotal);
-                              return (
-                                <div className="ltl-summary-strip">
-                                  <div className="summary-meta-row">
-                                    <span className="meta-badge we-num">{order.order_number || '—'}</span>
-                                    {order.shipment_number && <span className="meta-badge">发货单号 <strong>{order.shipment_number}</strong></span>}
-                                    {order.bol_number && <span className="meta-badge">Customer PO# <strong>{order.bol_number}</strong></span>}
-                                    {order.cargo_type && <span className="meta-badge cargo-tag">{order.cargo_type}</span>}
-                                  </div>
-
-                                  <div className="summary-cards">
-                                    <div className="summary-card route-card">
-                                      <div className="card-label">路线</div>
-                                      <div className="card-value">
-                                        {order.origin_city || '—'}{order.origin_state ? `, ${order.origin_state}` : ''}
-                                        <span className="route-arrow"> → </span>
-                                        {order.destination_city || '—'}{order.destination_state ? `, ${order.destination_state}` : ''}
-                                      </div>
-                                      <div className="card-sub">
-                                        距离 <strong>{order.transport_distance ? `${formatNumber(order.transport_distance)} mi` : '—'}</strong>
-                                        {order.address_type && <span> · {order.address_type}</span>}
-                                      </div>
-                                    </div>
-
-                                    <div className="summary-card cargo-card">
-                                      <div className="card-label">货物</div>
-                                      <div className="card-value">
-                                        <strong>{order.actual_pallets || '—'}</strong> 板 ·{' '}
-                                        <strong>{order.total_weight_lbs ? formatNumber(order.total_weight_lbs) : '—'}</strong> lbs ·{' '}
-                                        <strong>{order.total_volume ? parseFloat(order.total_volume).toFixed(1) : '—'}</strong> ft³
-                                      </div>
-                                      <div className="card-sub">
-                                        货值 <strong>{order.cargo_value ? formatCurrency(order.cargo_value) : '—'}</strong>
-                                      </div>
-                                    </div>
-
-                                    <div className="summary-card schedule-card">
-                                      <div className="card-label">时间</div>
-                                      <div className="card-value">
-                                        取货{' '}
-                                        <strong>{order.pickup_date ? new Date(order.pickup_date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }) : '—'}</strong>
-                                        {' · '}送货{' '}
-                                        <strong>{order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' }) : '—'}</strong>
-                                      </div>
-                                      <div className="card-sub">
-                                        报价日期 {order.quote_date ? new Date(order.quote_date).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' }) : '—'}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div className="summary-money-row">
-                                    <div className="money-card customer">
-                                      <div className="money-label">客户报价</div>
-                                      <div className="money-value">{formatCurrency(customerTotal)}</div>
-                                    </div>
-                                    <div className="money-card driver">
-                                      <div className="money-label">司机付款</div>
-                                      <div className="money-value">{formatCurrency(driverTotal)}</div>
-                                    </div>
-                                    <div className={`money-card profit ${profit < 0 ? 'negative' : ''}`}>
-                                      <div className="money-label">利润</div>
-                                      <div className="money-value">{formatCurrency(profit)}</div>
-                                    </div>
-                                    {order.quote_reference && (
-                                      <div className="money-card reference">
-                                        <div className="money-label">报价参考</div>
-                                        <div className="money-value">{formatCurrency(order.quote_reference)}</div>
-                                      </div>
-                                    )}
+                            {/* === 1. 详细地址 (最重要，放最前面输入) === */}
+                            <div className="ltl-address-section">
+                              <h4 className="ltl-section-title">详细地址（双击地址栏会自动算距离、城市、邮编）</h4>
+                              <div className="address-row">
+                                <div className="address-field">
+                                  <label>发货地址</label>
+                                  <EditableCell
+                                    value={order.origin_address}
+                                    orderId={order.id}
+                                    field="origin_address"
+                                    type="text"
+                                    onSave={async (id, field, newValue) => {
+                                      await handleCellUpdate(id, field, newValue);
+                                      const updatedOrder = orders.find(o => o.id === id);
+                                      const destAddr = updatedOrder?.destination_address || order.destination_address;
+                                      if (newValue && destAddr) {
+                                        setTimeout(() => {
+                                          calculateAddressDetails(id, 'origin', newValue, destAddr);
+                                        }, 500);
+                                      }
+                                    }}
+                                  />
+                                  <div className="address-meta">
+                                    {[order.origin_city, order.origin_state].filter(Boolean).join(', ')}
+                                    {order.origin_zipcode && ` ${order.origin_zipcode}`}
                                   </div>
                                 </div>
-                              );
-                            })()}
+                                <div className="address-field">
+                                  <label>收货地址</label>
+                                  <EditableCell
+                                    value={order.destination_address}
+                                    orderId={order.id}
+                                    field="destination_address"
+                                    type="text"
+                                    onSave={async (id, field, newValue) => {
+                                      await handleCellUpdate(id, field, newValue);
+                                      const updatedOrder = orders.find(o => o.id === id);
+                                      const originAddr = updatedOrder?.origin_address || order.origin_address;
+                                      if (originAddr && newValue) {
+                                        setTimeout(() => {
+                                          calculateAddressDetails(id, 'destination', originAddr, newValue);
+                                        }, 500);
+                                      }
+                                    }}
+                                  />
+                                  <div className="address-meta">
+                                    {[order.destination_city, order.destination_state].filter(Boolean).join(', ')}
+                                    {order.destination_zipcode && ` ${order.destination_zipcode}`}
+                                  </div>
+                                </div>
+                                <div className="address-extras">
+                                  <div className="address-field-small">
+                                    <label>距离 (mi)</label>
+                                    <EditableCell
+                                      value={order.transport_distance}
+                                      orderId={order.id}
+                                      field="transport_distance"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => v ? `${formatNumber(v)} mi` : '-'}
+                                    />
+                                  </div>
+                                  <div className="address-field-small">
+                                    <label>地址类型</label>
+                                    <EditableCell
+                                      value={order.address_type}
+                                      orderId={order.id}
+                                      field="address_type"
+                                      type="select"
+                                      options={[
+                                        { value: 'Residential', label: 'Residential' },
+                                        { value: 'Commercial+Lift', label: 'Commercial+Lift' },
+                                        { value: 'Commercial', label: 'Commercial' },
+                                        { value: 'Warehouse', label: 'Warehouse' }
+                                      ]}
+                                      onSave={async (id, field, newValue) => {
+                                        const truckType = newValue === 'Residential' ? '13' : '26';
+                                        await handleCellUpdate(id, field, newValue);
+                                        await handleCellUpdate(id, 'truck_pallets', truckType);
+                                        const currentOrder = orders.find(o => o.id === id);
+                                        if (currentOrder) {
+                                          const updatedOrder = { ...currentOrder, address_type: newValue, truck_pallets: truckType };
+                                          const calculations = calculateQuoteReferences(updatedOrder);
+                                          await orderApi.updateOrder(id, calculations);
+                                          setOrders(prevOrders =>
+                                            prevOrders.map(o => o.id === id ? { ...o, ...updatedOrder, ...calculations } : o)
+                                          );
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* === 2. 货物明细 === */}
+                            <CargoItemsList
+                              orderId={order.id}
+                              weightList={order.weight_list}
+                              dimensionsList={order.dimensions_list}
+                              totalWeightLbs={order.total_weight_lbs}
+                              totalVolume={order.total_volume}
+                              actualPallets={order.actual_pallets}
+                              onSave={async (orderId, updates) => {
+                                await orderApi.updateOrder(orderId, updates);
+                                setOrders(prevOrders =>
+                                  prevOrders.map(o =>
+                                    o.id === orderId ? { ...o, ...updates } : o
+                                  )
+                                );
+                                loadOrders();
+                              }}
+                              readOnly={currentStatus === 'completed' || currentStatus === 'cancelled'}
+                            />
 
                             {/* Workflow Stage Indicator */}
                             {order.workflow_stage && (
@@ -2074,26 +2155,6 @@ const BrokerOrdersNew = () => {
                               )}
                             </div>
 
-                            {/* 货物明细列表（板数、重量、尺寸）*/}
-                            <CargoItemsList
-                              orderId={order.id}
-                              weightList={order.weight_list}
-                              dimensionsList={order.dimensions_list}
-                              totalWeightLbs={order.total_weight_lbs}
-                              totalVolume={order.total_volume}
-                              actualPallets={order.actual_pallets}
-                              onSave={async (orderId, updates) => {
-                                await orderApi.updateOrder(orderId, updates);
-                                setOrders(prevOrders =>
-                                  prevOrders.map(o =>
-                                    o.id === orderId ? { ...o, ...updates } : o
-                                  )
-                                );
-                                loadOrders();
-                              }}
-                              readOnly={currentStatus === 'completed' || currentStatus === 'cancelled'}
-                            />
-
                             {/* === 报价分析 (Pricing Analysis) - 分组显示 === */}
                             <div className="ltl-pricing-card">
                               <h4 className="ltl-card-title">报价分析 / Pricing Analysis</h4>
@@ -2101,35 +2162,6 @@ const BrokerOrdersNew = () => {
                               <div className="pricing-group">
                                 <div className="group-label">输入参数</div>
                                 <div className="group-fields">
-                                  <div className="pricing-field">
-                                    <label>地址类型</label>
-                                    <EditableCell
-                                      value={order.address_type}
-                                      orderId={order.id}
-                                      field="address_type"
-                                      type="select"
-                                      options={[
-                                        { value: 'Residential', label: 'Residential' },
-                                        { value: 'Commercial+Lift', label: 'Commercial+Lift' },
-                                        { value: 'Commercial', label: 'Commercial' },
-                                        { value: 'Warehouse', label: 'Warehouse' }
-                                      ]}
-                                      onSave={async (id, field, newValue) => {
-                                        const truckType = newValue === 'Residential' ? '13' : '26';
-                                        await handleCellUpdate(id, field, newValue);
-                                        await handleCellUpdate(id, 'truck_pallets', truckType);
-                                        const currentOrder = orders.find(o => o.id === id);
-                                        if (currentOrder) {
-                                          const updatedOrder = { ...currentOrder, address_type: newValue, truck_pallets: truckType };
-                                          const calculations = calculateQuoteReferences(updatedOrder);
-                                          await orderApi.updateOrder(id, calculations);
-                                          setOrders(prevOrders =>
-                                            prevOrders.map(o => o.id === id ? { ...o, ...updatedOrder, ...calculations } : o)
-                                          );
-                                        }
-                                      }}
-                                    />
-                                  </div>
                                   <div className="pricing-field">
                                     <label>总面积板数</label>
                                     <EditableCell
@@ -2386,50 +2418,6 @@ const BrokerOrdersNew = () => {
                               </div>
                             )}
 
-                            {/* === 详细地址（可编辑） === 折叠 */}
-                            <details className="address-detail-collapse">
-                              <summary>详细地址（双击编辑，会自动算距离）</summary>
-                              <div className="address-detail-grid">
-                                <div className="address-detail-item">
-                                  <label>发货详细地址:</label>
-                                  <EditableCell
-                                    value={order.origin_address}
-                                    orderId={order.id}
-                                    field="origin_address"
-                                    type="text"
-                                    onSave={async (id, field, newValue) => {
-                                      await handleCellUpdate(id, field, newValue);
-                                      const updatedOrder = orders.find(o => o.id === id);
-                                      const destAddr = updatedOrder?.destination_address || order.destination_address;
-                                      if (newValue && destAddr) {
-                                        setTimeout(() => {
-                                          calculateAddressDetails(id, 'origin', newValue, destAddr);
-                                        }, 500);
-                                      }
-                                    }}
-                                  />
-                                </div>
-                                <div className="address-detail-item">
-                                  <label>收货详细地址:</label>
-                                  <EditableCell
-                                    value={order.destination_address}
-                                    orderId={order.id}
-                                    field="destination_address"
-                                    type="text"
-                                    onSave={async (id, field, newValue) => {
-                                      await handleCellUpdate(id, field, newValue);
-                                      const updatedOrder = orders.find(o => o.id === id);
-                                      const originAddr = updatedOrder?.origin_address || order.origin_address;
-                                      if (originAddr && newValue) {
-                                        setTimeout(() => {
-                                          calculateAddressDetails(id, 'destination', originAddr, newValue);
-                                        }, 500);
-                                      }
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            </details>
                           </div>
                         </td>
                       </tr>
