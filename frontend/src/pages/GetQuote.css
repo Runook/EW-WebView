@@ -435,6 +435,18 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }
 
+/* 次要信息行：货物类型 / 货物描述 / 初始单号 — 放在尺寸后面，视觉上稍轻一点 */
+.cargo-additional-grid {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #d4d4d8;
+}
+
+.cargo-additional-grid .form-group label {
+  color: #6b7280;
+  font-weight: 500;
+}
+
 .dimensions-grid {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 }

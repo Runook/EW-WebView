@@ -41,7 +41,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     destination: '',
     pickupDate: '',
     deliveryDate: '',
-    cargoType: '',
     originLocationType: '',
     destinationLocationType: '',
     pickupServices: [],
@@ -49,6 +48,7 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     cargoItems: [
       {
         id: 1,
+        cargoType: '',
         description: '',
         weight: '',
         length: '',
@@ -253,6 +253,7 @@ const GetQuoteLTL = ({ fbaDestination }) => {
     const newId = Math.max(...formData.cargoItems.map(item => item.id)) + 1;
     const newItem = {
       id: newId,
+      cargoType: '',
       description: '',
       weight: '',
       length: '',
@@ -828,7 +829,9 @@ const GetQuoteLTL = ({ fbaDestination }) => {
             deliveryDate: formData.deliveryDate,
             items: formData.cargoItems.map(item => ({
               id: item.id,
+              cargoType: item.cargoType,
               description: item.description,
+              shippingNumber: item.shippingNumber,
               weight: item.weight,
               length: item.length,
               width: item.width,
@@ -1088,20 +1091,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
           {/* 货物信息 */}
           <div className="form-section">
             <h3>货物信息</h3>
-            <div className="form-grid">
-              <div className="form-group">
-                <label>
-                  <Package size={16} />
-                  货物类型
-                </label>
-                <select name="cargoType" value={formData.cargoType} onChange={handleInputChange}>
-                  <option value="">请选择货物类型</option>
-                  {cargoTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
 
             <div className="nmfc-info">
               <Info size={16} />
@@ -1125,24 +1114,6 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                       placeholder="数量"
                       min="1"
                       required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>货物描述</label>
-                    <input
-                      type="text"
-                      value={item.description}
-                      onChange={(e) => updateCargoItem(item.id, 'description', e.target.value)}
-                      placeholder="如：电子设备、机械部件等"
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label><Hash size={16} /> 初始单号</label>
-                    <input
-                      type="text"
-                      value={item.shippingNumber}
-                      onChange={(e) => updateCargoItem(item.id, 'shippingNumber', e.target.value)}
-                      placeholder="如：SH123456789"
                     />
                   </div>
                 </div>
@@ -1251,6 +1222,43 @@ const GetQuoteLTL = ({ fbaDestination }) => {
                     </div>
                   </div>
                 )}
+
+                {/* 次要信息：货物类型 / 货物描述 / 初始单号 */}
+                <div className="form-grid cargo-basic-grid cargo-additional-grid">
+                  <div className="form-group">
+                    <label>
+                      <Package size={16} />
+                      货物类型
+                    </label>
+                    <select
+                      value={item.cargoType || ''}
+                      onChange={(e) => updateCargoItem(item.id, 'cargoType', e.target.value)}
+                    >
+                      <option value="">请选择货物类型</option>
+                      {cargoTypes.map(type => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>货物描述</label>
+                    <input
+                      type="text"
+                      value={item.description}
+                      onChange={(e) => updateCargoItem(item.id, 'description', e.target.value)}
+                      placeholder="如：电子设备、机械部件等"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label><Hash size={16} /> 初始单号</label>
+                    <input
+                      type="text"
+                      value={item.shippingNumber}
+                      onChange={(e) => updateCargoItem(item.id, 'shippingNumber', e.target.value)}
+                      placeholder="如：SH123456789"
+                    />
+                  </div>
+                </div>
 
                 <div className="special-attributes-compact">
                   <label className="checkbox-item">
