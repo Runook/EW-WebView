@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Upload, Loader, Sparkles } from 'lucide-react';
 import './CargoItemsList.css';
 
 /**
- * 货物列表组件 - V3 单栏 + 单元格双击编辑
- * - 每个单元格可直接双击编辑（板数 / 重量 / 长 / 宽 / 高 / CLASS）
- * - 修改 weight/长/宽/高 任一字段 → 自动按密度重算 CLASS 并覆盖
- * - 支持 lbs/in 与 kg/cm 切换
+ * 货物列表组件 - V4
+ * - 顶部统一的紧凑工具条（单位切换 + 添加 + 保存中）
+ * - 空状态：可拖拽截图/文件/文字的迷你 AI 解析区，自动 kg/cm → lbs/in
+ * - 单元格双击编辑，CLASS 按密度自动重算
  */
 
-// NMFC 货物分类映射表 (基于密度 lbs/cu ft)
 const FREIGHT_CLASS_MAP = [
   { minDensity: 50, class: '50' },
   { minDensity: 35, class: '55' },
@@ -41,13 +41,11 @@ const calculateFreightClass = (weight, length, width, height) => {
   return '500';
 };
 
-// 单位换算
 const kgToLbs = (kg) => kg * 2.20462;
 const lbsToKg = (lbs) => lbs / 2.20462;
 const cmToIn = (cm) => cm / 2.54;
 const inToCm = (inches) => inches * 2.54;
 
-// 内联可编辑单元格
 const InlineEditCell = ({ value, onCommit, type = 'text', align = 'center', className = '', formatter }) => {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
@@ -103,10 +101,208 @@ const InlineEditCell = ({ value, onCommit, type = 'text', align = 'center', clas
   );
 };
 
+/* ============================================================
+ * 内联 AI 解析（仅货物字段）
+ * ============================================================ */
+const getApiBase = () => process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const getAuthToken = () => localStorage.getItem('idToken') || localStorage.getItem('authToken') || '';
+
+const CargoAIDropZone = ({ onItemsParsed }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  const [parsing, setParsing] = useState(false);
+  const [error, setError] = useState(null);
+  const [pasteText, setPasteText] = useState('');
+  const [showPaste, setShowPaste] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const callParseFile = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${getApiBase()}/agent/parse-cargo`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${getAuthToken()}` },
+      body: formData
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`服务器错误 (${res.status}) ${errText.slice(0, 100)}`);
+    }
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || '解析失败');
+    return data.data;
+  };
+
+  const callParseText = async (text) => {
+    const res = await fetch(`${getApiBase()}/agent/parse-cargo`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${getAuthToken()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ text })
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => '');
+      throw new Error(`服务器错误 (${res.status}) ${errText.slice(0, 100)}`);
+    }
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || '解析失败');
+    return data.data;
+  };
+
+  const handleParsed = (parsed) => {
+    if (!parsed?.items?.length) {
+      setError('未识别到货物数据，请尝试更清晰的截图或更完整的描述');
+      return;
+    }
+    onItemsParsed(parsed.items);
+    setShowPaste(false);
+    setPasteText('');
+  };
+
+  const handleFile = useCallback(async (file) => {
+    setError(null);
+    setParsing(true);
+    try {
+      const parsed = await callParseFile(file);
+      handleParsed(parsed);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setParsing(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleTextSubmit = async () => {
+    if (!pasteText.trim()) return;
+    setError(null);
+    setParsing(true);
+    try {
+      const parsed = await callParseText(pasteText);
+      handleParsed(parsed);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (parsing) return;
+
+    // 1) 文件优先
+    const file = e.dataTransfer.files?.[0];
+    if (file) { handleFile(file); return; }
+
+    // 2) 文本回退
+    const text = e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('text');
+    if (text && text.trim()) {
+      setError(null);
+      setParsing(true);
+      try {
+        const parsed = await callParseText(text);
+        handleParsed(parsed);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setParsing(false);
+      }
+    }
+  };
+
+  const handlePaste = async (e) => {
+    if (parsing) return;
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          handleFile(file);
+          return;
+        }
+      }
+    }
+  };
+
+  return (
+    <div
+      className={`cargo-ai-zone ${isDragging ? 'dragging' : ''} ${parsing ? 'parsing' : ''}`}
+      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+      onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+      onDrop={handleDrop}
+      onPaste={handlePaste}
+      tabIndex={0}
+    >
+      {parsing ? (
+        <div className="cargo-ai-state">
+          <Loader size={22} className="spin" />
+          <span>AI 正在解析货物数据...</span>
+        </div>
+      ) : (
+        <>
+          <div className="cargo-ai-icon">
+            <Sparkles size={20} />
+          </div>
+          <div className="cargo-ai-title">智能解析货物明细</div>
+          <div className="cargo-ai-hint">
+            拖拽截图 / Excel / PDF 到此处，或粘贴 (⌘V / Ctrl+V) 截图
+          </div>
+          <div className="cargo-ai-fields">
+            支持识别：板数 · 重量 · 长 / 宽 / 高 · 体积 · CLASS（kg/cm 自动换算为 lbs/in）
+          </div>
+          <div className="cargo-ai-actions">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.png,.jpg,.jpeg,.webp,.gif,.xlsx,.xls,.csv,.txt"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) { handleFile(f); e.target.value = ''; } }}
+              style={{ display: 'none' }}
+            />
+            <button className="btn-cargo-upload" onClick={() => fileInputRef.current?.click()}>
+              <Upload size={13} /> 上传文件
+            </button>
+            <button className="btn-cargo-paste" onClick={() => setShowPaste((v) => !v)}>
+              {showPaste ? '收起' : '粘贴文字'}
+            </button>
+          </div>
+
+          {showPaste && (
+            <div className="cargo-paste-box">
+              <textarea
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                placeholder={'粘贴货物清单文字，例如：\n板数 重量(kg) 长x宽x高(cm)\n2  500  120x100x90\n1  300  90x80x60'}
+                rows={4}
+              />
+              <button
+                className="btn-cargo-parse"
+                onClick={handleTextSubmit}
+                disabled={!pasteText.trim() || parsing}
+              >
+                解析
+              </button>
+            </div>
+          )}
+
+          {error && (
+            <div className="cargo-ai-error">{error}</div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
 const CargoItemsList = ({
   orderId,
-  weightList,      // JSON字符串: [500, 600, ...]
-  dimensionsList,  // JSON字符串: [{length, width, height, pieces, freightClass}, ...]
+  weightList,
+  dimensionsList,
   onSave,
   readOnly = false
 }) => {
@@ -114,7 +310,6 @@ const CargoItemsList = ({
   const [items, setItems] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  // 解析现有数据
   useEffect(() => {
     try {
       const weights = weightList ? JSON.parse(weightList) : [];
@@ -147,7 +342,6 @@ const CargoItemsList = ({
     }
   }, [weightList, dimensionsList]);
 
-  // 推送保存（items 始终以 lbs/in 为内部单位）
   const pushSave = useCallback(async (nextItems) => {
     if (!onSave || readOnly) return;
     try {
@@ -178,7 +372,6 @@ const CargoItemsList = ({
     }
   }, [onSave, orderId, readOnly]);
 
-  // 更新某行某字段；若修改的是 weight/长/宽/高，自动覆盖重算 CLASS
   const updateItem = (idx, field, rawValue, options = {}) => {
     const { skipClassRecalc = false } = options;
     setItems(prev => {
@@ -186,7 +379,6 @@ const CargoItemsList = ({
         if (i !== idx) return it;
         const updated = { ...it };
         if (field === 'weight' || field === 'length' || field === 'width' || field === 'height') {
-          // 输入可能是当前显示单位（若 metric），转回内部英制
           let val = parseFloat(rawValue);
           if (Number.isNaN(val)) val = 0;
           if (useMetric) {
@@ -227,7 +419,27 @@ const CargoItemsList = ({
     });
   };
 
-  // 计算总计（内部单位 lbs/in）
+  // AI 解析返回的 items 已经是 lbs/in 内部单位
+  const handleAIParsed = (parsedItems) => {
+    setItems(prev => {
+      const cleaned = parsedItems.map(it => {
+        const weight = Number(it.weight) || 0;
+        const length = Number(it.length) || 0;
+        const width = Number(it.width) || 0;
+        const height = Number(it.height) || 0;
+        const pallets = parseInt(it.pallets) || 1;
+        let freightClass = String(it.freightClass || '').trim();
+        if (!freightClass && weight && length && width && height) {
+          freightClass = calculateFreightClass(weight, length, width, height);
+        }
+        return { freightClass, pallets, weight, length, width, height };
+      });
+      const next = [...prev, ...cleaned];
+      pushSave(next);
+      return next;
+    });
+  };
+
   const totals = items.reduce((acc, it) => {
     const pallets = parseInt(it.pallets) || 1;
     acc.totalPallets += pallets;
@@ -236,7 +448,6 @@ const CargoItemsList = ({
     return acc;
   }, { totalPallets: 0, totalWeight: 0, totalCubicFeet: 0 });
 
-  // 展示用格式化
   const fmtWeight = (lbs) => useMetric
     ? `${lbsToKg(lbs || 0).toFixed(1)}`
     : `${Math.round(lbs || 0)}`;
@@ -249,23 +460,36 @@ const CargoItemsList = ({
       <div className="cargo-list-header">
         <h4>📦 货物明细</h4>
         <div className="cargo-header-right">
-          <div className="unit-toggle">
-            <label className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={useMetric}
-                onChange={(e) => setUseMetric(e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-            <span className="unit-label">{useMetric ? 'kg/cm' : 'lbs/in'}</span>
+          {isSaving && <span className="cargo-saving">💾 保存中</span>}
+          <div
+            className={`unit-toggle-group ${useMetric ? 'metric' : 'imperial'}`}
+            role="tablist"
+            aria-label="单位切换"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={!useMetric}
+              className={`unit-pill ${!useMetric ? 'active' : ''}`}
+              onClick={() => setUseMetric(false)}
+            >
+              lbs/in
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={useMetric}
+              className={`unit-pill ${useMetric ? 'active' : ''}`}
+              onClick={() => setUseMetric(true)}
+            >
+              kg/cm
+            </button>
           </div>
-          {!readOnly && (
+          {!readOnly && items.length > 0 && (
             <button className="btn-add-row" onClick={addRow} title="添加一行">
-              ➕ 添加
+              ＋ 添加
             </button>
           )}
-          {isSaving && <span className="cargo-saving">💾 保存中...</span>}
         </div>
       </div>
 
@@ -365,7 +589,7 @@ const CargoItemsList = ({
                           onClick={() => removeRow(idx)}
                           title="删除此行"
                         >
-                          🗑️
+                          ×
                         </button>
                       </td>
                     )}
@@ -377,11 +601,11 @@ const CargoItemsList = ({
 
           <div className="cargo-totals">
             <div className="total-item">
-              <span className="total-label">总板数:</span>
-              <span className="total-value">{totals.totalPallets} 板</span>
+              <span className="total-label">总板数</span>
+              <span className="total-value">{totals.totalPallets}</span>
             </div>
             <div className="total-item">
-              <span className="total-label">总重量:</span>
+              <span className="total-label">总重量</span>
               <span className="total-value">
                 {useMetric
                   ? `${lbsToKg(totals.totalWeight).toFixed(1)} kg`
@@ -389,26 +613,17 @@ const CargoItemsList = ({
               </span>
             </div>
             <div className="total-item">
-              <span className="total-label">总体积:</span>
+              <span className="total-label">总体积</span>
               <span className="total-value">{totals.totalCubicFeet.toFixed(2)} ft³</span>
             </div>
           </div>
-
-          {!readOnly && (
-            <div className="cargo-hint">
-              提示：双击任意单元格即可编辑。修改「重量」或「长/宽/高」时，CLASS 会按密度自动重算并覆盖。
-            </div>
-          )}
         </>
       ) : (
-        <div className="cargo-empty">
-          暂无货物数据
-          {!readOnly && (
-            <button className="btn-add-empty" onClick={addRow}>
-              ➕ 添加第一行
-            </button>
-          )}
-        </div>
+        !readOnly ? (
+          <CargoAIDropZone onItemsParsed={handleAIParsed} />
+        ) : (
+          <div className="cargo-empty">暂无货物数据</div>
+        )
       )}
     </div>
   );

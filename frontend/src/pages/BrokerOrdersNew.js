@@ -11,6 +11,7 @@ import QuoteGenerator from '../components/QuoteGenerator';
 import QBOSettings from '../components/QBOSettings';
 import CargoItemsList from '../components/CargoItemsList';
 import AIFileDropZone from '../components/AIFileDropZone';
+import { Send, Map as MapIcon, Trash2 } from 'lucide-react';
 import { loadGoogleMapsScript, diagnoseGoogleMapsIssues } from '../config/googleMaps';
 import './BrokerOrdersNew.css';
 
@@ -258,9 +259,10 @@ const BrokerOrdersNew = () => {
       setLoading(true);
       
       // 创建最小必填字段的订单（默认 LTL 散板模式）
+      // 不预填公司名，留空让用户填写（CompanyEditableCell 会显示占位提示）
       const response = await orderApi.createOrder({
-        customer_name: '新建订单',
-        inquiry_company: '新建订单',
+        customer_name: '',
+        inquiry_company: '',
         cargo_description: '待填写',
         cargo_description_detailed: '待填写',
         order_type: 'land_freight',
@@ -1676,17 +1678,19 @@ const BrokerOrdersNew = () => {
                         {order.status === 'quote' ? (
                           <div className="quote-actions">
                             <button
-                              className="btn-quote-action btn-quote-confirm"
+                              className="btn-quote-icon btn-quote-confirm"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleConfirmOrder(order.id);
                               }}
                               title="确认下单"
+                              aria-label="确认下单"
                             >
-                              下单
+                              <Send size={13} strokeWidth={2.2} />
+                              <span>下单</span>
                             </button>
                             <button
-                              className="btn-quote-action btn-quote-map"
+                              className="btn-quote-icon btn-quote-map"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 const origin = order.origin_address || `${order.origin_city}, ${order.origin_state} ${order.origin_zipcode}`;
@@ -1694,11 +1698,12 @@ const BrokerOrdersNew = () => {
                                 window.open(`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(dest)}&travelmode=driving`, '_blank');
                               }}
                               title="在 Google Maps 查看路线"
+                              aria-label="路线"
                             >
-                              地图
+                              <MapIcon size={13} strokeWidth={2.2} />
                             </button>
                             <button
-                              className="btn-quote-action btn-quote-delete"
+                              className="btn-quote-icon btn-quote-delete"
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 if (!window.confirm(`确定要删除 ${order.order_number} 吗？`)) return;
@@ -1710,8 +1715,9 @@ const BrokerOrdersNew = () => {
                                 }
                               }}
                               title="删除订单"
+                              aria-label="删除"
                             >
-                              删除
+                              <Trash2 size={13} strokeWidth={2.2} />
                             </button>
                           </div>
                         ) : order.status === 'ordered' ? (
@@ -1841,7 +1847,9 @@ const BrokerOrdersNew = () => {
                         <td colSpan="100%">
                           <div className="expanded-content">
 
-                            {/* === 1. 详细地址 (最重要，放最前面输入) === */}
+                            {/* === 顶部区：详细地址 + 货物明细 两列并排，节省高度 === */}
+                            <div className="ltl-top-grid">
+                            {/* === 1. 详细地址 === */}
                             <div className="ltl-address-section">
                               <h4 className="ltl-section-title">详细地址（双击地址栏会自动算距离、城市、邮编）</h4>
                               <div className="address-row">
@@ -1955,6 +1963,8 @@ const BrokerOrdersNew = () => {
                               }}
                               readOnly={currentStatus === 'completed' || currentStatus === 'cancelled'}
                             />
+                            </div>
+                            {/* /ltl-top-grid */}
 
                             {/* Workflow Stage Indicator */}
                             {order.workflow_stage && (
@@ -2159,6 +2169,7 @@ const BrokerOrdersNew = () => {
                             <div className="ltl-pricing-card">
                               <h4 className="ltl-card-title">报价分析 / Pricing Analysis</h4>
 
+                              <div className="pricing-top-row">
                               <div className="pricing-group">
                                 <div className="group-label">输入参数</div>
                                 <div className="group-fields">
@@ -2267,6 +2278,8 @@ const BrokerOrdersNew = () => {
                                   </div>
                                 </div>
                               </div>
+                              </div>
+                              {/* /pricing-top-row */}
 
                               <div className="pricing-group pricing-actual">
                                 <div className="group-label">实际报价 & 利润</div>

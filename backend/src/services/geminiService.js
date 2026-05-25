@@ -369,4 +369,143 @@ function extractExcelText(buffer, filename) {
   }
 }
 
-module.exports = { parseFile };
+/* =================================================================
+ * Cargo-only parser
+ * Used by the in-row 货物明细 drop zone — extracts ONLY pallet items
+ * and auto-converts kg/cm to lbs/in. No address, no recipient, no notes.
+ * Output is intentionally narrow so the LTL row form can ingest it.
+ * ================================================================= */
+
+const CARGO_ONLY_PROMPT = `You are a US LTL freight cargo line-item extractor. Read the input (image / spreadsheet / screenshot / pasted text) and output ONLY a JSON object describing each pallet/crate.
+
+UNIT DETECTION & CONVERSION
+- Output is ALWAYS US imperial: weight in lbs, dimensions in inches.
+- Detect the input unit from explicit unit labels (kg, KG, cm, CM, lbs, LB, in, INCH, ", ') or column headers like "实重(KG)", "长(CM)", "Weight (lbs)".
+- If input is metric, convert: kg × 2.20462 = lbs; cm ÷ 2.54 = in. Round to nearest integer.
+- If only numbers without units: dimension numbers in 30–250 range are usually cm if any CM/中文 cue appears, otherwise inches; weights >300 are almost always lbs, weights <300 are usually kg if Chinese context.
+- ALWAYS round all numbers to integers in the output.
+
+ROW PARSING
+- Every distinct pallet/crate/box becomes ONE item with pallets >= 1.
+- "板数" / "件数" / "pallets" / "pieces" / "数量" → pallets count.
+- If the source lists each box on its own line (拆柜清单 style), output each as a separate item with pallets=1.
+- If the source shows identical boxes with a count column, output one item with pallets = count.
+- "1/3 2/3 3/3" notation = 3 pallets total.
+
+FREIGHT CLASS
+- If a CLASS column is present (50, 55, 60, 65, 70, 77.5, 85, 92.5, 100, 110, 125, 150, 175, 200, 250, 300, 400, 500), use it.
+- Otherwise compute density: PCF = weight_lbs / (L_in × W_in × H_in / 1728)
+  PCF≥50→"50", ≥35→"55", ≥30→"60", ≥22.5→"65", ≥15→"70", ≥13.5→"77.5",
+  ≥12→"85", ≥10.5→"92.5", ≥9→"100", ≥8→"110", ≥7→"125", ≥6→"150",
+  ≥4→"175", ≥2→"250", ≥1→"300", <1→"400".
+
+VOLUME
+- volume = (L × W × H × pallets) / 1728 (cubic feet). Round to 2 decimals.
+
+OUTPUT (strict JSON, no markdown fences):
+{
+  "items": [
+    { "pallets": 1, "weight": 754, "length": 48, "width": 40, "height": 42, "volume": 46.67, "freightClass": "125" }
+  ],
+  "detectedUnit": "metric" | "imperial",
+  "notes": "optional short note about ambiguity / how unit was decided"
+}
+
+If you cannot find any cargo line items, return { "items": [], "detectedUnit": "imperial", "notes": "no cargo detected" }.`;
+
+/**
+ * Parse cargo-only data from a file (image / xlsx / csv / pdf / txt).
+ * @param {Buffer} fileBuffer
+ * @param {string} mimeType
+ * @param {string} originalName
+ */
+async function parseCargoFile(fileBuffer, mimeType, originalName) {
+  if (!GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY environment variable is not set');
+  }
+  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+  let contents;
+  if (mimeType.includes('spreadsheet') || mimeType.includes('excel') ||
+      originalName?.endsWith('.xlsx') || originalName?.endsWith('.xls') ||
+      originalName?.endsWith('.csv')) {
+    const textContent = extractExcelText(fileBuffer, originalName);
+    contents = [
+      { text: CARGO_ONLY_PROMPT },
+      { text: `Extracted spreadsheet content:\n${textContent}` }
+    ];
+  } else if (mimeType === 'text/plain') {
+    const textContent = fileBuffer.toString('utf8').slice(0, 50000);
+    contents = [
+      { text: CARGO_ONLY_PROMPT },
+      { text: `Pasted text:\n${textContent}` }
+    ];
+  } else {
+    const base64Data = fileBuffer.toString('base64');
+    contents = [
+      { text: CARGO_ONLY_PROMPT },
+      { inlineData: { mimeType, data: base64Data } }
+    ];
+  }
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents,
+    config: {
+      responseMimeType: 'application/json',
+      thinkingConfig: { thinkingBudget: 0 },
+    }
+  });
+
+  const text = response.text || '';
+  try {
+    const parsed = JSON.parse(text);
+    if (!parsed.items || !Array.isArray(parsed.items)) {
+      throw new Error('Response missing "items" array');
+    }
+    return parsed;
+  } catch (parseError) {
+    const jsonMatch = text.match(/\{[\s\S]*"items"[\s\S]*\}/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    throw new Error(`Failed to parse cargo response: ${parseError.message}`);
+  }
+}
+
+/**
+ * Parse cargo-only data from raw pasted text (no file upload).
+ */
+async function parseCargoText(rawText) {
+  if (!GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY environment variable is not set');
+  }
+  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+  const contents = [
+    { text: CARGO_ONLY_PROMPT },
+    { text: `Pasted text:\n${String(rawText || '').slice(0, 50000)}` }
+  ];
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents,
+    config: {
+      responseMimeType: 'application/json',
+      thinkingConfig: { thinkingBudget: 0 },
+    }
+  });
+
+  const text = response.text || '';
+  try {
+    const parsed = JSON.parse(text);
+    if (!parsed.items || !Array.isArray(parsed.items)) {
+      throw new Error('Response missing "items" array');
+    }
+    return parsed;
+  } catch (parseError) {
+    const jsonMatch = text.match(/\{[\s\S]*"items"[\s\S]*\}/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    throw new Error(`Failed to parse cargo text response: ${parseError.message}`);
+  }
+}
+
+module.exports = { parseFile, parseCargoFile, parseCargoText };

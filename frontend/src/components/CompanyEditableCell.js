@@ -132,13 +132,15 @@ const CompanyEditableCell = ({ value, orderId, onSave }) => {
   };
 
   if (!isEditing) {
+    // 空值或历史遗留的占位文本"新建订单"都显示为灰色提示，引导用户填写
+    const isEmpty = !value || value === '新建订单' || value === '-';
     return (
-      <div 
-        className="editable-cell-display" 
+      <div
+        className={`editable-cell-display${isEmpty ? ' editable-cell-empty' : ''}`}
         onDoubleClick={() => setIsEditing(true)}
         title="双击编辑"
       >
-        {value || '-'}
+        {isEmpty ? '请输入公司名' : value}
       </div>
     );
   }

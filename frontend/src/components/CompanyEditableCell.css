@@ -12,6 +12,13 @@
   background: #f8f9fa;
 }
 
+/* 空值占位提示：灰色斜体，强烈区分于真实公司名 */
+.editable-cell-display.editable-cell-empty {
+  color: #9ca3af;
+  font-style: italic;
+  font-weight: 400;
+}
+
 .editable-input {
   width: 100%;
   padding: 4px 8px;

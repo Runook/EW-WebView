@@ -347,7 +347,78 @@
   color: white;
 }
 
-/* ===== 统一的报价操作按钮（下单 / 地图 / 删除） ===== */
+/* ===== 紧凑型报价操作按钮（下单 / 地图 / 删除）—— 图标 + 文字组合 ===== */
+.quote-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.btn-quote-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 22px;
+  padding: 0 7px;
+  border: none;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+  color: #475569;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.12s ease;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.btn-quote-icon svg {
+  flex-shrink: 0;
+}
+
+.btn-quote-icon:hover {
+  transform: translateY(-1px);
+}
+
+/* 主操作"下单" - 蓝色实底，强调主行为 */
+.btn-quote-icon.btn-quote-confirm {
+  background: #2563eb;
+  color: white;
+  padding: 0 9px;
+}
+.btn-quote-icon.btn-quote-confirm:hover {
+  background: #1d4ed8;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+/* 次要操作"地图" - 仅图标，hover 时显示绿色 */
+.btn-quote-icon.btn-quote-map {
+  width: 24px;
+  padding: 0;
+  color: #16a34a;
+}
+.btn-quote-icon.btn-quote-map:hover {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* 危险操作"删除" - 仅图标，hover 时显示红色 */
+.btn-quote-icon.btn-quote-delete {
+  width: 24px;
+  padding: 0;
+  color: #94a3b8;
+}
+.btn-quote-icon.btn-quote-delete:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* 旧类名保留以兼容 */
 .btn-quote-action {
   padding: 4px 10px;
   min-width: 48px;
@@ -364,13 +435,10 @@
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
 }
-
 .btn-quote-confirm { background: #3498db; }
 .btn-quote-confirm:hover { background: #2980b9; }
-
 .btn-quote-map { background: #27ae60; }
 .btn-quote-map:hover { background: #229954; }
-
 .btn-quote-delete { background: #ef4444; }
 .btn-quote-delete:hover { background: #dc2626; }
 
@@ -414,15 +482,35 @@
 }
 
 .expanded-content {
-  padding: 20px;
+  padding: 16px 20px;
 }
 
 .expanded-content > * {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .expanded-content > *:last-child {
   margin-bottom: 0;
+}
+
+/* 顶部两列布局：详细地址 (1.05fr) + 货物明细 (1fr) 并排 */
+.ltl-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.ltl-top-grid > .ltl-address-section,
+.ltl-top-grid > .cargo-items-list {
+  margin: 0;
+  height: 100%;
+}
+
+@media (max-width: 1100px) {
+  .ltl-top-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ============================================================ */
@@ -444,14 +532,18 @@
   border: 1px solid #e2e8f0;
   border-left: 4px solid #2c7be5;
   border-radius: 8px;
-  padding: 14px 16px;
+  padding: 12px 14px;
 }
 
 .address-row {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 14px;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
   align-items: start;
+}
+
+.address-row .address-extras {
+  grid-column: 1 / -1;
 }
 
 .address-field {
@@ -489,13 +581,15 @@
   display: flex;
   gap: 10px;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .address-field-small {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  width: 110px;
+  min-width: 110px;
+  flex: 1;
 }
 
 .address-field-small > label {
@@ -521,11 +615,11 @@
   background: white;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 14px 16px;
+  padding: 12px 14px;
 }
 
 .ltl-card-title {
-  margin: 0 0 12px 0;
+  margin: 0 0 10px 0;
   font-size: 0.88rem;
   font-weight: 700;
   color: #1e293b;
@@ -533,12 +627,44 @@
   border-bottom: 2px solid #f1f5f9;
 }
 
-/* Pricing 分组 */
+/* 报价分析顶部三组并排：输入参数 / 平台比价 / 报价参考 */
+.ltl-pricing-card .pricing-top-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1.4fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ltl-pricing-card .pricing-top-row .pricing-group {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 8px 10px;
+  border: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  border-radius: 6px;
+  background: #fafbfc;
+  gap: 8px;
+}
+
+.ltl-pricing-card .pricing-top-row .pricing-group .group-label {
+  flex: none;
+  align-self: flex-start;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  color: #475569;
+}
+
+.ltl-pricing-card .pricing-top-row .pricing-group .group-fields {
+  grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
+  gap: 6px 8px;
+}
+
+/* Pricing 分组（默认/底部使用） */
 .pricing-group {
   display: flex;
   align-items: stretch;
   gap: 12px;
-  padding: 8px 0;
+  padding: 6px 0;
   border-bottom: 1px dashed #f1f5f9;
 }
 
@@ -559,33 +685,36 @@
 .pricing-group .group-fields {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(105px, 145px));
-  gap: 8px 12px;
+  grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+  gap: 6px 10px;
 }
 
 .pricing-field {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-width: 145px;
+  min-width: 0;
 }
 
 .pricing-field label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: #64748b;
   font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pricing-field .editable-cell {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .pricing-field .readonly-value {
-  padding: 3px 8px;
+  padding: 2px 7px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 4px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #1e293b;
   min-height: 22px;
   display: inline-flex;
@@ -606,21 +735,42 @@
 }
 
 .pricing-group.pricing-actual {
-  background: #f8fafc;
+  background: linear-gradient(135deg, #f0f9ff, #f8fafc);
+  border: 1px solid #bae6fd;
   border-radius: 6px;
-  margin: 4px -8px 0;
-  padding: 10px 8px;
+  margin-top: 4px;
+  padding: 10px 12px;
+  display: block;
+}
+
+.pricing-group.pricing-actual .group-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.7rem;
+  color: #0369a1;
+}
+
+.pricing-group.pricing-actual .group-fields {
+  grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+  gap: 6px 10px;
+}
+
+.pricing-field.profit-field {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 5px;
+  padding: 2px 6px;
 }
 
 .pricing-field.profit-field label {
-  color: #1d4ed8;
+  color: #c2410c;
   font-weight: 700;
 }
 
 .pricing-field.profit-field .profit-value {
   font-weight: 700;
-  color: #1d4ed8;
-  font-size: 0.95rem;
+  color: #c2410c;
+  font-size: 0.92rem;
 }
 
 /* === Carrier Card === */
@@ -734,31 +884,26 @@
   }
 }
 
-/* Meta columns (发货单号 / WE单号 / 货物备注) — 次要信息，视觉降权 */
+/* Meta columns (发货单号 / WE单号 / 货物备注) — 与主表格使用相同的颜色，仅字体微缩 */
 .orders-table th.meta-col,
 .orders-table td.meta-col {
-  font-size: 0.78rem;
-  color: #6b7280;
-  background: #fafbfc;
-  max-width: 110px;
+  font-size: 0.82rem;
+  color: #333;
+  background: transparent;
+  max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .orders-table td.meta-col .editable-cell {
-  font-size: 0.78rem;
-  color: #6b7280;
+  font-size: 0.82rem;
+  color: #333;
 }
 
 .orders-table td.meta-col.we-number {
   font-family: 'SFMono-Regular', 'Menlo', monospace;
   letter-spacing: 0.02em;
-}
-
-.orders-table td.meta-col.we-number .we-number-display {
-  color: #6b7280;
-  font-weight: 500;
 }
 
 /* 重量和尺寸列表展示 */

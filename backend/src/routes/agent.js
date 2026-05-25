@@ -71,6 +71,37 @@ router.post('/parse-file', auth, requireEmployee, upload.single('file'), async (
 });
 
 /**
+ * POST /api/agent/parse-cargo
+ * Cargo-only parser used by the in-row 货物明细 drop zone.
+ * Accepts EITHER a multipart file upload OR a JSON body { text: "..." }.
+ * Returns ONLY pallet line items (lbs/in), no addresses or recipient info.
+ */
+router.post('/parse-cargo', auth, requireEmployee, upload.single('file'), async (req, res) => {
+  req.setTimeout(120000);
+  res.setTimeout(120000);
+  try {
+    if (req.file) {
+      const { buffer, mimetype, originalname } = req.file;
+      console.log(`📦 Agent parse-cargo (file): ${originalname} (${mimetype}, ${buffer.length} bytes)`);
+      const result = await geminiService.parseCargoFile(buffer, mimetype, originalname);
+      return res.json({ success: true, data: result });
+    }
+
+    // No file → expect JSON text body
+    const text = req.body && (req.body.text || req.body.content);
+    if (!text || String(text).trim().length === 0) {
+      return res.status(400).json({ success: false, message: 'No file or text provided' });
+    }
+    console.log(`📦 Agent parse-cargo (text): ${String(text).length} chars`);
+    const result = await geminiService.parseCargoText(text);
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Agent parse-cargo error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
  * POST /api/agent/parse-and-create
  * Accept parsed shipment data (from OpenClaw or manual upload) and create orders.
  */

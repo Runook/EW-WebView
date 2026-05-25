@@ -207,20 +207,25 @@ router.post('/', auth, async (req, res) => {
     const orderData = req.body;
     
     // 验证必填字段（兼容新旧字段）
-    const customerName = orderData.customer_name || orderData.inquiry_company;
+    // 客户名称允许为空：新建空白报价单时由前端占位提示用户填写，
+    // 这里若没有客户名则在 DB 层用 '' 填充以满足 NOT NULL 约束。
+    const customerName = orderData.customer_name || orderData.inquiry_company || '';
     const cargoDesc = orderData.cargo_description || orderData.cargo_description_detailed;
-    
-    if (!customerName || !orderData.order_type || !cargoDesc) {
+
+    if (!orderData.order_type || !cargoDesc) {
       return res.status(400).json({
         success: false,
-        message: '缺少必填字段：客户名称、订单类型、货物描述',
+        message: '缺少必填字段：订单类型、货物描述',
         debug: {
-          customer_name: !!customerName,
           order_type: !!orderData.order_type,
           cargo_description: !!cargoDesc
         }
       });
     }
+
+    // 注入兜底值，确保 DB 层 NOT NULL 不报错
+    orderData.customer_name = customerName;
+    orderData.inquiry_company = orderData.inquiry_company || customerName;
     
     // 验证订单类型
     const validTypes = ['land_freight', 'sea_freight', 'air_freight', 'warehouse', 'customs', 'other'];
