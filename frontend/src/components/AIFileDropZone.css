@@ -100,6 +100,13 @@
 }
 
 /* Results header */
+/* 解析结果整体面板：限高 + 滚动，避免货物/订单很多时超出屏幕看不见 */
+.ai-results {
+  max-height: 78vh;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
 .ai-results-header {
   display: flex;
   align-items: center;
@@ -108,6 +115,10 @@
   margin-bottom: 0.5rem;
   flex-wrap: wrap;
   gap: 0.5rem;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 2;
 }
 
 .results-title {
@@ -199,6 +210,15 @@
   border-radius: 4px;
 }
 
+.card-company {
+  font-size: 0.8rem;
+  background: #ecfdf5;
+  color: #047857;
+  padding: 1px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
 .card-desc {
   font-size: 0.85rem;
   color: #374151;
@@ -288,6 +308,27 @@
   margin-bottom: 4px;
   padding: 4px 0;
   border-bottom: 1px solid #f3f4f6;
+}
+
+/* 每条货物的序号 # */
+.item-index {
+  flex: 0 0 auto;
+  align-self: center;
+  min-width: 28px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: #eff6ff;
+  border-radius: 4px;
+  text-align: center;
+  padding: 2px 6px;
+}
+
+/* 货物明细很多时，内部滚动，避免被裁切看不见 */
+.ai-items-scroll {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .field-group {

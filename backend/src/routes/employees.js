@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Employee = require('../models/Employee');
-const { auth, requireRole, requirePermission } = require('../middleware/auth');
+const { auth, requireRole, requirePermission, requireEmployee } = require('../middleware/auth');
 
 /**
  * GET /api/employees
@@ -74,6 +74,29 @@ router.get('/search-users', auth, requirePermission('employee.manage'), async (r
       message: '搜索失败',
       error: error.message
     });
+  }
+});
+
+/**
+ * GET /api/employees/assignable
+ * 任意员工均可调用，返回可分配的员工精简列表（用于报价单"分配 Sales"下拉）。
+ * 必须在 /:id 之前定义，否则会被 /:id 匹配。
+ */
+router.get('/assignable', auth, requireEmployee, async (req, res) => {
+  try {
+    const employees = await Employee.getAllEmployees({ isActive: true });
+    const data = (employees || []).map((e) => ({
+      id: e.id,
+      first_name: e.first_name,
+      last_name: e.last_name,
+      employee_role: e.employee_role,
+      email: e.email,
+      name: `${e.first_name || ''} ${e.last_name || ''}`.trim() || e.email,
+    }));
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('获取可分配员工失败:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

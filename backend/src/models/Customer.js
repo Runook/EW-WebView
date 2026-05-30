@@ -55,6 +55,45 @@ class Customer {
   }
 
   /**
+   * 模糊匹配客户：用于 AI 解析时把识别到的公司名/收货人名对应到 customer list。
+   * 匹配优先级：
+   *   1. 精确（含 alias，大小写不敏感）
+   *   2. 客户名是输入文本的子串（如输入 "ABC Trading LLC" 命中客户 "ABC Trading"）
+   *   3. 输入文本是客户名的子串（如输入 "ABC" 命中客户 "ABC Trading"）
+   * 返回 customer 记录或 null（无相关匹配时由调用方决定直接用原始文本）。
+   */
+  static async matchByName(name) {
+    if (!name || !String(name).trim()) return null;
+    const n = String(name).trim();
+    try {
+      // 1. 精确 / alias
+      const exact = await this.getByName(n);
+      if (exact) return exact;
+
+      // 2. 客户名是输入文本的子串（取最长匹配，避免误中很短的名字）
+      let c = await db('customers')
+        .whereRaw('LENGTH(company_name) >= 3 AND ? ILIKE (\'%\' || company_name || \'%\')', [n])
+        .orderByRaw('LENGTH(company_name) DESC')
+        .first();
+      if (c) return c;
+
+      // 3. 输入文本是客户名的子串（取最短客户名，最接近输入）
+      if (n.length >= 3) {
+        c = await db('customers')
+          .whereRaw('company_name ILIKE ?', [`%${n}%`])
+          .orderByRaw('LENGTH(company_name) ASC')
+          .first();
+        if (c) return c;
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Failed to match customer by name:', error);
+      return null;
+    }
+  }
+
+  /**
    * 确保客户存在：按公司名（大小写不敏感 + alias）查找，找不到就新建。
    * 用于订单创建/更新时把 inquiry_company 同步到 customers 表。
    *

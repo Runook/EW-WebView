@@ -82,6 +82,11 @@ export const employeeApi = {
     return request(`/employees/${id}`);
   },
 
+  // 获取可分配员工精简列表（任意员工可用，用于"分配 Sales"）
+  getAssignableEmployees: () => {
+    return request('/employees/assignable');
+  },
+
   // 获取当前员工信息
   getCurrentEmployee: () => {
     return request('/employees/me/info');

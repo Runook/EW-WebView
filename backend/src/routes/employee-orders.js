@@ -321,7 +321,15 @@ router.put('/:id', auth, requireEmployee, async (req, res) => {
 router.delete('/:id', auth, requireEmployee, async (req, res) => {
   try {
     const { id } = req.params;
-    
+
+    // 仅 admin 角色可删除订单
+    if (req.user.employeeRole !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: '只有管理员可以删除订单'
+      });
+    }
+
     // 检查权限：能删除所有还是只能删除自己的
     const canDeleteAll = await Employee.hasPermission(req.user.id, 'order.delete.all');
     

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { orderApi, truckContactApi, guestQuoteApi, orderLoadApi, sourcingChannelApi } from '../config/employeeApi';
+import { orderApi, truckContactApi, guestQuoteApi, orderLoadApi, sourcingChannelApi, employeeApi } from '../config/employeeApi';
 import EditableCell from '../components/EditableCell';
 import CompanyEditableCell from '../components/CompanyEditableCell';
 import ConfirmOrderModal from '../components/ConfirmOrderModal';
@@ -30,6 +30,7 @@ const BrokerOrdersNew = () => {
   });
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [salesList, setSalesList] = useState([]);
   
   // 文档生成器状态
   const [showDocGenerator, setShowDocGenerator] = useState(false);
@@ -202,6 +203,13 @@ const BrokerOrdersNew = () => {
     }).catch(() => {});
   }, []);
 
+  // 加载可分配的员工列表（用于"分配 Sales"下拉）
+  useEffect(() => {
+    employeeApi.getAssignableEmployees().then(res => {
+      if (res.success) setSalesList(res.data || []);
+    }).catch(() => {});
+  }, []);
+
   const handleImportGuest = async (sessionId) => {
     if (!window.confirm('确定将此客人报价导入报价单？')) return;
     try {
@@ -321,6 +329,8 @@ const BrokerOrdersNew = () => {
 
         await orderApi.updateOrder(selectedOrder.id, {
           quote_date: getNYDate(),
+          // 分配的 Sales（被分配者成为该订单的操作员工）
+          ...(formData.assigned_sales_id ? { assigned_to: parseInt(formData.assigned_sales_id) } : {}),
           truck_payment: truckPayment,
           truck_reference_price: formData.truck_reference_price ? parseFloat(formData.truck_reference_price) : null,
           profit: profit,
@@ -1669,7 +1679,7 @@ const BrokerOrdersNew = () => {
                       </td>
                       <td>
                         {currentStatus === 'quote' && (order.creator_info?.name || '-')}
-                        {currentStatus === 'ordered' && (order.confirmer_info?.name || order.assignee_info?.name || '-')}
+                        {currentStatus === 'ordered' && (order.assignee_info?.name || order.confirmer_info?.name || '-')}
                         {currentStatus === 'completed' && (order.completer_info?.name || '-')}
                         {currentStatus === 'cancelled' && (order.canceller_info?.name || '-')}
                         {currentStatus === 'claim' && (order.assignee_info?.name || order.creator_info?.name || '-')}
@@ -1702,23 +1712,25 @@ const BrokerOrdersNew = () => {
                             >
                               <MapIcon size={13} strokeWidth={2.2} />
                             </button>
-                            <button
-                              className="btn-quote-icon btn-quote-delete"
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                if (!window.confirm(`确定要删除 ${order.order_number} 吗？`)) return;
-                                try {
-                                  await orderApi.deleteOrder(order.id);
-                                  loadOrders();
-                                } catch (err) {
-                                  alert('删除失败: ' + err.message);
-                                }
-                              }}
-                              title="删除订单"
-                              aria-label="删除"
-                            >
-                              <Trash2 size={13} strokeWidth={2.2} />
-                            </button>
+                            {user?.employeeRole === 'admin' && (
+                              <button
+                                className="btn-quote-icon btn-quote-delete"
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  if (!window.confirm(`确定要删除 ${order.order_number} 吗？`)) return;
+                                  try {
+                                    await orderApi.deleteOrder(order.id);
+                                    loadOrders();
+                                  } catch (err) {
+                                    alert('删除失败: ' + err.message);
+                                  }
+                                }}
+                                title="删除订单"
+                                aria-label="删除"
+                              >
+                                <Trash2 size={13} strokeWidth={2.2} />
+                              </button>
+                            )}
                           </div>
                         ) : order.status === 'ordered' ? (
                           <div className="ordered-actions">
@@ -1942,6 +1954,43 @@ const BrokerOrdersNew = () => {
                                   </div>
                                 </div>
                               </div>
+
+                              {/* 收货人信息（AI 解析时自动填入） */}
+                              <div className="recipient-row">
+                                <div className="address-field-small recipient-field">
+                                  <label>收货人</label>
+                                  <EditableCell
+                                    value={order.recipient_name}
+                                    orderId={order.id}
+                                    field="recipient_name"
+                                    type="text"
+                                    onSave={handleCellUpdate}
+                                    formatDisplay={(v) => v || '-'}
+                                  />
+                                </div>
+                                <div className="address-field-small recipient-field">
+                                  <label>收货人电话</label>
+                                  <EditableCell
+                                    value={order.recipient_phone}
+                                    orderId={order.id}
+                                    field="recipient_phone"
+                                    type="text"
+                                    onSave={handleCellUpdate}
+                                    formatDisplay={(v) => v || '-'}
+                                  />
+                                </div>
+                                <div className="address-field-small recipient-field">
+                                  <label>收货人邮箱</label>
+                                  <EditableCell
+                                    value={order.recipient_email}
+                                    orderId={order.id}
+                                    field="recipient_email"
+                                    type="text"
+                                    onSave={handleCellUpdate}
+                                    formatDisplay={(v) => v || '-'}
+                                  />
+                                </div>
+                              </div>
                             </div>
 
                             {/* === 2. 货物明细 === */}
@@ -2045,42 +2094,6 @@ const BrokerOrdersNew = () => {
                                 </div>
                               </div>
                             )}
-
-                            {/* Carrier Quotes from custom_fields */}
-                            {(() => {
-                              try {
-                                const cf = typeof order.custom_fields === 'string' ? JSON.parse(order.custom_fields) : order.custom_fields;
-                                const cq = cf?.carrier_quotes;
-                                if (!cq || cq.length === 0) return null;
-                                return (
-                                  <div style={{ marginBottom: 16, padding: '10px 14px', background: '#fffbeb', borderRadius: 8, border: '1px solid #fde68a' }}>
-                                    <h4 style={{ margin: '0 0 8px', fontSize: '0.9rem' }}>Carrier Quotes ({cq.length})</h4>
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                                      <thead>
-                                        <tr style={{ background: '#fef3c7' }}>
-                                          <th style={{ padding: '4px 8px', textAlign: 'left', borderBottom: '1px solid #fde68a' }}>Carrier</th>
-                                          <th style={{ padding: '4px 8px', textAlign: 'center', borderBottom: '1px solid #fde68a' }}>Price</th>
-                                          <th style={{ padding: '4px 8px', textAlign: 'center', borderBottom: '1px solid #fde68a' }}>Transit</th>
-                                          <th style={{ padding: '4px 8px', textAlign: 'left', borderBottom: '1px solid #fde68a' }}>Service</th>
-                                          <th style={{ padding: '4px 8px', textAlign: 'center', borderBottom: '1px solid #fde68a' }}>Guaranteed</th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {cq.sort((a, b) => (a.price || Infinity) - (b.price || Infinity)).map((q, idx) => (
-                                          <tr key={idx} style={{ borderBottom: '1px solid #fef3c7', background: idx === 0 ? '#f0fdf4' : 'transparent' }}>
-                                            <td style={{ padding: '4px 8px', fontWeight: idx === 0 ? 600 : 400 }}>{q.carrier || '—'}</td>
-                                            <td style={{ padding: '4px 8px', textAlign: 'center', fontWeight: 600, color: idx === 0 ? '#16a34a' : '#333' }}>${Number(q.price || 0).toFixed(2)}</td>
-                                            <td style={{ padding: '4px 8px', textAlign: 'center' }}>{q.transitDays || '—'}</td>
-                                            <td style={{ padding: '4px 8px', fontSize: '0.75rem' }}>{q.serviceType || '—'}</td>
-                                            <td style={{ padding: '4px 8px', textAlign: 'center' }}>{q.isGuaranteed ? '✓' : '—'}</td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                );
-                              } catch { return null; }
-                            })()}
 
                             {/* Order Loads Panel */}
                             <div style={{ marginBottom: 16 }}>
@@ -2218,22 +2231,88 @@ const BrokerOrdersNew = () => {
                                 <div className="group-label">平台比价</div>
                                 <div className="group-fields">
                                   <div className="pricing-field">
-                                    <label>TQL Low 1</label>
+                                    <label>Quote#</label>
                                     <EditableCell
-                                      value={order.tql_price_1}
+                                      value={order.quote_no}
                                       orderId={order.id}
-                                      field="tql_price_1"
+                                      field="quote_no"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => v || '-'}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>Priority1</label>
+                                    <EditableCell
+                                      value={order.priority_1}
+                                      orderId={order.id}
+                                      field="priority_1"
                                       type="number"
                                       onSave={handleCellUpdate}
                                       formatDisplay={(v) => formatCurrency(v)}
                                     />
                                   </div>
                                   <div className="pricing-field">
-                                    <label>TQL Low 2</label>
+                                    <label>Quote Company1</label>
                                     <EditableCell
-                                      value={order.tql_price_2}
+                                      value={order.quote_company_1}
                                       orderId={order.id}
-                                      field="tql_price_2"
+                                      field="quote_company_1"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => v || '-'}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>Company1 Price</label>
+                                    <EditableCell
+                                      value={order.quote_company_1_price}
+                                      orderId={order.id}
+                                      field="quote_company_1_price"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>Quote Company2</label>
+                                    <EditableCell
+                                      value={order.quote_company_2}
+                                      orderId={order.id}
+                                      field="quote_company_2"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => v || '-'}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>Company2 Price</label>
+                                    <EditableCell
+                                      value={order.quote_company_2_price}
+                                      orderId={order.id}
+                                      field="quote_company_2_price"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>Quote Company3</label>
+                                    <EditableCell
+                                      value={order.quote_company_3}
+                                      orderId={order.id}
+                                      field="quote_company_3"
+                                      type="text"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => v || '-'}
+                                    />
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>Company3 Price</label>
+                                    <EditableCell
+                                      value={order.quote_company_3_price}
+                                      orderId={order.id}
+                                      field="quote_company_3_price"
                                       type="number"
                                       onSave={handleCellUpdate}
                                       formatDisplay={(v) => formatCurrency(v)}
@@ -2431,6 +2510,42 @@ const BrokerOrdersNew = () => {
                               </div>
                             )}
 
+                            {/* Carrier Quotes from custom_fields — 放在最后 */}
+                            {(() => {
+                              try {
+                                const cf = typeof order.custom_fields === 'string' ? JSON.parse(order.custom_fields) : order.custom_fields;
+                                const cq = cf?.carrier_quotes;
+                                if (!cq || cq.length === 0) return null;
+                                return (
+                                  <div style={{ marginBottom: 0, padding: '10px 14px', background: '#fffbeb', borderRadius: 8, border: '1px solid #fde68a' }}>
+                                    <h4 style={{ margin: '0 0 8px', fontSize: '0.9rem' }}>Carrier Quotes ({cq.length})</h4>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                                      <thead>
+                                        <tr style={{ background: '#fef3c7' }}>
+                                          <th style={{ padding: '4px 8px', textAlign: 'left', borderBottom: '1px solid #fde68a' }}>Carrier</th>
+                                          <th style={{ padding: '4px 8px', textAlign: 'center', borderBottom: '1px solid #fde68a' }}>Price</th>
+                                          <th style={{ padding: '4px 8px', textAlign: 'center', borderBottom: '1px solid #fde68a' }}>Transit</th>
+                                          <th style={{ padding: '4px 8px', textAlign: 'left', borderBottom: '1px solid #fde68a' }}>Service</th>
+                                          <th style={{ padding: '4px 8px', textAlign: 'center', borderBottom: '1px solid #fde68a' }}>Guaranteed</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {cq.sort((a, b) => (a.price || Infinity) - (b.price || Infinity)).map((q, idx) => (
+                                          <tr key={idx} style={{ borderBottom: '1px solid #fef3c7', background: idx === 0 ? '#f0fdf4' : 'transparent' }}>
+                                            <td style={{ padding: '4px 8px', fontWeight: idx === 0 ? 600 : 400 }}>{q.carrier || '—'}</td>
+                                            <td style={{ padding: '4px 8px', textAlign: 'center', fontWeight: 600, color: idx === 0 ? '#16a34a' : '#333' }}>${Number(q.price || 0).toFixed(2)}</td>
+                                            <td style={{ padding: '4px 8px', textAlign: 'center' }}>{q.transitDays || '—'}</td>
+                                            <td style={{ padding: '4px 8px', fontSize: '0.75rem' }}>{q.serviceType || '—'}</td>
+                                            <td style={{ padding: '4px 8px', textAlign: 'center' }}>{q.isGuaranteed ? '✓' : '—'}</td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                );
+                              } catch { return null; }
+                            })()}
+
                           </div>
                         </td>
                       </tr>
@@ -2459,6 +2574,8 @@ const BrokerOrdersNew = () => {
       {showConfirmModal && selectedOrder && (
         <ConfirmOrderModal
           order={selectedOrder}
+          salesList={salesList}
+          defaultSalesId={selectedOrder?.assigned_to || selectedOrder?.created_by || ''}
           onClose={() => {
             setShowConfirmModal(false);
             setSelectedOrder(null);

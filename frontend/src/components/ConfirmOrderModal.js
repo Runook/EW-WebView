@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { truckContactApi } from '../config/employeeApi';
 import './ConfirmOrderModal.css';
 
-const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
+const ConfirmOrderModal = ({ order, onClose, onConfirm, salesList = [], defaultSalesId = '' }) => {
   const [formData, setFormData] = useState({
+    assigned_sales_id: defaultSalesId ? String(defaultSalesId) : '',
     truck_payment: '',
     truck_reference_price: order?.truck_reference_price || '',
     mc_number: '',
@@ -102,14 +103,15 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
   };
 
   const validate = () => {
+    // 卡车信息均为选填：点击"确认下单"后直接进入已下单，可稍后补填。
+    // 仅"分配 Sales"必选（下单后该 Sales 即为操作员工），以及价格格式校验。
     const newErrors = {};
-    if (!formData.truck_payment || formData.truck_payment.trim() === '') newErrors.truck_payment = '付卡车价格不能为空';
-    else if (isNaN(parseFloat(formData.truck_payment))) newErrors.truck_payment = '请输入有效的数字';
-    if (!formData.mc_number?.trim()) newErrors.mc_number = 'MC# 不能为空';
-    if (!formData.dot_number?.trim()) newErrors.dot_number = 'DOT# 不能为空';
-    if (!formData.truck_company_name?.trim()) newErrors.truck_company_name = '卡车公司名不能为空';
-    if (!formData.truck_contact?.trim()) newErrors.truck_contact = '公司联络方式不能为空';
-    if (!formData.carrier_email?.trim()) newErrors.carrier_email = 'Carrier Email 不能为空';
+    if (!formData.assigned_sales_id) {
+      newErrors.assigned_sales_id = '请选择负责的 Sales';
+    }
+    if (formData.truck_payment && formData.truck_payment.trim() !== '' && isNaN(parseFloat(formData.truck_payment))) {
+      newErrors.truck_payment = '请输入有效的数字';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -164,10 +166,35 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* Carrier Info — required */}
+            {/* 分配 Sales — 下单后该订单的操作员工 */}
             <div className="form-section">
               <div className="form-section-header">
-                <h3>承运商信息 <span className="required">*必填</span></h3>
+                <h3>分配 Sales <span className="required">*</span></h3>
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>负责 Sales（操作员工）</label>
+                  <select
+                    value={formData.assigned_sales_id}
+                    onChange={(e) => handleChange('assigned_sales_id', e.target.value)}
+                    className={errors.assigned_sales_id ? 'error' : ''}
+                  >
+                    <option value="">请选择 Sales</option>
+                    {salesList.map((s) => (
+                      <option key={s.id} value={String(s.id)}>
+                        {s.name}{s.employee_role ? ` (${s.employee_role})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.assigned_sales_id && <span className="error-message">{errors.assigned_sales_id}</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* Carrier Info — 全部选填，可下单后补填 */}
+            <div className="form-section">
+              <div className="form-section-header">
+                <h3>承运商信息 <span className="optional">(选填，可稍后补填)</span></h3>
                 <div className="contact-book-actions">
                   <button type="button" className="btn-contact-book" onClick={() => setShowContactBook(!showContactBook)}>📒 联系簿</button>
                 </div>
@@ -196,7 +223,7 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>付卡车价格 <span className="required">*</span></label>
+                  <label>付卡车价格 <span className="optional">(选填)</span></label>
                   <input type="number" step="0.01" value={formData.truck_payment} onChange={(e) => handleChange('truck_payment', e.target.value)} placeholder="请输入付卡车价格" className={errors.truck_payment ? 'error' : ''} />
                   {errors.truck_payment && <span className="error-message">{errors.truck_payment}</span>}
                 </div>
@@ -208,13 +235,13 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
 
               <div className="form-row">
                 <div className="form-group autocomplete-wrapper">
-                  <label>MC# <span className="required">*</span></label>
+                  <label>MC# <span className="optional">(选填)</span></label>
                   <input type="text" value={formData.mc_number} onChange={(e) => handleChange('mc_number', e.target.value)} onFocus={() => setActiveField('mc_number')} placeholder="1234567" className={errors.mc_number ? 'error' : ''} onClick={(e) => e.stopPropagation()} />
                   {errors.mc_number && <span className="error-message">{errors.mc_number}</span>}
                   {renderSuggestions('mc_number')}
                 </div>
                 <div className="form-group autocomplete-wrapper">
-                  <label>DOT# <span className="required">*</span></label>
+                  <label>DOT# <span className="optional">(选填)</span></label>
                   <input type="text" value={formData.dot_number} onChange={(e) => handleChange('dot_number', e.target.value)} onFocus={() => setActiveField('dot_number')} placeholder="7654321" className={errors.dot_number ? 'error' : ''} onClick={(e) => e.stopPropagation()} />
                   {errors.dot_number && <span className="error-message">{errors.dot_number}</span>}
                   {renderSuggestions('dot_number')}
@@ -223,13 +250,13 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
 
               <div className="form-row">
                 <div className="form-group autocomplete-wrapper">
-                  <label>卡车公司名 <span className="required">*</span></label>
+                  <label>卡车公司名 <span className="optional">(选填)</span></label>
                   <input type="text" value={formData.truck_company_name} onChange={(e) => handleChange('truck_company_name', e.target.value)} onFocus={() => setActiveField('truck_company_name')} placeholder="请输入卡车公司名" className={errors.truck_company_name ? 'error' : ''} onClick={(e) => e.stopPropagation()} />
                   {errors.truck_company_name && <span className="error-message">{errors.truck_company_name}</span>}
                   {renderSuggestions('truck_company_name')}
                 </div>
                 <div className="form-group autocomplete-wrapper">
-                  <label>公司联络方式 <span className="required">*</span></label>
+                  <label>公司联络方式 <span className="optional">(选填)</span></label>
                   <input type="text" value={formData.truck_contact} onChange={(e) => handleChange('truck_contact', e.target.value)} onFocus={() => setActiveField('truck_contact')} placeholder="1234567890" className={errors.truck_contact ? 'error' : ''} onClick={(e) => e.stopPropagation()} />
                   {errors.truck_contact && <span className="error-message">{errors.truck_contact}</span>}
                   {renderSuggestions('truck_contact')}
@@ -238,7 +265,7 @@ const ConfirmOrderModal = ({ order, onClose, onConfirm }) => {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Carrier Email <span className="required">*</span></label>
+                  <label>Carrier Email <span className="optional">(选填)</span></label>
                   <input type="text" value={formData.carrier_email} onChange={(e) => handleChange('carrier_email', e.target.value)} placeholder="carrier@company.com" className={errors.carrier_email ? 'error' : ''} />
                   {errors.carrier_email && <span className="error-message">{errors.carrier_email}</span>}
                 </div>

@@ -225,6 +225,15 @@ SECTION 6: ADDRESS RULES
 Extract destination data (邮编/城市/详细地址) when present in the row.
 If origin is not in the document or filename, leave origin fields as null — the employee will fill it in manually.
 
+COMPANY vs RECIPIENT — CRITICAL DISTINCTION:
+- companyName = the consignee's BUSINESS/COMPANY name (公司名/商号/单位名). Examples: "ABC Trading LLC", "Sunrise Furniture Inc", "美中国际物流", "纽约华人超市".
+  Signals it's a company: 公司/有限公司/Inc/LLC/Corp/Ltd/贸易/物流/超市/商行/工厂/仓 in the text, OR a 收件公司/公司名/Company column.
+- recipientName = the consignee's CONTACT PERSON (人名). Examples: "张伟", "John Smith", "李先生".
+  Signals it's a person: 收件人/联系人/Attn/Contact column, a personal name with no business words, optionally a 先生/女士/Mr/Ms title.
+- If a row has BOTH a company and a person, put the company in companyName and the person in recipientName.
+- If a row has ONLY a person name (no business name), set companyName=null and put the person in recipientName. Do NOT copy the person name into companyName.
+- recipientEmail: extract any email associated with the consignee (邮箱/Email column or inline).
+
 ══════════════════════════════════════════════════
 SECTION 7: OUTPUT
 ══════════════════════════════════════════════════
@@ -245,10 +254,11 @@ OUTPUT (strict JSON only, no markdown, no code fences):
       "destinationState": "2-letter US state code",
       "destinationZip": "5-digit string",
       "destinationLocationType": "commercial or residential",
-      "recipientName": "string or null",
-      "recipientPhone": "string or null",
+      "recipientName": "consignee CONTACT PERSON full name (人名) or null — NEVER put a company/business name here",
+      "recipientPhone": "consignee phone number or null",
+      "recipientEmail": "consignee email address or null",
       "recipientAddress": "full street address or null",
-      "companyName": "string or null",
+      "companyName": "consignee BUSINESS/COMPANY name (公司名/商号) or null — e.g. 'ABC Trading LLC', '美中物流'. NEVER put a person's name here. If only a person name is present and no business name, leave companyName null.",
       "items": [
         {
           "description": "item description with pallet info",

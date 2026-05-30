@@ -292,6 +292,17 @@
   overflow: visible;
   position: relative;
   max-width: 180px;
+  white-space: normal;
+  word-break: break-word;
+  vertical-align: top;
+}
+
+/* Company 名称过长时换行显示，不要把字挤成一团 */
+.orders-table td.td-company .editable-cell-display {
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
 }
 
 
@@ -590,6 +601,21 @@
   gap: 4px;
   min-width: 110px;
   flex: 1;
+}
+
+/* 收货人信息行 */
+.recipient-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.recipient-field {
+  flex: 1;
+  min-width: 130px;
 }
 
 .address-field-small > label {

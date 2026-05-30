@@ -535,6 +535,7 @@ class Order {
       // 过滤允许更新的字段
       const allowedFields = [
         'customer_name', 'customer_email', 'customer_phone',
+        'recipient_name', 'recipient_phone', 'recipient_email',
         'order_type', 'status', 'sub_status', 'priority',
         // Broker专用字段
         'quote_date', 'inquiry_company', 'ew_quote_number', 'shipment_number',
@@ -546,6 +547,11 @@ class Order {
         'customer_extra_fee', 'driver_extra_fee',
         'transport_distance', 'ideal_quote', 'truck_pallets', 
         'tql_price_1', 'tql_price_2', 'other_api_price',
+        // 平台比价（新版）：Priority1 + Quote# + 三家报价公司及价格
+        'priority_1', 'quote_no',
+        'quote_company_1', 'quote_company_1_price',
+        'quote_company_2', 'quote_company_2_price',
+        'quote_company_3', 'quote_company_3_price',
         'quote_reference', 'quote_ref_10', 'quote_ref_20', 'quote_ref_30',
         'truck_payment', 'truck_reference_price', 'driver_reference_price', 'mc_number', 'truck_company_name', 'truck_contact',
         'dot_number', 'carrier_email', 'carrier_address', 'driver_name', 'driver_phone',

@@ -254,7 +254,7 @@ const CargoAIDropZone = ({ onItemsParsed }) => {
             拖拽截图 / Excel / PDF 到此处，或粘贴 (⌘V / Ctrl+V) 截图
           </div>
           <div className="cargo-ai-fields">
-            支持识别：板数 · 重量 · 长 / 宽 / 高 · 体积 · CLASS（kg/cm 自动换算为 lbs/in）
+            支持识别：件数 · 重量 · 长 / 宽 / 高 · 体积 · CLASS（kg/cm 自动换算为 lbs/in）
           </div>
           <div className="cargo-ai-actions">
             <input
@@ -277,7 +277,7 @@ const CargoAIDropZone = ({ onItemsParsed }) => {
               <textarea
                 value={pasteText}
                 onChange={(e) => setPasteText(e.target.value)}
-                placeholder={'粘贴货物清单文字，例如：\n板数 重量(kg) 长x宽x高(cm)\n2  500  120x100x90\n1  300  90x80x60'}
+                placeholder={'粘贴货物清单文字，例如：\n件数 重量(kg) 长x宽x高(cm)\n2  500  120x100x90\n1  300  90x80x60'}
                 rows={4}
               />
               <button
@@ -499,7 +499,7 @@ const CargoItemsList = ({
             <thead>
               <tr>
                 <th className="th-num">#</th>
-                <th className="th-pallets">板数</th>
+                <th className="th-pallets">件数</th>
                 <th className="th-weight">重量 ({useMetric ? 'kg' : 'lbs'})</th>
                 <th className="th-dim">长 ({useMetric ? 'cm' : 'in'})</th>
                 <th className="th-dim">宽 ({useMetric ? 'cm' : 'in'})</th>
@@ -601,7 +601,7 @@ const CargoItemsList = ({
 
           <div className="cargo-totals">
             <div className="total-item">
-              <span className="total-label">总板数</span>
+              <span className="total-label">总件数</span>
               <span className="total-value">{totals.totalPallets}</span>
             </div>
             <div className="total-item">
@@ -615,6 +615,10 @@ const CargoItemsList = ({
             <div className="total-item">
               <span className="total-label">总体积</span>
               <span className="total-value">{totals.totalCubicFeet.toFixed(2)} ft³</span>
+            </div>
+            <div className="total-item">
+              <span className="total-label">总体积(m³)</span>
+              <span className="total-value">{(totals.totalCubicFeet * 0.0283168).toFixed(2)} m³</span>
             </div>
           </div>
         </>

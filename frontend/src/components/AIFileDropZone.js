@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Upload, Loader, CheckCircle, AlertCircle, X,
   MapPin, Package, Truck, Clock
@@ -80,6 +80,35 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
     e.target.value = '';
   };
 
+  // 支持直接粘贴：截图（图片）随时可贴；纯文本仅在焦点不在输入框时接管，避免干扰其它输入
+  useEffect(() => {
+    const onPaste = (e) => {
+      if (parsing || shipments.length > 0) return;
+      const cd = e.clipboardData;
+      if (!cd) return;
+
+      for (const it of cd.items || []) {
+        if (it.kind === 'file' && it.type.startsWith('image/')) {
+          const file = it.getAsFile();
+          if (file) { e.preventDefault(); handleFile(file); return; }
+        }
+      }
+
+      const ae = document.activeElement;
+      const inEditable = ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.isContentEditable);
+      if (inEditable) return;
+
+      const text = cd.getData('text/plain');
+      if (text && text.trim().length > 3) {
+        e.preventDefault();
+        const f = new File([text], 'pasted.txt', { type: 'text/plain' });
+        handleFile(f);
+      }
+    };
+    document.addEventListener('paste', onPaste);
+    return () => document.removeEventListener('paste', onPaste);
+  }, [parsing, shipments.length, handleFile]);
+
   const updateShipment = (idx, field, value) => {
     setShipments(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s));
   };
@@ -115,6 +144,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
         company_name: s.companyName || null,
         recipient_name: s.recipientName,
         phone: s.recipientPhone,
+        email: s.recipientEmail || null,
         address: s.recipientAddress,
         address_type: s.destinationLocationType === 'residential' ? 'Residential' : 'Commercial',
         cargo_value: s.cargoValue,
@@ -265,7 +295,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
           <Upload size={32} className="dropzone-icon" />
           <div className="dropzone-title">AI 智能解析询价文件</div>
           <div className="dropzone-hint">
-            拖拽 PDF / Excel / 图片 到此处，或点击上传
+            拖拽 PDF / Excel / 图片 到此处，点击上传，或直接粘贴 (⌘V / Ctrl+V) 截图
           </div>
           <div className="dropzone-formats">
             支持格式: PDF, Excel (.xlsx/.xls), 图片 (PNG/JPG), CSV, TXT
@@ -314,6 +344,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
               <div className="card-header">
                 <span className="card-index">#{idx + 1}</span>
                 {s.trackingNumber && <span className="card-tracking">{s.trackingNumber}</span>}
+                {s.companyName && <span className="card-company">🏢 {s.companyName}</span>}
                 <span className="card-desc">{s.cargoDescription || '未知货物'}</span>
                 <div className="card-header-actions">
                   <button
@@ -363,6 +394,10 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
                   </div>
                   <div className="field-row">
                     <div className="field-group">
+                      <label>公司 (Company)</label>
+                      <input value={s.companyName || ''} onChange={e => updateShipment(idx, 'companyName', e.target.value)} placeholder="公司名 / Company" />
+                    </div>
+                    <div className="field-group">
                       <label>地址类型</label>
                       <select value={s.destinationLocationType || 'commercial'} onChange={e => updateShipment(idx, 'destinationLocationType', e.target.value)}>
                         <option value="commercial">Commercial</option>
@@ -370,22 +405,30 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
                         <option value="limited_access">Limited Access</option>
                       </select>
                     </div>
+                  </div>
+                  <div className="field-row">
                     <div className="field-group">
-                      <label>收件人</label>
-                      <input value={s.recipientName || ''} onChange={e => updateShipment(idx, 'recipientName', e.target.value)} placeholder="Name" />
+                      <label>收件人 (人名)</label>
+                      <input value={s.recipientName || ''} onChange={e => updateShipment(idx, 'recipientName', e.target.value)} placeholder="联系人姓名" />
                     </div>
                     <div className="field-group">
                       <label>电话</label>
                       <input value={s.recipientPhone || ''} onChange={e => updateShipment(idx, 'recipientPhone', e.target.value)} placeholder="Phone" />
+                    </div>
+                    <div className="field-group">
+                      <label>邮箱</label>
+                      <input value={s.recipientEmail || ''} onChange={e => updateShipment(idx, 'recipientEmail', e.target.value)} placeholder="Email" />
                     </div>
                   </div>
                 </div>
 
                 {/* Items */}
                 <div className="card-section">
-                  <div className="section-label"><Package size={13} /> 货物明细</div>
+                  <div className="section-label"><Package size={13} /> 货物明细 ({s.items.length})</div>
+                  <div className="ai-items-scroll">
                   {s.items.map((item, ii) => (
                     <div key={ii} className="item-row">
+                      <div className="item-index">#{ii + 1}</div>
                       <div className="field-group">
                         <label>Weight (lbs)</label>
                         <input type="number" value={item.weight || ''} onChange={e => updateItem(idx, ii, 'weight', e.target.value)} />
@@ -412,6 +455,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
                       </div>
                     </div>
                   ))}
+                  </div>
                 </div>
 
                 {/* Notes */}

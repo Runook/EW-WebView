@@ -102,11 +102,20 @@ async function batchCreateOrders(items, createdBy) {
       }));
       const dimensionsList = JSON.stringify(dimensionsListArr);
 
-      // 把公司名同步到 customers 表（找不到就自动新建），不影响本事务。
+      // 公司名解析：把 AI 识别到的公司名（或收货人名）尝试匹配到 customer list。
+      //   - 命中客户 → 用客户列表里的规范公司名
+      //   - 没命中 → 直接用 AI 识别的公司名（毫不相关时就放进 Company）
+      // 注意：收货人是"人名"，绝不放进 Company；仅当没有公司名时才用人名去碰运气匹配客户。
+      const matched = await Customer.matchByName(item.company_name || item.recipient_name);
+      const resolvedCompany = matched
+        ? matched.company_name
+        : (item.company_name || null);
+
+      // 把公司名同步到 customers 表（找不到就自动新建）。
       // 同上：不写 customer_id 到订单，employee_orders.customer_id 的 FK
       // 指向了 users 表（历史遗留），写 customers.id 会 FK 失败。
-      if (item.company_name) {
-        await Customer.ensureByName(item.company_name, {
+      if (resolvedCompany && !matched) {
+        await Customer.ensureByName(resolvedCompany, {
           contact_person: item.recipient_name || null,
           contact_email: item.email || null,
           contact_phone: item.phone || null,
@@ -115,15 +124,20 @@ async function batchCreateOrders(items, createdBy) {
 
       const insertData = {
         order_number: orderNumber,
-        customer_name: item.recipient_name || 'AI Import',
-        customer_email: item.email || null,
-        customer_phone: item.phone || null,
+        // customer_name 作为 Company 列的兜底显示，存公司名（绝不存收货人名）
+        customer_name: resolvedCompany || 'AI Import',
+        customer_email: matched?.contact_email || null,
+        customer_phone: matched?.contact_phone || null,
+        // 收货人信息单独存，展示在"详细地址"区
+        recipient_name: item.recipient_name || null,
+        recipient_phone: item.phone || null,
+        recipient_email: item.email || null,
         order_type: 'land_freight',
         status: 'quote',
         priority: 'normal',
         cargo_description: item.product_name_en || item.product_name_cn || '',
         quote_date: nyDate,
-        inquiry_company: item.company_name || null,
+        inquiry_company: resolvedCompany || null,
         ew_quote_number: item.tracking_number || null,
         shipment_number: item.tracking_number || null,
         cargo_description_detailed: [
