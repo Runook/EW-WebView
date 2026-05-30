@@ -19,6 +19,25 @@
   font-weight: 400;
 }
 
+/* AI 识别待确认：灰色，提示员工点击/编辑确认后转黑 */
+.editable-cell-display.editable-cell-tentative {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.editable-cell-display.editable-cell-tentative .tentative-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  color: #b45309;
+  background: #fef3c7;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
 .editable-input {
   width: 100%;
   padding: 4px 8px;

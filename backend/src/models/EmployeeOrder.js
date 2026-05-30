@@ -538,7 +538,7 @@ class Order {
         'recipient_name', 'recipient_phone', 'recipient_email',
         'order_type', 'status', 'sub_status', 'priority',
         // Broker专用字段
-        'quote_date', 'inquiry_company', 'ew_quote_number', 'shipment_number',
+        'quote_date', 'inquiry_company', 'inquiry_company_confirmed', 'ew_quote_number', 'shipment_number',
         'cargo_type', 'cargo_description_detailed', 'weight_list', 'total_weight_lbs',
         'dimensions_list', 'total_volume', 'cargo_value', 'address_type',
         'ew_quote_price', 'actual_pallets', 'total_area_pallets', 'total_dat', 'driver_payment', 'truck_size',

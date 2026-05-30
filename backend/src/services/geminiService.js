@@ -225,13 +225,23 @@ SECTION 6: ADDRESS RULES
 Extract destination data (邮编/城市/详细地址) when present in the row.
 If origin is not in the document or filename, leave origin fields as null — the employee will fill it in manually.
 
-COMPANY vs RECIPIENT — CRITICAL DISTINCTION:
-- companyName = the consignee's BUSINESS/COMPANY name (公司名/商号/单位名). Examples: "ABC Trading LLC", "Sunrise Furniture Inc", "美中国际物流", "纽约华人超市".
-  Signals it's a company: 公司/有限公司/Inc/LLC/Corp/Ltd/贸易/物流/超市/商行/工厂/仓 in the text, OR a 收件公司/公司名/Company column.
-- recipientName = the consignee's CONTACT PERSON (人名). Examples: "张伟", "John Smith", "李先生".
-  Signals it's a person: 收件人/联系人/Attn/Contact column, a personal name with no business words, optionally a 先生/女士/Mr/Ms title.
-- If a row has BOTH a company and a person, put the company in companyName and the person in recipientName.
-- If a row has ONLY a person name (no business name), set companyName=null and put the person in recipientName. Do NOT copy the person name into companyName.
+THREE DISTINCT PARTIES — DO NOT CONFUSE THEM:
+1. inquiryCompany = the QUOTE CUSTOMER (询价客户) — WHO is asking us for the quote. This is usually
+   the document sender / freight forwarder / the value under a 'Customer' / '客户' / '询价公司' /
+   '报价客户' / 'Quote Company' / 'Bill To' / 'Account' label, OR the company name in the file
+   title/header that is clearly the requester. This is NOT the delivery destination.
+   → Goes into the order's "Company" column. If no such field exists, set inquiryCompany=null
+     (do NOT guess it from the consignee). The employee will fill it in.
+2. companyName = the consignee DESTINATION business (收货公司) — the company AT THE DELIVERY ADDRESS.
+   Signals: 公司/有限公司/Inc/LLC/Corp/Ltd/贸易/物流/超市/商行/工厂/仓, OR a 收件公司/收货公司 column.
+   → This is RECIPIENT info, NOT the Company column.
+3. recipientName = the consignee CONTACT PERSON (收货人/人名). Examples: "张伟", "John Smith", "李先生".
+   Signals: 收件人/联系人/Attn/Contact column; a personal name with no business words; 先生/女士/Mr/Ms.
+
+Rules:
+- NEVER put the consignee (companyName) or a person (recipientName) into inquiryCompany.
+- If only a destination company exists and there is no explicit quote-customer field, inquiryCompany=null.
+- If a row has BOTH a destination company and a person, fill companyName and recipientName respectively.
 - recipientEmail: extract any email associated with the consignee (邮箱/Email column or inline).
 
 ══════════════════════════════════════════════════
@@ -254,11 +264,12 @@ OUTPUT (strict JSON only, no markdown, no code fences):
       "destinationState": "2-letter US state code",
       "destinationZip": "5-digit string",
       "destinationLocationType": "commercial or residential",
-      "recipientName": "consignee CONTACT PERSON full name (人名) or null — NEVER put a company/business name here",
+      "inquiryCompany": "the QUOTE CUSTOMER / 询价客户公司 — the party REQUESTING the quote (the document sender / freight forwarder). Look for labels like 'Customer', '客户', '询价公司', '报价客户', 'Quote Company', 'Bill To', 'Account'. This is NOT the delivery destination. Null if no such customer field exists.",
+      "recipientName": "consignee CONTACT PERSON full name (收货人/人名) or null — NEVER put a company/business name here",
       "recipientPhone": "consignee phone number or null",
       "recipientEmail": "consignee email address or null",
       "recipientAddress": "full street address or null",
-      "companyName": "consignee BUSINESS/COMPANY name (公司名/商号) or null — e.g. 'ABC Trading LLC', '美中物流'. NEVER put a person's name here. If only a person name is present and no business name, leave companyName null.",
+      "companyName": "consignee DESTINATION business name (收货公司/目的地商号) or null — the company AT THE DELIVERY ADDRESS. This is the RECIPIENT's company, NOT the quote customer. NEVER put a person's name here.",
       "items": [
         {
           "description": "item description with pallet info",

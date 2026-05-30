@@ -653,12 +653,49 @@
   border-bottom: 2px solid #f1f5f9;
 }
 
-/* 报价分析顶部三组并排：输入参数 / 平台比价 / 报价参考 */
+/* 报价分析顶部两组并排：输入参数 / 报价参考（平台比价已独立成整行） */
 .ltl-pricing-card .pricing-top-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1.4fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
   gap: 10px;
   margin-bottom: 10px;
+}
+
+/* 平台比价：整行宽度，Priority1 母集为带边框子卡 */
+.pricing-group.pricing-platform {
+  align-items: flex-start;
+}
+
+.priority-subgroup {
+  grid-column: 1 / -1;
+  border: 1px solid #dbeafe;
+  border-left: 3px solid #2563eb;
+  border-radius: 6px;
+  padding: 8px 10px;
+  background: #f8fbff;
+  margin-bottom: 6px;
+}
+
+.priority-subgroup-title {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #2563eb;
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.priority-subgroup-title::before {
+  content: '▸';
+  font-size: 0.7rem;
+}
+
+.priority-subgroup-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px 10px;
 }
 
 .ltl-pricing-card .pricing-top-row .pricing-group {

@@ -50,6 +50,7 @@ function normalizeShipmentItems(rawItems) {
       destination_zip: String(item.destination_zip || '').padStart(5, '0'),
       destination_city: item.destination_city || null,
       destination_state: item.destination_state || null,
+      inquiry_company: item.inquiry_company || null,
       company_name: item.company_name || null,
       recipient_name: item.recipient_name || null,
       phone: item.phone || null,
@@ -102,18 +103,21 @@ async function batchCreateOrders(items, createdBy) {
       }));
       const dimensionsList = JSON.stringify(dimensionsListArr);
 
-      // 公司名解析：把 AI 识别到的公司名（或收货人名）尝试匹配到 customer list。
+      // Company 列 = 询价客户（谁来问价），而不是收货公司/收货人。
+      //   - 只用 AI 识别到的"询价客户"(inquiry_company) 去匹配 customer list
       //   - 命中客户 → 用客户列表里的规范公司名
-      //   - 没命中 → 直接用 AI 识别的公司名（毫不相关时就放进 Company）
-      // 注意：收货人是"人名"，绝不放进 Company；仅当没有公司名时才用人名去碰运气匹配客户。
-      const matched = await Customer.matchByName(item.company_name || item.recipient_name);
+      //   - 没命中 → 直接用 AI 识别的询价客户名
+      //   - AI 没识别到询价客户 → Company 留空，让员工填
+      // AI 填入的 Company 一律标记为"未确认"(灰色)，员工点击/编辑后才转为已确认(黑色)。
+      const matched = item.inquiry_company
+        ? await Customer.matchByName(item.inquiry_company)
+        : null;
       const resolvedCompany = matched
         ? matched.company_name
-        : (item.company_name || null);
+        : (item.inquiry_company || null);
+      const companyIsTentative = !!resolvedCompany; // AI 给的值，待员工确认
 
-      // 把公司名同步到 customers 表（找不到就自动新建）。
-      // 同上：不写 customer_id 到订单，employee_orders.customer_id 的 FK
-      // 指向了 users 表（历史遗留），写 customers.id 会 FK 失败。
+      // 把询价客户同步到 customers 表（命中的不必再建）。
       if (resolvedCompany && !matched) {
         await Customer.ensureByName(resolvedCompany, {
           contact_person: item.recipient_name || null,
@@ -124,20 +128,24 @@ async function batchCreateOrders(items, createdBy) {
 
       const insertData = {
         order_number: orderNumber,
-        // customer_name 作为 Company 列的兜底显示，存公司名（绝不存收货人名）
-        customer_name: resolvedCompany || 'AI Import',
+        // customer_name 作为 Company 列的兜底显示，存询价客户名（没有则留空 → 显示占位提示）
+        customer_name: resolvedCompany || '',
         customer_email: matched?.contact_email || null,
         customer_phone: matched?.contact_phone || null,
         // 收货人信息单独存，展示在"详细地址"区
         recipient_name: item.recipient_name || null,
         recipient_phone: item.phone || null,
         recipient_email: item.email || null,
+        // 收货公司（目的地商号）单独存，不进 Company
+        consignee_contact: item.company_name || null,
         order_type: 'land_freight',
         status: 'quote',
         priority: 'normal',
         cargo_description: item.product_name_en || item.product_name_cn || '',
         quote_date: nyDate,
         inquiry_company: resolvedCompany || null,
+        // 命中客户列表的视为已确认(黑色)；AI 自由识别的待确认(灰色)；无值则确认态
+        inquiry_company_confirmed: matched ? true : !companyIsTentative,
         ew_quote_number: item.tracking_number || null,
         shipment_number: item.tracking_number || null,
         cargo_description_detailed: [

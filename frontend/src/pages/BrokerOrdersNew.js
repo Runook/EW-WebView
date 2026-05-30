@@ -446,6 +446,27 @@ const BrokerOrdersNew = () => {
     }
   };
 
+  // Company 列保存：写入公司名的同时把"待确认(AI识别)"标记清除（转为已确认/黑色）
+  const handleCompanySave = async (orderId, field, newValue) => {
+    try {
+      const response = await orderApi.updateOrder(orderId, {
+        inquiry_company: newValue,
+        inquiry_company_confirmed: true
+      });
+      const updated = response.success ? (response.data || {}) : {};
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order.id === orderId
+            ? { ...order, inquiry_company: newValue, inquiry_company_confirmed: true, customer_name: newValue || order.customer_name, ...updated }
+            : order
+        )
+      );
+    } catch (error) {
+      console.error('❌ 保存公司名失败:', error);
+      throw error;
+    }
+  };
+
   // 单元格更新处理（带自动计算）
   const handleCellUpdateWithCalculation = async (orderId, field, newValue) => {
     try {
@@ -1541,7 +1562,8 @@ const BrokerOrdersNew = () => {
                         <CompanyEditableCell
                           value={order.inquiry_company || order.customer_name}
                           orderId={order.id}
-                          onSave={handleCellUpdate}
+                          tentative={order.inquiry_company_confirmed === false && !!(order.inquiry_company || order.customer_name)}
+                          onSave={handleCompanySave}
                         />
                       </td>
                       <td onClick={(e) => e.stopPropagation()}>
@@ -2228,115 +2250,6 @@ const BrokerOrdersNew = () => {
                               </div>
 
                               <div className="pricing-group">
-                                <div className="group-label">平台比价</div>
-                                <div className="group-fields">
-                                  <div className="pricing-field">
-                                    <label>Quote#</label>
-                                    <EditableCell
-                                      value={order.quote_no}
-                                      orderId={order.id}
-                                      field="quote_no"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                      formatDisplay={(v) => v || '-'}
-                                    />
-                                  </div>
-                                  <div className="pricing-field">
-                                    <label>Priority1</label>
-                                    <EditableCell
-                                      value={order.priority_1}
-                                      orderId={order.id}
-                                      field="priority_1"
-                                      type="number"
-                                      onSave={handleCellUpdate}
-                                      formatDisplay={(v) => formatCurrency(v)}
-                                    />
-                                  </div>
-                                  <div className="pricing-field">
-                                    <label>Quote Company1</label>
-                                    <EditableCell
-                                      value={order.quote_company_1}
-                                      orderId={order.id}
-                                      field="quote_company_1"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                      formatDisplay={(v) => v || '-'}
-                                    />
-                                  </div>
-                                  <div className="pricing-field">
-                                    <label>Company1 Price</label>
-                                    <EditableCell
-                                      value={order.quote_company_1_price}
-                                      orderId={order.id}
-                                      field="quote_company_1_price"
-                                      type="number"
-                                      onSave={handleCellUpdate}
-                                      formatDisplay={(v) => formatCurrency(v)}
-                                    />
-                                  </div>
-                                  <div className="pricing-field">
-                                    <label>Quote Company2</label>
-                                    <EditableCell
-                                      value={order.quote_company_2}
-                                      orderId={order.id}
-                                      field="quote_company_2"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                      formatDisplay={(v) => v || '-'}
-                                    />
-                                  </div>
-                                  <div className="pricing-field">
-                                    <label>Company2 Price</label>
-                                    <EditableCell
-                                      value={order.quote_company_2_price}
-                                      orderId={order.id}
-                                      field="quote_company_2_price"
-                                      type="number"
-                                      onSave={handleCellUpdate}
-                                      formatDisplay={(v) => formatCurrency(v)}
-                                    />
-                                  </div>
-                                  <div className="pricing-field">
-                                    <label>Quote Company3</label>
-                                    <EditableCell
-                                      value={order.quote_company_3}
-                                      orderId={order.id}
-                                      field="quote_company_3"
-                                      type="text"
-                                      onSave={handleCellUpdate}
-                                      formatDisplay={(v) => v || '-'}
-                                    />
-                                  </div>
-                                  <div className="pricing-field">
-                                    <label>Company3 Price</label>
-                                    <EditableCell
-                                      value={order.quote_company_3_price}
-                                      orderId={order.id}
-                                      field="quote_company_3_price"
-                                      type="number"
-                                      onSave={handleCellUpdate}
-                                      formatDisplay={(v) => formatCurrency(v)}
-                                    />
-                                  </div>
-                                  <div className="pricing-field">
-                                    <label>其他 API</label>
-                                    <span className="readonly-value">{formatCurrency(order.other_api_price)}</span>
-                                  </div>
-                                  <div className="pricing-field">
-                                    <label>理想报价</label>
-                                    <EditableCell
-                                      value={order.ideal_quote}
-                                      orderId={order.id}
-                                      field="ideal_quote"
-                                      type="number"
-                                      onSave={handleCellUpdate}
-                                      formatDisplay={(v) => formatCurrency(v)}
-                                    />
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="pricing-group">
                                 <div className="group-label">报价参考</div>
                                 <div className="group-fields">
                                   <div className="pricing-field highlight">
@@ -2359,6 +2272,110 @@ const BrokerOrdersNew = () => {
                               </div>
                               </div>
                               {/* /pricing-top-row */}
+
+                              {/* 平台比价：Priority1 为母集，Quote# / Quote Company 为其子集 */}
+                              <div className="pricing-group pricing-platform">
+                                <div className="group-label">平台比价</div>
+                                <div className="group-fields">
+                                  <div className="priority-subgroup">
+                                    <div className="priority-subgroup-title">Priority1</div>
+                                    <div className="priority-subgroup-fields">
+                                      <div className="pricing-field">
+                                        <label>Quote#</label>
+                                        <EditableCell
+                                          value={order.quote_no}
+                                          orderId={order.id}
+                                          field="quote_no"
+                                          type="text"
+                                          onSave={handleCellUpdate}
+                                          formatDisplay={(v) => v || '-'}
+                                        />
+                                      </div>
+                                      <div className="pricing-field">
+                                        <label>Quote Company1</label>
+                                        <EditableCell
+                                          value={order.quote_company_1}
+                                          orderId={order.id}
+                                          field="quote_company_1"
+                                          type="text"
+                                          onSave={handleCellUpdate}
+                                          formatDisplay={(v) => v || '-'}
+                                        />
+                                      </div>
+                                      <div className="pricing-field">
+                                        <label>Company1 Price</label>
+                                        <EditableCell
+                                          value={order.quote_company_1_price}
+                                          orderId={order.id}
+                                          field="quote_company_1_price"
+                                          type="number"
+                                          onSave={handleCellUpdate}
+                                          formatDisplay={(v) => formatCurrency(v)}
+                                        />
+                                      </div>
+                                      <div className="pricing-field">
+                                        <label>Quote Company2</label>
+                                        <EditableCell
+                                          value={order.quote_company_2}
+                                          orderId={order.id}
+                                          field="quote_company_2"
+                                          type="text"
+                                          onSave={handleCellUpdate}
+                                          formatDisplay={(v) => v || '-'}
+                                        />
+                                      </div>
+                                      <div className="pricing-field">
+                                        <label>Company2 Price</label>
+                                        <EditableCell
+                                          value={order.quote_company_2_price}
+                                          orderId={order.id}
+                                          field="quote_company_2_price"
+                                          type="number"
+                                          onSave={handleCellUpdate}
+                                          formatDisplay={(v) => formatCurrency(v)}
+                                        />
+                                      </div>
+                                      <div className="pricing-field">
+                                        <label>Quote Company3</label>
+                                        <EditableCell
+                                          value={order.quote_company_3}
+                                          orderId={order.id}
+                                          field="quote_company_3"
+                                          type="text"
+                                          onSave={handleCellUpdate}
+                                          formatDisplay={(v) => v || '-'}
+                                        />
+                                      </div>
+                                      <div className="pricing-field">
+                                        <label>Company3 Price</label>
+                                        <EditableCell
+                                          value={order.quote_company_3_price}
+                                          orderId={order.id}
+                                          field="quote_company_3_price"
+                                          type="number"
+                                          onSave={handleCellUpdate}
+                                          formatDisplay={(v) => formatCurrency(v)}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>其他 API</label>
+                                    <span className="readonly-value">{formatCurrency(order.other_api_price)}</span>
+                                  </div>
+                                  <div className="pricing-field">
+                                    <label>理想报价</label>
+                                    <EditableCell
+                                      value={order.ideal_quote}
+                                      orderId={order.id}
+                                      field="ideal_quote"
+                                      type="number"
+                                      onSave={handleCellUpdate}
+                                      formatDisplay={(v) => formatCurrency(v)}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
 
                               <div className="pricing-group pricing-actual">
                                 <div className="group-label">实际报价 & 利润</div>

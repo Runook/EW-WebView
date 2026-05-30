@@ -141,6 +141,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
         destination_state: s.destinationState,
         destination_zip: s.destinationZip,
         destination_country: 'US',
+        inquiry_company: s.inquiryCompany || null,
         company_name: s.companyName || null,
         recipient_name: s.recipientName,
         phone: s.recipientPhone,
@@ -344,7 +345,7 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
               <div className="card-header">
                 <span className="card-index">#{idx + 1}</span>
                 {s.trackingNumber && <span className="card-tracking">{s.trackingNumber}</span>}
-                {s.companyName && <span className="card-company">🏢 {s.companyName}</span>}
+                {s.inquiryCompany && <span className="card-company">客户: {s.inquiryCompany}</span>}
                 <span className="card-desc">{s.cargoDescription || '未知货物'}</span>
                 <div className="card-header-actions">
                   <button
@@ -394,8 +395,12 @@ const AIFileDropZone = ({ onOrdersCreated }) => {
                   </div>
                   <div className="field-row">
                     <div className="field-group">
-                      <label>公司 (Company)</label>
-                      <input value={s.companyName || ''} onChange={e => updateShipment(idx, 'companyName', e.target.value)} placeholder="公司名 / Company" />
+                      <label>询价客户 (Company)</label>
+                      <input value={s.inquiryCompany || ''} onChange={e => updateShipment(idx, 'inquiryCompany', e.target.value)} placeholder="谁来询价 / Customer（进 Company 列）" />
+                    </div>
+                    <div className="field-group">
+                      <label>收货公司</label>
+                      <input value={s.companyName || ''} onChange={e => updateShipment(idx, 'companyName', e.target.value)} placeholder="目的地收货公司" />
                     </div>
                     <div className="field-group">
                       <label>地址类型</label>
