@@ -305,6 +305,15 @@ router.put('/:id', auth, requireEmployee, async (req, res) => {
         details: error.details
       });
     }
+
+    // 订单已分配，无修改权限
+    if (error.code === 'ORDER_LOCKED') {
+      return res.status(403).json({
+        success: false,
+        code: 'ORDER_LOCKED',
+        message: error.message
+      });
+    }
     
     res.status(400).json({
       success: false,

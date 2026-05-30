@@ -446,6 +446,33 @@ const BrokerOrdersNew = () => {
     }
   };
 
+  // 当前登录员工标识 + 角色
+  const currentEmail = (user?.attributes?.email || user?.email || user?.username || '').toLowerCase();
+  const isAdmin = user?.employeeRole === 'admin';
+
+  // 是否有权修改某订单：
+  //  - 报价单阶段：所有员工开放
+  //  - 已下单及之后：仅被分配的 Sales 或 admin（未分配时回退创建人）
+  const canModifyOrder = (order) => {
+    if (!order) return false;
+    if (order.status === 'quote') return true;
+    if (isAdmin) return true;
+    const assigneeEmail = (order.assignee_info?.email || '').toLowerCase();
+    if (assigneeEmail) return assigneeEmail === currentEmail;
+    const creatorEmail = (order.creator_info?.email || '').toLowerCase();
+    return !!creatorEmail && creatorEmail === currentEmail;
+  };
+
+  // Admin 在"操作员工"列重新分配 Sales
+  const handleReassign = async (orderId, newAssigneeId) => {
+    try {
+      await orderApi.updateOrder(orderId, { assigned_to: newAssigneeId ? parseInt(newAssigneeId) : null });
+      await loadOrders();
+    } catch (error) {
+      alert('重新分配失败: ' + error.message);
+    }
+  };
+
   // Company 列保存：写入公司名的同时把"待确认(AI识别)"标记清除（转为已确认/黑色）
   const handleCompanySave = async (orderId, field, newValue) => {
     try {
@@ -1534,7 +1561,7 @@ const BrokerOrdersNew = () => {
                   <React.Fragment key={order.id}>
                     {/* 主行 */}
                     <tr 
-                      className={`order-row ${order.sub_status ? `sub-status-${order.sub_status}` : ''}`}
+                      className={`order-row ${order.sub_status ? `sub-status-${order.sub_status}` : ''} ${!canModifyOrder(order) ? 'order-locked' : ''}`}
                       data-order-id={order.id}
                       onClick={() => toggleRow(order.id)}
                     >
@@ -1700,14 +1727,33 @@ const BrokerOrdersNew = () => {
                         />
                       </td>
                       <td>
-                        {currentStatus === 'quote' && (order.creator_info?.name || '-')}
-                        {currentStatus === 'ordered' && (order.assignee_info?.name || order.confirmer_info?.name || '-')}
-                        {currentStatus === 'completed' && (order.completer_info?.name || '-')}
-                        {currentStatus === 'cancelled' && (order.canceller_info?.name || '-')}
-                        {currentStatus === 'claim' && (order.assignee_info?.name || order.creator_info?.name || '-')}
+                        {order.status === 'quote' ? (
+                          /* 报价单阶段：显示创建/操作人 */
+                          (order.creator_info?.name || '-')
+                        ) : isAdmin ? (
+                          /* 已下单及之后：Admin 可在此重新分配 Sales */
+                          <select
+                            className="reassign-select"
+                            value={order.assigned_to || ''}
+                            onClick={(e) => e.stopPropagation()}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onChange={(e) => { e.stopPropagation(); handleReassign(order.id, e.target.value); }}
+                            title="重新分配 Sales（仅管理员）"
+                          >
+                            <option value="">未分配</option>
+                            {salesList.map((s) => (
+                              <option key={s.id} value={String(s.id)}>{s.name}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          /* 非 Admin：仅显示被分配的 Sales，不可更改 */
+                          (order.assignee_info?.name || order.confirmer_info?.name || '-')
+                        )}
                       </td>
                       <td>
-                        {order.status === 'quote' ? (
+                        {!canModifyOrder(order) ? (
+                          <span className="locked-indicator" title="该订单已分配给其他 Sales，您没有修改权限">🔒 只读</span>
+                        ) : order.status === 'quote' ? (
                           <div className="quote-actions">
                             <button
                               className="btn-quote-icon btn-quote-confirm"
@@ -1877,7 +1923,7 @@ const BrokerOrdersNew = () => {
 
                     {/* 展开行（隐藏字段） */}
                     {expandedRow === order.id && (
-                      <tr className="expanded-row">
+                      <tr className={`expanded-row ${!canModifyOrder(order) ? 'order-locked' : ''}`}>
                         <td colSpan="100%">
                           <div className="expanded-content">
 
@@ -2032,7 +2078,7 @@ const BrokerOrdersNew = () => {
                                 );
                                 loadOrders();
                               }}
-                              readOnly={currentStatus === 'completed' || currentStatus === 'cancelled'}
+                              readOnly={!canModifyOrder(order) || currentStatus === 'completed' || currentStatus === 'cancelled'}
                             />
                             </div>
                             {/* /ltl-top-grid */}

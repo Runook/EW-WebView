@@ -1341,6 +1341,49 @@
   font-style: italic;
 }
 
+/* ===== 订单锁定（已分配给他人，无修改权限）===== */
+.locked-indicator {
+  display: inline-block;
+  font-size: 0.78rem;
+  color: #6b7280;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+/* 锁定行内：禁用所有可编辑单元格 / 下拉 / 货物明细的交互（后端同样强制校验） */
+.order-row.order-locked .editable-cell,
+.order-row.order-locked .editable-cell-display,
+.order-row.order-locked .sub-status-select,
+.order-row.order-locked .payment-status-select,
+.expanded-row.order-locked .editable-cell,
+.expanded-row.order-locked .editable-cell-display,
+.expanded-row.order-locked .cargo-items-list,
+.expanded-row.order-locked .sub-status-select,
+.expanded-row.order-locked select,
+.expanded-row.order-locked .priority-subgroup,
+.expanded-row.order-locked details {
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+/* 操作员工列的重新分配下拉（仅 admin 可见）*/
+.reassign-select {
+  max-width: 120px;
+  padding: 4px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+}
+.reassign-select:hover {
+  border-color: #3b82f6;
+}
+
 /* 已下单操作区域 */
 .ordered-actions {
   display: flex;

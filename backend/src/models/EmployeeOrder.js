@@ -467,6 +467,26 @@ class Order {
   }
   
   /**
+   * 权限守卫：订单一旦离开"报价单"阶段（已下单/已完成/已取消/索赔等），
+   * 只有被分配的 Sales（assigned_to）或 admin 可以修改/改状态；
+   * 未分配时回退到创建人。报价单阶段对所有员工开放。
+   * admin 额外拥有重新分配（修改 assigned_to）的权限。
+   */
+  static async assertOwnerOrAdmin(trx, existingOrder, userId) {
+    if (!existingOrder) throw new Error('订单不存在');
+    if (existingOrder.status === 'quote') return;
+    const u = await trx('users').select('employee_role').where('id', userId).first();
+    if (u && u.employee_role === 'admin') return;
+    const assigned = existingOrder.assigned_to;
+    const isOwner = assigned ? assigned === userId : existingOrder.created_by === userId;
+    if (!isOwner) {
+      const e = new Error('该订单已分配，只有被分配的 Sales 或管理员可以操作');
+      e.code = 'ORDER_LOCKED';
+      throw e;
+    }
+  }
+
+  /**
    * 更新订单
    * @param {number} orderId - 订单ID
    * @param {Object} updateData - 更新数据
@@ -494,41 +514,19 @@ class Order {
         .where('id', updatedBy)
         .first();
       
-      const isEmployee = user.employee_role === 'employee';
-      const isOwnOrder = existingOrder.created_by === updatedBy || existingOrder.assigned_to === updatedBy;
+      // 权限：报价单阶段对所有员工开放；一旦下单分配后，只有被分配的 Sales 或 admin 可改
+      // （含改状态/细节/重新分配）。其余人一律拒绝。未分配时回退创建人为 owner。
+      // 注意：下单时由确认人(创建人=owner)设置 assigned_to + 卡车信息，因此 owner 也可改 assigned_to；
+      // 前端只对 admin 暴露"重新分配"入口。
       const isQuote = existingOrder.status === 'quote';
-      
-      // 权限检查逻辑
-      if (isEmployee && !isQuote && !isOwnOrder && !changeOperator) {
-        // 员工编辑非报价单的其他人订单，需要确认更换操作员
-        const operator = await trx('users')
-          .select('first_name', 'last_name', 'email')
-          .where('id', existingOrder.created_by)
-          .first();
-        
-        const error = new Error('订单权限确认');
-        error.code = 'OPERATOR_CHANGE_REQUIRED';
-        error.details = {
-          orderId: orderId,
-          currentOperator: {
-            id: existingOrder.created_by,
-            name: `${operator?.first_name || ''} ${operator?.last_name || ''}`.trim(),
-            email: operator?.email
-          },
-          newOperator: {
-            id: updatedBy,
-            name: `${user.first_name || ''} ${user.last_name || ''}`.trim()
-          },
-          orderNumber: existingOrder.order_number,
-          status: existingOrder.status
-        };
-        throw error;
-      }
-      
-      // 如果不能编辑所有订单，检查权限
-      if (!canEditAll && !isQuote && !changeOperator) {
-        if (!isOwnOrder) {
-          throw new Error('订单不存在或无权限修改');
+      if (!isQuote) {
+        const isAdmin = user.employee_role === 'admin';
+        const assigned = existingOrder.assigned_to;
+        const isOwner = assigned ? assigned === updatedBy : existingOrder.created_by === updatedBy;
+        if (!isAdmin && !isOwner) {
+          const e = new Error('该订单已分配给其他 Sales，只有被分配人或管理员可以修改');
+          e.code = 'ORDER_LOCKED';
+          throw e;
         }
       }
       
@@ -1015,7 +1013,14 @@ class Order {
     
     try {
       const nyDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-      
+
+      // 权限：已下单订单只有被分配的 Sales 或 admin 可标记完成
+      const existing = await trx('employee_orders')
+        .where('id', orderId)
+        .where('is_deleted', false)
+        .first();
+      await this.assertOwnerOrAdmin(trx, existing, completedBy);
+
       const [order] = await trx('employee_orders')
         .where('id', orderId)
         .where('status', 'ordered')
@@ -1148,7 +1153,9 @@ class Order {
       if (!existingOrder) {
         throw new Error('只有已下单的订单可以更新子状态');
       }
-      
+
+      await this.assertOwnerOrAdmin(trx, existingOrder, updatedBy);
+
       const SUB_TO_WORKFLOW = {
         waiting_driver: 'carrier_sourcing',
         driver_found: 'pickup',
@@ -1204,6 +1211,8 @@ class Order {
       if (!existingOrder) {
         throw new Error('只有已下单的订单可以申请索赔');
       }
+
+      await this.assertOwnerOrAdmin(trx, existingOrder, requestedBy);
       
       const [order] = await trx('employee_orders')
         .where('id', orderId)
@@ -1306,7 +1315,9 @@ class Order {
       if (!existingOrder) {
         throw new Error('只有报价单或已下单的订单可以取消');
       }
-      
+
+      await this.assertOwnerOrAdmin(trx, existingOrder, cancelledBy);
+
       const [order] = await trx('employee_orders')
         .where('id', orderId)
         .update({
