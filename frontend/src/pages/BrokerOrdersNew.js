@@ -8,6 +8,7 @@ import ConfirmOrderModal from '../components/ConfirmOrderModal';
 import DocumentGenerator from '../components/DocumentGenerator';
 import InvoiceGenerator from '../components/InvoiceGenerator';
 import QuoteGenerator from '../components/QuoteGenerator';
+import DriverQuoteGenerator from '../components/DriverQuoteGenerator';
 import QBOSettings from '../components/QBOSettings';
 import CargoItemsList from '../components/CargoItemsList';
 import AIFileDropZone from '../components/AIFileDropZone';
@@ -38,6 +39,9 @@ const BrokerOrdersNew = () => {
   
   // 报价生成器状态
   const [showQuoteGenerator, setShowQuoteGenerator] = useState(false);
+
+  // 司机报价生成器状态
+  const [showDriverQuoteGenerator, setShowDriverQuoteGenerator] = useState(false);
   
   // Invoice 生成器状态
   const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
@@ -839,7 +843,8 @@ const BrokerOrdersNew = () => {
 
   // ========== 文档管理 ==========
   const DOC_TYPES = [
-    { key: 'quote', label: '报价' },
+    { key: 'quote', label: '客户报价' },
+    { key: 'driver_quote', label: '司机报价' },
     { key: 'bol', label: 'BOL' },
     { key: 'rc', label: 'RC' },
     { key: 'pod', label: 'POD' },
@@ -894,10 +899,12 @@ const BrokerOrdersNew = () => {
                   style={{ color: '#1565C0', cursor: 'pointer', textDecoration: 'underline', fontWeight: 500 }}
                   onClick={() => handleDocDownload(order.id, doc.id, doc.original_filename)}
                 >{dt.label}</span>
-                <span
-                  style={{ color: '#94a3b8', cursor: 'pointer', fontSize: 10 }}
-                  onClick={() => handleDocDelete(order.id, doc.id, dt.key)}
-                >x</span>
+                {isAdmin && (
+                  <span
+                    style={{ color: '#94a3b8', cursor: 'pointer', fontSize: 10 }}
+                    onClick={() => handleDocDelete(order.id, doc.id, dt.key)}
+                  >x</span>
+                )}
               </span>
             );
           }
@@ -1450,7 +1457,7 @@ const BrokerOrdersNew = () => {
             {loading ? '创建中...' : '+ 新建报价单'}
           </button>
 
-          {/* 报价单：批量生成报价 */}
+          {/* 报价单：批量生成客户报价 */}
           {currentStatus === 'quote' && (
             <button
               className="btn-header btn-quote-header"
@@ -1458,15 +1465,25 @@ const BrokerOrdersNew = () => {
                 e.stopPropagation();
                 setShowQuoteGenerator(true);
               }}
-              title="批量生成报价"
+              title="批量生成客户报价"
             >
-              📋 报价
+              📋 客户报价
             </button>
           )}
 
-          {/* 报价单 / 已下单：批量生成 BOL / RC 按钮 */}
-          {(currentStatus === 'quote' || currentStatus === 'ordered') && (
+          {/* 已下单：批量生成司机报价 / BOL / RC 按钮 */}
+          {currentStatus === 'ordered' && (
             <>
+              <button
+                className="btn-header btn-quote-header"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowDriverQuoteGenerator(true);
+                }}
+                title="批量生成司机报价"
+              >
+                🚚 司机报价
+              </button>
               <button
                 className="btn-header btn-bol-header"
                 onClick={(e) => {
@@ -2669,6 +2686,13 @@ const BrokerOrdersNew = () => {
       <QuoteGenerator
         isOpen={showQuoteGenerator}
         onClose={() => setShowQuoteGenerator(false)}
+        orders={orders}
+      />
+
+      {/* 司机报价生成器对话框 */}
+      <DriverQuoteGenerator
+        isOpen={showDriverQuoteGenerator}
+        onClose={() => setShowDriverQuoteGenerator(false)}
         orders={orders}
       />
 

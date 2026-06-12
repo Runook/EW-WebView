@@ -2,13 +2,13 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const { db } = require('../config/database');
-const { auth, requireEmployee } = require('../middleware/auth');
+const { auth, requireEmployee, requireEmployeeRole } = require('../middleware/auth');
 const { uploadToS3, deleteFromS3, getS3Stream, isS3Url } = require('../utils/s3Upload');
 const fs = require('fs');
 const router = express.Router();
 
 const VALID_DOC_TYPES = [
-  'quote', 'bol', 'rc', 'pod', 'customer_invoice', 'vendor_invoice',
+  'quote', 'driver_quote', 'bol', 'rc', 'pod', 'customer_invoice', 'vendor_invoice',
   'driver_id', 'vin_pic', 'coi', 'w9'
 ];
 
@@ -108,7 +108,7 @@ router.get('/:orderId/documents/:docId/download', auth, requireEmployee, async (
   }
 });
 
-router.delete('/:orderId/documents/:docId', auth, requireEmployee, async (req, res) => {
+router.delete('/:orderId/documents/:docId', auth, requireEmployee, requireEmployeeRole(['admin']), async (req, res) => {
   try {
     const doc = await db('order_documents').where('id', req.params.docId).where('order_id', req.params.orderId).first();
     if (!doc) return res.status(404).json({ success: false, message: '文档不存在' });
